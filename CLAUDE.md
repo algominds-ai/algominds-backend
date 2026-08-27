@@ -80,6 +80,19 @@ Do not add a registry, a plugin loader, or a base class.
 - Every Exa field that carries evidence is **optional** in `outputSchema`. A required field
   forces the agent to invent a value.
 
+## Cost
+
+Every capability returns `costDollars: { total, byProvider, entries }`. Workflows sum by
+merging ledgers, never by re-deriving. `CostLedger` has exactly two ways in:
+
+- **reported** — the vendor returned dollars. Exa only.
+- **metered** — units x a configured rate. Everything else: tokens, credits, records, calls.
+
+Model prices come from OpenRouter's public `GET /api/v1/models` at runtime, fetched with
+`cf: { cacheTtl: 86400, cacheEverything: true }` and memoized per isolate. No KV, no cron,
+no bundled price file. OpenRouter is the upstream inside the gateway, so its prices are what
+we are billed at.
+
 ## Gotchas that will cost you a day
 
 - `undici` and `cross-spawn` arrive transitively (`@ai-sdk/provider-utils`, `@ai-sdk/mcp`) and
@@ -101,6 +114,15 @@ Do not add a registry, a plugin loader, or a base class.
   takes 10 people per call. Never set a reveal flag from `findPeople`.
 - Clay is not free. ~$0.05 per Data Credit, 6-20 per person. It is last in every waterfall and
   never used for discovery.
+- AI Gateway never returns cost to the caller. `cf-aig-custom-cost` is a REQUEST header for
+  telling it your price. Cost reaches analytics, logs, and OTel only.
+- Price the model `cf-aig-model` names, never the configured id. A dynamic route falls back to
+  a cheaper model under a spend limit, so pricing by config is wrong when it matters most.
+- A gateway cache hit is billed at zero, even with a custom cost. Do not price its tokens.
+- Cache-read tokens cost about a tenth of fresh input. Price `usage.inputTokenDetails.
+  cacheReadTokens` at `input_cache_read`, not `prompt`.
+- OpenRouter pricing carries an `overrides` array for tiered rates above a prompt-token
+  threshold. Ignoring it under-reports big batches.
 
 ## Not in this project
 
