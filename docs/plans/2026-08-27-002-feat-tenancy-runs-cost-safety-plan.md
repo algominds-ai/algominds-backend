@@ -25,6 +25,17 @@ its R constraints. A unit overrides neither.
 seconds for $0.134, then 30 people in 127 seconds for $0.100. Every unit ends
 with `bun run gate` green and that behaviour intact.
 
+**Greenfield revision.** The user confirmed mid-execution that the local data is
+disposable. That deleted the plan's largest risk rather than mitigating it: the
+database and the migration history were rebuilt from scratch, `icp.account_id`
+and `company.run_id` are `NOT NULL` from the first migration, and no backfill
+exists to go wrong. U5 is withdrawn. Its transaction-wrapping requirement, its
+truncate-prompt exposure, and its restore rehearsal are all moot.
+
+The consequence is real and deliberate: a company cannot be inserted before its
+run row exists, so U6 is now a prerequisite for the pipeline working at all,
+not a follow-on.
+
 **Recovery point.** Git tag `baseline-before-multitenancy` at `a702c72`.
 Database dump at `algo-backend-backups/algo-2026-08-27-baseline.sql`, holding
 icp 9, company 24, person 30, evidence 297.
@@ -408,7 +419,15 @@ generated default, so the application always supplies `run.id`.
 **Verification.** Migration applies to the live database, the four baseline row
 counts are unchanged, gate green.
 
-### U5. Backfill tenancy and the run history, then constrain
+### U5. Withdrawn
+
+The greenfield revision above removed this unit's reason to exist. The
+constraints it would have reached by backfill are declared final in U4's
+migration instead. Nothing replaces it.
+
+The original text follows, struck for the record.
+
+### U5. Backfill tenancy and the run history, then constrain (WITHDRAWN)
 
 **Goal.** Existing data gets an account and a run, and the constraints land.
 
@@ -857,7 +876,7 @@ recorded baseline of 9, 24, 30, and 297.
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| A truncate prompt answered wrongly during U5 destroys a table | Highest | Versioned migrations rather than `push` (KTD4); a fresh dump before U5; `--force` never used |
+| ~~A truncate prompt answered wrongly during U5 destroys a table~~ | Withdrawn | Versioned migrations rather than `push` (KTD4); a fresh dump before U5; `--force` never used |
 | The migration tool silently targets an empty database | High | U1 confirms the four tables through `DATABASE_URL` before any migration; a clean diff against an empty database looks identical to a correct one |
 | The daily spend sum reads a stale cached value and the cap is passable | High | KTD3 routes it through `HYPERDRIVE_DIRECT`, asserted by test |
 | A capped run returns nothing and loses paid work | High | KTD1 returns rather than throws; a test asserts rows come back with status `capped` |
@@ -865,7 +884,7 @@ recorded baseline of 9, 24, 30, and 297.
 | Shared test database causes cross-test interference | Medium | `fileParallelism` is already false; every writing test scopes and removes its own rows |
 | The Findymail rate is an unverified $0.01 placeholder, and it is the only priced call on the enrichment path | Medium | The enrichment ceiling is wrong by whatever multiple the true rate differs from the guess. Probe the real rate before relying on that ceiling; the companies and people ceilings are unaffected, since Exa and the gateway report real cost |
 | Two runs start together for one account and both pass the daily check | Medium | U7 serialises the check per account with an advisory lock, and a test starts two runs at the boundary |
-| The migration fails partway and leaves a half-migrated schema | High | U5 requires the whole file to run in one transaction, proven by a deliberately failing backfill that leaves the schema untouched |
+| ~~The migration fails partway and leaves a half-migrated schema~~ | Withdrawn | U5 requires the whole file to run in one transaction, proven by a deliberately failing backfill that leaves the schema untouched |
 | A writing test reaches production rows, because no Cloudflare isolation covers a Hyperdrive connection | High | KTD8 points test bindings at their own database through the env-var override; writing tests also clean up |
 | Enrich cannot measure its ceiling in dollars, because `EnrichOutcome` carries no cost | Medium | U7 threads cost back before the ceiling is applied to that path |
 | The cap check pushes `runFindCompaniesRounds` past the 80-line function limit | Low | U7 extracts it as a helper rather than inlining |
