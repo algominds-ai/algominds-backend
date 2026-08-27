@@ -1,5 +1,5 @@
 import { exports, env as testEnv } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import app from "../src/index";
 import { constantTimeEqual } from "../src/routes";
 
@@ -29,6 +29,36 @@ function postInit(body: unknown, token?: string): RequestInit {
 function authedGetInit(): RequestInit {
 	return { headers: { authorization: `Bearer ${TOKEN}` } };
 }
+
+const SCOPES: readonly string[] = [
+	"11111111-1111-4111-8111-111111111111",
+	"55555555-5555-4555-8555-555555555555",
+	"66666666-6666-4666-8666-666666666666",
+	"77777777-7777-4777-8777-777777777777",
+	"88888888-8888-4888-8888-888888888888",
+	"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
+	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
+];
+
+async function terminateStartedRuns(): Promise<void> {
+	const today = new Date().toISOString().slice(0, 10);
+	const bindings: [Workflow, string][] = [
+		[testEnv.FIND_COMPANIES, "companies"],
+		[testEnv.FIND_PEOPLE, "people"],
+		[testEnv.ENRICH, "enrich"],
+	];
+	for (const [binding, capability] of bindings) {
+		for (const scope of SCOPES) {
+			const instance = await binding
+				.get(`${capability}_${scope}_${today}`)
+				.catch(() => null);
+			await instance?.terminate().catch(() => undefined);
+		}
+	}
+}
+
+afterEach(terminateStartedRuns);
 
 const ICP_A = "11111111-1111-4111-8111-111111111111";
 
@@ -161,26 +191,26 @@ describe("POST /people/find and /enrich", () => {
 		expect(body.runId).toBe(`people_${icpId}_${today}`);
 	});
 
-	it("starts an enrich run scoped by personId", async () => {
-		const personId = "99999999-9999-4999-8999-999999999999";
+	it("starts an enrich run scoped by the people-find run it enriches", async () => {
+		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
 
 		const response = await authedCall(
 			"/enrich",
-			postInit({ personId, channels: ["email"] }, TOKEN),
+			postInit({ runId: sourceRun, channels: ["email"] }, TOKEN),
 		);
 		const body: { runId?: string } = await response.json();
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`enrich_${personId}_${today}`);
+		expect(body.runId).toBe(`enrich_${sourceRun}_${today}`);
 	});
 
 	it("rejects an enrich body with an unknown channel", async () => {
-		const personId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+		const sourceRun = "people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27";
 
 		const response = await authedCall(
 			"/enrich",
-			postInit({ personId, channels: ["phone"] }, TOKEN),
+			postInit({ runId: sourceRun, channels: ["phone"] }, TOKEN),
 		);
 
 		expect(response.status).toBe(400);

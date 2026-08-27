@@ -5,12 +5,12 @@ import type {
 	EnrichOutcome,
 	EnrichSubject,
 } from "@/core/enrich";
-import { enrich } from "@/core/enrich";
+import { enrich, subjectsForRun } from "@/core/enrich";
 
 const BATCH_SIZE = 5;
 
 export type EnrichWorkflowParams = {
-	subjects: EnrichSubject[];
+	runId: string;
 	channels: EnrichChannel[];
 };
 
@@ -31,7 +31,10 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 		event: WorkflowEvent<EnrichWorkflowParams>,
 		step: WorkflowStep,
 	): Promise<EnrichOutcome[]> {
-		const { subjects, channels } = event.payload;
+		const { runId, channels } = event.payload;
+		const subjects = await step.do("resolve-subjects", () =>
+			subjectsForRun(this.env, runId),
+		);
 		const outcomes: EnrichOutcome[] = [];
 		for (const [index, batch] of toBatches(subjects).entries()) {
 			const batchOutcomes = await step.do(`enrich-batch-${index}`, () =>

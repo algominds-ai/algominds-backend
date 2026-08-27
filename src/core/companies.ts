@@ -2,11 +2,10 @@ import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import type {
 	CompanyRow,
-	Confidence,
 	GateOptions,
 	GateResult,
-	GroundingEntry,
 	Reject,
+	SearchResult,
 } from "@/core/gate";
 import type { JudgeResult, Verdict } from "@/core/judge";
 import type {
@@ -20,7 +19,7 @@ const MAX_ROUNDS = 3;
 const RESULTS_PER_ROUND = 5;
 const SEEN_DOMAINS_WINDOW_DAYS = 90;
 const DEFAULT_FRESHNESS_DAYS = 90;
-export const ROW_CONFIDENCE: Confidence = "medium";
+const DEFAULT_SCORE_FLOOR = 0.5;
 
 const SUMMARY_PROPERTIES: Record<string, { type: "string" }> = {
 	name: { type: "string" },
@@ -34,7 +33,7 @@ export type FindCompaniesOptions = {
 	icpId: string;
 	env: Env;
 	freshnessDays?: number;
-	confidenceFloor?: Confidence;
+	scoreFloor?: number;
 	maxRounds?: number;
 };
 
@@ -52,7 +51,7 @@ export type FindCompaniesDeps = {
 	) => Promise<ExaSearchResult>;
 	gate: (
 		rows: readonly CompanyRow[],
-		grounding: readonly GroundingEntry[],
+		results: readonly SearchResult[],
 		opts: GateOptions,
 	) => GateResult;
 	judge: (
@@ -135,31 +134,32 @@ function toCompanyRow(result: ExaResult): CompanyRow {
 		evidenceUrl: result.url,
 		signal: summaryField(result.summary, "signal"),
 		evidenceDate:
-			summaryField(result.summary, "evidenceDate") ??
 			result.publishedDate ??
+			summaryField(result.summary, "evidenceDate") ??
 			null,
 	};
 }
 
-function toGroundingEntry(result: ExaResult, index: number): GroundingEntry {
+function toSearchResult(result: ExaResult): SearchResult {
 	return {
-		field: `structured.companies[${index}]`,
-		citations: [{ url: result.url, title: result.title }],
-		confidence: ROW_CONFIDENCE,
+		...(result.publishedDate !== undefined
+			? { publishedDate: result.publishedDate }
+			: {}),
 	};
 }
 
 /**
  * Turns Exa's raw results into gate input: one `CompanyRow` per result plus
- * one grounding entry citing the result's own URL, at the same index.
+ * the vendor's own `publishedDate`, at the same index. `ExaResult` carries no
+ * `score` yet, so the gate's score check stays inactive until it does.
  */
-function toRowsAndGrounding(results: readonly ExaResult[]): {
+function toRowsAndResults(results: readonly ExaResult[]): {
 	rows: CompanyRow[];
-	grounding: GroundingEntry[];
+	results: SearchResult[];
 } {
 	return {
 		rows: results.map(toCompanyRow),
-		grounding: results.map(toGroundingEntry),
+		results: results.map(toSearchResult),
 	};
 }
 
@@ -251,13 +251,13 @@ async function runRound(
 		synthesized.searchShape,
 	);
 	const searched = await deps.search(request, opts.env, searchLedger);
-	const { rows, grounding } = toRowsAndGrounding(searched.results);
+	const { rows, results } = toRowsAndResults(searched.results);
 	const unseenCount = countUnseen(rows, ctx.seenDomains);
-	const gated = deps.gate(rows, grounding, {
+	const gated = deps.gate(rows, results, {
 		freshnessDays: opts.freshnessDays ?? DEFAULT_FRESHNESS_DAYS,
 		seenDomains: ctx.seenDomains,
+		scoreFloor: opts.scoreFloor ?? DEFAULT_SCORE_FLOOR,
 		query: synthesized.query,
-		...(opts.confidenceFloor ? { confidenceFloor: opts.confidenceFloor } : {}),
 	});
 	const judged =
 		gated.kept.length > 0

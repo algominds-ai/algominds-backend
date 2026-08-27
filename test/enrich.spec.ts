@@ -6,15 +6,21 @@ import type {
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
 } from "../src/core/db/queries";
-import type { Evidence, NewEvidence } from "../src/core/db/schema";
+import type {
+	Company,
+	Evidence,
+	NewEvidence,
+	Person,
+} from "../src/core/db/schema";
 import type {
 	EnrichDeps,
 	EnrichOutcome,
 	EnrichSubject,
 	LinkedinInput,
 	LinkedinResult,
+	RunPeopleConnection,
 } from "../src/core/enrich";
-import { enrich, isSendable } from "../src/core/enrich";
+import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
 import type { Provider } from "../src/core/providers/types";
 import { toBatches } from "../src/workflows/enrich";
 
@@ -250,6 +256,84 @@ describe("isSendable", () => {
 	});
 });
 
+function fakeRunPeople(
+	rows: { person: Person; company: Company }[],
+): DbFactory<RunPeopleConnection> {
+	return () => ({
+		select: () => ({
+			from: () => ({
+				innerJoin: () => ({
+					where: () => Promise.resolve(rows),
+				}),
+			}),
+		}),
+	});
+}
+
+describe("subjectsForRun", () => {
+	it("maps every person joined to their company's domain, for one run", async () => {
+		const companyRow: Company = {
+			id: "company-1",
+			icpId: "icp-1",
+			domain: "acme.com",
+			name: "Acme",
+			data: null,
+			runId: "people_run_1",
+			foundAt: new Date(),
+		};
+		const rows = [
+			{
+				person: {
+					id: "person-1",
+					companyId: "company-1",
+					linkedinUrl: "https://linkedin.com/in/a",
+					name: "Ada",
+					title: "VP",
+					data: null,
+				},
+				company: companyRow,
+			},
+			{
+				person: {
+					id: "person-2",
+					companyId: "company-1",
+					linkedinUrl: null,
+					name: null,
+					title: null,
+					data: null,
+				},
+				company: companyRow,
+			},
+		];
+
+		const subjects = await subjectsForRun(
+			testEnv,
+			"people_run_1",
+			fakeRunPeople(rows),
+		);
+
+		expect(subjects).toEqual([
+			{
+				id: "person-1",
+				domain: "acme.com",
+				name: "Ada",
+				linkedinUrl: "https://linkedin.com/in/a",
+			},
+			{ id: "person-2", domain: "acme.com" },
+		]);
+	});
+
+	it("returns an empty list when a run has no people", async () => {
+		const subjects = await subjectsForRun(
+			testEnv,
+			"people_run_empty",
+			fakeRunPeople([]),
+		);
+
+		expect(subjects).toEqual([]);
+	});
+});
+
 describe("the email evidence cache", () => {
 	it("reuses email evidence 89 days old", async () => {
 		const now = new Date("2026-08-27T00:00:00.000Z");
@@ -480,13 +564,16 @@ describe("EnrichWorkflow", () => {
 		expect(batches[2]?.[1]?.id).toBe("subject-11");
 	});
 
-	it("runs one step per batch and concatenates every batch's outcomes", async () => {
+	it("resolves a run into subjects and runs one step per batch", async () => {
 		const instanceId = "enrich_workflow_batches_test";
 		const instance = await introspectWorkflowInstance(
 			testEnv.ENRICH,
 			instanceId,
 		);
 		try {
+			const subjects: EnrichSubject[] = Array.from({ length: 6 }, (_, i) => ({
+				id: `subject-${i}`,
+			}));
 			const batchZero: EnrichOutcome[] = Array.from({ length: 5 }, (_, i) => ({
 				subjectId: `subject-${i}`,
 				linkedin: {
@@ -506,21 +593,77 @@ describe("EnrichWorkflow", () => {
 				},
 			];
 			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
 				await m.mockStepResult({ name: "enrich-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "enrich-batch-1" }, batchOne);
 			});
-			const subjects: EnrichSubject[] = Array.from({ length: 6 }, (_, i) => ({
-				id: `subject-${i}`,
-			}));
 
 			await testEnv.ENRICH.create({
 				id: instanceId,
-				params: { subjects, channels: ["linkedin"] },
+				params: { runId: "people_run_batches", channels: ["linkedin"] },
 			});
 			await instance.waitForStatus("complete");
 
 			const output = await instance.getOutput();
 			expect(output).toEqual([...batchZero, ...batchOne]);
+		} finally {
+			await instance.dispose();
+		}
+	});
+
+	it("a run resolving to three people enriches three", async () => {
+		const instanceId = "enrich_workflow_three_people_test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.ENRICH,
+			instanceId,
+		);
+		try {
+			const subjects: EnrichSubject[] = [
+				{ id: "person-a" },
+				{ id: "person-b" },
+				{ id: "person-c" },
+			];
+			const outcomes: EnrichOutcome[] = subjects.map((subject) => ({
+				subjectId: subject.id,
+				linkedin: { status: "unknown", value: null, source: null },
+			}));
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
+				await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
+			});
+
+			await testEnv.ENRICH.create({
+				id: instanceId,
+				params: { runId: "people_run_three", channels: ["linkedin"] },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual(outcomes);
+		} finally {
+			await instance.dispose();
+		}
+	});
+
+	it("a run resolving to no people returns an empty list without throwing", async () => {
+		const instanceId = "enrich_workflow_no_people_test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.ENRICH,
+			instanceId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "resolve-subjects" }, []);
+			});
+
+			await testEnv.ENRICH.create({
+				id: instanceId,
+				params: { runId: "people_run_empty", channels: ["email"] },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual([]);
 		} finally {
 			await instance.dispose();
 		}

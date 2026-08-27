@@ -1,16 +1,8 @@
 import { normalizeDomain } from "@/core/db/schema";
 
-export type Citation = {
-	url: string;
-	title?: string;
-};
-
-export type Confidence = "low" | "medium" | "high";
-
-export type GroundingEntry = {
-	field: string;
-	citations: Citation[];
-	confidence?: Confidence | null;
+export type SearchResult = {
+	publishedDate?: string;
+	score?: number;
 };
 
 const FIELD_NAMES = [
@@ -35,8 +27,7 @@ const REQUIRED_FIELDS: readonly CompanyField[] = [
 export type RejectReason =
 	| "missing-required"
 	| "echoes-query"
-	| "ungrounded"
-	| "low-confidence"
+	| "low-score"
 	| "stale-evidence"
 	| "bad-date"
 	| "already-seen";
@@ -49,7 +40,7 @@ export type Reject = {
 export type GateOptions = {
 	freshnessDays: number;
 	seenDomains: ReadonlySet<string>;
-	confidenceFloor?: Confidence;
+	scoreFloor: number;
 	query?: string;
 };
 
@@ -58,46 +49,7 @@ export type GateResult = {
 	rejects: Reject[];
 };
 
-export type RowGrounding = {
-	citations: Citation[];
-	confidence: Confidence | null;
-};
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const ROW_INDEX = /^structured\.companies\[(\d+)\]/;
-const CONFIDENCE_RANK: { low: number; medium: number; high: number } = {
-	low: 0,
-	medium: 1,
-	high: 2,
-};
-
-function parseRowIndex(field: string): number | null {
-	const raw = ROW_INDEX.exec(field)?.[1];
-	return raw === undefined ? null : Number(raw);
-}
-
-/** Maps each grounded row index to its merged citations and latest confidence, ignoring any trailing field suffix such as `.sourceUrl`. */
-export function groundedRows(
-	grounding: readonly GroundingEntry[],
-): Map<number, RowGrounding> {
-	const lookup = new Map<number, RowGrounding>();
-	for (const entry of grounding) {
-		const index = parseRowIndex(entry.field);
-		if (index === null) continue;
-		const existing = lookup.get(index);
-		lookup.set(index, {
-			citations: existing
-				? [...existing.citations, ...entry.citations]
-				: entry.citations,
-			confidence: entry.confidence ?? null,
-		});
-	}
-	return lookup;
-}
-
-function confidenceRank(confidence: Confidence | null): number {
-	return confidence === null ? -1 : CONFIDENCE_RANK[confidence];
-}
 
 function missingRequiredField(row: CompanyRow): boolean {
 	return REQUIRED_FIELDS.some((field) => row[field] === null);
@@ -129,33 +81,31 @@ function dateRejectReason(
 
 function rejectReason(
 	row: CompanyRow,
-	grounding: RowGrounding | undefined,
+	result: SearchResult | undefined,
 	opts: GateOptions,
 ): RejectReason | null {
 	if (missingRequiredField(row)) return "missing-required";
 	if (echoesQuery(row, opts.query)) return "echoes-query";
-	if (!grounding) return "ungrounded";
-	const floor = opts.confidenceFloor ?? "medium";
-	if (confidenceRank(grounding.confidence) < confidenceRank(floor))
-		return "low-confidence";
-	const dateReason = dateRejectReason(row.evidenceDate, opts.freshnessDays);
+	const score = result?.score;
+	if (score !== undefined && score < opts.scoreFloor) return "low-score";
+	const evidenceDate = result?.publishedDate ?? row.evidenceDate;
+	const dateReason = dateRejectReason(evidenceDate, opts.freshnessDays);
 	if (dateReason) return dateReason;
 	const domain = row.domain;
 	if (domain === null) return "missing-required";
 	return opts.seenDomains.has(normalizeDomain(domain)) ? "already-seen" : null;
 }
 
-/** Drops a row for a missing required field, a field that echoes the search query, missing or below-floor grounding, stale or malformed evidence, or an already-seen domain. */
+/** Drops a row for a missing required field, a field that echoes the search query, a below-floor score, stale or malformed evidence, or an already-seen domain. */
 export function gate(
 	rows: readonly CompanyRow[],
-	grounding: readonly GroundingEntry[],
+	results: readonly SearchResult[],
 	opts: GateOptions,
 ): GateResult {
-	const lookup = groundedRows(grounding);
 	const kept: CompanyRow[] = [];
 	const rejects: Reject[] = [];
 	rows.forEach((row, index) => {
-		const reason = rejectReason(row, lookup.get(index), opts);
+		const reason = rejectReason(row, results[index], opts);
 		if (reason) rejects.push({ index, reason });
 		else kept.push(row);
 	});

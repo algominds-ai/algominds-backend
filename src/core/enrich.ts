@@ -1,10 +1,14 @@
+import { eq } from "drizzle-orm";
+import type { DbEnv } from "@/core/db/client";
+import { db } from "@/core/db/client";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
 } from "@/core/db/queries";
 import { appendEvidence, cutoffDate, latestEvidence } from "@/core/db/queries";
-import type { Evidence, NewEvidence } from "@/core/db/schema";
+import type { Company, Evidence, NewEvidence, Person } from "@/core/db/schema";
+import { company, person } from "@/core/db/schema";
 import type {
 	FindymailInput,
 	FindymailResult,
@@ -62,6 +66,47 @@ export type EnrichDeps = {
 /** True only for an email verdict that can actually be sent to. */
 export function isSendable(status: EmailStatus): boolean {
 	return status === "verified";
+}
+
+export type PersonCompanyRow = { person: Person; company: Company };
+
+export interface RunPeopleConnection {
+	select(): {
+		from(table: typeof person): {
+			innerJoin(
+				table: typeof company,
+				condition: unknown,
+			): {
+				where(condition: unknown): Promise<PersonCompanyRow[]>;
+			};
+		};
+	};
+}
+
+function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
+	return {
+		id: row.person.id,
+		domain: row.company.domain,
+		...(row.person.name !== null ? { name: row.person.name } : {}),
+		...(row.person.linkedinUrl !== null
+			? { linkedinUrl: row.person.linkedinUrl }
+			: {}),
+	};
+}
+
+/** Every person produced by the find-people run `runId`, as enrich subjects. */
+export async function subjectsForRun(
+	env: DbEnv,
+	runId: string,
+	buildDb: DbFactory<RunPeopleConnection> = db,
+): Promise<EnrichSubject[]> {
+	const connection = buildDb(env, "cached");
+	const rows = await connection
+		.select()
+		.from(person)
+		.innerJoin(company, eq(person.companyId, company.id))
+		.where(eq(company.runId, runId));
+	return rows.map(toEnrichSubject);
 }
 
 function withinTtl(row: Evidence, ttlDays: number, now: Date): boolean {

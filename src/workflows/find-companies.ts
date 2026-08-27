@@ -9,7 +9,7 @@ import type {
 	FindCompaniesResult,
 	FindCompaniesStatus,
 } from "@/core/companies";
-import { findCompanies, ROW_CONFIDENCE } from "@/core/companies";
+import { findCompanies } from "@/core/companies";
 import {
 	appendEvidence,
 	loadIcp,
@@ -18,7 +18,7 @@ import {
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
-import type { CompanyRow, Confidence } from "@/core/gate";
+import type { CompanyRow } from "@/core/gate";
 import { gate } from "@/core/gate";
 import { judge } from "@/core/judge";
 import { search } from "@/core/providers/exa";
@@ -27,11 +27,6 @@ import { IcpDocSchema, synthesize } from "@/core/synthesize";
 
 const MAX_ROUNDS = 3;
 const EVIDENCE_SOURCE = "exa";
-const CONFIDENCE_SCORE: Record<Confidence, number> = {
-	low: 0.4,
-	medium: 0.7,
-	high: 0.95,
-};
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -174,7 +169,6 @@ function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
 			kind,
 			value,
 			source: EVIDENCE_SOURCE,
-			confidence: CONFIDENCE_SCORE[ROW_CONFIDENCE],
 		}));
 }
 

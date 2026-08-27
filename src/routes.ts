@@ -58,7 +58,7 @@ const peopleFindSchema = z.object({
 });
 
 const enrichSchema = z.object({
-	personId: z.uuid(),
+	runId: z.string(),
 	channels: z.array(z.enum(["email", "linkedin"])).min(1),
 });
 
@@ -133,7 +133,7 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, enrichSchema, {
 			capability: "enrich",
 			workflow: c.env.ENRICH,
-			scopeId: (body) => body.personId,
+			scopeId: (body) => body.runId,
 		}),
 	);
 
