@@ -53,6 +53,12 @@ src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
 - **No comments. None.** Rename until the code says it. If something genuinely needs
   explaining, write `docs/solutions/<topic>.md`. Only `/** */` docstrings are allowed, and only
   where a signature is genuinely non-obvious. Enforced by `scripts/check-comments.mjs`.
+- **A docstring says what the thing does and what it returns.** One or two sentences. Not an
+  essay, not rationale, not history. If it needs a paragraph, it belongs in `docs/solutions/`.
+- **No planning vocabulary in code — ever.** No requirement, decision, acceptance-example or
+  unit ids (`R42`, `KTD3`, `AE7`, `U12`), no "milestone", "phase", "sub-phase", "the plan says".
+  A test is named for the behaviour it proves, never the plan entry it traces to. Enforced by
+  `scripts/check-language.mjs`.
 - **No type assertions.** `as X` is banned outside `test/` (`as const` is fine). Declare the
   real type, or parse at the boundary with Zod and let inference carry it.
 - **No untyped bags.** `Record<string, unknown>`, `Record<string, any>`, `object`, and
