@@ -15,7 +15,7 @@ import type {
 	EvidenceReadConnection,
 	IcpConnection,
 	PersonInsertConnection,
-	RunInsertConnection,
+	RunOpenConnection,
 	RunUpdateConnection,
 	TransactableConnection,
 } from "../src/core/db/queries";
@@ -434,18 +434,67 @@ describe("openRun", () => {
 			startedAt: new Date("2026-08-27T00:00:00.000Z"),
 			finishedAt: null,
 		};
-		const buildDb: DbFactory<RunInsertConnection> = () => ({
+		const buildDb: DbFactory<RunOpenConnection> = () => ({
 			insert: () => ({
 				values: (values: NewRun | NewRun[]) => {
 					expect(values).toEqual(newRun);
-					return { returning: () => Promise.resolve([storedRun]) };
+					return {
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([storedRun]),
+						}),
+					};
 				},
+			}),
+			select: () => ({
+				from: () => ({
+					where: () => ({ limit: () => Promise.resolve([storedRun]) }),
+				}),
 			}),
 		});
 
 		const result = await openRun(env, newRun, buildDb);
 
 		expect(result.id).toBe(newRun.id);
+	});
+
+	it("returns the existing run when a retried step re-inserts the same id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const newRun: NewRun = {
+			id: "companies_icp-1_2026-08-27",
+			accountId: "account-1",
+			icpId: "icp-1",
+			capability: "companies",
+			status: "running",
+		};
+		const storedRun: Run = {
+			...newRun,
+			costDollars: 0,
+			startedAt: new Date("2026-08-27T00:00:00.000Z"),
+			finishedAt: null,
+		};
+		const modes: DbMode[] = [];
+		const buildDb: DbFactory<RunOpenConnection> = (_env, mode) => {
+			modes.push(mode);
+			return {
+				insert: () => ({
+					values: () => ({
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([]),
+						}),
+					}),
+				}),
+				select: () => ({
+					from: () => ({
+						where: () => ({ limit: () => Promise.resolve([storedRun]) }),
+					}),
+				}),
+			};
+		};
+
+		const result = await openRun(env, newRun, buildDb);
+
+		expect(result.id).toBe(newRun.id);
+		expect(modes).toContain("direct");
 	});
 });
 

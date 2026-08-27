@@ -141,6 +141,8 @@ export type AccountConnection = InsertConnection<
 > &
 	SelectAllWhereConnection<typeof account, Account>;
 export type RunInsertConnection = AppendConnection<typeof run, NewRun, Run>;
+export type RunOpenConnection = InsertConnection<typeof run, NewRun, Run> &
+	SelectLimitConnection<typeof run, Run>;
 export type RunUpdateConnection = UpdateWhereConnection<
 	typeof run,
 	Pick<NewRun, "status" | "costDollars" | "finishedAt">
@@ -230,15 +232,27 @@ export async function ensureAccount(
 }
 
 /** Inserts a run row keyed by the caller-supplied run id. */
+/** Opens a run, or returns the one already opened under this id. A retried step must not fail on the primary key it just wrote. */
 export async function openRun(
 	env: DbEnv,
 	newRun: NewRun,
-	buildDb: DbFactory<RunInsertConnection> = db,
+	buildDb: DbFactory<RunOpenConnection> = db,
 ): Promise<Run> {
 	const connection = buildDb(env, "cached");
-	const rows = await connection.insert(run).values(newRun).returning();
-	const row = rows[0];
-	if (!row) throw new Error("openRun: insert returned no row");
+	const inserted = await connection
+		.insert(run)
+		.values(newRun)
+		.onConflictDoNothing({ target: [run.id] })
+		.returning();
+	const created = inserted[0];
+	if (created) return created;
+	const existing = await buildDb(env, "direct")
+		.select()
+		.from(run)
+		.where(eq(run.id, newRun.id))
+		.limit(1);
+	const row = existing[0];
+	if (!row) throw new Error(`openRun: no run for id ${newRun.id}`);
 	return row;
 }
 
