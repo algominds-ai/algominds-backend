@@ -43,6 +43,15 @@ describe("CostLedger.metered", () => {
 		expect(ledger.byProvider().findymail).toBeCloseTo(12 * 0.01, 10);
 	});
 
+	it("meters Findymail's search credits and verifier credits as two separate pools", () => {
+		const ledger = new CostLedger();
+
+		ledger.metered("findymail", "find-email", 10, "credits");
+		ledger.metered("findymail", "verify-email", 5, "verifier_credits");
+
+		expect(ledger.byProvider().findymail).toBeCloseTo(10 * 0.01 + 5 * 0.01, 10);
+	});
+
 	it("throws at once for an unknown provider or unit rather than recording a silent zero", () => {
 		const ledger = new CostLedger();
 

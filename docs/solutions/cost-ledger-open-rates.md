@@ -4,14 +4,34 @@ Three vendor dollar figures and one response shape used by the cost ledger are u
 This file is where whoever resolves one should look first, and where a probe's findings should
 land once one is captured.
 
-## Findymail credits: `RATES.findymail.credits` = `0.01`
+## Findymail credits: `RATES.findymail.credits` and `RATES.findymail.verifier_credits` = `0.01`
 
-Findymail is the one vendor `CostLedger.metered()` still prices in v1 — every other call
-either returns its own dollar figure inline (Exa `/search`, the AI Gateway) or costs nothing
-(Apollo People Search) or is cut from v1 entirely (Apollo enrichment, BrightData). No public
-Findymail price list was found; `0.01` is a round placeholder, not a confirmed rate.
+Findymail is the one vendor `CostLedger.metered()` still prices in v1 — every other call either
+returns its own dollar figure inline (Exa `/search`, the AI Gateway) or costs nothing (Apollo
+People Search) or is cut from v1 entirely (Apollo enrichment, BrightData).
 
-**Status:** unknown pending a published rate card or an account lookup.
+Findymail's response body carries no cost, credit, or charge field of any kind — just
+`{ contact: {...} }`. A probe against a live account measured the actual charge by credit
+delta instead:
+
+    before  {"credits":327653, "verifier_credits":374773, "pricing":"variant_a"}
+    after   {"credits":327652, "verifier_credits":374773}
+
+Measured facts:
+
+- One `search` credit is spent per `/api/search/linkedin` call.
+- `verifier_credits` is a separate pool, untouched by a search call — a verify call must be
+  metered against `verifier_credits`, never `credits`.
+- `pricing: "variant_a"` in the credits response names a plan variant, not a rate.
+- Rate limit is `x-ratelimit-limit: 50` per the response headers observed during the probe.
+
+The dollar-per-credit price for either pool is still unknown; `0.01` is a round placeholder for
+both, not a confirmed rate. `RATES.findymail` keeps them as two separate keys so a verify call
+can never be priced against the search pool's rate by accident, even once real numbers replace
+the placeholders.
+
+**Status:** unknown pending a published Findymail rate card or an account lookup. This is the
+last open dollar figure the ledger depends on.
 
 ## Apollo credits (not currently priced — enrichment is cut from v1)
 
@@ -57,9 +77,18 @@ treated as an ordinary (retryable) error. It is a heuristic, not a confirmed con
 gateway with a spend limit configured is expected to surface the real shape, which should
 replace this heuristic with an exact field check.
 
+## The lesson from three probes
+
+Three vendors were probed for an inline cost figure. Two report it: Exa `/search` returns
+`costDollars`, and the AI Gateway returns `usage.cost`. One does not: Findymail returns neither
+a cost nor a credit count, only a body a before/after credit-balance probe had to measure
+around. The lesson is not "vendors report cost inline" — it is "probe before assuming either
+way." Both directions have been wrong at least once on this ledger already.
+
 ## Verification
 
-`test/rates.spec.ts` asserts `RATES` holds the Findymail entry directly. `test/cost.spec.ts`
-asserts `isSpendLimitExceeded` classifies a spend-limit message as non-retryable and an
-ordinary rate-limit message as retryable. Both suites keep passing unchanged once a real number
-replaces a placeholder.
+`test/rates.spec.ts` asserts `RATES` holds both Findymail entries directly.
+`test/cost.spec.ts` asserts `CostLedger.metered()` prices `credits` and `verifier_credits` as
+independent pools, and that `isSpendLimitExceeded` classifies a spend-limit message as
+non-retryable and an ordinary rate-limit message as retryable. All three keep passing unchanged
+once a real number replaces a placeholder.
