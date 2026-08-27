@@ -17,7 +17,6 @@ const env = Object.fromEntries(
 );
 
 let spent = 0;
-const note = (label, value) => console.log(`  ${label.padEnd(22)} ${value}`);
 
 async function exaSearch(body) {
 	const res = await fetch("https://api.exa.ai/search", {
@@ -29,6 +28,8 @@ async function exaSearch(body) {
 		body: JSON.stringify(body),
 	});
 	const json = await res.json();
+	if (!res.ok)
+		throw new Error(`exa ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
 	spent += json?.costDollars?.total ?? 0;
 	return json;
 }
@@ -37,12 +38,19 @@ function parseSummary(raw) {
 	try {
 		return JSON.parse(raw ?? "");
 	} catch {
-		return null;
+		return {};
 	}
 }
 
+function normalizeTitle(raw) {
+	if (!raw) return null;
+	const cut = [raw.indexOf("@"), raw.indexOf("("), raw.indexOf("|")].filter(
+		(i) => i > 0,
+	);
+	return (cut.length ? raw.slice(0, Math.min(...cut)) : raw).trim();
+}
+
 async function findCompanies() {
-	console.log("\n── find companies ──");
 	const out = await exaSearch({
 		query: "seed stage fintech startup in San Francisco",
 		category: "company",
@@ -54,30 +62,29 @@ async function findCompanies() {
 					required: ["companyName"],
 					properties: {
 						companyName: { type: "string" },
+						domain: { type: "string" },
 						hqCity: { type: "string" },
-						stage: { type: "string" },
 					},
 				},
 			},
 		},
 	});
-	const rows = (out.results ?? []).map((r) => ({
-		url: r.url,
-		...parseSummary(r.summary),
-	}));
-	for (const r of rows)
-		note(String(r.companyName).slice(0, 22), `${r.stage ?? "?"} · ${r.url}`);
-	note("cost", `$${out?.costDollars?.total ?? 0}`);
-	return rows;
+	return (out.results ?? []).map((r) => {
+		const s = parseSummary(r.summary);
+		return {
+			name: s.companyName ?? null,
+			domain: s.domain ?? new URL(r.url).hostname.replace(/^www\./, ""),
+			url: r.url,
+		};
+	});
 }
 
-async function findPeople(company) {
-	console.log(`\n── find people at ${company} ──`);
+async function findDecisionMakers(company) {
 	const out = await exaSearch({
-		query: `VP of Sales or Head of Sales at ${company}`,
+		query: `VP of Sales, Head of Growth or founder at ${company.name}`,
 		category: "linkedin profile",
 		type: "keyword",
-		numResults: 2,
+		numResults: 3,
 		contents: {
 			summary: {
 				schema: {
@@ -92,44 +99,48 @@ async function findPeople(company) {
 			},
 		},
 	});
-	const rows = (out.results ?? []).map((r) => ({
-		url: r.url,
-		...parseSummary(r.summary),
-	}));
-	for (const p of rows)
-		note(
-			String(p.fullName).slice(0, 22),
-			`${p.currentTitle} @ ${p.currentCompany}`,
-		);
-	note("cost", `$${out?.costDollars?.total ?? 0}`);
-	return rows;
-}
-
-async function enrich(linkedinUrl) {
-	console.log("\n── enrich ──");
-	const res = await fetch("https://app.findymail.com/api/search/linkedin", {
-		method: "POST",
-		headers: {
-			authorization: `Bearer ${env.FINDYMAIL_API_KEY}`,
-			"content-type": "application/json",
-		},
-		body: JSON.stringify({ linkedin_url: linkedinUrl }),
-	});
-	const c = (await res.json())?.contact ?? {};
-	note("email", c.email ?? "(none)");
-	note("name", c.name ?? "(none)");
-	note("company", c.company ?? "(none)");
-	note("credits", "1 email credit");
-	return c;
+	return (out.results ?? [])
+		.map((r) => {
+			const s = parseSummary(r.summary);
+			return {
+				fullName: s.fullName ?? null,
+				title: normalizeTitle(s.currentTitle),
+				rawTitle: s.currentTitle ?? null,
+				employer: s.currentCompany ?? null,
+				linkedinUrl: r.url,
+			};
+		})
+		.filter((p) => p.fullName);
 }
 
 const companies = await findCompanies();
-const people = await findPeople("Ramp");
-const person = people.find((p) => p.url?.includes("linkedin.com/in/"));
-if (person) await enrich(person.url);
+console.log("\n── companies found ──");
+for (const c of companies)
+	console.log(`  ${String(c.name).padEnd(26)} ${c.domain}`);
 
-console.log("\n════ smoke ════");
-note("companies found", companies.length);
-note("people found", people.length);
-note("exa spend", `$${spent.toFixed(4)}`);
-note("findymail spend", person ? "1 credit" : "0 credits");
+console.log("\n── decision makers at those same companies ──");
+let peopleTotal = 0;
+let matched = 0;
+for (const company of companies) {
+	const people = await findDecisionMakers(company);
+	peopleTotal += people.length;
+	console.log(`\n  ${company.name} (${company.domain})`);
+	if (people.length === 0) console.log("     none found");
+	for (const p of people) {
+		const agrees = (p.employer ?? "")
+			.toLowerCase()
+			.includes(String(company.name).toLowerCase().split(" ")[0]);
+		if (agrees) matched++;
+		console.log(
+			`     ${String(p.fullName).padEnd(22)} ${String(p.title ?? "?").padEnd(28)} employer=${p.employer ?? "?"} ${agrees ? "MATCH" : "mismatch"}`,
+		);
+		if (p.rawTitle && p.rawTitle !== p.title)
+			console.log(`        raw headline: ${p.rawTitle}`);
+	}
+}
+
+console.log("\n════ chain result ════");
+console.log(`  companies found          ${companies.length}`);
+console.log(`  people found             ${peopleTotal}`);
+console.log(`  employer agrees w/ target ${matched}/${peopleTotal}`);
+console.log(`  exa spend                $${spent.toFixed(4)}`);

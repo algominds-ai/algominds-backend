@@ -79,7 +79,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R68. Employment is verified by the same call that finds the person. Exa `/search` with `category: "linkedin profile"` and a summary schema returns `currentTitle` and `currentCompany` alongside the profile URL, so no second lookup and no per-person agent loop exist.
 - R69. Apollo People Search runs as an independent second list, never as the primary. It returns `last_name_obfuscated` and no LinkedIn URL, so it cannot feed an email finder on its own. Its value is coverage: it finds people Exa missed.
 - R70. Every Apollo filter key is validated against a closed allow-list before the request leaves. Apollo silently ignores an unknown key and returns unfiltered results, so a typo would widen the search with no error.
-- R71. `currentTitle` from a people search is normalised before use. Exa returns the LinkedIn headline verbatim when the headline occupies the title field, so a real result was `SVP of Sales @ Ramp (I'm hiring - ramp.com/careers)`. Personalisation tolerates that; title filtering does not. Strip anything after an `@`, a parenthesis, or a pipe, and keep the raw headline as evidence.
+- R71. `currentTitle` from a people search is normalised before use. Cut at whichever of `@`, `(`, `|` or ` - ` appears first. A live run produced `Co-Founder & COO - Copperlane (YC W26)`, where cutting only at `(` leaves the employer glued to the title. Exa returns the LinkedIn headline verbatim when the headline occupies the title field, so a real result was `SVP of Sales @ Ramp (I'm hiring - ramp.com/careers)`. Personalisation tolerates that; title filtering does not. Strip anything after an `@`, a parenthesis, or a pipe, and keep the raw headline as evidence.
 - R44. Find people caps the number of companies searched in one run. The default is 100, and the run reports how many it skipped. One `/search` call covers a company, so the ceiling is calls, not loops.
 
 #### Enrich
@@ -980,6 +980,7 @@ before the network.
 - A company whose search returns nobody yields `{ domain, people: [], reason }` and the run
   still succeeds.
 - A headline of `SVP of Sales @ Ramp (I'm hiring - ramp.com/careers)` normalises to `SVP of Sales`, and the raw headline survives as evidence.
+- A headline of `Co-Founder & COO - Copperlane (YC W26)` normalises to `Co-Founder & COO`. Both live examples.
 - `currentCompany` differing from the target lowers confidence and keeps both claims.
 - The same LinkedIn URL under two companies collapses to one person; two people sharing a name
   with different URLs stay separate.
