@@ -216,6 +216,7 @@ describe("mcpProvider", () => {
 			tool: "lookup",
 			channels: ["email"],
 			cost: 1,
+			parse: (raw) => raw,
 		});
 
 		await expect(found.run({}, testEnv)).rejects.toThrow();
@@ -236,6 +237,7 @@ describe("mcpProvider", () => {
 			channels: ["email"],
 			cost: 1,
 			headers: (env) => ({ "x-api-key": env.CF_ACCOUNT_ID }),
+			parse: (raw) => raw,
 		});
 
 		await found.run({}, { ...testEnv, CF_ACCOUNT_ID: "key-a" });

@@ -20,9 +20,7 @@ function isAsyncIterableResult(
 	value: CallToolResult | AsyncIterable<CallToolResult>,
 ): value is AsyncIterable<CallToolResult> {
 	return (
-		typeof value === "object" &&
-		value !== null &&
-		Symbol.asyncIterator in value
+		typeof value === "object" && value !== null && Symbol.asyncIterator in value
 	);
 }
 

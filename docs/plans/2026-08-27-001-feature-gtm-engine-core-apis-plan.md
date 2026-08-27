@@ -557,7 +557,7 @@ U1 gates everything. U14 lands second, because every provider and every model ca
 **Patterns to follow.** None. This is the pattern the capability units follow.
 
 **Test scenarios.**
-- `reported` with an Exa payload of `{ total: 1.02, agentCompute: 0.98, search: 0.04, dataSources: { fiber: 0.04 } }` produces a `fiber` line of its own in `byProvider`.
+- `reported` with an Exa payload of `{ total: 1.06, agentCompute: 0.98, search: 0.04, dataSources: { fiber: 0.04 } }` produces a `fiber` line of its own in `byProvider`.
 - `metered` on a model call with 12,000 input and 800 output tokens prices each class at its own rate and sums them.
 - `modelRate` fetches once and memoizes. Ten calls in one isolate produce exactly one outbound fetch, asserted with a fetch spy.
 - `modelRate` returns the pinned fallback when the fetch fails, and the ledger still totals correctly.

@@ -1,13 +1,7 @@
 import { and, desc, eq, gte } from "drizzle-orm";
+import type { IndexColumn } from "drizzle-orm/pg-core";
+import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
-import type { Db, DbMode } from "@/core/db/client";
-import {
-	company,
-	evidence,
-	icp,
-	normalizeDomain,
-	person,
-} from "@/core/db/schema";
 import type {
 	Company,
 	Evidence,
@@ -17,27 +11,117 @@ import type {
 	NewPerson,
 	Person,
 } from "@/core/db/schema";
+import {
+	company,
+	evidence,
+	icp,
+	normalizeDomain,
+	person,
+} from "@/core/db/schema";
 
-// Every query takes `env` and returns plain objects. No repository classes
-// (CLAUDE.md). `buildDb` defaults to the real client builder; a test supplies
-// a faithful fake in its place so the mode a query selects — the one thing
-// R32/AE7 cares about — is provable without a live database or module
-// mocking (biome bans `vi.mock`/`mock.module`).
-export type DbFactory = (env: Env, mode: DbMode) => Db;
+export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
+
+interface SelectWhereConnection<TTable, TColumns, TRow> {
+	select(columns: TColumns): {
+		from(table: TTable): {
+			where(condition: unknown): Promise<TRow[]>;
+		};
+	};
+}
+
+interface SelectLimitConnection<TTable, TRow> {
+	select(): {
+		from(table: TTable): {
+			where(condition: unknown): {
+				limit(count: number): Promise<TRow[]>;
+			};
+		};
+	};
+}
+
+interface SelectOrderedConnection<TTable, TRow> {
+	select(): {
+		from(table: TTable): {
+			where(condition: unknown): {
+				orderBy(order: unknown): {
+					limit(count: number): Promise<TRow[]>;
+				};
+			};
+		};
+	};
+}
+
+interface InsertChain<TRow> {
+	onConflictDoNothing(config?: { target?: IndexColumn | IndexColumn[] }): {
+		returning(): Promise<TRow[]>;
+	};
+}
+
+interface InsertConnection<TTable, TNewRow, TRow> {
+	insert(table: TTable): {
+		values(row: TNewRow): InsertChain<TRow>;
+		values(rows: TNewRow[]): InsertChain<TRow>;
+	};
+}
+
+interface AppendChain<TRow> {
+	returning(): Promise<TRow[]>;
+}
+
+interface AppendConnection<TTable, TNewRow, TRow> {
+	insert(table: TTable): {
+		values(row: TNewRow): AppendChain<TRow>;
+		values(rows: TNewRow[]): AppendChain<TRow>;
+	};
+}
+
+export interface DeleteTransaction {
+	delete(table: typeof evidence | typeof person): {
+		where(condition: unknown): Promise<unknown>;
+	};
+}
+
+export interface TransactableConnection {
+	transaction<T>(fn: (tx: DeleteTransaction) => Promise<T>): Promise<T>;
+}
+
+export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
+export type DomainsConnection = SelectWhereConnection<
+	typeof company,
+	{ domain: typeof company.domain },
+	{ domain: string }
+>;
+export type EvidenceReadConnection = SelectOrderedConnection<
+	typeof evidence,
+	Evidence
+>;
+export type CompanyInsertConnection = InsertConnection<
+	typeof company,
+	NewCompany,
+	Company
+>;
+export type PersonInsertConnection = InsertConnection<
+	typeof person,
+	NewPerson,
+	Person
+>;
+export type EvidenceAppendConnection = AppendConnection<
+	typeof evidence,
+	NewEvidence,
+	Evidence
+>;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-// Exported so a test can prove the 90-day boundary (R7) without a live
-// database: a company found 89 days ago must land on the "included" side of
-// the cutoff, one found 91 days ago on the "excluded" side.
+/** The instant `days` days before `now` (defaults to the current time). */
 export function cutoffDate(days: number, now: Date = new Date()): Date {
 	return new Date(now.getTime() - days * MS_PER_DAY);
 }
 
 export async function loadIcp(
-	env: Env,
+	env: DbEnv,
 	icpId: string,
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<IcpConnection> = db,
 ): Promise<Icp | undefined> {
 	const connection = buildDb(env, "cached");
 	const rows = await connection
@@ -48,31 +132,30 @@ export async function loadIcp(
 	return rows[0];
 }
 
-// R32/KTD3/AE7: the dedupe read always uses the cache-disabled binding. A
-// cached read here could re-deliver companies a write stored seconds earlier,
-// because Hyperdrive does not invalidate its cache on write.
+/**
+ * Domains found for an ICP within the trailing `days` days, read through
+ * the cache-disabled binding.
+ */
 export async function recentDomains(
-	env: Env,
+	env: DbEnv,
 	icpId: string,
 	days: number,
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<DomainsConnection> = db,
 ): Promise<string[]> {
 	const connection = buildDb(env, "direct");
 	const rows = await connection
 		.select({ domain: company.domain })
 		.from(company)
-		.where(and(eq(company.icpId, icpId), gte(company.foundAt, cutoffDate(days))));
+		.where(
+			and(eq(company.icpId, icpId), gte(company.foundAt, cutoffDate(days))),
+		);
 	return rows.map((row) => row.domain);
 }
 
-// Normalizes each domain on write (plan step 5) so `recentDomains` and R42's
-// grounding check never drift apart. The unique index on `(icp_id, domain)`
-// makes a repeat insert of the same company a no-op rather than a duplicate
-// row.
 export async function saveCompanies(
-	env: Env,
+	env: DbEnv,
 	rows: NewCompany[],
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<CompanyInsertConnection> = db,
 ): Promise<Company[]> {
 	if (rows.length === 0) {
 		return [];
@@ -89,11 +172,10 @@ export async function saveCompanies(
 		.returning();
 }
 
-// R11: people are deduplicated by LinkedIn URL, never by name plus company.
 export async function savePeople(
-	env: Env,
+	env: DbEnv,
 	rows: NewPerson[],
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<PersonInsertConnection> = db,
 ): Promise<Person[]> {
 	if (rows.length === 0) {
 		return [];
@@ -106,12 +188,10 @@ export async function savePeople(
 		.returning();
 }
 
-// `evidence` is append-only (CLAUDE.md invariant, R18): this never updates or
-// deletes an existing row, only adds new ones.
 export async function appendEvidence(
-	env: Env,
+	env: DbEnv,
 	rows: NewEvidence[],
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<EvidenceAppendConnection> = db,
 ): Promise<Evidence[]> {
 	if (rows.length === 0) {
 		return [];
@@ -121,10 +201,10 @@ export async function appendEvidence(
 }
 
 export async function latestEvidence(
-	env: Env,
+	env: DbEnv,
 	subjectId: string,
 	kind: string,
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<EvidenceReadConnection> = db,
 ): Promise<Evidence | undefined> {
 	const connection = buildDb(env, "cached");
 	const rows = await connection
@@ -136,20 +216,21 @@ export async function latestEvidence(
 	return rows[0];
 }
 
-// R20: `evidence.source` plus this one delete-by-person query is the whole
-// data-deletion path. Both deletes run in one transaction so a failure never
-// leaves an orphaned evidence row behind.
+/** Deletes a person and every evidence row recorded for them, in one transaction. */
 export async function deletePerson(
-	env: Env,
+	env: DbEnv,
 	personId: string,
-	buildDb: DbFactory = db,
+	buildDb: DbFactory<TransactableConnection> = db,
 ): Promise<void> {
 	const connection = buildDb(env, "cached");
 	await connection.transaction(async (tx) => {
 		await tx
 			.delete(evidence)
 			.where(
-				and(eq(evidence.subjectType, "person"), eq(evidence.subjectId, personId)),
+				and(
+					eq(evidence.subjectType, "person"),
+					eq(evidence.subjectId, personId),
+				),
 			);
 		await tx.delete(person).where(eq(person.id, personId));
 	});

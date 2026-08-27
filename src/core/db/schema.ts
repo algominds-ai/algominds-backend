@@ -9,11 +9,6 @@ import {
 	uuid,
 } from "drizzle-orm/pg-core";
 
-// Four tables. `evidence` has no raw-payload column by design: it stores only
-// the fields a capability reads, so R20's delete-by-person query is the whole
-// data-deletion path. See docs/plans/2026-08-27-001-feature-gtm-engine-core-apis-plan.md
-// U2 for the field list this mirrors verbatim.
-
 export const icp = pgTable("icp", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	domain: text("domain").notNull(),
@@ -53,9 +48,6 @@ export const person = pgTable("person", {
 	data: jsonb("data"),
 });
 
-// Contacts are evidence rows with `kind` of `email`, `phone`, or `linkedin`.
-// There is no second contacts table (R18). Append-only: a value is never
-// overwritten, only superseded by a newer row (see CLAUDE.md invariants).
 export const evidence = pgTable(
 	"evidence",
 	{
@@ -67,9 +59,7 @@ export const evidence = pgTable(
 		source: text("source").notNull(),
 		confidence: real("confidence"),
 		status: text("status"),
-		seenAt: timestamp("seen_at", { withTimezone: true })
-			.notNull()
-			.defaultNow(),
+		seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
 		index("evidence_subject_kind_seen_idx").on(
@@ -90,16 +80,12 @@ export type NewPerson = typeof person.$inferInsert;
 export type Evidence = typeof evidence.$inferSelect;
 export type NewEvidence = typeof evidence.$inferInsert;
 
-// ponytail: this keeps only the "www." prefix and URL noise off a domain. It
-// does not resolve a real public-suffix list, so a value such as
-// `shop.acme.co.uk` normalizes to itself rather than collapsing to
-// `acme.co.uk`. Upgrade path: swap in a public-suffix-list lookup (e.g.
-// `tldts`) if a provider ever returns domains with an eTLD that needs that
-// collapse. No provider seen so far needs it, so adding the dependency now
-// has no test behind it.
+/**
+ * Lowercases a domain or URL and removes one leading `www.`. Does not
+ * collapse to a registrable domain (see `docs/solutions/domain-normalization.md`).
+ */
 export function normalizeDomain(input: string): string {
-	const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(input);
-	const url = new URL(hasScheme ? input : `https://${input}`);
+	const url = new URL(input.includes("://") ? input : `https://${input}`);
 	const host = url.hostname.toLowerCase();
 	return host.startsWith("www.") ? host.slice(4) : host;
 }

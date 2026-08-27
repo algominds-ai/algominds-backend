@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { cloudflareTest } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
@@ -10,7 +10,7 @@ export default defineConfig({
 	],
 	resolve: {
 		alias: {
-			"@": fileURLToPath(new URL("./src", import.meta.url)),
+			"@": resolve("src"),
 		},
 	},
 });
