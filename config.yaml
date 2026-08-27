@@ -1,6 +1,17 @@
 # Every tunable number in the engine. Edit here, then run `bun run config`.
 # src/config.ts is generated from this file and is never edited by hand.
 
+# Hard ceilings on what one request may ask for. A caller's number wins up to
+# these; beyond them the request is clamped and the clamp is reported, never
+# silently applied. They exist so a single request cannot force unbounded work.
+limits:
+  # Three rounds return at most 300 candidates, so asking for more than this
+  # can never be satisfied anyway. The cap makes that explicit at the boundary.
+  maxCompaniesPerRequest: 300
+  # Each company in a people run is its own paid search, so this one bounds
+  # real spend rather than just effort.
+  maxCompaniesPerPeopleRun: 100
+
 companies:
   # Rounds of search per run. Each round is one paid Exa call plus two model calls.
   maxRounds: 3

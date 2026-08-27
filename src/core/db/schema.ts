@@ -22,7 +22,9 @@ export const icp = pgTable(
 	"icp",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
-		accountId: uuid("account_id").references(() => account.id),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => account.id),
 		domain: text("domain").notNull(),
 		product: text("product"),
 		doc: jsonb("doc"),
@@ -65,7 +67,9 @@ export const company = pgTable(
 		domain: text("domain").notNull(),
 		name: text("name").notNull(),
 		data: jsonb("data"),
-		runId: text("run_id"),
+		runId: text("run_id")
+			.notNull()
+			.references(() => run.id),
 		foundAt: timestamp("found_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),

@@ -3,21 +3,27 @@ import type { IndexColumn } from "drizzle-orm/pg-core";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
+	Account,
 	Company,
 	Evidence,
 	Icp,
+	NewAccount,
 	NewCompany,
 	NewEvidence,
 	NewIcp,
 	NewPerson,
+	NewRun,
 	Person,
+	Run,
 } from "@/core/db/schema";
 import {
+	account,
 	company,
 	evidence,
 	icp,
 	normalizeDomain,
 	person,
+	run,
 } from "@/core/db/schema";
 
 export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
@@ -36,6 +42,22 @@ interface SelectLimitConnection<TTable, TRow> {
 			where(condition: unknown): {
 				limit(count: number): Promise<TRow[]>;
 			};
+		};
+	};
+}
+
+interface SelectAllWhereConnection<TTable, TRow> {
+	select(): {
+		from(table: TTable): {
+			where(condition: unknown): Promise<TRow[]>;
+		};
+	};
+}
+
+interface UpdateWhereConnection<TTable, TValues> {
+	update(table: TTable): {
+		set(values: TValues): {
+			where(condition: unknown): Promise<unknown>;
 		};
 	};
 }
@@ -112,6 +134,32 @@ export type EvidenceAppendConnection = AppendConnection<
 	NewEvidence,
 	Evidence
 >;
+export type AccountConnection = InsertConnection<
+	typeof account,
+	NewAccount,
+	Account
+> &
+	SelectAllWhereConnection<typeof account, Account>;
+export type RunInsertConnection = AppendConnection<typeof run, NewRun, Run>;
+export type RunUpdateConnection = UpdateWhereConnection<
+	typeof run,
+	Pick<NewRun, "status" | "costDollars" | "finishedAt">
+>;
+export type AccountSpendConnection = SelectWhereConnection<
+	typeof run,
+	{ costDollars: typeof run.costDollars },
+	{ costDollars: number }
+>;
+export type RunCompany = Pick<Company, "id" | "domain" | "name">;
+export type CompanyRunConnection = SelectWhereConnection<
+	typeof company,
+	{
+		id: typeof company.id;
+		domain: typeof company.domain;
+		name: typeof company.name;
+	},
+	RunCompany
+>;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -134,21 +182,118 @@ export async function loadIcp(
 	return rows[0];
 }
 
+export type NewIcpInput = Pick<NewIcp, "domain" | "accountId"> & {
+	description: string;
+};
+
 /** Stores a free-text ideal customer profile and returns the stored row. */
 export async function createIcp(
 	env: DbEnv,
-	description: string,
-	domain: string,
+	input: NewIcpInput,
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
 	const connection = buildDb(env, "cached");
 	const rows = await connection
 		.insert(icp)
-		.values({ domain, doc: { description } })
+		.values({
+			domain: input.domain,
+			accountId: input.accountId,
+			doc: { description: input.description },
+		})
 		.returning();
 	const row = rows[0];
 	if (!row) throw new Error("createIcp: insert returned no row");
 	return row;
+}
+
+/** Finds the account for `domain`, creating it with `name` if it does not exist. */
+export async function ensureAccount(
+	env: DbEnv,
+	name: string,
+	domain: string,
+	buildDb: DbFactory<AccountConnection> = db,
+): Promise<Account> {
+	const connection = buildDb(env, "cached");
+	const inserted = await connection
+		.insert(account)
+		.values({ name, domain })
+		.onConflictDoNothing({ target: [account.domain] })
+		.returning();
+	if (inserted[0]) return inserted[0];
+	const rows = await connection
+		.select()
+		.from(account)
+		.where(eq(account.domain, domain));
+	const row = rows[0];
+	if (!row) throw new Error(`ensureAccount: no account for domain ${domain}`);
+	return row;
+}
+
+/** Inserts a run row keyed by the caller-supplied run id. */
+export async function openRun(
+	env: DbEnv,
+	newRun: NewRun,
+	buildDb: DbFactory<RunInsertConnection> = db,
+): Promise<Run> {
+	const connection = buildDb(env, "cached");
+	const rows = await connection.insert(run).values(newRun).returning();
+	const row = rows[0];
+	if (!row) throw new Error("openRun: insert returned no row");
+	return row;
+}
+
+/** Records a run's terminal status and spend, and stamps `finished_at`. */
+export async function closeRun(
+	env: DbEnv,
+	runId: string,
+	outcome: Pick<NewRun, "status" | "costDollars">,
+	buildDb: DbFactory<RunUpdateConnection> = db,
+): Promise<void> {
+	const connection = buildDb(env, "cached");
+	await connection
+		.update(run)
+		.set({ ...outcome, finishedAt: new Date() })
+		.where(eq(run.id, runId));
+}
+
+/** Midnight UTC on the day of `now` (defaults to the current time). */
+export function startOfUtcDay(now: Date = new Date()): Date {
+	return new Date(
+		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+	);
+}
+
+/**
+ * Sums an account's run spend since the start of the current UTC day, read
+ * through the cache-disabled binding so a same-run write is never missed.
+ */
+export async function accountSpendToday(
+	env: DbEnv,
+	accountId: string,
+	now: Date = new Date(),
+	buildDb: DbFactory<AccountSpendConnection> = db,
+): Promise<number> {
+	const connection = buildDb(env, "direct");
+	const rows = await connection
+		.select({ costDollars: run.costDollars })
+		.from(run)
+		.where(
+			and(eq(run.accountId, accountId), gte(run.startedAt, startOfUtcDay(now))),
+		);
+	return rows.reduce((total, row) => total + row.costDollars, 0);
+}
+
+/** The id, domain, and name of every company found in run `runId`. */
+export async function companiesForRun(
+	env: DbEnv,
+	runId: string,
+	buildDb: DbFactory<CompanyRunConnection> = db,
+): Promise<RunCompany[]> {
+	const connection = buildDb(env, "cached");
+	return connection
+		.select({ id: company.id, domain: company.domain, name: company.name })
+		.from(company)
+		.where(eq(company.runId, runId));
 }
 
 /**

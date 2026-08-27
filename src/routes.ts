@@ -1,7 +1,8 @@
 import type { Context, Next } from "hono";
 import { Hono } from "hono";
 import { z } from "zod";
-import { createIcp } from "@/core/db/queries";
+import { config } from "@/config";
+import { createIcp, ensureAccount } from "@/core/db/queries";
 
 type ApiEnv = { Bindings: Env };
 
@@ -57,13 +58,24 @@ const icpRef = z.union([
 
 const companiesFindSchema = z.intersection(
 	icpRef,
-	z.object({ count: z.number().int().positive() }),
+	z.object({
+		count: z
+			.number()
+			.int()
+			.positive()
+			.max(config.limits.maxCompaniesPerRequest),
+	}),
 );
 
 const peopleFindSchema = z.intersection(
 	icpRef,
 	z.object({
-		maxCompanies: z.number().int().positive().max(100).optional(),
+		maxCompanies: z
+			.number()
+			.int()
+			.positive()
+			.max(config.limits.maxCompaniesPerPeopleRun)
+			.optional(),
 	}),
 );
 
@@ -77,7 +89,12 @@ type IcpRef = z.infer<typeof icpRef>;
 /** Uses the given ICP, or stores the free-text prompt as a new one. */
 async function resolveIcpId(env: Env, body: IcpRef): Promise<string> {
 	if ("icpId" in body) return body.icpId;
-	const row = await createIcp(env, body.prompt, SELLER_DOMAIN);
+	const sellerAccount = await ensureAccount(env, SELLER_DOMAIN, SELLER_DOMAIN);
+	const row = await createIcp(env, {
+		description: body.prompt,
+		domain: SELLER_DOMAIN,
+		accountId: sellerAccount.id,
+	});
 	return row.id;
 }
 

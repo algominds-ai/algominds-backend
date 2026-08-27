@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1787871023435,
-      "tag": "0000_typical_stardust",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1787871053840,
-      "tag": "0001_rapid_william_stryker",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1787871809998,
-      "tag": "0002_military_retro_girl",
+      "when": 1787871900808,
+      "tag": "0000_wonderful_havok",
       "breakpoints": true
     }
   ]

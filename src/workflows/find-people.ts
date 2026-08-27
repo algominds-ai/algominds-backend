@@ -7,7 +7,13 @@ import { config } from "@/config";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type { DbFactory } from "@/core/db/queries";
-import { appendEvidence, loadIcp, savePeople } from "@/core/db/queries";
+import {
+	appendEvidence,
+	closeRun,
+	loadIcp,
+	openRun,
+	savePeople,
+} from "@/core/db/queries";
 import type { NewEvidence, NewPerson } from "@/core/db/schema";
 import { company } from "@/core/db/schema";
 import type {
@@ -228,7 +234,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindPeopleResult> {
 		const payload = FindPeoplePayloadSchema.parse(event.payload);
-		const icp = await step.do(
+		const { doc: icp, accountId } = await step.do(
 			"load-icp",
 			config.stepConfig.databaseWork,
 			async () => {
@@ -238,9 +244,23 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 						`findPeople: unknown icp ${payload.icpId}`,
 					);
 				}
-				return IcpDocSchema.parse(icpRow.doc);
+				return {
+					doc: IcpDocSchema.parse(icpRow.doc),
+					accountId: icpRow.accountId,
+				};
 			},
 		);
+
+		await step.do("open-run", config.stepConfig.databaseWork, () =>
+			openRun(this.env, {
+				id: event.instanceId,
+				accountId,
+				icpId: payload.icpId,
+				capability: "people",
+				status: "running",
+			}),
+		);
+
 		const allCompanies = await step.do(
 			"load-companies",
 			config.stepConfig.databaseWork,
@@ -256,6 +276,13 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 
 		await step.do("save-people", config.stepConfig.databaseWork, () =>
 			persistPeople(this.env, scoped, result.companies),
+		);
+
+		await step.do("close-run", config.stepConfig.databaseWork, () =>
+			closeRun(this.env, event.instanceId, {
+				status: "complete",
+				costDollars: result.costDollars,
+			}),
 		);
 
 		return result;

@@ -1,4 +1,0 @@
--- Baseline. The four tables in this migration's snapshot already exist in every
--- environment, created before this project kept a migration history. The
--- snapshot records them so later migrations diff against the real schema; there
--- is nothing to execute here.

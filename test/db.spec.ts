@@ -1,9 +1,13 @@
+import { and, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import type { DbEnv, DbMode } from "../src/core/db/client";
 import { db } from "../src/core/db/client";
 import type {
+	AccountConnection,
+	AccountSpendConnection,
 	CompanyInsertConnection,
+	CompanyRunConnection,
 	DbFactory,
 	DeleteTransaction,
 	DomainsConnection,
@@ -11,31 +15,43 @@ import type {
 	EvidenceReadConnection,
 	IcpConnection,
 	PersonInsertConnection,
+	RunInsertConnection,
+	RunUpdateConnection,
 	TransactableConnection,
 } from "../src/core/db/queries";
 import {
+	accountSpendToday,
 	appendEvidence,
+	closeRun,
+	companiesForRun,
 	cutoffDate,
 	deletePerson,
+	ensureAccount,
 	latestEvidence,
 	loadIcp,
+	openRun,
 	recentDomains,
 	saveCompanies,
 	savePeople,
+	startOfUtcDay,
 } from "../src/core/db/queries";
 import type {
+	Account,
 	Evidence,
 	Icp,
 	NewCompany,
 	NewEvidence,
 	NewPerson,
+	NewRun,
 	Person,
+	Run,
 } from "../src/core/db/schema";
 import {
 	company,
 	evidence,
 	normalizeDomain,
 	person,
+	run,
 } from "../src/core/db/schema";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
@@ -129,7 +145,7 @@ describe("loadIcp", () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const row: Icp = {
 			id: "icp-1",
-			accountId: null,
+			accountId: "account-1",
 			domain: "acme.com",
 			product: "widgets",
 			doc: null,
@@ -182,6 +198,7 @@ describe("saveCompanies", () => {
 					icpId: "icp-1",
 					domain: "https://WWW.Acme.com/careers",
 					name: "Acme",
+					runId: "run-1",
 				},
 			],
 			buildDb,
@@ -205,7 +222,7 @@ describe("saveCompanies", () => {
 
 		await saveCompanies(
 			env,
-			[{ icpId: "icp-1", domain: "acme.com", name: "Acme" }],
+			[{ icpId: "icp-1", domain: "acme.com", name: "Acme", runId: "run-1" }],
 			buildDb,
 		);
 
@@ -364,5 +381,170 @@ describe("deletePerson", () => {
 
 		expect(deletedTables).toEqual([evidence, person]);
 		expect(wherePredicates).toHaveLength(2);
+	});
+});
+
+describe("ensureAccount", () => {
+	it("returns an existing account rather than creating a second one for the same domain", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const existing: Account = {
+			id: "account-1",
+			name: "Acme",
+			domain: "acme.com",
+			createdAt: new Date("2026-01-01T00:00:00.000Z"),
+		};
+		const buildDb: DbFactory<AccountConnection> = () => ({
+			insert: () => ({
+				values: () => ({
+					onConflictDoNothing: () => ({
+						returning: () => Promise.resolve([]),
+					}),
+				}),
+			}),
+			select: () => ({
+				from: () => ({
+					where: () => Promise.resolve([existing]),
+				}),
+			}),
+		});
+
+		const result = await ensureAccount(env, "Acme", "acme.com", buildDb);
+
+		expect(result).toEqual(existing);
+	});
+});
+
+describe("openRun", () => {
+	it("writes a row whose primary key is the supplied run id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const newRun: NewRun = {
+			id: "companies_icp-1_2026-08-27",
+			accountId: "account-1",
+			icpId: "icp-1",
+			capability: "companies",
+			status: "running",
+		};
+		const storedRun: Run = {
+			...newRun,
+			costDollars: 0,
+			startedAt: new Date("2026-08-27T00:00:00.000Z"),
+			finishedAt: null,
+		};
+		const buildDb: DbFactory<RunInsertConnection> = () => ({
+			insert: () => ({
+				values: (values: NewRun | NewRun[]) => {
+					expect(values).toEqual(newRun);
+					return { returning: () => Promise.resolve([storedRun]) };
+				},
+			}),
+		});
+
+		const result = await openRun(env, newRun, buildDb);
+
+		expect(result.id).toBe(newRun.id);
+	});
+});
+
+describe("closeRun", () => {
+	it("records the terminal status and the spend", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let setValues:
+			| Pick<NewRun, "status" | "costDollars" | "finishedAt">
+			| undefined;
+		const buildDb: DbFactory<RunUpdateConnection> = () => ({
+			update: () => ({
+				set: (values) => {
+					setValues = values;
+					return { where: () => Promise.resolve(undefined) };
+				},
+			}),
+		});
+
+		await closeRun(
+			env,
+			"run-1",
+			{ status: "complete", costDollars: 4.5 },
+			buildDb,
+		);
+
+		expect(setValues?.status).toBe("complete");
+		expect(setValues?.costDollars).toBe(4.5);
+		expect(setValues?.finishedAt).toBeInstanceOf(Date);
+	});
+});
+
+describe("accountSpendToday", () => {
+	it("reads through the direct binding, never cached", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let recordedMode: DbMode | undefined;
+		const buildDb: DbFactory<AccountSpendConnection> = (_env, mode) => {
+			recordedMode = mode;
+			return {
+				select: () => ({
+					from: () => ({
+						where: () => Promise.resolve([]),
+					}),
+				}),
+			};
+		};
+
+		await accountSpendToday(
+			env,
+			"account-1",
+			new Date("2026-08-27T12:00:00.000Z"),
+			buildDb,
+		);
+
+		expect(recordedMode).toBe("direct");
+	});
+
+	it("filters to the named account and to today, summing every matching row", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const now = new Date("2026-08-27T12:00:00.000Z");
+		let recordedCondition: unknown;
+		const rows = [{ costDollars: 1.5 }, { costDollars: 2.25 }];
+		const buildDb: DbFactory<AccountSpendConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: (condition) => {
+						recordedCondition = condition;
+						return Promise.resolve(rows);
+					},
+				}),
+			}),
+		});
+
+		const total = await accountSpendToday(env, "account-1", now, buildDb);
+
+		expect(total).toBe(3.75);
+		expect(recordedCondition).toEqual(
+			and(
+				eq(run.accountId, "account-1"),
+				gte(run.startedAt, startOfUtcDay(now)),
+			),
+		);
+	});
+});
+
+describe("companiesForRun", () => {
+	it("filters by run id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let recordedCondition: unknown;
+		const rows = [{ id: "company-1", domain: "acme.com", name: "Acme" }];
+		const buildDb: DbFactory<CompanyRunConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: (condition) => {
+						recordedCondition = condition;
+						return Promise.resolve(rows);
+					},
+				}),
+			}),
+		});
+
+		const result = await companiesForRun(env, "run-1", buildDb);
+
+		expect(result).toEqual(rows);
+		expect(recordedCondition).toEqual(eq(company.runId, "run-1"));
 	});
 });

@@ -13,7 +13,9 @@ import type {
 import { findCompanies } from "@/core/companies";
 import {
 	appendEvidence,
+	closeRun,
 	loadIcp,
+	openRun,
 	recentDomains,
 	saveCompanies,
 } from "@/core/db/queries";
@@ -204,7 +206,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindCompaniesResult> {
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
-		const icp = await step.do(
+		const { doc: icp, accountId } = await step.do(
 			"load-icp",
 			config.stepConfig.databaseWork,
 			async () => {
@@ -214,8 +216,21 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 						`findCompanies: unknown icp ${payload.icpId}`,
 					);
 				}
-				return IcpDocSchema.parse(icpRow.doc);
+				return {
+					doc: IcpDocSchema.parse(icpRow.doc),
+					accountId: icpRow.accountId,
+				};
 			},
+		);
+
+		await step.do("open-run", config.stepConfig.databaseWork, () =>
+			openRun(this.env, {
+				id: event.instanceId,
+				accountId,
+				icpId: payload.icpId,
+				capability: "companies",
+				status: "running",
+			}),
 		);
 
 		const result = await runFindCompaniesRounds(this.env, payload, icp, step);
@@ -227,6 +242,13 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				event.instanceId,
 				result.companies,
 			),
+		);
+
+		await step.do("close-run", config.stepConfig.databaseWork, () =>
+			closeRun(this.env, event.instanceId, {
+				status: result.status,
+				costDollars: result.costDollars,
+			}),
 		);
 
 		return result;

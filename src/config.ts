@@ -1,5 +1,9 @@
 /** Generated from config.yaml. Edit that file, then run `bun run config`. */
 export const config = {
+	limits: {
+		maxCompaniesPerRequest: 300,
+		maxCompaniesPerPeopleRun: 100,
+	},
 	companies: {
 		maxRounds: 3,
 		resultsPerRound: 100,

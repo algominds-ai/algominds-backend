@@ -131,3 +131,30 @@ Two consequences:
   vendor does not reject it. It has to assert the opposite: that our own code
   never sends a field outside the measured request schema. That check is free
   and belongs in the gate.
+
+## The Agent API can cap its own spend; `/search` cannot
+
+`POST /agent/runs` accepts a native per-run spending limit:
+
+```
+budget.maxCostDollars   $1 to $100, for effort "auto" and "max" only
+                        default $5 for auto, $20 for max
+```
+
+That is a hard cap Exa enforces itself, which is stronger than checking a
+ledger after each call. It is tempting for spend safety. It is still the wrong
+tool for company discovery, for three measured reasons:
+
+- It exists only on `/agent/runs`. `/search` has no budget field.
+- Its floor is $1. One `/search` round costs $0.089, so the minimum budget is
+  more than eleven times a whole round.
+- The Agent API is far slower. `/search` returned 92 structured company records
+  in 1.6 seconds.
+
+It also caps only Exa. A run pays Apollo, Findymail, and the model gateway too,
+and Exa's budget cannot see any of that. A ledger check across every vendor
+can.
+
+Use `effort: "auto"` with `budget.maxCostDollars` if a deep-research path is
+ever added, where the work is genuinely open-ended and a vendor-enforced
+ceiling is worth its price. Do not use it for the discovery path.
