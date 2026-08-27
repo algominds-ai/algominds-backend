@@ -38,7 +38,7 @@ the same way before U5, the one unit that can lose data.
 
 ## Problem Frame
 
-Seven defects, each measured, not assumed.
+Eight defects, each measured, not assumed.
 
 1. **No tenant exists.** No column in any table names a user, account, or
    organisation. `icp.domain` is free text, unindexed and not unique. Nobody
@@ -68,7 +68,15 @@ Seven defects, each measured, not assumed.
    people run id the route's own test uses matches zero rows. The test asserts
    a 202 and never the join, so it passes while the feature does nothing.
 
-An eighth defect blocks the work itself: **`drizzle-kit` cannot connect.**
+8. **A repeated start is silently ignored.** The run id is
+   `capability_icpId_date`, so a second call for the same profile on the same
+   day reuses the first instance. Measured: a request for 50 companies against
+   a profile already run today returned 202 with that run id, and the run
+   reported `requested: 10, found: 10` from the earlier call. No new spend, no
+   new rows, and nothing told the caller their count was discarded. The
+   idempotency is worth keeping; the silence is not.
+
+A ninth defect blocks the work itself: **`drizzle-kit` cannot connect.**
 `DATABASE_URL` names a database `app` that does not exist; the real tables are
 in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 
@@ -94,6 +102,7 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R14 | `bun run gate` stays green, and the measured end-to-end behaviour is unchanged. |
 | R15 | `/enrich` resolves its subjects from the run the caller names. A run id that matches no company is reported, never silently enriched as empty. |
 | R16 | Tests that write to the database run against a database that holds no production rows. |
+| R17 | A start request that matches a run already in flight or finished says so. It never returns 202 as though it began new work. |
 
 ---
 
@@ -677,6 +686,40 @@ regression test that passes on the broken version proves nothing.
 **Verification.** Each new test fails against `baseline-before-multitenancy`
 and passes after, gate green.
 
+### U14. Report a repeated start instead of ignoring it
+
+**Goal.** A caller learns that their request matched an existing run.
+
+**Requirements.** R17.
+
+**Dependencies.** U6.
+
+**Files.** `src/routes.ts`, `test/routes.spec.ts`.
+
+**Approach.**
+1. The deterministic run id makes a same-day repeat idempotent, which is the
+   protection against paying twice for one profile. Keep it.
+2. Before starting, look for a run with that id. When one exists, return it and
+   say so, rather than a bare 202 that implies new work began.
+3. The response carries enough for the caller to act: the run id and the fact
+   that it already existed. A caller who wants different parameters starts a
+   new profile, which the prompt path already does on every call.
+
+**Execution note.** The measured case is a request for 50 companies answered by
+a 10-company run from earlier in the day, with no signal. Write that exact case
+as the failing test first.
+
+**Test scenarios.**
+- A first start returns 202 and reports that the run is new.
+- An identical second start reports that the run already existed.
+- A second start with a different count still reports the existing run, and
+  does not silently present itself as having accepted the new count.
+- A repeated start performs no vendor call and creates no rows.
+- A start for a profile with no run today is unaffected.
+
+**Verification.** The measured silent case now reports the existing run, and the
+test fails against the baseline tag.
+
 ### U13. Fix the enrich run scoping
 
 **Goal.** `/enrich` enriches the people the caller meant, or says it found none.
@@ -792,7 +835,15 @@ recorded baseline of 9, 24, 30, and 297.
 ## Assumptions
 
 - One account covers all existing data. The 9 icp rows belong to one customer,
-  so U5 creates a single account rather than inferring several.
+  so U5 creates a single account rather than inferring several. Until
+  token-to-account authentication lands, that single account is the effective
+  tenancy boundary for every caller. The tables are structural readiness, not an
+  isolation guarantee anyone can rely on yet.
+- U9's capture has no named consumer in this plan. It is a deliberate bet: the
+  fields are already paid for and discarding them is irreversible, while keeping
+  them costs one jsonb column that already exists. If no consumer appears, the
+  cost was a few hundred kilobytes; if one does, no backfill is possible after
+  the fact because the vendor response is gone.
 - The runId format `capability_icpId_date` is stable enough for U5 to derive
   run rows from the 6 existing values. Verified: all 24 company rows carry a
   non-null id in that shape.
