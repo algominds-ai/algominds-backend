@@ -102,16 +102,32 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 		: { content: JSON.stringify(value), cost };
 }
 
-const companyShape = {
-	category: "company" as const,
-	startPublishedDate: null,
+type PlanShape = {
+	query: string;
+	angle: string;
+	userLocation: string | null;
+	countries: string[];
+	minWorkforce: number | null;
+	maxWorkforce: number | null;
 };
 
-function signalShape(startPublishedDate: string): {
-	category: "none";
-	startPublishedDate: string;
-} {
-	return { category: "none", startPublishedDate };
+function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
+	return objectReply({
+		query: "small US software teams that sell without a sales team",
+		angle: "founder-led vertical software",
+		userLocation: "US",
+		countries: ["United States"],
+		minWorkforce: null,
+		maxWorkforce: 20,
+		...overrides,
+	});
+}
+
+function runSynthesize(
+	pastAngles: readonly string[] = [],
+	feedback: readonly string[] = [],
+) {
+	return synthesize({ icp, pastAngles, feedback }, env);
 }
 
 describe("synthesize: gateway wiring", () => {
@@ -122,18 +138,10 @@ describe("synthesize: gateway wiring", () => {
 	});
 
 	it("sends cf-aig-authorization and targets a URL under /compat", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					query: "q",
-					systemPrompt: "s",
-					searchShape: companyShape,
-				}),
-			),
-		]);
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
-		await synthesize(icp, [], env);
+		await runSynthesize();
 
 		const call = gateway.calls[0];
 		expect(call?.headers.get("cf-aig-authorization")).toBe(
@@ -143,18 +151,10 @@ describe("synthesize: gateway wiring", () => {
 	});
 
 	it("selects MODEL_ROUTE_WORKER in the request body", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					query: "q",
-					systemPrompt: "s",
-					searchShape: companyShape,
-				}),
-			),
-		]);
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
-		await synthesize(icp, [], env);
+		await runSynthesize();
 
 		expect(modelInBody(gateway.calls[0])).toBe(env.MODEL_ROUTE_WORKER);
 	});
@@ -162,17 +162,11 @@ describe("synthesize: gateway wiring", () => {
 	it("sends cf-aig-skip-cache on every call, including a retry", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
-			chatCompletionResponse(
-				objectReply({
-					query: "q",
-					systemPrompt: "s",
-					searchShape: companyShape,
-				}),
-			),
+			chatCompletionResponse(planReply()),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await synthesize(icp, [], env);
+		await runSynthesize();
 
 		expect(gateway.calls).toHaveLength(2);
 		for (const call of gateway.calls) {
@@ -184,14 +178,21 @@ describe("synthesize: gateway wiring", () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply(
-					{ query: "q", systemPrompt: "s", searchShape: companyShape },
+					{
+						query: "q",
+						angle: "a",
+						userLocation: null,
+						countries: [],
+						minWorkforce: null,
+						maxWorkforce: null,
+					},
 					0.0000042,
 				),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
+		const result = await runSynthesize();
 
 		expect(result.ledger.total()).toBeCloseTo(0.0000042, 12);
 	});
@@ -215,8 +216,11 @@ describe("synthesize: cost recording without a cost field", () => {
 						role: "assistant",
 						content: JSON.stringify({
 							query: "q",
-							systemPrompt: "s",
-							searchShape: companyShape,
+							angle: "a",
+							userLocation: null,
+							countries: [],
+							minWorkforce: null,
+							maxWorkforce: null,
 						}),
 					},
 					finish_reason: "stop",
@@ -235,93 +239,53 @@ describe("synthesize: cost recording without a cost field", () => {
 		const gateway = fakeGateway([response]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
+		const result = await runSynthesize();
 
 		expect(result.ledger.total()).toBe(0);
 	});
 });
 
-describe("synthesize: search shape", () => {
+describe("synthesize: the plan it returns", () => {
 	const originalFetch = globalThis.fetch;
 
 	afterEach(() => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("passes through the company shape with no date filter", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					query: "q",
-					systemPrompt: "s",
-					searchShape: companyShape,
-				}),
-			),
-		]);
+	it("returns the model's query, angle, and numeric limits unchanged", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
+		const result = await runSynthesize();
 
-		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
+		expect(result.plan.query).toBe(
+			"small US software teams that sell without a sales team",
+		);
+		expect(result.plan.angle).toBe("founder-led vertical software");
+		expect(result.plan.maxWorkforce).toBe(20);
+		expect(result.plan.countries).toEqual(["United States"]);
 	});
 
-	it("keeps the model's startPublishedDate for the signal shape", async () => {
+	it("uppercases a two-letter country code and drops anything else", async () => {
 		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					query: "q",
-					systemPrompt: "s",
-					searchShape: signalShape("2026-08-01"),
-				}),
-			),
+			chatCompletionResponse(planReply({ userLocation: "us" })),
+			chatCompletionResponse(planReply({ userLocation: "United States" })),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
-
-		expect(result.searchShape).toEqual({
-			type: "neural",
-			startPublishedDate: "2026-08-01",
-		});
+		expect((await runSynthesize()).plan.userLocation).toBe("US");
+		expect((await runSynthesize()).plan.userLocation).toBeNull();
 	});
 
-	it("never lets a company category reach the caller with a date filter attached", async () => {
-		const invalidModelOutput = {
-			query: "q",
-			systemPrompt: "s",
-			searchShape: { category: "company", startPublishedDate: "2026-08-01" },
-		};
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(invalidModelOutput)),
-		]);
+	it("lists the angles already tried so the model picks a different one", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
+		await runSynthesize(["vertical dental software", "developer tooling"]);
 
-		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
-		expect(result.searchShape.startPublishedDate).toBeUndefined();
-	});
-
-	it("defaults to a recent date when the signal shape is missing or has an invalid date", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					query: "q",
-					systemPrompt: "s",
-					searchShape: { category: "none", startPublishedDate: null },
-				}),
-			),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await synthesize(icp, [], env);
-
-		expect(result.searchShape.category).toBeUndefined();
-		expect(
-			Number.isNaN(
-				new Date(result.searchShape.startPublishedDate ?? "").getTime(),
-			),
-		).toBe(false);
+		const prompt = userContent(gateway.calls[0]);
+		expect(prompt).toContain("vertical dental software");
+		expect(prompt).toContain("developer tooling");
 	});
 });
 
@@ -332,58 +296,37 @@ describe("synthesize: prompt drift and retries", () => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("keeps every core scoping term in the round-2 prompt after reject reasons are added", async () => {
+	it("keeps the whole profile in the round-2 prompt after reject reasons are added", async () => {
 		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					query: "round-1",
-					systemPrompt: "s",
-					searchShape: companyShape,
-				}),
-			),
-			chatCompletionResponse(
-				objectReply({
-					query: "round-2",
-					systemPrompt: "s",
-					searchShape: companyShape,
-				}),
-			),
+			chatCompletionResponse(planReply({ query: "round-1" })),
+			chatCompletionResponse(planReply({ query: "round-2" })),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await synthesize(icp, [], env);
-		await synthesize(
-			icp,
-			["stale evidence", "already seen", "no grounding"],
-			env,
-		);
+		await runSynthesize();
+		await runSynthesize(["angle-1"], ["already seen", "headcount too high"]);
 
 		const roundOnePrompt = userContent(gateway.calls[0]);
 		const roundTwoPrompt = userContent(gateway.calls[1]);
 		expect(roundTwoPrompt).not.toBe(roundOnePrompt);
-		for (const term of ["fintech", "seed", "San Francisco"]) {
-			expect(roundTwoPrompt).toContain(term);
-		}
+		expect(roundTwoPrompt).toContain(icp.description);
+		expect(roundTwoPrompt).toContain("headcount too high");
 	});
 
 	it("retries once after a schema failure and returns the retry's result", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
 			chatCompletionResponse(
-				objectReply({
-					query: "retry-query",
-					systemPrompt: "retry-prompt",
-					searchShape: companyShape,
-				}),
+				planReply({ query: "retry-query", angle: "retry-angle" }),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
+		const result = await runSynthesize();
 
 		expect(gateway.calls).toHaveLength(2);
-		expect(result.query).toBe("retry-query");
-		expect(result.systemPrompt).toBe("retry-prompt");
+		expect(result.plan.query).toBe("retry-query");
+		expect(result.plan.angle).toBe("retry-angle");
 	});
 
 	it("falls back to a template query after two consecutive failures, without throwing", async () => {
@@ -393,12 +336,11 @@ describe("synthesize: prompt drift and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(icp, [], env);
+		const result = await runSynthesize();
 
 		expect(gateway.calls).toHaveLength(2);
-		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
-		expect(result.query).toContain("fintech");
-		expect(result.query).toContain("seed");
-		expect(result.query).toContain("San Francisco");
+		expect(result.plan.query).toBe(icp.description);
+		expect(result.plan.maxWorkforce).toBeNull();
+		expect(result.plan.countries).toEqual([]);
 	});
 });

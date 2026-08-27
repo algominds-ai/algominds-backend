@@ -1,3 +1,4 @@
+import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import type {
@@ -9,25 +10,25 @@ import type {
 } from "@/core/gate";
 import type { JudgeResult, Verdict } from "@/core/judge";
 import type {
+	CompanyEntity,
 	ExaResult,
 	ExaSearchRequest,
 	ExaSearchResult,
 } from "@/core/providers/exa";
-import type { IcpDoc, SearchShape, SynthesizeResult } from "@/core/synthesize";
+import type {
+	IcpDoc,
+	SearchPlan,
+	SynthesizeInput,
+	SynthesizeResult,
+} from "@/core/synthesize";
 
-const MAX_ROUNDS = 3;
-const RESULTS_PER_ROUND = 5;
-const SEEN_DOMAINS_WINDOW_DAYS = 90;
-const DEFAULT_FRESHNESS_DAYS = 90;
-const DEFAULT_SCORE_FLOOR = 0.5;
-
-const SUMMARY_PROPERTIES: Record<string, { type: "string" }> = {
-	name: { type: "string" },
-	domain: { type: "string" },
-	linkedinUrl: { type: "string" },
-	signal: { type: "string" },
-	evidenceDate: { type: "string" },
-};
+const {
+	maxRounds: MAX_ROUNDS,
+	resultsPerRound: RESULTS_PER_ROUND,
+	judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE,
+	descriptionChars: DESCRIPTION_CHARS,
+	seenDomainsWindowDays: SEEN_DOMAINS_WINDOW_DAYS,
+} = config.companies;
 
 export type FindCompaniesOptions = {
 	icpId: string;
@@ -39,11 +40,7 @@ export type FindCompaniesOptions = {
 
 export type FindCompaniesDeps = {
 	recentDomains: (env: Env, icpId: string, days: number) => Promise<string[]>;
-	synthesize: (
-		icp: IcpDoc,
-		feedback: readonly string[],
-		env: Env,
-	) => Promise<SynthesizeResult>;
+	synthesize: (input: SynthesizeInput, env: Env) => Promise<SynthesizeResult>;
 	search: (
 		req: ExaSearchRequest,
 		env: Env,
@@ -63,17 +60,10 @@ export type FindCompaniesDeps = {
 
 export type FindCompaniesStatus = "complete" | "short" | "exhausted";
 
-/** What the synthesizer decided this round: the exact Exa query, the extraction instruction, and the filter shape. */
-export type SearchPlan = {
-	query: string;
-	extractionPrompt: string;
-	shape: SearchShape;
-};
-
 export type FindCompaniesReject = {
 	domain: string | null;
 	reason: string;
-	stage: "gate" | "judge";
+	stage: "filter" | "gate" | "judge";
 };
 
 export type FindCompaniesResult = {
@@ -87,89 +77,102 @@ export type FindCompaniesResult = {
 	searches: SearchPlan[];
 };
 
-type CompanySummarySchema = {
-	type: "object";
-	description: string;
-	properties: Record<string, { type: "string" }>;
-	required: string[];
-};
-
-/** The JSON schema Exa fills per result. Only `name` and `domain` are required; every other field can come back null rather than invented. */
-function companySummarySchema(systemPrompt: string): CompanySummarySchema {
+function buildSearchRequest(plan: SearchPlan): ExaSearchRequest {
 	return {
-		type: "object",
-		description: systemPrompt,
-		properties: SUMMARY_PROPERTIES,
-		required: ["name", "domain"],
-	};
-}
-
-function buildSearchRequest(
-	query: string,
-	systemPrompt: string,
-	shape: SearchShape,
-): ExaSearchRequest {
-	return {
-		query,
+		query: plan.query,
+		category: "company",
 		numResults: RESULTS_PER_ROUND,
-		...shape,
-		contents: { summary: { schema: companySummarySchema(systemPrompt) } },
+		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
 	};
 }
 
-type SummaryValue = NonNullable<ExaResult["summary"]>;
-
-function isSummaryObject(
-	value: ExaResult["summary"],
-): value is { [key: string]: SummaryValue } {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
+function describeCompany(entity: CompanyEntity): string {
+	const facts: string[] = [];
+	if (entity.workforceTotal !== null)
+		facts.push(`headcount ${entity.workforceTotal}`);
+	if (entity.country !== null)
+		facts.push(`${entity.city ? `${entity.city}, ` : ""}${entity.country}`);
+	if (entity.foundedYear !== null) facts.push(`founded ${entity.foundedYear}`);
+	if (entity.revenueAnnual !== null)
+		facts.push(`annual revenue ${entity.revenueAnnual} USD`);
+	if (entity.fundingTotal !== null)
+		facts.push(`funding raised ${entity.fundingTotal} USD`);
+	const description = (entity.description ?? "").slice(0, DESCRIPTION_CHARS);
+	return [facts.join("; "), description].filter(Boolean).join(". ");
 }
 
-function summaryField(
-	summary: ExaResult["summary"],
-	key: string,
-): string | null {
-	if (!isSummaryObject(summary)) return null;
-	const value = summary[key];
-	return typeof value === "string" && value.trim().length > 0 ? value : null;
-}
-
-function toCompanyRow(result: ExaResult): CompanyRow {
+function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 	return {
-		name: summaryField(result.summary, "name"),
-		domain: summaryField(result.summary, "domain"),
-		linkedinUrl: summaryField(result.summary, "linkedinUrl"),
+		name: entity.name ?? result.title,
+		domain: normalizeDomain(result.url),
+		linkedinUrl: null,
 		evidenceUrl: result.url,
-		signal: summaryField(result.summary, "signal"),
-		evidenceDate:
-			result.publishedDate ??
-			summaryField(result.summary, "evidenceDate") ??
-			null,
+		signal: describeCompany(entity) || null,
+		evidenceDate: result.publishedDate ?? null,
 	};
 }
 
 function toSearchResult(result: ExaResult): SearchResult {
 	return {
-		...(result.publishedDate !== undefined
-			? { publishedDate: result.publishedDate }
-			: {}),
 		...(result.score !== undefined ? { score: result.score } : {}),
 	};
 }
 
-/**
- * Turns Exa's raw results into gate input: one `CompanyRow` per result plus
- * the vendor's own `publishedDate`, at the same index. `ExaResult` carries no
- * `score` yet, so the gate's score check stays inactive until it does.
- */
-function toRowsAndResults(results: readonly ExaResult[]): {
+function entityRejectReason(
+	entity: CompanyEntity,
+	plan: SearchPlan,
+): string | null {
+	const { country } = entity;
+	if (plan.countries.length > 0 && country !== null) {
+		const allowed = plan.countries.some(
+			(name) => name.toLowerCase() === country.toLowerCase(),
+		);
+		if (!allowed) return `headquarters in ${country}`;
+	}
+	const staff = entity.workforceTotal;
+	if (staff === null) return null;
+	if (plan.maxWorkforce !== null && staff > plan.maxWorkforce)
+		return `headcount ${staff} above the limit of ${plan.maxWorkforce}`;
+	if (plan.minWorkforce !== null && staff < plan.minWorkforce)
+		return `headcount ${staff} below the floor of ${plan.minWorkforce}`;
+	return null;
+}
+
+type FilterOutcome = {
 	rows: CompanyRow[];
 	results: SearchResult[];
-} {
-	return {
-		rows: results.map(toCompanyRow),
-		results: results.map(toSearchResult),
-	};
+	rejects: FindCompaniesReject[];
+};
+
+/** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
+function filterEntities(
+	results: readonly ExaResult[],
+	plan: SearchPlan,
+): FilterOutcome {
+	const outcome: FilterOutcome = { rows: [], results: [], rejects: [] };
+	for (const result of results) {
+		const entity = result.company;
+		if (!entity) {
+			outcome.rejects.push({
+				domain: normalizeDomain(result.url),
+				reason: "no company record in the result",
+				stage: "filter",
+			});
+			continue;
+		}
+		const reason = entityRejectReason(entity, plan);
+		if (reason) {
+			outcome.rejects.push({
+				domain: normalizeDomain(result.url),
+				reason,
+				stage: "filter",
+			});
+			continue;
+		}
+		outcome.rows.push(toCompanyRow(result, entity));
+		outcome.results.push(toSearchResult(result));
+	}
+	return outcome;
 }
 
 function rowDomain(row: CompanyRow): string | null {
@@ -234,12 +237,15 @@ function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
 
 type RoundContext = {
 	icp: IcpDoc;
+	count: number;
+	pastAngles: readonly string[];
 	feedback: readonly string[];
 	seenDomains: ReadonlySet<string>;
 };
 
 type RoundOutcome = {
 	plan: SearchPlan;
+	filterRejects: FindCompaniesReject[];
 	rows: CompanyRow[];
 	gateRejects: Reject[];
 	keptRows: CompanyRow[];
@@ -253,35 +259,33 @@ async function runRound(
 	opts: FindCompaniesOptions,
 	deps: FindCompaniesDeps,
 ): Promise<RoundOutcome> {
-	const synthesized = await deps.synthesize(ctx.icp, ctx.feedback, opts.env);
-	const searchLedger = new CostLedger();
-	const request = buildSearchRequest(
-		synthesized.query,
-		synthesized.systemPrompt,
-		synthesized.searchShape,
+	const synthesized = await deps.synthesize(
+		{ icp: ctx.icp, pastAngles: ctx.pastAngles, feedback: ctx.feedback },
+		opts.env,
 	);
-	const searched = await deps.search(request, opts.env, searchLedger);
-	const { rows, results } = toRowsAndResults(searched.results);
-	const unseenCount = countUnseen(rows, ctx.seenDomains);
-	const gated = deps.gate(rows, results, {
-		freshnessDays: opts.freshnessDays ?? DEFAULT_FRESHNESS_DAYS,
+	const plan = synthesized.plan;
+	const searchLedger = new CostLedger();
+	const searched = await deps.search(
+		buildSearchRequest(plan),
+		opts.env,
+		searchLedger,
+	);
+	const filtered = filterEntities(searched.results, plan);
+	const unseenCount = countUnseen(filtered.rows, ctx.seenDomains);
+	const gated = deps.gate(filtered.rows, filtered.results, {
 		seenDomains: ctx.seenDomains,
-		scoreFloor: opts.scoreFloor ?? DEFAULT_SCORE_FLOOR,
-		query: synthesized.query,
 	});
+	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
 	const judged =
-		gated.kept.length > 0
-			? await deps.judge(ctx.icp, gated.kept, opts.env)
+		candidates.length > 0
+			? await deps.judge(ctx.icp, candidates, opts.env)
 			: { verdicts: [], ledger: new CostLedger() };
 	return {
-		plan: {
-			query: synthesized.query,
-			extractionPrompt: synthesized.systemPrompt,
-			shape: synthesized.searchShape,
-		},
-		rows,
+		plan,
+		rows: filtered.rows,
+		filterRejects: filtered.rejects,
 		gateRejects: gated.rejects,
-		keptRows: gated.kept,
+		keptRows: candidates,
 		verdicts: judged.verdicts,
 		unseenCount,
 		ledger: CostLedger.merge(synthesized.ledger, searchLedger, judged.ledger),
@@ -308,6 +312,7 @@ async function runRounds(
 	const rejects: FindCompaniesReject[] = [];
 	const ledgers: CostLedger[] = [];
 	const searches: SearchPlan[] = [];
+	const pastAngles: string[] = [];
 	const maxRounds = opts.maxRounds ?? MAX_ROUNDS;
 	let feedback: string[] = [];
 	let status: FindCompaniesStatus = "short";
@@ -316,12 +321,19 @@ async function runRounds(
 	for (let round = 0; round < maxRounds; round++) {
 		rounds += 1;
 		const outcome = await runRound(
-			{ icp: input.icp, feedback, seenDomains: input.seenDomains },
+			{
+				icp: input.icp,
+				count: input.count,
+				pastAngles,
+				feedback,
+				seenDomains: input.seenDomains,
+			},
 			opts,
 			deps,
 		);
 		ledgers.push(outcome.ledger);
 		searches.push(outcome.plan);
+		pastAngles.push(outcome.plan.angle);
 		for (const domain of collectDomains(outcome.rows))
 			input.seenDomains.add(domain);
 
@@ -330,7 +342,11 @@ async function runRounds(
 			outcome.keptRows,
 			outcome.verdicts,
 		);
-		const roundRejects = [...gateRejects, ...judgeRejects];
+		const roundRejects = [
+			...outcome.filterRejects,
+			...gateRejects,
+			...judgeRejects,
+		];
 		rejects.push(...roundRejects);
 		companies.push(...accepted);
 		feedback = buildFeedback(roundRejects);

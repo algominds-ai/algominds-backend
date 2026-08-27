@@ -19,17 +19,26 @@ const EXA_CATEGORIES = [
 	"linkedin profile",
 ] as const;
 
+const EXA_SEARCH_TYPES = [
+	"instant",
+	"fast",
+	"auto",
+	"deep-lite",
+	"deep",
+	"deep-reasoning",
+] as const;
+
 const ExaSearchRequestSchema = z.object({
 	query: z.string(),
-	numResults: z.number().int().positive().optional(),
-	type: z.enum(["neural", "keyword", "auto"]).optional(),
+	numResults: z.number().int().min(1).max(100).optional(),
+	type: z.enum(EXA_SEARCH_TYPES).optional(),
 	category: z.enum(EXA_CATEGORIES).optional(),
+	userLocation: z.string().length(2).optional(),
 	startPublishedDate: z.string().optional(),
-	startCrawlDate: z.string().optional(),
-	includeDomains: z.array(z.string()).optional(),
-	excludeDomains: z.array(z.string()).optional(),
-	includeText: z.array(z.string()).optional(),
-	excludeText: z.array(z.string()).optional(),
+	endPublishedDate: z.string().optional(),
+	includeDomains: z.array(z.string()).max(1200).optional(),
+	excludeDomains: z.array(z.string()).max(1200).optional(),
+	systemPrompt: z.string().optional(),
 	contents: z
 		.object({
 			text: z.boolean().optional(),
@@ -43,16 +52,24 @@ export type ExaSearchRequest = z.input<typeof ExaSearchRequestSchema>;
 
 type ValidatedRequest = z.infer<typeof ExaSearchRequestSchema>;
 
-const DATE_FILTER_FIELDS = ["startPublishedDate", "startCrawlDate"] as const;
+const ENTITY_INDEX_CATEGORIES = ["company", "people"];
 
-function rejectCompanyDateFilter(req: ValidatedRequest): void {
-	if (req.category !== "company") return;
-	const present = DATE_FILTER_FIELDS.filter(
+const ENTITY_INDEX_UNSUPPORTED = [
+	"startPublishedDate",
+	"endPublishedDate",
+	"excludeDomains",
+] as const;
+
+function rejectEntityIndexFilters(req: ValidatedRequest): void {
+	const category = req.category;
+	if (category === undefined) return;
+	if (!ENTITY_INDEX_CATEGORIES.includes(category)) return;
+	const present = ENTITY_INDEX_UNSUPPORTED.filter(
 		(field) => req[field] !== undefined,
 	);
 	if (present.length === 0) return;
 	throw new NonRetryableError(
-		`Exa: category "company" cannot combine with ${present.join(" or ")}; the company category only supports semantic search without date filters.`,
+		`Exa: category "${category}" does not support ${present.join(" or ")}; the company and people categories use dedicated indices that only support semantic search.`,
 	);
 }
 
@@ -76,6 +93,27 @@ function flattenCost(rest: Omit<ExaCost, "total">): Record<string, number> {
 	return flat;
 }
 
+const CompanyPropertiesSchema = z.object({
+	name: z.string().nullish(),
+	description: z.string().nullish(),
+	foundedYear: z.number().nullish(),
+	workforce: z.object({ total: z.number().nullish() }).nullish(),
+	headquarters: z
+		.object({ city: z.string().nullish(), country: z.string().nullish() })
+		.nullish(),
+	financials: z
+		.object({
+			revenueAnnual: z.number().nullish(),
+			fundingTotal: z.number().nullish(),
+		})
+		.nullish(),
+});
+
+const EntitySchema = z.object({
+	type: z.string(),
+	properties: CompanyPropertiesSchema,
+});
+
 const ExaResultSchema = z.object({
 	url: z.string(),
 	title: z.string(),
@@ -83,6 +121,7 @@ const ExaResultSchema = z.object({
 	score: z.number().optional(),
 	text: z.string().optional(),
 	summary: z.string().optional(),
+	entities: z.array(EntitySchema).optional(),
 });
 
 const ExaResponseSchema = z.object({
@@ -97,6 +136,18 @@ const ExaErrorSchema = z.object({
 	message: z.string().optional(),
 });
 
+/** The structured company record Exa returns for `category: "company"`. Every field can be absent; see `docs/solutions/exa-search-contract.md` for the measured fill rates. */
+export type CompanyEntity = {
+	name: string | null;
+	description: string | null;
+	foundedYear: number | null;
+	workforceTotal: number | null;
+	city: string | null;
+	country: string | null;
+	revenueAnnual: number | null;
+	fundingTotal: number | null;
+};
+
 export type ExaResult = {
 	url: string;
 	title: string;
@@ -104,6 +155,7 @@ export type ExaResult = {
 	score?: number;
 	text?: string;
 	summary: Json | null;
+	company: CompanyEntity | null;
 };
 
 export type ExaSearchResult = {
@@ -120,8 +172,27 @@ function parseSummary(raw: string | undefined): Json | null {
 	}
 }
 
+function toCompanyEntity(
+	entities: z.infer<typeof ExaResultSchema>["entities"],
+): CompanyEntity | null {
+	const found = entities?.find((entity) => entity.type === "company");
+	if (!found) return null;
+	const p = found.properties;
+	return {
+		name: p.name ?? null,
+		description: p.description ?? null,
+		foundedYear: p.foundedYear ?? null,
+		workforceTotal: p.workforce?.total ?? null,
+		city: p.headquarters?.city ?? null,
+		country: p.headquarters?.country ?? null,
+		revenueAnnual: p.financials?.revenueAnnual ?? null,
+		fundingTotal: p.financials?.fundingTotal ?? null,
+	};
+}
+
 function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
 	return {
+		company: toCompanyEntity(raw.entities),
 		url: raw.url,
 		title: raw.title,
 		...(raw.publishedDate !== undefined
@@ -178,7 +249,7 @@ export async function search(
 	ledger: CostLedger,
 ): Promise<ExaSearchResult> {
 	const validated = ExaSearchRequestSchema.parse(req);
-	rejectCompanyDateFilter(validated);
+	rejectEntityIndexFilters(validated);
 	const apiKey = await env.EXA_API_KEY.get();
 	const response = await fetch("https://api.exa.ai/search", {
 		method: "POST",

@@ -158,7 +158,7 @@ function buildPersonSearchRequest(
 	return {
 		query: `${titles.join(" OR ")} at ${company.name}`,
 		numResults: RESULTS_PER_COMPANY,
-		type: "keyword",
+		type: "fast",
 		category: "linkedin profile",
 		contents: { summary: { schema: personSummarySchema() } },
 	};

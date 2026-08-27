@@ -60,7 +60,7 @@ function personResult(
 	if (fields.currentTitle) summary.currentTitle = fields.currentTitle;
 	if (fields.currentCompany) summary.currentCompany = fields.currentCompany;
 	if (fields.location) summary.location = fields.location;
-	return { url, title: fields.fullName ?? "profile", summary };
+	return { url, title: fields.fullName ?? "profile", summary, company: null };
 }
 
 function scriptedSearch(perCall: ExaResult[][]): {

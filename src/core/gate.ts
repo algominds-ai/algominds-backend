@@ -24,13 +24,7 @@ const REQUIRED_FIELDS: readonly CompanyField[] = [
 	"evidenceUrl",
 ];
 
-export type RejectReason =
-	| "missing-required"
-	| "echoes-query"
-	| "low-score"
-	| "stale-evidence"
-	| "bad-date"
-	| "already-seen";
+export type RejectReason = "missing-required" | "already-seen";
 
 export type Reject = {
 	index: number;
@@ -38,10 +32,7 @@ export type Reject = {
 };
 
 export type GateOptions = {
-	freshnessDays: number;
 	seenDomains: ReadonlySet<string>;
-	scoreFloor: number;
-	query?: string;
 };
 
 export type GateResult = {
@@ -49,63 +40,27 @@ export type GateResult = {
 	rejects: Reject[];
 };
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
 function missingRequiredField(row: CompanyRow): boolean {
 	return REQUIRED_FIELDS.some((field) => row[field] === null);
 }
 
-function normalizeText(value: string): string {
-	return value.trim().toLowerCase();
-}
-
-function echoesQuery(row: CompanyRow, query: string | undefined): boolean {
-	if (query === undefined) return false;
-	const target = normalizeText(query);
-	return FIELD_NAMES.some((field) => {
-		const value = row[field];
-		return value !== null && normalizeText(value) === target;
-	});
-}
-
-function dateRejectReason(
-	evidenceDate: string | null,
-	freshnessDays: number,
-): RejectReason | null {
-	if (evidenceDate === null) return null;
-	const parsed = new Date(evidenceDate);
-	if (Number.isNaN(parsed.getTime())) return "bad-date";
-	const cutoff = Date.now() - freshnessDays * MS_PER_DAY;
-	return parsed.getTime() < cutoff ? "stale-evidence" : null;
-}
-
-function rejectReason(
-	row: CompanyRow,
-	result: SearchResult | undefined,
-	opts: GateOptions,
-): RejectReason | null {
+function rejectReason(row: CompanyRow, opts: GateOptions): RejectReason | null {
 	if (missingRequiredField(row)) return "missing-required";
-	if (echoesQuery(row, opts.query)) return "echoes-query";
-	const score = result?.score;
-	if (score !== undefined && score < opts.scoreFloor) return "low-score";
-	const evidenceDate = result?.publishedDate ?? row.evidenceDate;
-	const dateReason = dateRejectReason(evidenceDate, opts.freshnessDays);
-	if (dateReason) return dateReason;
 	const domain = row.domain;
 	if (domain === null) return "missing-required";
 	return opts.seenDomains.has(normalizeDomain(domain)) ? "already-seen" : null;
 }
 
-/** Drops a row for a missing required field, a field that echoes the search query, a below-floor score, stale or malformed evidence, or an already-seen domain. */
+/** Drops a row for a missing required field or an already-seen domain. Fit against the profile is the judge's decision, not this function's. */
 export function gate(
 	rows: readonly CompanyRow[],
-	results: readonly SearchResult[],
+	_results: readonly SearchResult[],
 	opts: GateOptions,
 ): GateResult {
 	const kept: CompanyRow[] = [];
 	const rejects: Reject[] = [];
 	rows.forEach((row, index) => {
-		const reason = rejectReason(row, results[index], opts);
+		const reason = rejectReason(row, opts);
 		if (reason) rejects.push({ index, reason });
 		else kept.push(row);
 	});
