@@ -179,9 +179,11 @@ rows with a limit and a cursor.
 cherry-picked fields and discard the description, founded year, web traffic,
 financials, city, country, and workforce that we already paid for.
 
-No new column. The shape becomes `{ provider, entity, result }` — the vendor's
-own object stored verbatim under `entity`, keyed by `provider` so a second
-vendor sits beside it. `evidence` is unchanged: it stays the asserted-fact
+No new column. The shape becomes `{ provider, entity, result }`: `entity` holds
+the vendor's own object verbatim, `result` holds the fields that describe the
+match rather than the company — url, title, published date, and relevance score
+— and `provider` names which vendor produced both, so a second vendor sits
+beside the first instead of overwriting it. `evidence` is unchanged: it stays the asserted-fact
 table, append-only; `data` is the raw capture.
 
 ### KTD8. Tests get their own database
@@ -458,7 +460,7 @@ matching the reported cost, gate green.
 
 **Requirements.** R8, R9, R14.
 
-**Dependencies.** U6.
+**Dependencies.** U3, U6.
 
 **Files.** `src/config.ts`, `src/core/companies.ts`, `src/core/people.ts`,
 `src/workflows/find-companies.ts`, `src/workflows/find-people.ts`,
@@ -555,7 +557,7 @@ previous run discarded, gate green.
 
 **Requirements.** R4, R5.
 
-**Dependencies.** U5.
+**Dependencies.** U3, U5.
 
 **Files.** `src/routes.ts`, `src/workflows/find-people.ts`,
 `src/core/people.ts`, `test/routes.spec.ts`, `test/people.spec.ts`.
@@ -633,7 +635,7 @@ page, gate green.
 
 **Requirements.** R13.
 
-**Dependencies.** U8, U11.
+**Dependencies.** U7, U8, U11.
 
 **Files.** `test/exa-request-contract.spec.ts` (new),
 `test/model.spec.ts` (new), `test/find-companies.workflow.spec.ts` (new),
