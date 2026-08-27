@@ -20,8 +20,16 @@
 	//   wrangler hyperdrive create algo-cached --connection-string="postgres://…"
 	//   wrangler hyperdrive create algo-direct  --connection-string="postgres://…" --caching-disabled
 	"hyperdrive": [
-		{ "binding": "HYPERDRIVE_CACHED", "id": "<algo-cached-id>" },
-		{ "binding": "HYPERDRIVE_DIRECT", "id": "<algo-direct-id>" }
+		{
+			"binding": "HYPERDRIVE_CACHED",
+			"id": "<algo-cached-id>",
+			"localConnectionString": "postgresql://postgres:postgres@localhost:5432/algo"
+		},
+		{
+			"binding": "HYPERDRIVE_DIRECT",
+			"id": "<algo-direct-id>",
+			"localConnectionString": "postgresql://postgres:postgres@localhost:5432/algo"
+		}
 	],
 
 	"workflows": [
@@ -38,12 +46,47 @@
 		{ "binding": "ENRICH", "name": "enrich", "class_name": "EnrichWorkflow" }
 	],
 
+	// Non-secret configuration. Real values live in .env for local dev.
+	"vars": {
+		"CF_ACCOUNT_ID": "558c97456d4a969cb82bee23d2054613",
+		"CF_GATEWAY_ID": "",
+		"AI_GATEWAY_BASE_URL": "",
+		"MODEL_ROUTE_REASONING": "",
+		"MODEL_ROUTE_WORKER": ""
+	},
+
+	// Production secrets. Local dev reads the same names from .env / .dev.vars.
 	// Create with: wrangler secrets-store secret create <store> --name <NAME> --scopes workers
 	"secrets_store_secrets": [
-		{ "binding": "EXA_API_KEY", "store_id": "<store-id>", "secret_name": "exa-api-key" },
-		{ "binding": "APOLLO_API_KEY", "store_id": "<store-id>", "secret_name": "apollo-api-key" },
-		{ "binding": "BRIGHTDATA_TOKEN", "store_id": "<store-id>", "secret_name": "brightdata-token" },
-		{ "binding": "AI_GATEWAY_TOKEN", "store_id": "<store-id>", "secret_name": "ai-gateway-token" },
-		{ "binding": "API_BEARER_TOKEN", "store_id": "<store-id>", "secret_name": "api-bearer-token" }
+		{
+			"binding": "EXA_API_KEY",
+			"store_id": "<store-id>",
+			"secret_name": "exa-api-key"
+		},
+		{
+			"binding": "APOLLO_API_KEY",
+			"store_id": "<store-id>",
+			"secret_name": "apollo-api-key"
+		},
+		{
+			"binding": "BRIGHTDATA_API_TOKEN",
+			"store_id": "<store-id>",
+			"secret_name": "brightdata-api-token"
+		},
+		{
+			"binding": "CF_AIG_TOKEN",
+			"store_id": "<store-id>",
+			"secret_name": "cf-aig-token"
+		},
+		{
+			"binding": "OPENROUTER_API_KEY",
+			"store_id": "<store-id>",
+			"secret_name": "openrouter-api-key"
+		},
+		{
+			"binding": "API_BEARER_TOKEN",
+			"store_id": "<store-id>",
+			"secret_name": "api-bearer-token"
+		}
 	]
 }

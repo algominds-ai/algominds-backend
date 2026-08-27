@@ -4,7 +4,11 @@
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"lib": ["ES2022"],
-		"types": ["@cloudflare/workers-types", "vitest/globals"],
+		"types": [
+			"@cloudflare/workers-types",
+			"@cloudflare/vitest-plugin/types",
+			"vitest/globals"
+		],
 		"strict": true,
 		"noUncheckedIndexedAccess": true,
 		"exactOptionalPropertyTypes": true,
@@ -13,8 +17,7 @@
 		"skipLibCheck": true,
 		"noEmit": true,
 		"isolatedModules": true,
-		"baseUrl": ".",
-		"paths": { "@/*": ["src/*"] }
+		"paths": { "@/*": ["./src/*"] }
 	},
 	"include": ["src/**/*.ts", "test/**/*.ts", "build/**/*.ts", "*.ts"]
 }

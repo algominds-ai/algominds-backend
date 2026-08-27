@@ -41,7 +41,7 @@
 						"patterns": [
 							{
 								"group": ["./*", "../*"],
-								"message": "Use @/* imports — relative paths are forbidden."
+								"message": "Use @/* imports \u2014 relative paths are forbidden."
 							}
 						]
 					}
@@ -50,6 +50,18 @@
 		}
 	},
 	"overrides": [
+		{
+			"includes": ["worker-configuration.d.ts", "drizzle/**"],
+			"formatter": {
+				"enabled": false
+			},
+			"linter": {
+				"enabled": false
+			},
+			"assist": {
+				"enabled": false
+			}
+		},
 		{
 			"includes": ["test/**"],
 			"linter": {
