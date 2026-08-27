@@ -110,13 +110,7 @@ export type FindPeopleResult = {
 };
 
 function titlesPrompt(icp: IcpDoc): string {
-	const lines = [
-		`Industry: ${icp.industry}`,
-		`Stage: ${icp.stage}`,
-		`Geography: ${icp.geography}`,
-	];
-	if (icp.product) lines.push(`Product: ${icp.product}`);
-	return lines.join("\n");
+	return [`Ideal customer profile:`, icp.description].join("\n");
 }
 
 /**

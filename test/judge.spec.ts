@@ -14,9 +14,8 @@ const env: Env = {
 };
 
 const icp: IcpDoc = {
-	industry: "fintech",
-	stage: "seed",
-	geography: "United States",
+	description:
+		"fintech companies at seed stage in San Francisco with a small team",
 };
 
 function row(name: string, domain: string): CompanyRow {

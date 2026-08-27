@@ -12,9 +12,8 @@ import type { ExaResult, ExaSearchRequest } from "../src/core/providers/exa";
 import type { IcpDoc } from "../src/core/synthesize";
 
 const icp: IcpDoc = {
-	industry: "fintech",
-	stage: "seed",
-	geography: "United States",
+	description:
+		"fintech companies at seed stage in San Francisco with a small team",
 };
 
 function rawResult(
@@ -71,7 +70,7 @@ function scriptedSynthesize() {
 		ledger.reported("worker-model", "synthesize", 0.001);
 		const suffix = feedback.length > 0 ? ` round-${feedbacks.length}` : "";
 		return {
-			query: `${icpDoc.industry} ${icpDoc.stage} ${icpDoc.geography}${suffix}`,
+			query: `${icpDoc.description}${suffix}`,
 			systemPrompt: "extract company fields",
 			searchShape: { type: "neural" },
 			ledger,
@@ -212,7 +211,7 @@ describe("findCompanies — the gate outranks the count", () => {
 	});
 
 	it("rejects a row whose signal echoes the search query, proving the query reaches the gate", async () => {
-		const query = "fintech seed United States";
+		const query = icp.description;
 		const { search } = scriptedSearch([
 			[goodResult("echo.com", { signal: query }), goodResult("clean.com")],
 		]);
@@ -258,9 +257,9 @@ describe("findCompanies — round-to-round behaviour", () => {
 		const [first, second] = calls;
 		expect(first?.query).not.toBe(second?.query);
 		for (const call of calls) {
-			expect(call.query).toContain(icp.industry);
-			expect(call.query).toContain(icp.stage);
-			expect(call.query).toContain(icp.geography);
+			expect(call.query).toContain("fintech");
+			expect(call.query).toContain("seed");
+			expect(call.query).toContain("San Francisco");
 		}
 	});
 

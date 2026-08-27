@@ -13,9 +13,8 @@ const env: Env = {
 };
 
 const icp: IcpDoc = {
-	industry: "fintech",
-	stage: "seed",
-	geography: "United States",
+	description:
+		"fintech companies at seed stage in San Francisco with a small team",
 };
 
 type CapturedRequest = { url: string; headers: Headers; body: unknown };
@@ -359,7 +358,7 @@ describe("synthesize: prompt drift and retries", () => {
 		const roundOnePrompt = userContent(gateway.calls[0]);
 		const roundTwoPrompt = userContent(gateway.calls[1]);
 		expect(roundTwoPrompt).not.toBe(roundOnePrompt);
-		for (const term of [icp.industry, icp.stage, icp.geography]) {
+		for (const term of ["fintech", "seed", "San Francisco"]) {
 			expect(roundTwoPrompt).toContain(term);
 		}
 	});
@@ -395,8 +394,8 @@ describe("synthesize: prompt drift and retries", () => {
 
 		expect(gateway.calls).toHaveLength(2);
 		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
-		expect(result.query).toContain(icp.industry);
-		expect(result.query).toContain(icp.stage);
-		expect(result.query).toContain(icp.geography);
+		expect(result.query).toContain("fintech");
+		expect(result.query).toContain("seed");
+		expect(result.query).toContain("San Francisco");
 	});
 });

@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono";
 import { Hono } from "hono";
 import { z } from "zod";
+import { createIcp } from "@/core/db/queries";
 
 type ApiEnv = { Bindings: Env };
 
@@ -47,25 +48,45 @@ async function requireBearerToken(
 	return undefined;
 }
 
-const companiesFindSchema = z.object({
-	icpId: z.uuid(),
-	count: z.number().int().positive(),
-});
+const SELLER_DOMAIN = "algominds.ai";
 
-const peopleFindSchema = z.object({
-	icpId: z.uuid(),
-	maxCompanies: z.number().int().positive().max(100).optional(),
-});
+const icpRef = z.union([
+	z.object({ icpId: z.uuid() }),
+	z.object({ prompt: z.string().min(1) }),
+]);
+
+const companiesFindSchema = z.intersection(
+	icpRef,
+	z.object({ count: z.number().int().positive() }),
+);
+
+const peopleFindSchema = z.intersection(
+	icpRef,
+	z.object({
+		maxCompanies: z.number().int().positive().max(100).optional(),
+	}),
+);
 
 const enrichSchema = z.object({
 	runId: z.string(),
 	channels: z.array(z.enum(["email", "linkedin"])).min(1),
 });
 
+type IcpRef = z.infer<typeof icpRef>;
+
+/** Uses the given ICP, or stores the free-text prompt as a new one. */
+async function resolveIcpId(env: Env, body: IcpRef): Promise<string> {
+	if ("icpId" in body) return body.icpId;
+	const row = await createIcp(env, body.prompt, SELLER_DOMAIN);
+	return row.id;
+}
+
+type Job = { scopeId: string; params: unknown; icpId?: string };
+
 type JobConfig<Body> = {
 	capability: Capability;
 	workflow: Workflow<unknown>;
-	scopeId: (body: Body) => string;
+	toJob: (body: Body, env: Env) => Promise<Job>;
 };
 
 async function startJob<Body>(
@@ -78,9 +99,10 @@ async function startJob<Body>(
 	if (!parsed.success) {
 		return c.json({ issues: parsed.error.issues }, 400);
 	}
-	const runId = buildRunId(config.capability, config.scopeId(parsed.data));
-	await config.workflow.createBatch([{ id: runId, params: parsed.data }]);
-	return c.json({ runId }, 202);
+	const job = await config.toJob(parsed.data, c.env);
+	const runId = buildRunId(config.capability, job.scopeId);
+	await config.workflow.createBatch([{ id: runId, params: job.params }]);
+	return c.json({ runId, icpId: job.icpId }, 202);
 }
 
 function workflowForCapability(
@@ -117,7 +139,10 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, companiesFindSchema, {
 			capability: "companies",
 			workflow: c.env.FIND_COMPANIES,
-			scopeId: (body) => body.icpId,
+			toJob: async (body, env) => {
+				const icpId = await resolveIcpId(env, body);
+				return { scopeId: icpId, icpId, params: { icpId, count: body.count } };
+			},
 		}),
 	);
 
@@ -125,7 +150,14 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, peopleFindSchema, {
 			capability: "people",
 			workflow: c.env.FIND_PEOPLE,
-			scopeId: (body) => body.icpId,
+			toJob: async (body, env) => {
+				const icpId = await resolveIcpId(env, body);
+				return {
+					scopeId: icpId,
+					icpId,
+					params: { icpId, maxCompanies: body.maxCompanies },
+				};
+			},
 		}),
 	);
 
@@ -133,7 +165,7 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, enrichSchema, {
 			capability: "enrich",
 			workflow: c.env.ENRICH,
-			scopeId: (body) => body.runId,
+			toJob: async (body) => ({ scopeId: body.runId, params: body }),
 		}),
 	);
 

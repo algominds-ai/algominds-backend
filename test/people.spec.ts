@@ -19,9 +19,8 @@ async function rawSource(path: string): Promise<string> {
 }
 
 const icp: IcpDoc = {
-	industry: "fintech",
-	stage: "seed",
-	geography: "United States",
+	description:
+		"fintech companies at seed stage in San Francisco with a small team",
 };
 
 let companySeq = 0;

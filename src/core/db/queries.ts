@@ -8,6 +8,7 @@ import type {
 	Icp,
 	NewCompany,
 	NewEvidence,
+	NewIcp,
 	NewPerson,
 	Person,
 } from "@/core/db/schema";
@@ -86,6 +87,7 @@ export interface TransactableConnection {
 }
 
 export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
+export type IcpInsertConnection = AppendConnection<typeof icp, NewIcp, Icp>;
 export type DomainsConnection = SelectWhereConnection<
 	typeof company,
 	{ domain: typeof company.domain },
@@ -130,6 +132,23 @@ export async function loadIcp(
 		.where(eq(icp.id, icpId))
 		.limit(1);
 	return rows[0];
+}
+
+/** Stores a free-text ideal customer profile and returns the stored row. */
+export async function createIcp(
+	env: DbEnv,
+	description: string,
+	domain: string,
+	buildDb: DbFactory<IcpInsertConnection> = db,
+): Promise<Icp> {
+	const connection = buildDb(env, "cached");
+	const rows = await connection
+		.insert(icp)
+		.values({ domain, doc: { description } })
+		.returning();
+	const row = rows[0];
+	if (!row) throw new Error("createIcp: insert returned no row");
+	return row;
 }
 
 /**

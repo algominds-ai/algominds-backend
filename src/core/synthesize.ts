@@ -3,10 +3,7 @@ import { CostLedger } from "@/core/cost";
 import { generateStructured, workerModel } from "@/core/model";
 
 export const IcpDocSchema = z.object({
-	industry: z.string(),
-	stage: z.string(),
-	geography: z.string(),
-	product: z.string().optional(),
+	description: z.string(),
 });
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
@@ -70,18 +67,13 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	'from each result, and a search shape. A search shape is either category "company" for a',
 	'broad semantic match on the ideal customer profile, or category "none" with a',
 	"startPublishedDate for companies showing a recent hiring or funding signal. Keep the query",
-	"specific to the industry, stage, and geography given. When rejection reasons are given,",
-	"change the query enough to reach different companies without dropping any of the three",
-	"scoping terms.",
+	"faithful to every constraint in the profile, including team size, revenue, and which",
+	"functions the company does or does not have. When rejection reasons are given, change the",
+	"query enough to reach different companies without dropping any stated constraint.",
 ].join(" ");
 
 function synthesizePrompt(icp: IcpDoc, feedback: readonly string[]): string {
-	const lines = [
-		`Industry: ${icp.industry}`,
-		`Stage: ${icp.stage}`,
-		`Geography: ${icp.geography}`,
-	];
-	if (icp.product) lines.push(`Product: ${icp.product}`);
+	const lines = [`Ideal customer profile:`, icp.description];
 	if (feedback.length > 0) {
 		lines.push("Reasons the previous round's companies were rejected:");
 		for (const reason of feedback) lines.push(`- ${reason}`);
@@ -91,7 +83,7 @@ function synthesizePrompt(icp: IcpDoc, feedback: readonly string[]): string {
 
 function templateResult(icp: IcpDoc, ledger: CostLedger): SynthesizeResult {
 	return {
-		query: `${icp.industry} companies at ${icp.stage} stage in ${icp.geography}`,
+		query: icp.description,
 		systemPrompt:
 			"Extract the company name, domain, and one recent hiring or funding signal.",
 		searchShape: { category: "company", type: "neural" },

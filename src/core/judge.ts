@@ -31,11 +31,7 @@ const JUDGE_INSTRUCTIONS = [
 ].join(" ");
 
 function judgePrompt(icp: IcpDoc, rows: readonly CompanyRow[]): string {
-	const criteria = [
-		`Industry: ${icp.industry}`,
-		`Stage: ${icp.stage}`,
-		`Geography: ${icp.geography}`,
-	];
+	const criteria = [`Ideal customer profile:`, icp.description];
 	const numbered = rows.map((row, index) => `${index}: ${JSON.stringify(row)}`);
 	return [...criteria, "Rows:", ...numbered].join("\n");
 }
