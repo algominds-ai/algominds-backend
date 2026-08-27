@@ -29,6 +29,11 @@ with `bun run gate` green and that behaviour intact.
 Database dump at `algo-backend-backups/algo-2026-08-27-baseline.sql`, holding
 icp 9, company 24, person 30, evidence 297.
 
+The restore is **verified, not assumed**. The dump was loaded into a scratch
+database and returned those four counts exactly, then the scratch database was
+dropped. A backup nobody has restored is a hope, not a rollback plan. Re-verify
+the same way before U5, the one unit that can lose data.
+
 ---
 
 ## Problem Frame
