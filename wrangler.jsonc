@@ -60,27 +60,27 @@
 	"secrets_store_secrets": [
 		{
 			"binding": "EXA_API_KEY",
-			"store_id": "<store-id>",
+			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "exa-api-key"
 		},
 		{
 			"binding": "APOLLO_API_KEY",
-			"store_id": "<store-id>",
+			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "apollo-api-key"
 		},
 		{
 			"binding": "FINDYMAIL_API_KEY",
-			"store_id": "<store-id>",
+			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "findymail-api-key"
 		},
 		{
 			"binding": "CF_AIG_TOKEN",
-			"store_id": "<store-id>",
+			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "cf-aig-token"
 		},
 		{
 			"binding": "API_BEARER_TOKEN",
-			"store_id": "<store-id>",
+			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "api-bearer-token"
 		}
 	]
