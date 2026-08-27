@@ -2,6 +2,7 @@
 import { spawnSync } from "node:child_process";
 
 const STEPS = [
+	["config", "bun", ["scripts/config-gen.mjs", "--check"]],
 	["types", "bunx", ["tsc", "--noEmit"]],
 	["biome", "bunx", ["biome", "check", "."]],
 	["comments", "bun", ["scripts/check-comments.mjs"]],

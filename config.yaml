@@ -1,0 +1,45 @@
+# Every tunable number in the engine. Edit here, then run `bun run config`.
+# src/config.ts is generated from this file and is never edited by hand.
+
+companies:
+  # Rounds of search per run. Each round is one paid Exa call plus two model calls.
+  maxRounds: 3
+  # Exa returns at most 100 records per call. Fewer makes the requested count unreachable.
+  resultsPerRound: 100
+  # Candidates sent to the judge, as a multiple of the requested count.
+  judgeCandidateMultiple: 3
+  # How much of a company description reaches the judge.
+  descriptionChars: 600
+  # Window for treating a domain as already seen.
+  seenDomainsWindowDays: 90
+
+people:
+  resultsPerCompany: 3
+  batchSize: 5
+
+enrich:
+  batchSize: 5
+  emailTtlDays: 90
+  linkedinTtlDays: 30
+
+judge:
+  cacheTtlSeconds: 86400
+
+# Retry and timeout budgets for Cloudflare Workflow steps.
+# Cloudflare's own default is 5 retries and a 10 minute timeout on every step.
+stepConfig:
+  # Steps that pay a vendor. A retry re-runs the whole paid call, so keep the
+  # limit low. The timeout must clear the slowest real run: a companies round
+  # has been measured at about 100 seconds.
+  vendorWork:
+    retries:
+      limit: 2
+      delay: 10 seconds
+    timeout: 5 minutes
+  # Steps that only touch the database. A transient blip is worth retrying and
+  # costs nothing, so this keeps Cloudflare's default limit.
+  databaseWork:
+    retries:
+      limit: 5
+      delay: 1 second
+    timeout: 60 seconds

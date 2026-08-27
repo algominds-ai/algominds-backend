@@ -12,6 +12,7 @@
 		"lint:fix": "biome check --write . && bun scripts/check-comments.mjs && bun scripts/check-language.mjs",
 		"test": "SFW_SHIM_DISABLE=1 vitest run",
 		"test:watch": "vitest",
+		"config": "bun scripts/config-gen.mjs",
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
