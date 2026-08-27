@@ -107,3 +107,27 @@ fiber, financial_datasets, similarweb, baselayer, affiliate, particle, jinko
 ```
 
 `/search` has no provider array. Only `/agent/runs` does.
+
+## There is no free contract check
+
+An earlier note recorded that an unknown category returns an empty result set
+at zero cost. Measured again on 2026-08-27, that is no longer true:
+
+| Request | Results | Cost | Error |
+|---|---|---|---|
+| `category: "zzz-not-a-real-category"` | 2 | $0.007 | none |
+| `type: "neural"` (not a valid enum value) | 2 | $0.007 | none |
+
+Exa accepts both, ignores both, bills for both, and reports no error. That is
+the same silent-acceptance behaviour that let `includeText` and `type:
+"neural"` sit in the code unnoticed.
+
+Two consequences:
+
+- A live contract test costs about $0.007 per call. It must not run inside
+  `bun run gate`, which runs many times a day. Keep it a separate command and
+  run it deliberately.
+- A contract test cannot assert "the vendor rejects a bad field", because the
+  vendor does not reject it. It has to assert the opposite: that our own code
+  never sends a field outside the measured request schema. That check is free
+  and belongs in the gate.
