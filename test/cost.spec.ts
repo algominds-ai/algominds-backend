@@ -35,21 +35,19 @@ describe("CostLedger.reported", () => {
 });
 
 describe("CostLedger.metered", () => {
-	it("prices tokens_in and tokens_out at each class's own rate and sums them", () => {
+	it("prices units at the configured rate for that provider and unit", () => {
 		const ledger = new CostLedger();
 
-		ledger.metered("apollo", "bulk_match", 12, "credits");
-		ledger.metered("brightdata", "trigger", 5, "records");
+		ledger.metered("findymail", "find-email", 12, "credits");
 
-		expect(ledger.byProvider().apollo).toBeCloseTo(12 * 0.01, 10);
-		expect(ledger.byProvider().brightdata).toBeCloseTo(5 * 0.0025, 10);
+		expect(ledger.byProvider().findymail).toBeCloseTo(12 * 0.01, 10);
 	});
 
 	it("throws at once for an unknown provider or unit rather than recording a silent zero", () => {
 		const ledger = new CostLedger();
 
 		expect(() => ledger.metered("clay", "enrich", 1, "credits")).toThrow();
-		expect(() => ledger.metered("apollo", "op", 1, "calls")).toThrow();
+		expect(() => ledger.metered("findymail", "op", 1, "records")).toThrow();
 	});
 });
 

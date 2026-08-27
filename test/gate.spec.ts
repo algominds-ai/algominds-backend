@@ -112,6 +112,38 @@ describe("gate — grounding presence", () => {
 	});
 });
 
+describe("gate — query echo", () => {
+	const query =
+		"fintech startup announced hiring its first head of go-to-market";
+
+	it("rejects a row whose field exactly echoes the search query", () => {
+		const rows = [companyRow({ signal: `  ${query.toUpperCase()}  ` })];
+
+		const result = gate(rows, [rowGrounding(0)], {
+			freshnessDays: 90,
+			seenDomains: new Set(),
+			query,
+		});
+
+		expect(result.kept).toEqual([]);
+		expect(result.rejects).toEqual([{ index: 0, reason: "echoes-query" }]);
+	});
+
+	it("keeps a row whose field merely shares a word with the query", () => {
+		const rows = [
+			companyRow({ signal: "Announced a new fintech partnership" }),
+		];
+
+		const result = gate(rows, [rowGrounding(0)], {
+			freshnessDays: 90,
+			seenDomains: new Set(),
+			query,
+		});
+
+		expect(result.rejects).toEqual([]);
+	});
+});
+
 describe("gate — confidence floor", () => {
 	it("drops a row grounded at low confidence under the default floor", () => {
 		const rows = [companyRow()];

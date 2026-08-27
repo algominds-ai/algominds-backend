@@ -34,6 +34,7 @@ const REQUIRED_FIELDS: readonly CompanyField[] = [
 
 export type RejectReason =
 	| "missing-required"
+	| "echoes-query"
 	| "ungrounded"
 	| "low-confidence"
 	| "stale-evidence"
@@ -49,6 +50,7 @@ export type GateOptions = {
 	freshnessDays: number;
 	seenDomains: ReadonlySet<string>;
 	confidenceFloor?: Confidence;
+	query?: string;
 };
 
 export type GateResult = {
@@ -101,6 +103,19 @@ function missingRequiredField(row: CompanyRow): boolean {
 	return REQUIRED_FIELDS.some((field) => row[field] === null);
 }
 
+function normalizeText(value: string): string {
+	return value.trim().toLowerCase();
+}
+
+function echoesQuery(row: CompanyRow, query: string | undefined): boolean {
+	if (query === undefined) return false;
+	const target = normalizeText(query);
+	return FIELD_NAMES.some((field) => {
+		const value = row[field];
+		return value !== null && normalizeText(value) === target;
+	});
+}
+
 function dateRejectReason(
 	evidenceDate: string | null,
 	freshnessDays: number,
@@ -118,6 +133,7 @@ function rejectReason(
 	opts: GateOptions,
 ): RejectReason | null {
 	if (missingRequiredField(row)) return "missing-required";
+	if (echoesQuery(row, opts.query)) return "echoes-query";
 	if (!grounding) return "ungrounded";
 	const floor = opts.confidenceFloor ?? "medium";
 	if (confidenceRank(grounding.confidence) < confidenceRank(floor))
@@ -129,7 +145,7 @@ function rejectReason(
 	return opts.seenDomains.has(normalizeDomain(domain)) ? "already-seen" : null;
 }
 
-/** Drops a row for a missing required field, missing or below-floor grounding, stale or malformed evidence, or an already-seen domain. */
+/** Drops a row for a missing required field, a field that echoes the search query, missing or below-floor grounding, stale or malformed evidence, or an already-seen domain. */
 export function gate(
 	rows: readonly CompanyRow[],
 	grounding: readonly GroundingEntry[],
