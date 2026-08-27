@@ -138,9 +138,14 @@ async function readJson(response: Response): Promise<unknown> {
 	}
 }
 
+function extractRequestId(body: unknown): string | undefined {
+	const parsed = ExaErrorSchema.safeParse(body);
+	return parsed.success ? parsed.data.requestId : undefined;
+}
+
 function throwForStatus(status: number, body: unknown): never {
 	const parsed = ExaErrorSchema.safeParse(body);
-	const requestId = parsed.success ? parsed.data.requestId : undefined;
+	const requestId = extractRequestId(body);
 	const reason = parsed.success
 		? (parsed.data.message ?? parsed.data.error ?? `status ${status}`)
 		: `status ${status}`;
@@ -148,6 +153,16 @@ function throwForStatus(status: number, body: unknown): never {
 		? `Exa request failed: ${reason} (requestId ${requestId})`
 		: `Exa request failed: ${reason}`;
 	if (status === 429 || status >= 500) throw new RetryableProviderError(detail);
+	throw new NonRetryableError(detail);
+}
+
+function parseResponse(body: unknown): z.infer<typeof ExaResponseSchema> {
+	const parsed = ExaResponseSchema.safeParse(body);
+	if (parsed.success) return parsed.data;
+	const requestId = extractRequestId(body);
+	const detail = requestId
+		? `Exa: response did not match the expected shape (requestId ${requestId})`
+		: "Exa: response did not match the expected shape";
 	throw new NonRetryableError(detail);
 }
 
@@ -170,7 +185,7 @@ export async function search(
 	});
 	const body = await readJson(response);
 	if (!response.ok) throwForStatus(response.status, body);
-	const parsed = ExaResponseSchema.parse(body);
+	const parsed = parseResponse(body);
 	const { total, ...rest } = parsed.costDollars;
 	ledger.reported("exa", "search", total, flattenCost(rest));
 	return {

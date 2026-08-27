@@ -156,6 +156,31 @@ describe("search error mapping", () => {
 	});
 });
 
+describe("search response shape", () => {
+	it("raises NonRetryableError, not a raw Zod error, on a malformed 200 body, naming the requestId", async () => {
+		stubFetch(
+			jsonResponse(200, {
+				requestId: "req-malformed",
+				costDollars: { total: 0.01 },
+				results: [{ url: "https://a.example" }],
+			}),
+		);
+
+		let caught: unknown;
+		try {
+			await search({ query: "GTM leads" }, exaEnv(), new CostLedger());
+		} catch (error) {
+			caught = error;
+		}
+
+		expect(caught).toBeInstanceOf(NonRetryableError);
+		expect(caught).not.toBeInstanceOf(RetryableProviderError);
+		if (caught instanceof Error) {
+			expect(caught.message).toContain("req-malformed");
+		}
+	});
+});
+
 describe("search cost reporting", () => {
 	it("reports costDollars into the ledger unchanged, including the summary component", async () => {
 		stubFetch(jsonResponse(200, successBody()));
