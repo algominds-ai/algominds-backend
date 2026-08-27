@@ -3,145 +3,67 @@
 Algominds GTM engine. Three capabilities that turn an ICP document into verified, enriched
 decision makers: **find companies**, **find people**, **enrich people**.
 
-Full spec: `docs/plans/2026-08-27-001-feature-gtm-engine-core-apis-plan.md`. That plan is the
-source of truth. Read it before changing behaviour.
+Cloudflare Workers + Workflows · Hono · Zod · Drizzle · Postgres (PlanetScale via Hyperdrive)
+· `ai@7` through Cloudflare AI Gateway.
 
-## The governing rule
-
-> Code decides **whether** a fact is acceptable.
-> A model decides only **what to ask for next**.
-> A tool loop appears only where the answer needs a live lookup.
-
-Every architectural choice follows from this. If a change breaks it, the change is wrong.
-
-## Stack
-
-Cloudflare Workers + Workflows · Hono · Zod · Drizzle · Postgres on PlanetScale through
-Hyperdrive · `ai@7` through Cloudflare AI Gateway (dynamic route, OpenRouter behind it).
-
-Package manager is `bun`. Versions are exact-pinned and `bun.lock` is committed.
+**The spec is `docs/plans/2026-08-27-001-feature-gtm-engine-core-apis-plan.md`.** Requirements,
+vendor contracts, and decisions live there, not here. Read it before changing behaviour. Do not
+copy its content into this file.
 
 ## Commands
 
 ```bash
 bun install --frozen-lockfile
 bunx tsc --noEmit
-bun run test              # vitest under @cloudflare/vitest-pool-workers
-bunx wrangler deploy --dry-run   # bundle check — must stay clean
+bun run test                      # vitest on the real Workers runtime
+bunx wrangler deploy --dry-run    # bundle check — must stay clean
 bunx wrangler dev
 bunx drizzle-kit push
 ```
 
-Tests run on the **real Workers runtime**. Do not add Node-runtime tests; runtime
-compatibility is the main risk this project carries.
-
 ## Layout
 
 ```
-src/core/        plain async functions. No HTTP. No Workflows. No env globals.
+src/core/        plain async functions. no HTTP. no Workflows. no env globals.
 src/core/providers/   one file per provider + the waterfall + the MCP adapter
-src/workflows/   one WorkflowEntrypoint per capability. Calls src/core/.
-src/routes.ts    Hono. A route only starts a Workflow and returns a run id.
+src/workflows/   one WorkflowEntrypoint per capability. calls src/core/.
+src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
 ```
 
-`src/core/` never imports from `src/routes.ts` or `src/workflows/`. The dependency arrow
-points one way. That is what makes the functions callable from a future end-to-end workflow.
+`src/core/` never imports from `src/routes.ts` or `src/workflows/`. The arrow points one way.
 
-## Adding a provider
+## Coding standards
 
-One file, one array entry:
+- **Laziest thing that works.** Stdlib before a helper, a platform feature before a dependency,
+  one line before fifty. No abstraction with one implementation.
+- **Plain functions and plain objects.** No registry classes, no base classes, no dependency
+  injection container. A provider is an object literal; a channel is an array.
+- **Take collaborators as arguments.** No module-level singletons, no module-level secrets.
+  Anything needing a binding takes `env` as a parameter.
+- **Exact version pins.** No carets. Commit `bun.lock`. A new dependency needs a reason a few
+  lines of code could not cover.
+- **Zod schema is the type.** Infer types from it. Never hand-write a matching interface.
+- **Tests run on the Workers runtime** under `@cloudflare/vitest-pool-workers`. Node-runtime
+  tests do not count — runtime compatibility is the main risk here.
+- **Non-trivial logic leaves one runnable check behind.** A branch, a loop, a parser, or a
+  money path gets a test. Trivial one-liners do not.
+- **Repo-relative paths everywhere.** Never absolute.
+- **Mark deliberate shortcuts** with a `ponytail:` comment naming the ceiling and the upgrade
+  path, so simple reads as intent rather than ignorance.
 
-```ts
-// src/core/providers/hunter.ts
-export const hunterEmail: Provider<In, Out> = {
-  id: 'hunter', channels: ['email'], cost: 2,
-  async run(input, env) { /* return null on a miss */ },
-}
-```
+## Invariants that are not style
 
-```ts
-// src/core/providers/index.ts
-export const EMAIL = [apolloEmail, hunterEmail, clayEmail]
-```
+Break these and the product is wrong, not just untidy.
 
-An MCP provider needs no file at all — one `mcpProvider({...})` entry in the array.
-Do not add a registry, a plugin loader, or a base class.
-
-## Hard rules
-
-- A provider that throws is a **miss**. The waterfall continues. Never fail a run on one provider.
-- Never hold an HTTP connection open waiting for a vendor. `POST` returns a run id.
-- There is no `runs` table. `instance.status()` returns `{ status, output }`.
-- The dedupe read uses `HYPERDRIVE_DIRECT` (caching off). Hyperdrive does not invalidate on
-  PlanetScale writes, so a cached read after a write re-delivers companies.
+- A provider that misses returns `null`. The waterfall moves on. Only a retryable error throws.
+- Nothing holds an HTTP connection open waiting for a vendor.
 - `evidence` is append-only. Never delete a value; lower its confidence.
-- An email with status `unknown` is never sendable. Only Apollo `email_status: "verified"`
-  yields `verified`.
-- Every Exa field that carries evidence is **optional** in `outputSchema`. A required field
-  forces the agent to invent a value.
+- The dedupe read uses the cache-disabled Hyperdrive binding.
+- The synthesizer must send `cf-aig-skip-cache`. A cache hit there silently repeats yesterday's
+  companies.
+- `undici` and `cross-spawn` are aliased to throwing stubs in `build/`. They arrive
+  transitively and cannot run on Workers. Do not remove them.
 
-## Cost
+## Git
 
-Every capability returns `costDollars: { total, byProvider, entries }`. Workflows sum by
-merging ledgers, never by re-deriving. `CostLedger` has exactly two ways in:
-
-- **reported** — the vendor returned dollars. Exa only.
-- **metered** — units x a configured rate. Everything else: tokens, credits, records, calls.
-
-Model prices come from OpenRouter's public `GET /api/v1/models` at runtime, fetched with
-`cf: { cacheTtl: 86400, cacheEverything: true }` and memoized per isolate. No KV, no cron,
-no bundled price file. OpenRouter is the upstream inside the gateway, so its prices are what
-we are billed at.
-
-## Gotchas that will cost you a day
-
-- `undici` and `cross-spawn` arrive transitively (`@ai-sdk/provider-utils`, `@ai-sdk/mcp`) and
-  cannot run on Workers. Both are aliased to throwing stubs in `build/`. Do not remove them.
-- `generateObject` is deprecated in `ai@7`. Use `generateText` + `Output.object()`.
-- `generateText` defaults `stopWhen` to `isStepCount(1)`. `ToolLoopAgent` defaults to 20.
-  Add a tool to a `generateText` call without setting `stopWhen` and it stops after one step.
-- `system` is now `instructions`. `onFinish` is now `onEnd`.
-- The Workers subrequest budget is **per Workflow instance**, not per step. Set
-  `limits.subrequests` explicitly.
-- Exa `stopReason: "schema_satisfied"` means the *shape* matched with nulls allowed. It is not
-  proof the row count was met. Count rows yourself.
-- Exa sends no `Retry-After` and has no idempotency header. The `step.do` retry config is the
-  only backoff; the Workflow instance id is the only dedupe.
-- Exa `dataSources` items are objects `{provider: "fiber"}`, not strings. Max 5. Crunchbase is
-  not in the enum.
-- Exa `/stop` works only on `max` effort. Use `/cancel`.
-- Apollo People **Search** is free and returns no email or phone. `bulk_match` costs credits and
-  takes 10 people per call. Never set a reveal flag from `findPeople`.
-- Clay is not free (~$0.05/Data Credit, 6-20 per person) and is NOT in v1. Adding it is one
-  file plus one array entry.
-- AI Gateway never returns cost to the caller. `cf-aig-custom-cost` is a REQUEST header for
-  telling it your price. Cost reaches analytics, logs, and OTel only.
-- Price the model `cf-aig-model` names, never the configured id. A dynamic route falls back to
-  a cheaper model under a spend limit, so pricing by config is wrong when it matters most.
-- A gateway cache hit is billed at zero, even with a custom cost. Do not price its tokens.
-- Cache-read tokens cost about a tenth of fresh input. Price `usage.inputTokenDetails.
-  cacheReadTokens` at `input_cache_read`, not `prompt`.
-- OpenRouter pricing carries an `overrides` array for tiered rates above a prompt-token
-  threshold. Ignoring it under-reports big batches.
-- **Never let the synthesizer hit the AI Gateway cache.** It must send `cf-aig-skip-cache`.
-  A cached synthesizer returns yesterday's query, Exa returns yesterday's companies, the gate
-  rejects them all as already-seen, and the run reports `exhausted` on a healthy ICP. Nothing
-  errors. The judge is the opposite: cache it.
-- BrightData profiles are fetched in ONE batched trigger before the per-person loops open.
-  The trigger body is an array. Per-person triggers plus polls would be ~700 req/hr against a
-  limit near 120.
-
-## Deliberately out of v1
-
-Phone (most expensive call, and the only thing needing an async vendor webhook) · Clay ·
-a raw-payload column on `evidence`. Each is one file or one array entry to add later. That
-is the point of the provider design.
-
-## Not in this project
-
-Websets. The Exa MCP server. Redis or BullMQ. A queue product. Service bindings or RPC. A
-plugin framework. A `runs` table. A cron. `step.waitForEvent`. `budget.maxCostDollars`.
-`auto`/`max` effort. `previousRunId`. Apollo company search. BrightData discovery mode.
-A separate email-verification vendor. `WorkflowAgent` from `@ai-sdk/workflow`.
-
-The daily end-to-end workflow and the campaign push are separate plans, not this one.
+Sole author is Lahfir. No co-author trailers, no AI attribution anywhere.
