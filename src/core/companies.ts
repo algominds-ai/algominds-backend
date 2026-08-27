@@ -145,6 +145,7 @@ function toSearchResult(result: ExaResult): SearchResult {
 		...(result.publishedDate !== undefined
 			? { publishedDate: result.publishedDate }
 			: {}),
+		...(result.score !== undefined ? { score: result.score } : {}),
 	};
 }
 

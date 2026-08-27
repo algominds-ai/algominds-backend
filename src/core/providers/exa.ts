@@ -80,6 +80,7 @@ const ExaResultSchema = z.object({
 	url: z.string(),
 	title: z.string(),
 	publishedDate: z.string().optional(),
+	score: z.number().optional(),
 	text: z.string().optional(),
 	summary: z.string().optional(),
 });
@@ -100,6 +101,7 @@ export type ExaResult = {
 	url: string;
 	title: string;
 	publishedDate?: string;
+	score?: number;
 	text?: string;
 	summary: Json | null;
 };
