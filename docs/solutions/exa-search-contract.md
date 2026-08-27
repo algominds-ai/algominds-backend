@@ -158,3 +158,47 @@ can.
 Use `effort: "auto"` with `budget.maxCostDollars` if a deep-research path is
 ever added, where the work is genuinely open-ended and a vendor-enforced
 ceiling is worth its price. Do not use it for the discovery path.
+
+## Correction: the Agent API is cheaper than `/search` at a fixed effort
+
+An earlier section here, and two statements made while planning, said the Agent
+API was slower and dearer. Measured on 2026-08-27 with the same query:
+
+| | `/search` + `category: company` | `/agent/runs` + `effort: low` |
+|---|---|---|
+| Wall clock | 1.6 s | 5 s |
+| Cost | $0.089 | **$0.025** |
+| Companies returned | 92 | 2 |
+
+The "$1 minimum budget" applies only to `budget.maxCostDollars` on the metered
+`auto` and `max` efforts. A fixed effort has no budget floor. The claim was
+wrong for `low`.
+
+## The two endpoints answer different questions
+
+`/search` returns breadth: 92 company records with structured fields, which our
+own filter and judge then sort. `/agent/runs` returns a short, evidenced list —
+it stopped at two with `stopReason: "schema_satisfied"`, because the schema
+asked for companies and never asked how many.
+
+The agent's evidence is the kind a judge would otherwise have to infer, naming
+the founder and the operating model in prose. Ask for a count in the schema, or
+raise the effort, to get more rows.
+
+## The async shape
+
+`POST /agent/runs` returns immediately with an id and `status: "running"`. Poll
+`GET /agent/runs/{id}` until `status` is `completed`. The probe took 5 seconds.
+
+The completed run carries `output.text`, `output.structured` matching the
+supplied `outputSchema`, `usage`, and an itemised `costDollars`:
+
+```
+costDollars: { total, agentCompute, search, emails, phoneNumbers }
+usage:       { agentComputeUnits, searches, emails, phoneNumbers }
+```
+
+`emails` and `phoneNumbers` are billable lines, so the agent can return contact
+details. That overlaps the enrichment path, not only discovery.
+
+`dataSources: [{ "provider": "fiber" }]` is accepted without error.
