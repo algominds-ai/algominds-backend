@@ -7,7 +7,12 @@ const env = Object.fromEntries(
 		.filter((l) => l && !l.startsWith("#") && l.includes("="))
 		.map((l) => {
 			const i = l.indexOf("=");
-			return [l.slice(0, i), l.slice(i + 1).trim()];
+			const raw = l.slice(i + 1);
+			const commented = raw.search(/\s#/);
+			return [
+				l.slice(0, i),
+				(commented === -1 ? raw : raw.slice(0, commented)).trim(),
+			];
 		}),
 );
 
