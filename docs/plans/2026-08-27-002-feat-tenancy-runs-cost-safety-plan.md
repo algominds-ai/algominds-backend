@@ -114,6 +114,8 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R15 | `/enrich` resolves its subjects from the run the caller names. A run id that matches no company is reported, never silently enriched as empty. |
 | R16 | Tests that write to the database run against a database that holds no production rows. |
 | R17 | A start request that matches a run already in flight or finished says so. It never returns 202 as though it began new work. |
+| R18 | Companies can be sourced from Exa's `/search` or its Agent API, chosen by config. Both produce the same company shape, and the filter, gate, and judge do not branch on which ran. |
+| R19 | The Agent API is available as an enrichment provider in the existing waterfall, after the faster providers rather than in front of them. |
 
 ---
 
@@ -839,6 +841,78 @@ that is precisely how this shipped.
 
 **Verification.** Enriching a real run resolves a non-empty subject list, and
 the new test fails against the baseline tag.
+
+### U15. Add the Agent API as a second company source
+
+**Goal.** Either endpoint can find companies, chosen by one config value.
+
+**Requirements.** R18.
+
+**Dependencies.** U3.
+
+**Files.** `src/core/providers/exa-agent.ts` (new), `config.yaml`,
+`src/workflows/find-companies.ts`, `test/exa-agent.spec.ts` (new).
+
+**Approach.** `findCompanies` already takes `search` as an injected dependency,
+so a second source needs no change to the round loop, the filter, the gate, or
+the judge. The agent's output maps onto the existing `CompanyEntity`; a field it
+cannot supply is null, as `revenueAnnual` already is on the search path.
+
+The agent is asynchronous: start a run, then poll until it completes. The
+workflow waits with `step.sleep`, which is free and does not count toward the
+step limit. The provider file does HTTP only and owns no waiting.
+
+**Measured, and the reason this unit exists.** At `effort: "low"` the agent cost
+$0.025 against `/search`'s $0.089 for the same query, in 5 seconds against 1.6.
+It returned 2 companies to `/search`'s 92, stopping at
+`stopReason: "schema_satisfied"` because the schema never asked for a count. So
+the requested count goes into both the query text and the output schema.
+
+**Test scenarios.**
+- The start call sends the query, the effort, the fiber data source, and a
+  schema that asks for the requested count.
+- A completed run maps onto `CompanyEntity`, with unavailable fields null.
+- A 429 is retryable; a 400 is not.
+- A response that does not match the expected shape is rejected rather than
+  half-parsed.
+- A `failed` or `canceled` run surfaces, rather than reading as empty success.
+- Reported cost reaches the ledger.
+
+**Verification.** The same prompt run through each source produces comparable
+rows, and the run row records which source ran and what it cost.
+
+### U16. Add the Agent API as an enrichment provider
+
+**Goal.** A contact the fast providers miss is still found, with provenance.
+
+**Requirements.** R19.
+
+**Dependencies.** U15.
+
+**Files.** `src/core/providers/index.ts`, `src/core/enrich.ts`,
+`test/enrich.spec.ts`.
+
+**Approach.** The waterfall already takes an array of providers, each returning
+null on a miss so the next one runs. This adds one entry.
+
+Placement is the whole decision. Measured: the agent returned a founder's work
+email with a cited source URL in 26 seconds for $0.025. Thirty people run
+serially would take about thirteen minutes, so it goes **after** Findymail, not
+before. Fast and cheap first; slow, dearer, and evidenced for the misses.
+
+The cited source is the reason to bother. Findymail returns an address with no
+provenance; the agent names where it found it, which is what the append-only
+`evidence` table stores.
+
+**Test scenarios.**
+- A miss from the earlier provider falls through to the agent.
+- A hit from the earlier provider never reaches the agent, so the slow path
+  costs nothing on the common case.
+- A found address is recorded with its source URL, not just the value.
+- An agent miss returns null and does not throw, so the waterfall continues.
+
+**Verification.** A person Findymail cannot resolve is resolved by the agent,
+and the evidence row carries the source.
 
 ---
 
