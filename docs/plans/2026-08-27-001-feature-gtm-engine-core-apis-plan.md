@@ -114,6 +114,17 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R49. The caller bearer token rotates by dual-token overlap: two valid tokens during a rotation window, then the old one is removed. One token gates both paid work and personal data, so a rotation path that does not break every caller at once is the minimum.
 - R36. Every run records `costDollars` per provider and writes the total to the run output. Cost is a first-class return value, not a log line.
 - R37. Every external call logs `{ provider, operation, ms, ok, costDollars, requestId }` as one structured line.
+- R51. Every capability returns `costDollars` in one shape: `{ total, byProvider, entries }`. A workflow sums by merging ledgers. It never re-derives a cost a capability already computed.
+- R52. Cost has exactly two input shapes and no third. **Reported**: the vendor returned dollars, which today is Exa alone. **Metered**: units multiplied by a configured rate, which is every other vendor — tokens, credits, records, calls.
+- R53. Every non-model vendor rate lives in one configuration object. Changing a vendor's price is a one-line edit in one file.
+- R55. Model prices come from OpenRouter's own `GET /api/v1/models`, fetched at runtime and cached at the Cloudflare edge. A pinned fallback constant keeps the ledger working when the fetch fails. OpenRouter is the vendor that bills us, so its prices are authoritative rather than a third-party mirror.
+- R56. Cached input tokens are priced at `input_cache_read`, not `prompt`. `ai@7` reports them in `usage.inputTokenDetails.cacheReadTokens`, and a cache read costs about a tenth of a fresh input token.
+- R57. When a model's pricing carries an `overrides` entry and the call's prompt tokens exceed its `min_prompt_tokens`, the override rate applies. Ignoring it under-reports a large batch.
+- R58. Price the model the gateway actually used, read from the `cf-aig-model` response header, never the model id we configured. A dynamic route chooses the model, and an AI Gateway spend limit is documented to fall back to a cheaper model when a budget is hit. Pricing by configuration would be wrong exactly when cost matters most.
+- R59. All inference goes through the AI Gateway dynamic route. The fetch to OpenRouter's public model list is reference data for the ledger and is never an inference path.
+- R60. A gateway cache hit costs zero. Cloudflare documents that a cached response is always billed at `0`, even under a custom cost. Read the cache-status response header and record zero rather than pricing the tokens, or the ledger over-reports every repeat call.
+- R61. Each model request carries a `cf-aig-custom-cost` header built from the OpenRouter rates the ledger already resolved. The gateway then computes its analytics and enforces its spend limit against the real price instead of its own estimate.
+- R54. An AI Gateway spend limit is configured as the platform-level ceiling on model spend, scoped by the `cf-aig-metadata` the run already sends. The ledger reports; the gateway enforces. A 429 carrying a spend-limit body is not a transient error and must not be retried.
 - R45. Every run's output carries `providerFailures: { [providerId]: count }`. A provider that misses every single time is then visible in the result, without anyone reading a log. A silent permanent miss caused by a bad key or an exhausted quota is the failure this catches.
 - R38. Exa `x-request-id` is captured on every Exa response, success or failure, and stored with the run.
 - R39. A 429 from any provider backs off with exponential delay through the `step.do` retry config. No provider documents `Retry-After`, so the retry config is the only backoff.
@@ -190,6 +201,11 @@ The three capability functions, their Workflows, their routes, the provider cont
 - KTD7. **`grounding.field` matching is a string comparison against a computed path, plus a domain check on URL fields.** For row index `i` and field `f`, the expected path is `structured.companies[i].f`. The gate builds that string and looks for an exact match in `output.grounding`. Presence alone proves nothing about truth, so for a URL-valued field the gate also requires one citation at that path to share the value's registrable domain. This stays inside KD4: it is one more string comparison, not a model call. Governs R29, R42.
 - KTD15. **The waterfall re-throws a tagged retryable error and swallows everything else.** One error class, one `instanceof` check. Without it, `.catch(() => null)` converts a 429 into a miss before `step.do` ever sees it, and the retry configuration is dead code. Governs R3, R43.
 - KTD17. **Webhook authentication is a static secret plus a per-run nonce, both in the `webhook_url`.** Apollo cannot hold our bearer token, so R35 is unsatisfiable on that route. Two constant-time comparisons cost nothing and close both internet noise and cross-run replay. The Workflow can build that URL because `WorkflowEvent` carries `instanceId` and `workflowName`, so it knows its own identity inside `run`. Governs R47.
+- KTD19. **The model layer is metered from tokens, because the AI Gateway returns no dollars inline.** Confirmed on two Cloudflare pages: cost reaches analytics, logs, and the OTel attribute `gen_ai.usage.cost`, never the caller. The only cost-named header is `cf-aig-custom-cost`, which is a **request** header shaped `{"per_token_in": n, "per_token_out": n}`. Cloudflare's own figure reaches analytics, logs, and the OTel attribute `gen_ai.usage.cost` — never the response body — and their docs call it "best-effort estimation based on token counts and model pricing". Vercel's `gateway.getSpendReport()` and `getGenerationInfo()` belong to Vercel's gateway, not Cloudflare's. So `result.usage` times a configured rate is the only figure available in time to act on. Governs R52.
+- KTD21. **Model prices come from OpenRouter's `GET /api/v1/models` at runtime, edge-cached, never bundled.** OpenRouter is the upstream provider configured *inside* our AI Gateway dynamic route, so it is the vendor whose prices we are billed at. We never call it for inference — every completion goes through the gateway. This one fetch is a public price list and nothing else. The endpoint needs no authentication, returns 417 models at about 687 KB, and gives `pricing.prompt`, `pricing.completion`, `pricing.input_cache_read`, `pricing.input_cache_write`, and an `overrides` array for tiered pricing. Fetch it with `cf: { cacheTtl: 86400, cacheEverything: true }` so Cloudflare's edge holds it, then memoize the two or three models we use in a module-scope map for the isolate's lifetime. No KV binding, no Cron Trigger, no bundled copy, no daily job to maintain. A pinned fallback constant covers a failed fetch. Governs R55, R56, R57.
+- KTD23. **Feed our resolved rates back to the gateway as `cf-aig-custom-cost`.** We already fetch OpenRouter's real prices for the ledger, so sending them costs one header. Cloudflare's own figure is a self-described estimate, and its spend limits enforce on that figure. Pushing the true rate makes KTD20's hard ceiling accurate rather than approximate, and it closes the loop: one price source drives both our report and the platform's enforcement. Governs R61.
+- KTD22. **`GET /api/v1/generation?id=` is the recorded upgrade path, not the v1 choice.** It returns the real `total_cost`, `cache_discount`, and `upstream_inference_cost` for one generation rather than a computed figure. It costs one extra round trip per model call, needs the OpenRouter key we do not hold when the gateway uses stored keys, and depends on the gateway passing OpenRouter's `gen-…` id through the `/compat` response, which is unverified. Take it only if per-call exactness starts to matter. Governs R55.
+- KTD20. **An AI Gateway spend limit is the hard ceiling on model spend.** Cost-based budgets return 429 when exceeded and scope by model, provider, or custom metadata. We already send `cf-aig-metadata`, so this costs one dashboard rule and caps model spend at the platform rather than in our code. R44's loop cap and R8's round cap stay; this is the backstop under both. Governs R54.
 - KTD18. **`evidence.raw` gets its own 30-day purge on a Cron Trigger.** One extra handler and one wrangler line. Without it, a company-scoped raw blob is a personal-data sink with no deletion path. Governs R50.
 - KTD16. **`findPeople` caps validation loops per run before the loop starts.** `isStepCount(8)` bounds one person. Nothing bounded the count of people, so a wide ICP could run hundreds of loops before the cost report arrives. Governs R44.
 - KTD8. **The per-person validity check is the only `ToolLoopAgent` in the system.** "Is this person still employed here" needs a live lookup, which is what a tool loop is for. Companies need no loop because grounding already ships the proof. Governs R4, R9, R10.
@@ -371,6 +387,7 @@ algo-backend/
       gate.ts
       model.ts
       cost.ts
+      rates.ts
       log.ts
       providers/
         types.ts
@@ -400,7 +417,7 @@ algo-backend/
 
 ### Sequencing
 
-U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in parallel. U6 needs U4. U7 needs U2. U8 needs U5, U6, U7. U9, U10, U11 need U3. U12 needs U8, U9, U10. U13 needs U9, U10, U11. U14 is last.
+U1 gates everything. U14 lands second, because every provider and every model call reports into its ledger. After those two, U2 and U3 are independent and can land in parallel, and so can U4 and U5 once U14 exists. U6 needs U4. U7 needs U2. U8 needs U5, U6, U7. U9, U10, U11 need U3 and U14. U12 needs U8, U9, U10. U13 needs U9, U10, U11.
 
 ### Sources and research
 
@@ -422,19 +439,19 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 | U | Title | Key files | Depends on |
 |---|---|---|---|
 | U1 | Skeleton and Workers bundle spike | `wrangler.jsonc`, `build/stub-*.ts`, `src/index.ts` | — |
+| U14 | Cost ledger and structured logs | `src/core/{cost,rates,log}.ts` | U1 |
 | U2 | Data layer: Drizzle, dual Hyperdrive, four tables | `src/core/db/*`, `drizzle.config.ts` | U1 |
 | U3 | Provider contract, waterfall, MCP adapter | `src/core/providers/{types,waterfall,mcp}.ts` | U1 |
-| U4 | Exa Agent REST client and poll loop | `src/core/providers/exa.ts` | U1 |
-| U5 | Model layer, synthesizer, judge | `src/core/{model,synthesize,judge}.ts` | U1 |
+| U4 | Exa Agent REST client and poll loop | `src/core/providers/exa.ts` | U1, U14 |
+| U5 | Model layer, synthesizer, judge | `src/core/{model,synthesize,judge}.ts` | U1, U14 |
 | U6 | Validation gate | `src/core/gate.ts` | U4 |
 | U7 | HTTP shell, run status, webhook receiver, auth | `src/routes.ts`, `src/index.ts` | U2 |
 | U8 | findCompanies core and Workflow | `src/core/companies.ts`, `src/workflows/find-companies.ts` | U5, U6, U7 |
-| U9 | Apollo provider | `src/core/providers/apollo.ts` | U3 |
-| U10 | BrightData provider | `src/core/providers/brightdata.ts` | U3 |
-| U11 | Clay provider | `src/core/providers/clay.ts` | U3 |
+| U9 | Apollo provider | `src/core/providers/apollo.ts` | U3, U14 |
+| U10 | BrightData provider | `src/core/providers/brightdata.ts` | U3, U14 |
+| U11 | Clay provider | `src/core/providers/clay.ts` | U3, U14 |
 | U12 | findPeople core, validity agent, Workflow | `src/core/people.ts`, `src/workflows/find-people.ts` | U8, U9, U10 |
 | U13 | enrich core, channel waterfalls, Workflow | `src/core/enrich.ts`, `src/workflows/enrich.ts` | U9, U10, U11 |
-| U14 | Cost accounting and structured logs | `src/core/{cost,log}.ts` | U12, U13 |
 
 ---
 
@@ -475,6 +492,89 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - `tsc --noEmit` exits 0.
 
 **Verification.** The bundle builds, the health route answers on the Workers pool, and both stubs throw by name.
+
+---
+
+### U14. Cost ledger and structured logs
+
+**Goal.** One cost service every capability reports into. Built second, because everything depends on it.
+
+**Requirements.** R36, R37, R38, R45, R51, R52, R53, R54, R55, R56, R57, R58, R59, R60, R61. Implements KTD19, KTD20, KTD21, KTD22, KTD23.
+
+**Dependencies.** U1.
+
+**Files.** `src/core/cost.ts`, `src/core/rates.ts`, `src/core/log.ts`, `test/cost.spec.ts`, `test/rates.spec.ts`
+
+**Approach.**
+1. `rates.ts` holds every **non-model** vendor price from the Appendix, keyed by provider and unit. Changing a vendor price is a one-line edit in one file.
+1b. Model prices come from OpenRouter at runtime. `rates.ts` exports `modelRate(id)`:
+
+   ```ts
+   let memo: Record<string, Pricing> | null = null
+   async function modelRate(id: string): Promise<Pricing> {
+     if (!memo) {
+       const r = await fetch('https://openrouter.ai/api/v1/models',
+                            { cf: { cacheTtl: 86400, cacheEverything: true } })
+       const { data } = await r.json()
+       memo = Object.fromEntries(data
+         .filter(m => MODELS_IN_USE.has(m.id))
+         .map(m => [m.id, m.pricing]))
+     }
+     return memo[id] ?? FALLBACK[id]
+   }
+   ```
+   `MODELS_IN_USE` lists every model the dynamic route can reach, **including its fallbacks**, not just the primary. A route that fell back to a model missing from the memo would price at the fallback constant instead of the real rate.
+   No authentication. Cloudflare's edge caches the response for a day, so the network cost is paid once per edge, not once per run. The memo keeps the parse cost to once per isolate. Prices arrive as decimal strings; parse them once at memo time, never per call.
+2. `cost.ts` exports `CostLedger` with exactly two ways in and no third:
+
+   ```ts
+   type Unit = 'dollars' | 'tokens_in' | 'tokens_out' | 'credits' | 'records' | 'calls'
+
+   class CostLedger {
+     reported(provider: string, op: string, dollars: number,
+              detail?: Record<string, number>): void   // the vendor told us
+     metered(provider: string, op: string, units: number, unit: Unit): void
+                                                       // units x rates[provider][unit]
+     total(): number
+     byProvider(): Record<string, number>
+     toJSON(): { total: number; byProvider: Record<string, number>; entries: CostEntry[] }
+     static merge(...ledgers: CostLedger[]): CostLedger
+   }
+   ```
+3. Exa is the only `reported` caller. Its `costDollars` breakdown maps straight through, and each `dataSources` provider becomes its own entry so Fiber and Similarweb show separately.
+4. If the response is a gateway cache hit, record zero and stop. A cached response is billed at zero regardless of any custom cost. Otherwise resolve the model: read `cf-aig-model` from `result.response.headers`, and use `result.response.modelId` only when the header is absent. Never price by the configured id: the route chooses the model, and a spend limit falls back to a cheaper one. Then `metered` the call from `result.usage`. Price three token classes separately, because they differ by roughly ten times: `inputTokens` at `pricing.prompt`, `outputTokens` at `pricing.completion`, and `usage.inputTokenDetails.cacheReadTokens` at `pricing.input_cache_read`. Apply an `overrides` entry when the prompt-token count passes its `min_prompt_tokens`. The AI Gateway returns no dollars in the response, so tokens times rate is the only inline path. Cloudflare's own figure is a best-effort estimate published to analytics, so ours is not less accurate — it is just ours, and it arrives in time to act on.
+5. Apollo and Clay are `metered` in `credits`. BrightData is `metered` in `records`. Exa Connect providers arrive inside the Exa `reported` detail.
+6. `log.ts` emits one JSON line per external call: `{ provider, operation, ms, ok, costDollars, requestId }`.
+7. Configure an AI Gateway spend limit scoped by the `cf-aig-metadata` we already send. That is the hard ceiling; the ledger is the report. A 429 from the gateway means the budget is spent, and the step must not retry it as a transient error.
+
+**Patterns to follow.** None. This is the pattern the capability units follow.
+
+**Test scenarios.**
+- `reported` with an Exa payload of `{ total: 1.02, agentCompute: 0.98, search: 0.04, dataSources: { fiber: 0.04 } }` produces a `fiber` line of its own in `byProvider`.
+- `metered` on a model call with 12,000 input, 800 output, and 9,000 cache-read tokens prices all three classes separately and sums them. Pricing cache reads at the input rate would over-report by roughly ten times on that call. This is the R56 guard.
+- `modelRate` fetches once and memoizes. Ten calls in one isolate produce exactly one outbound fetch, asserted with a fetch spy.
+- `modelRate` returns the pinned fallback when the fetch fails, and the ledger still totals correctly.
+- The fetch carries `cf: { cacheTtl: 86400, cacheEverything: true }`.
+- Only the model ids in `MODELS_IN_USE` are kept in the memo. The other 400-odd models are dropped at parse time.
+- Prices arrive as strings and are parsed once. A call site never sees a string rate.
+- A call with 300,000 prompt tokens against a model carrying an `overrides` entry at `min_prompt_tokens: 272000` uses the override rate, not the base rate. This is the R57 guard.
+- A response whose `cf-aig-model` header names a **different** model from the configured one is priced at the header's model. This is the R58 guard and the spend-limit-fallback case.
+- A response with no `cf-aig-model` header falls back to `result.response.modelId`, and with neither, to the configured id plus a warning log.
+- `MODELS_IN_USE` contains every model the dynamic route can reach, fallbacks included. A static assertion compares it against the route configuration.
+- A response marked as a gateway cache hit records `0`, not a token-priced figure, even when `usage` reports tokens. This is the R60 guard.
+- Every model request carries `cf-aig-custom-cost` with `per_token_in` and `per_token_out` taken from the resolved OpenRouter rate. This is the R61 guard.
+- The value sent in `cf-aig-custom-cost` equals the rate the ledger used for the same call. One source, two consumers; they cannot drift.
+- `total()` equals the sum of `byProvider()`, asserted with exact decimal comparison, not a tolerance.
+- `CostLedger.merge(a, b)` produces a ledger whose total is `a.total() + b.total()` and whose entries are the concatenation. This is the R51 guard and the whole reason a workflow can just sum.
+- An unknown provider or unit in `metered` throws at once. A silent zero would under-report spend, which is worse than a crash.
+- A ledger with no entries returns `total: 0`, never `undefined`.
+- A failed call still logs with `ok: false` and its `requestId`, and still records any cost the vendor charged.
+- Exa `x-request-id` reaches the log line on both a success and a failure.
+- A provider returning `null` on all 20 calls in a run shows `20` under its id in `providerFailures`. This is the R45 bad-key signal.
+- A provider that succeeds once and misses twice shows `2`, not `3`.
+- A gateway 429 carrying a spend-limit body is classified non-retryable, so `step.do` does not burn five attempts against an exhausted budget.
+
+**Verification.** Every run reports what it spent, split by provider, and two ledgers merge into a correct total.
 
 ---
 
@@ -565,9 +665,9 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Two functions and a typed error taxonomy. No SDK.
 
-**Requirements.** R25, R26, R38, R39. Implements KTD1, KTD11, KTD12. Covers AE8.
+**Requirements.** R25, R26, R38, R39, R51, R52. Implements KTD1, KTD11, KTD12. Covers AE8.
 
-**Dependencies.** U1.
+**Dependencies.** U1, U14.
 
 **Files.** `src/core/providers/exa.ts`, `test/exa.spec.ts`
 
@@ -598,9 +698,9 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** One gateway client and two pure model calls.
 
-**Requirements.** R36. Implements KTD5, KTD6.
+**Requirements.** R36, R51, R52, R54. Implements KTD5, KTD6, KTD19, KTD20.
 
-**Dependencies.** U1.
+**Dependencies.** U1, U14.
 
 **Files.** `src/core/model.ts`, `src/core/synthesize.ts`, `src/core/judge.ts`, `test/synthesize.spec.ts`, `test/judge.spec.ts`
 
@@ -754,9 +854,9 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Free identity, paid contact, and the phone webhook.
 
-**Requirements.** R3, R27, R30, R39.
+**Requirements.** R3, R27, R30, R39, R51, R52.
 
-**Dependencies.** U3.
+**Dependencies.** U3, U14.
 
 **Files.** `src/core/providers/apollo.ts`, `test/apollo.spec.ts`
 
@@ -787,9 +887,9 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** The live employment check, and nothing else.
 
-**Requirements.** R3, R10, R27.
+**Requirements.** R3, R10, R27, R51, R52.
 
-**Dependencies.** U3.
+**Dependencies.** U3, U14.
 
 **Files.** `src/core/providers/brightdata.ts`, `test/brightdata.spec.ts`
 
@@ -818,9 +918,9 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Last resort on every channel it serves.
 
-**Requirements.** R3, R27.
+**Requirements.** R3, R27, R51, R52.
 
-**Dependencies.** U3.
+**Dependencies.** U3, U14.
 
 **Files.** `src/core/providers/clay.ts`, `test/clay.spec.ts`
 
@@ -920,33 +1020,6 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 **Verification.** The email channel's stop rule differs from the others, and no unverified address is ever marked sendable.
 
 ---
-
-### U14. Cost accounting and structured logs
-
-**Goal.** Cost is a return value, not a log line.
-
-**Requirements.** R36, R37, R38, R45.
-
-**Dependencies.** U12, U13.
-
-**Files.** `src/core/cost.ts`, `src/core/log.ts`, `test/cost.spec.ts`
-
-**Approach.**
-1. `log.ts` exports one function that emits a single JSON line: `{ provider, operation, ms, ok, costDollars, requestId }`.
-2. `cost.ts` accumulates per-provider dollars for a run. Exa cost comes from the response's `costDollars` breakdown, which already splits `agentCompute`, `search`, `emails`, `phoneNumbers`, and per-provider `dataSources`. Apollo and Clay cost is credits multiplied by a configured rate.
-3. Every capability's return value carries `costDollars: { total, byProvider }` and `providerFailures: { [providerId]: count }`.
-4. Wire `observability: { enabled: true }` in `wrangler.jsonc` so the lines land in Workers Logs.
-
-**Test scenarios.**
-- An Exa response with `dataSources: { fiber: 0.04 }` shows `fiber` as its own line in `byProvider`.
-- `total` equals the sum of `byProvider`, asserted with an exact decimal comparison.
-- A failed call still logs with `ok: false` and its `requestId`.
-- Exa's `x-request-id` reaches the log line on both a success and a failure.
-- A capability with zero external calls returns `costDollars.total` of 0, not `undefined`.
-- A provider that returns `null` on all 20 calls in a run shows `20` under its id in `providerFailures`. This is the bad-key and exhausted-quota signal from R45.
-- A provider that succeeds once and misses twice shows `2`, not `3`.
-
-**Verification.** Every run reports what it spent, broken down by provider.
 
 ---
 
