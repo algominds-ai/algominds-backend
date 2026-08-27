@@ -202,3 +202,32 @@ usage:       { agentComputeUnits, searches, emails, phoneNumbers }
 details. That overlaps the enrichment path, not only discovery.
 
 `dataSources: [{ "provider": "fiber" }]` is accepted without error.
+
+## The agent finds contact details, with provenance
+
+Measured: asking for the founder's work email at one named company returned a
+complete person record in 26 seconds for $0.025.
+
+```
+fullName     Kirk Marple
+title        Founder and Chief Executive Officer, Graphlit
+email        kirk@graphlit.com
+linkedinUrl  https://www.linkedin.com/in/kirkmarple
+source       https://www.linkedin.com/posts/kirkmarple_...
+```
+
+Two things matter here.
+
+**It cites a source.** Findymail returns an address and nothing about where it
+came from. A cited URL is exactly what the append-only `evidence` table stores,
+so a later reviewer can judge the value rather than trust it.
+
+**The billable email counter stayed at zero.** `usage.emails` was 0 and
+`costDollars.emails` was $0. The address came from search, not from a dedicated
+lookup, so the whole run billed as ordinary agent compute plus search.
+
+**Twenty-six seconds is the constraint.** Thirty people run serially would take
+about thirteen minutes. That rules the agent out as the first enrichment
+provider and rules it in as the next one: Findymail first because it is fast
+and cheap, the agent after it for the misses, where slow and evidenced beats
+empty.
