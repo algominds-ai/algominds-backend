@@ -209,8 +209,10 @@ async function runBatches(
 ): Promise<FindPeopleResult[]> {
 	const results: FindPeopleResult[] = [];
 	for (const [index, batch] of batches.entries()) {
-		const batchResult = await step.do(`people-batch-${index}`, () =>
-			findPeople(batch, opts, PRODUCTION_DEPS),
+		const batchResult = await step.do(
+			`people-batch-${index}`,
+			config.stepConfig.vendorWork,
+			() => findPeople(batch, opts, PRODUCTION_DEPS),
 		);
 		results.push(batchResult);
 	}
@@ -226,15 +228,23 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindPeopleResult> {
 		const payload = FindPeoplePayloadSchema.parse(event.payload);
-		const icp = await step.do("load-icp", async () => {
-			const icpRow = await loadIcp(this.env, payload.icpId);
-			if (!icpRow) {
-				throw new NonRetryableError(`findPeople: unknown icp ${payload.icpId}`);
-			}
-			return IcpDocSchema.parse(icpRow.doc);
-		});
-		const allCompanies = await step.do("load-companies", () =>
-			companiesForIcp(this.env, payload.icpId),
+		const icp = await step.do(
+			"load-icp",
+			config.stepConfig.databaseWork,
+			async () => {
+				const icpRow = await loadIcp(this.env, payload.icpId);
+				if (!icpRow) {
+					throw new NonRetryableError(
+						`findPeople: unknown icp ${payload.icpId}`,
+					);
+				}
+				return IcpDocSchema.parse(icpRow.doc);
+			},
+		);
+		const allCompanies = await step.do(
+			"load-companies",
+			config.stepConfig.databaseWork,
+			() => companiesForIcp(this.env, payload.icpId),
 		);
 		const { companies: scoped, skipped } = truncateCompanies(
 			allCompanies,
@@ -244,7 +254,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const batches = await runBatches(toBatches(scoped), opts, step);
 		const result = mergeResults(batches, skipped);
 
-		await step.do("save-people", () =>
+		await step.do("save-people", config.stepConfig.databaseWork, () =>
 			persistPeople(this.env, scoped, result.companies),
 		);
 

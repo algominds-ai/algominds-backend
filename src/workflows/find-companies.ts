@@ -101,8 +101,10 @@ async function runFindCompaniesRounds(
 			maxRounds: 1,
 		};
 		const deps = roundDeps(accumulatedDomains);
-		const stepResult = await step.do(`round_${round}`, () =>
-			findCompanies(icp, remaining, opts, deps),
+		const stepResult = await step.do(
+			`round_${round}`,
+			config.stepConfig.vendorWork,
+			() => findCompanies(icp, remaining, opts, deps),
 		);
 		companies = companies.concat(stepResult.companies);
 		rejects = rejects.concat(stepResult.rejects);
@@ -202,19 +204,23 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindCompaniesResult> {
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
-		const icp = await step.do("load-icp", async () => {
-			const icpRow = await loadIcp(this.env, payload.icpId);
-			if (!icpRow) {
-				throw new NonRetryableError(
-					`findCompanies: unknown icp ${payload.icpId}`,
-				);
-			}
-			return IcpDocSchema.parse(icpRow.doc);
-		});
+		const icp = await step.do(
+			"load-icp",
+			config.stepConfig.databaseWork,
+			async () => {
+				const icpRow = await loadIcp(this.env, payload.icpId);
+				if (!icpRow) {
+					throw new NonRetryableError(
+						`findCompanies: unknown icp ${payload.icpId}`,
+					);
+				}
+				return IcpDocSchema.parse(icpRow.doc);
+			},
+		);
 
 		const result = await runFindCompaniesRounds(this.env, payload, icp, step);
 
-		await step.do("save-companies", () =>
+		await step.do("save-companies", config.stepConfig.databaseWork, () =>
 			persistCompanies(
 				this.env,
 				payload.icpId,

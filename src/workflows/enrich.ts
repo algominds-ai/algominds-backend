@@ -33,13 +33,17 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<EnrichOutcome[]> {
 		const { runId, channels } = event.payload;
-		const subjects = await step.do("resolve-subjects", () =>
-			subjectsForRun(this.env, runId),
+		const subjects = await step.do(
+			"resolve-subjects",
+			config.stepConfig.databaseWork,
+			() => subjectsForRun(this.env, runId),
 		);
 		const outcomes: EnrichOutcome[] = [];
 		for (const [index, batch] of toBatches(subjects).entries()) {
-			const batchOutcomes = await step.do(`enrich-batch-${index}`, () =>
-				enrich(batch, channels, { env: this.env }),
+			const batchOutcomes = await step.do(
+				`enrich-batch-${index}`,
+				config.stepConfig.vendorWork,
+				() => enrich(batch, channels, { env: this.env }),
 			);
 			outcomes.push(...batchOutcomes);
 		}
