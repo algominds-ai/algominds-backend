@@ -69,19 +69,14 @@
 			"secret_name": "apollo-api-key"
 		},
 		{
-			"binding": "BRIGHTDATA_API_TOKEN",
+			"binding": "FINDYMAIL_API_KEY",
 			"store_id": "<store-id>",
-			"secret_name": "brightdata-api-token"
+			"secret_name": "findymail-api-key"
 		},
 		{
 			"binding": "CF_AIG_TOKEN",
 			"store_id": "<store-id>",
 			"secret_name": "cf-aig-token"
-		},
-		{
-			"binding": "OPENROUTER_API_KEY",
-			"store_id": "<store-id>",
-			"secret_name": "openrouter-api-key"
 		},
 		{
 			"binding": "API_BEARER_TOKEN",
