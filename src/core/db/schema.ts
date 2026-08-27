@@ -9,15 +9,51 @@ import {
 	uuid,
 } from "drizzle-orm/pg-core";
 
-export const icp = pgTable("icp", {
+export const account = pgTable("account", {
 	id: uuid("id").primaryKey().defaultRandom(),
-	domain: text("domain").notNull(),
-	product: text("product"),
-	doc: jsonb("doc"),
+	name: text("name").notNull(),
+	domain: text("domain").notNull().unique(),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
 });
+
+export const icp = pgTable(
+	"icp",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		accountId: uuid("account_id").references(() => account.id),
+		domain: text("domain").notNull(),
+		product: text("product"),
+		doc: jsonb("doc"),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(t) => [index("icp_account_idx").on(t.accountId)],
+);
+
+/** One row per capability run. The id is the run id the route builds, so it carries no generated default. */
+export const run = pgTable(
+	"run",
+	{
+		id: text("id").primaryKey(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => account.id),
+		icpId: uuid("icp_id")
+			.notNull()
+			.references(() => icp.id),
+		capability: text("capability").notNull(),
+		status: text("status").notNull(),
+		costDollars: real("cost_dollars").notNull().default(0),
+		startedAt: timestamp("started_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		finishedAt: timestamp("finished_at", { withTimezone: true }),
+	},
+	(t) => [index("run_account_started_idx").on(t.accountId, t.startedAt.desc())],
+);
 
 export const company = pgTable(
 	"company",
@@ -34,19 +70,27 @@ export const company = pgTable(
 			.notNull()
 			.defaultNow(),
 	},
-	(t) => [unique("company_icp_domain_unique").on(t.icpId, t.domain)],
+	(t) => [
+		unique("company_icp_domain_unique").on(t.icpId, t.domain),
+		index("company_run_idx").on(t.runId),
+		index("company_icp_found_at_idx").on(t.icpId, t.foundAt.desc()),
+	],
 );
 
-export const person = pgTable("person", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	companyId: uuid("company_id")
-		.notNull()
-		.references(() => company.id),
-	linkedinUrl: text("linkedin_url").unique(),
-	name: text("name"),
-	title: text("title"),
-	data: jsonb("data"),
-});
+export const person = pgTable(
+	"person",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		companyId: uuid("company_id")
+			.notNull()
+			.references(() => company.id),
+		linkedinUrl: text("linkedin_url").unique(),
+		name: text("name"),
+		title: text("title"),
+		data: jsonb("data"),
+	},
+	(t) => [index("person_company_idx").on(t.companyId)],
+);
 
 export const evidence = pgTable(
 	"evidence",
@@ -71,6 +115,10 @@ export const evidence = pgTable(
 	],
 );
 
+export type Account = typeof account.$inferSelect;
+export type NewAccount = typeof account.$inferInsert;
+export type Run = typeof run.$inferSelect;
+export type NewRun = typeof run.$inferInsert;
 export type Icp = typeof icp.$inferSelect;
 export type NewIcp = typeof icp.$inferInsert;
 export type Company = typeof company.$inferSelect;

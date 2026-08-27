@@ -129,6 +129,7 @@ describe("loadIcp", () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const row: Icp = {
 			id: "icp-1",
+			accountId: null,
 			domain: "acme.com",
 			product: "widgets",
 			doc: null,
