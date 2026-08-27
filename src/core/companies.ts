@@ -63,6 +63,13 @@ export type FindCompaniesDeps = {
 
 export type FindCompaniesStatus = "complete" | "short" | "exhausted";
 
+/** What the synthesizer decided this round: the exact Exa query, the extraction instruction, and the filter shape. */
+export type SearchPlan = {
+	query: string;
+	extractionPrompt: string;
+	shape: SearchShape;
+};
+
 export type FindCompaniesReject = {
 	domain: string | null;
 	reason: string;
@@ -77,6 +84,7 @@ export type FindCompaniesResult = {
 	status: FindCompaniesStatus;
 	costDollars: number;
 	rejects: FindCompaniesReject[];
+	searches: SearchPlan[];
 };
 
 type CompanySummarySchema = {
@@ -231,6 +239,7 @@ type RoundContext = {
 };
 
 type RoundOutcome = {
+	plan: SearchPlan;
 	rows: CompanyRow[];
 	gateRejects: Reject[];
 	keptRows: CompanyRow[];
@@ -265,6 +274,11 @@ async function runRound(
 			? await deps.judge(ctx.icp, gated.kept, opts.env)
 			: { verdicts: [], ledger: new CostLedger() };
 	return {
+		plan: {
+			query: synthesized.query,
+			extractionPrompt: synthesized.systemPrompt,
+			shape: synthesized.searchShape,
+		},
 		rows,
 		gateRejects: gated.rejects,
 		keptRows: gated.kept,
@@ -282,6 +296,7 @@ type RoundsAccumulator = {
 	ledgers: CostLedger[];
 	rounds: number;
 	status: FindCompaniesStatus;
+	searches: SearchPlan[];
 };
 
 async function runRounds(
@@ -292,6 +307,7 @@ async function runRounds(
 	const companies: CompanyRow[] = [];
 	const rejects: FindCompaniesReject[] = [];
 	const ledgers: CostLedger[] = [];
+	const searches: SearchPlan[] = [];
 	const maxRounds = opts.maxRounds ?? MAX_ROUNDS;
 	let feedback: string[] = [];
 	let status: FindCompaniesStatus = "short";
@@ -305,6 +321,7 @@ async function runRounds(
 			deps,
 		);
 		ledgers.push(outcome.ledger);
+		searches.push(outcome.plan);
 		for (const domain of collectDomains(outcome.rows))
 			input.seenDomains.add(domain);
 
@@ -327,7 +344,7 @@ async function runRounds(
 			break;
 		}
 	}
-	return { companies, rejects, ledgers, rounds, status };
+	return { companies, rejects, ledgers, rounds, status, searches };
 }
 
 /**
@@ -358,5 +375,6 @@ export async function findCompanies(
 		status: outcome.status,
 		costDollars: CostLedger.merge(...outcome.ledgers).total(),
 		rejects: outcome.rejects,
+		searches: outcome.searches,
 	};
 }

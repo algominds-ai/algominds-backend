@@ -85,6 +85,7 @@ async function runFindCompaniesRounds(
 	let rejects: FindCompaniesReject[] = [];
 	let costDollars = 0;
 	let rounds = 0;
+	const searches: FindCompaniesResult["searches"] = [];
 	let lastRoundStatus: FindCompaniesStatus = "short";
 
 	for (
@@ -105,6 +106,7 @@ async function runFindCompaniesRounds(
 		companies = companies.concat(stepResult.companies);
 		rejects = rejects.concat(stepResult.rejects);
 		costDollars += stepResult.costDollars;
+		searches.push(...stepResult.searches);
 		rounds += 1;
 		lastRoundStatus = stepResult.status;
 		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
@@ -119,6 +121,7 @@ async function runFindCompaniesRounds(
 		status: finalStatus(companies.length, payload.count, lastRoundStatus),
 		costDollars,
 		rejects,
+		searches,
 	};
 }
 
