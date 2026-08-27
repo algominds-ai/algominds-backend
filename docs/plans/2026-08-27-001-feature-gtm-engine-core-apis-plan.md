@@ -709,7 +709,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** The deterministic round loop.
 
-**Requirements.** R4, R5, R6, R7, R8, R28, R29. Implements KTD2, KTD9. Covers AE1, AE2, AE7, AE8.
+**Requirements.** R4, R5, R6, R7, R8, R21, R28, R29. Implements KTD2, KTD9. Covers AE1, AE2, AE7, AE8.
 
 **Dependencies.** U5, U6, U7.
 
@@ -744,6 +744,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - A retryable Exa error retries and then succeeds; a `NonRetryableError` fails the step without five attempts. This is AE8.
 - `costDollars` in the result equals the sum of the per-round Exa `costDollars.total`.
 - `recentDomains` is called on the direct connection, asserted through the injected dependency. This is AE7.
+- `findCompanies` is called directly with plain arguments, with no Hono context and no `WorkflowStep`. This is the R21 guard.
 
 **Verification.** All three terminal states are reachable and asserted, and the gate outranks the count.
 
@@ -844,7 +845,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Free identification, then one live validity check per person.
 
-**Requirements.** R9, R10, R11, R12, R30, R44, R48. Covers AE4, AE12. Implements KTD8, KTD16.
+**Requirements.** R9, R10, R11, R12, R21, R30, R44, R48. Covers AE4, AE12. Implements KTD8, KTD16.
 
 **Dependencies.** U8, U9, U10.
 
@@ -877,6 +878,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - `toolsContext` supplies the BrightData token, and no token is read from module scope.
 - 250 candidates with `maxPeople: 100` opens exactly 100 loops and returns `skippedPeople: 150`. The cap is applied before any loop starts, asserted by a spy on the agent constructor.
 - The worst case is bounded and asserted: `maxPeople` multiplied by 8 steps is the ceiling on model calls for the unit.
+- `findPeople` is called directly with plain arguments, with no Hono context and no `WorkflowStep`. This is the R21 guard.
 
 **Verification.** Identity costs nothing, conflicts keep both sides, and the loop always terminates.
 
@@ -886,7 +888,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** One independent waterfall per channel, with a real verify gate on email.
 
-**Requirements.** R13, R14, R15, R16, R17, R19, R31. Covers AE5.
+**Requirements.** R13, R14, R15, R16, R17, R19, R21, R31. Covers AE5.
 
 **Dependencies.** U9, U10, U11.
 
@@ -913,6 +915,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - The phone webhook never arrives, `waitForEvent` times out at 10 minutes, and Clay runs.
 - Email found and phone missing returns `{ email: {...}, phone: null }` with per-channel statuses, not a throw. This is R17.
 - `enrich` runs against a person who never went through `findPeople` and still works, reading only `evidence`. This is R19.
+- `enrich` is called directly with plain arguments, with no Hono context and no `WorkflowStep`. This is the R21 guard, and the same assertion exists in U8 and U12.
 
 **Verification.** The email channel's stop rule differs from the others, and no unverified address is ever marked sendable.
 
@@ -977,6 +980,7 @@ Non-negotiable assertions that must exist somewhere in the suite:
 9. The webhook route is not bearer-authenticated and does verify the static secret.
 10. `recordVerdict` cannot be called without a `citationUrl`.
 11. `purgeRawEvidence` touches only the `raw` column.
+12. No file under `src/core/` imports from `src/routes.ts` or `src/workflows/`. Enforce with a static import check, not a convention.
 
 ---
 
