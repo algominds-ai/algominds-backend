@@ -103,6 +103,15 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 		: { content: JSON.stringify(value), cost };
 }
 
+const companyShape = { category: "company" as const };
+
+function signalShape(startPublishedDate: string): {
+	category: "none";
+	startPublishedDate: string;
+} {
+	return { category: "none", startPublishedDate };
+}
+
 describe("synthesize: gateway wiring", () => {
 	const originalFetch = globalThis.fetch;
 
@@ -113,7 +122,11 @@ describe("synthesize: gateway wiring", () => {
 	it("sends cf-aig-authorization and targets a URL under /compat", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
-				objectReply({ query: "q", systemPrompt: "s", dataSources: [] }),
+				objectReply({
+					query: "q",
+					systemPrompt: "s",
+					searchShape: companyShape,
+				}),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
@@ -130,7 +143,11 @@ describe("synthesize: gateway wiring", () => {
 	it("selects MODEL_ROUTE_WORKER in the request body", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
-				objectReply({ query: "q", systemPrompt: "s", dataSources: [] }),
+				objectReply({
+					query: "q",
+					systemPrompt: "s",
+					searchShape: companyShape,
+				}),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
@@ -144,7 +161,11 @@ describe("synthesize: gateway wiring", () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
 			chatCompletionResponse(
-				objectReply({ query: "q", systemPrompt: "s", dataSources: [] }),
+				objectReply({
+					query: "q",
+					systemPrompt: "s",
+					searchShape: companyShape,
+				}),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
@@ -161,7 +182,7 @@ describe("synthesize: gateway wiring", () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply(
-					{ query: "q", systemPrompt: "s", dataSources: [] },
+					{ query: "q", systemPrompt: "s", searchShape: companyShape },
 					0.0000042,
 				),
 			),
@@ -193,7 +214,7 @@ describe("synthesize: cost recording without a cost field", () => {
 						content: JSON.stringify({
 							query: "q",
 							systemPrompt: "s",
-							dataSources: [],
+							searchShape: companyShape,
 						}),
 					},
 					finish_reason: "stop",
@@ -218,20 +239,20 @@ describe("synthesize: cost recording without a cost field", () => {
 	});
 });
 
-describe("synthesize: data sources", () => {
+describe("synthesize: search shape", () => {
 	const originalFetch = globalThis.fetch;
 
 	afterEach(() => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("drops a data source slug outside the closed enum", async () => {
+	it("passes through the company shape with no date filter", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply({
 					query: "q",
 					systemPrompt: "s",
-					dataSources: ["fiber", "totally-made-up", "similarweb"],
+					searchShape: companyShape,
 				}),
 			),
 		]);
@@ -239,24 +260,16 @@ describe("synthesize: data sources", () => {
 
 		const result = await synthesize(icp, [], env);
 
-		expect(result.dataSources).toEqual(["fiber", "similarweb"]);
+		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
 	});
 
-	it("never emits more than five data sources", async () => {
+	it("keeps the model's startPublishedDate for the signal shape", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply({
 					query: "q",
 					systemPrompt: "s",
-					dataSources: [
-						"fiber",
-						"similarweb",
-						"fiber",
-						"similarweb",
-						"fiber",
-						"similarweb",
-						"fiber",
-					],
+					searchShape: signalShape("2026-08-01"),
 				}),
 			),
 		]);
@@ -264,7 +277,49 @@ describe("synthesize: data sources", () => {
 
 		const result = await synthesize(icp, [], env);
 
-		expect(result.dataSources).toHaveLength(5);
+		expect(result.searchShape).toEqual({
+			category: null,
+			type: "keyword",
+			startPublishedDate: "2026-08-01",
+		});
+	});
+
+	it("never lets a company category reach the caller with a date filter attached", async () => {
+		const invalidModelOutput = {
+			query: "q",
+			systemPrompt: "s",
+			searchShape: { category: "company", startPublishedDate: "2026-08-01" },
+		};
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(invalidModelOutput)),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(icp, [], env);
+
+		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
+	});
+
+	it("defaults to a recent date when the signal shape is missing or has an invalid date", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				objectReply({
+					query: "q",
+					systemPrompt: "s",
+					searchShape: { category: "none" },
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(icp, [], env);
+
+		expect(result.searchShape.category).toBeNull();
+		if (result.searchShape.category === null) {
+			expect(
+				Number.isNaN(new Date(result.searchShape.startPublishedDate).getTime()),
+			).toBe(false);
+		}
 	});
 });
 
@@ -278,10 +333,18 @@ describe("synthesize: prompt drift and retries", () => {
 	it("keeps every core scoping term in the round-2 prompt after reject reasons are added", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
-				objectReply({ query: "round-1", systemPrompt: "s", dataSources: [] }),
+				objectReply({
+					query: "round-1",
+					systemPrompt: "s",
+					searchShape: companyShape,
+				}),
 			),
 			chatCompletionResponse(
-				objectReply({ query: "round-2", systemPrompt: "s", dataSources: [] }),
+				objectReply({
+					query: "round-2",
+					systemPrompt: "s",
+					searchShape: companyShape,
+				}),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
@@ -308,7 +371,7 @@ describe("synthesize: prompt drift and retries", () => {
 				objectReply({
 					query: "retry-query",
 					systemPrompt: "retry-prompt",
-					dataSources: ["fiber"],
+					searchShape: companyShape,
 				}),
 			),
 		]);
@@ -331,7 +394,7 @@ describe("synthesize: prompt drift and retries", () => {
 		const result = await synthesize(icp, [], env);
 
 		expect(gateway.calls).toHaveLength(2);
-		expect(result.dataSources).toEqual([]);
+		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
 		expect(result.query).toContain(icp.industry);
 		expect(result.query).toContain(icp.stage);
 		expect(result.query).toContain(icp.geography);

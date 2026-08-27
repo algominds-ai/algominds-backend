@@ -11,35 +11,62 @@ export const IcpDocSchema = z.object({
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
 
-const DATA_SOURCES = ["fiber", "similarweb"] as const;
-type DataSource = (typeof DATA_SOURCES)[number];
-const DATA_SOURCE_NAMES: ReadonlySet<string> = new Set(DATA_SOURCES);
-const MAX_DATA_SOURCES = 5;
+export type SearchShape =
+	| { category: "company"; type: "neural" }
+	| { category: null; type: "keyword"; startPublishedDate: string };
 
-function isDataSource(value: string): value is DataSource {
-	return DATA_SOURCE_NAMES.has(value);
+const DEFAULT_SIGNAL_WINDOW_DAYS = 30;
+
+function isIsoDate(value: string | undefined): value is string {
+	return value !== undefined && !Number.isNaN(new Date(value).getTime());
+}
+
+function defaultSignalDate(): string {
+	const windowMs = DEFAULT_SIGNAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+	return new Date(Date.now() - windowMs).toISOString().slice(0, 10);
+}
+
+const SearchShapeModelSchema = z.object({
+	category: z.enum(["company", "none"]),
+	startPublishedDate: z.string().optional(),
+});
+
+function normalizeSearchShape(
+	raw: z.infer<typeof SearchShapeModelSchema>,
+): SearchShape {
+	if (raw.category === "company")
+		return { category: "company", type: "neural" };
+	return {
+		category: null,
+		type: "keyword",
+		startPublishedDate: isIsoDate(raw.startPublishedDate)
+			? raw.startPublishedDate
+			: defaultSignalDate(),
+	};
 }
 
 const SynthesizeModelSchema = z.object({
 	query: z.string(),
 	systemPrompt: z.string(),
-	dataSources: z.array(z.string()),
+	searchShape: SearchShapeModelSchema,
 });
 
 export type SynthesizeResult = {
 	query: string;
 	systemPrompt: string;
-	dataSources: DataSource[];
+	searchShape: SearchShape;
 	ledger: CostLedger;
 };
 
 const SYNTHESIZE_INSTRUCTIONS = [
 	"You write one search request for a round of company discovery against an ideal customer",
 	"profile. Return a query string, a system prompt telling the search step what to extract",
-	"from each result, and up to five data source slugs to enrich each company with. Keep the",
-	"query specific to the industry, stage, and geography given. When rejection reasons are",
-	"given, change the query enough to reach different companies without dropping any of the",
-	"three scoping terms.",
+	'from each result, and a search shape. A search shape is either category "company" for a',
+	'broad semantic match on the ideal customer profile, or category "none" with a',
+	"startPublishedDate for companies showing a recent hiring or funding signal. Keep the query",
+	"specific to the industry, stage, and geography given. When rejection reasons are given,",
+	"change the query enough to reach different companies without dropping any of the three",
+	"scoping terms.",
 ].join(" ");
 
 function synthesizePrompt(icp: IcpDoc, feedback: readonly string[]): string {
@@ -61,16 +88,17 @@ function templateResult(icp: IcpDoc, ledger: CostLedger): SynthesizeResult {
 		query: `${icp.industry} companies at ${icp.stage} stage in ${icp.geography}`,
 		systemPrompt:
 			"Extract the company name, domain, and one recent hiring or funding signal.",
-		dataSources: [],
+		searchShape: { category: "company", type: "neural" },
 		ledger,
 	};
 }
 
 /**
  * Turns an ICP document plus any reject reasons from the previous round
- * into a search query, an extraction prompt, and a capped list of
- * enrichment data sources. Falls back to a template query built from the
- * ICP document when the model produces nothing usable twice in a row.
+ * into a search query, an extraction prompt, and a search shape that never
+ * combines a company category with a date filter. Falls back to a
+ * template query built from the ICP document when the model produces
+ * nothing usable twice in a row.
  */
 export async function synthesize(
 	icp: IcpDoc,
@@ -94,9 +122,7 @@ export async function synthesize(
 	return {
 		query: output.query,
 		systemPrompt: output.systemPrompt,
-		dataSources: output.dataSources
-			.filter(isDataSource)
-			.slice(0, MAX_DATA_SOURCES),
+		searchShape: normalizeSearchShape(output.searchShape),
 		ledger,
 	};
 }
