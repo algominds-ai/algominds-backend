@@ -50,8 +50,15 @@ src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
   money path gets a test. Trivial one-liners do not.
 - **No relative imports.** Biome bans `./*` and `../*` outside `test/`. Use `@/*`.
 - **Repo-relative paths everywhere.** Never absolute.
-- **Mark deliberate shortcuts** with a `ponytail:` comment naming the ceiling and the upgrade
-  path, so simple reads as intent rather than ignorance.
+- **No comments. None.** Rename until the code says it. If something genuinely needs
+  explaining, write `docs/solutions/<topic>.md`. Only `/** */` docstrings are allowed, and only
+  where a signature is genuinely non-obvious. Enforced by `scripts/check-comments.mjs`.
+- **No type assertions.** `as X` is banned outside `test/` (`as const` is fine). Declare the
+  real type, or parse at the boundary with Zod and let inference carry it.
+- **No untyped bags.** `Record<string, unknown>`, `Record<string, any>`, `object`, and
+  `Function` are banned. Declare the shape.
+- **Size limits, enforced:** 80 lines per function, 400 per file, cognitive complexity 10,
+  4 parameters. Hitting one is a signal to split, not to raise the limit.
 
 ## Invariants that are not style
 

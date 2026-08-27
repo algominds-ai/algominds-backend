@@ -1,0 +1,7 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+`Record<$k, $v>` as $ty where {
+	or { $v <: `unknown`, $v <: `any` },
+	register_diagnostic(span=$ty, message="Record<string, unknown> is an untyped bag. Declare the actual shape, or use a Zod schema and infer the type from it.", severity="error")
+}

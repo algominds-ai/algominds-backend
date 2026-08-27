@@ -1,0 +1,7 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+TsAsExpression() as $expr where {
+	not $expr <: `$_ as const`,
+	register_diagnostic(span=$expr, message="Type assertions are banned. Define the real type, or parse the value at its boundary with a Zod schema and let inference carry it.", severity="error")
+}

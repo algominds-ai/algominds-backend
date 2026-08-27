@@ -3,13 +3,26 @@
 	"plugins": [
 		{
 			"path": "./lint/anti-slop/no-chained-type-assertions.grit",
-			"includes": ["**", "!**/test/**"]
+			"includes": [
+				"**",
+				"!test/**"
+			]
 		},
 		{
 			"path": "./lint/anti-slop/no-module-mocking.grit",
-			"includes": ["**"]
+			"includes": [
+				"**"
+			]
 		},
-		"./lint/anti-slop/no-unknown-type-aliases.grit"
+		"./lint/anti-slop/no-unknown-type-aliases.grit",
+		{
+			"path": "./lint/rules/no-type-assertions.grit",
+			"includes": [
+				"**",
+				"!test/**"
+			]
+		},
+		"./lint/rules/no-loose-record.grit"
 	],
 	"vcs": {
 		"enabled": true,
@@ -28,19 +41,64 @@
 		"rules": {
 			"preset": "recommended",
 			"complexity": {
-				"noBannedTypes": "error"
+				"noBannedTypes": "error",
+				"noExcessiveCognitiveComplexity": {
+					"level": "error",
+					"options": {
+						"maxAllowedComplexity": 10
+					}
+				},
+				"noExcessiveLinesPerFunction": {
+					"level": "error",
+					"options": {
+						"maxLines": 80,
+						"skipBlankLines": true
+					}
+				},
+				"useMaxParams": {
+					"level": "error",
+					"options": {
+						"max": 4
+					}
+				}
 			},
 			"suspicious": {
 				"noExplicitAny": "error"
 			},
 			"style": {
 				"noNonNullAssertion": "error",
+				"noExcessiveLinesPerFile": {
+					"level": "error",
+					"options": {
+						"maxLines": 400,
+						"skipBlankLines": true
+					}
+				},
+				"noRestrictedTypes": {
+					"level": "error",
+					"options": {
+						"types": {
+							"object": {
+								"message": "`object` is an untyped bag. Declare the real shape."
+							},
+							"Object": {
+								"message": "Use a declared interface or a Zod-inferred type."
+							},
+							"Function": {
+								"message": "Declare the call signature you actually need."
+							}
+						}
+					}
+				},
 				"noRestrictedImports": {
 					"level": "error",
 					"options": {
 						"patterns": [
 							{
-								"group": ["./*", "../*"],
+								"group": [
+									"./*",
+									"../*"
+								],
 								"message": "Use @/* imports \u2014 relative paths are forbidden."
 							}
 						]
@@ -51,7 +109,10 @@
 	},
 	"overrides": [
 		{
-			"includes": ["worker-configuration.d.ts", "drizzle/**"],
+			"includes": [
+				"worker-configuration.d.ts",
+				"drizzle/**"
+			],
 			"formatter": {
 				"enabled": false
 			},
@@ -63,11 +124,14 @@
 			}
 		},
 		{
-			"includes": ["test/**"],
+			"includes": [
+				"test/**"
+			],
 			"linter": {
 				"rules": {
 					"style": {
-						"noRestrictedImports": "off"
+						"noRestrictedImports": "off",
+						"noExcessiveLinesPerFile": "off"
 					}
 				}
 			}

@@ -114,6 +114,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R53. Every non-model vendor rate lives in one configuration object. Changing a vendor's price is a one-line edit in one file.
 - R55. Model prices come from OpenRouter's own `GET /api/v1/models`, fetched at runtime and cached at the Cloudflare edge. A pinned fallback constant keeps the ledger working when the fetch fails. OpenRouter is the vendor that bills us, so its prices are authoritative rather than a third-party mirror.
 - R58. Price the model the gateway actually used, read from the `cf-aig-model` response header, never the model id we configured. A dynamic route chooses the model, and an AI Gateway spend limit is documented to fall back to a cheaper model when a budget is hit. Pricing by configuration would be wrong exactly when cost matters most.
+- R67. Two AI Gateway dynamic routes are configured. `MODEL_ROUTE_REASONING` serves the judge; `MODEL_ROUTE_WORKER` serves the synthesizer. Both call sites run once per round, so volume is equal and the split is about consequence: the judge decides which companies reach a campaign, the synthesizer only has to write a competent query.
 - R59. All inference goes through the AI Gateway dynamic route. The fetch to OpenRouter's public model list is reference data for the ledger and is never an inference path.
 - R60. A gateway cache hit costs zero. Cloudflare documents that a cached response is always billed at `0`, even under a custom cost. Read the cache-status response header and record zero rather than pricing the tokens, or the ledger over-reports every repeat call.
 - R61. Each model request carries a `cf-aig-custom-cost` header built from the OpenRouter rates the ledger already resolved. The gateway then computes its analytics and enforces its spend limit against the real price instead of its own estimate.
@@ -149,6 +150,7 @@ The three capability functions, their Workflows, their routes, the provider cont
 - **`previousRunId`.** No documented cost saving, and it is unavailable under Zero Data Retention.
 - **`POST /agent/runs/{id}/stop`.** Documented as supported only on `max` effort runs. We use fixed `high`. Use `cancel` instead.
 - **Apollo `mixed_companies/search`.** It costs 1 credit per page. Exa finds companies.
+- **No Findymail and no Firecrawl in v1.** (session-settled: user-directed.) Both keys exist in the environment. Findymail finds and verifies email and would be a stronger verifier than Apollo's `email_status` flag, but nothing is measured yet; Firecrawl overlaps what Exa and BrightData already do. Adding either is one file and one array entry once a measurement justifies it.
 - **No Clay at all in v1.** It costs 6-20 Data Credits per person at about $0.05 each, it is last in every waterfall, and its domain-filter field name is undocumented. Adding it later is one file and one array entry — which is the provider design doing its job. The Appendix keeps its contract for that day.
 - **No phone channel in v1.** Phone reveal is the most expensive call in the stack at 1+8 credits, and it is the only thing that would need an async vendor webhook. Cutting it removes the webhook route, its authentication scheme, and `step.waitForEvent` entirely. The workflow this serves writes email. Adding phone later is one provider entry and one route.
 - **No raw-payload column.** `evidence` stores only fields we read. A raw provider response for a company can name a person who never became a `person` row, creating a deletion path we would then have to build and schedule. Storing less removes the problem instead of managing it.
@@ -200,6 +202,7 @@ The three capability functions, their Workflows, their routes, the provider cont
 - KTD15. **The waterfall re-throws a tagged retryable error and swallows everything else.** One error class, one `instanceof` check. Without it, `.catch(() => null)` converts a 429 into a miss before `step.do` ever sees it, and the retry configuration is dead code. Governs R3, R43.
 - KTD19. **The model layer is metered from tokens, because the AI Gateway returns no dollars inline.** Confirmed on two Cloudflare pages: cost reaches analytics, logs, and the OTel attribute `gen_ai.usage.cost`, never the caller. The only cost-named header is `cf-aig-custom-cost`, which is a **request** header shaped `{"per_token_in": n, "per_token_out": n}`. Cloudflare's own figure reaches analytics, logs, and the OTel attribute `gen_ai.usage.cost` — never the response body — and their docs call it "best-effort estimation based on token counts and model pricing". Vercel's `gateway.getSpendReport()` and `getGenerationInfo()` belong to Vercel's gateway, not Cloudflare's. So `result.usage` times a configured rate is the only figure available in time to act on. Governs R52.
 - KTD21. **Model prices come from OpenRouter's `GET /api/v1/models` at runtime, edge-cached, never bundled.** OpenRouter is the upstream provider configured *inside* our AI Gateway dynamic route, so it is the vendor whose prices we are billed at. We never call it for inference — every completion goes through the gateway. This one fetch is a public price list and nothing else. The endpoint needs no authentication, returns 417 models at about 687 KB, and gives `pricing.prompt`, `pricing.completion`, `pricing.input_cache_read`, `pricing.input_cache_write`, and an `overrides` array for tiered pricing. Fetch it with `cf: { cacheTtl: 86400, cacheEverything: true }` so Cloudflare's edge holds it, then memoize the two or three models we use in a module-scope map for the isolate's lifetime. No KV binding, no Cron Trigger, no bundled copy, no daily job to maintain. A pinned fallback constant covers a failed fetch. Governs R55.
+- KTD26. **The reasoning route serves the judge, the worker route serves the synthesizer.** (session-settled: user-directed — chosen over reasoning-on-synthesize: both call sites fire once per round, so cost is a wash, and the judge's accept/reject decision is the one that reaches the campaign.) Governs R67.
 - KTD24. **Gateway caching is per call site, not global: skip it on the synthesizer, use it on the judge.** These two calls want opposite behaviour. A cached synthesizer silently repeats yesterday's companies and breaks the product's core promise; a cached judge saves money on a retry and costs nothing. A single gateway-wide cache setting cannot serve both, so each call site sets its own header. Governs R62, R63.
 - KTD25. **Batch every LinkedIn profile into one BrightData trigger before the loops start.** The trigger body is an array, so one call carries every URL in the run. Per-person triggers plus their poll loops would cost roughly seven hundred requests an hour against a reported limit near one hundred and twenty, and would make each person wait ten to thirty seconds serially. The accepted cost is that a profile is fetched for a person the loop later rejects — cheap, because rejection usually happens after reading the profile anyway. Governs R65.
 - KTD23. **Feed our resolved rates back to the gateway as `cf-aig-custom-cost`.** We already fetch OpenRouter's real prices for the ledger, so sending them costs one header. Cloudflare's own figure is a self-described estimate, and its spend limits enforce on that figure. Pushing the true rate makes KTD20's hard ceiling accurate rather than approximate, and it closes the loop: one price source drives both our report and the platform's enforcement. Governs R61.
@@ -230,9 +233,25 @@ The three capability functions, their Workflows, their routes, the provider cont
 | `@cloudflare/workers-types` | 5.20260827.1 |
 | `typescript` | 7.0.2 |
 | `vitest` | 4.1.11 |
-| `@cloudflare/vitest-pool-workers` | 0.22.0 |
+| `@cloudflare/vitest-plugin` | 1.1.1 |
+| `@biomejs/biome` | 2.5.1 |
 
 `ai@7` peer range is `zod: ^3.25.76 || ^4.1.8`. Pinned `zod@4.4.3` satisfies it.
+
+`@cloudflare/vitest-pool-workers` was renamed `@cloudflare/vitest-plugin` on 2026-08-19. `defineWorkersConfig` is gone, replaced by the `cloudflareTest()` Vite plugin; `cloudflare:test` is deprecated in favour of `cloudflare:workers`; `fetchMock` is removed, so tests mock `globalThis.fetch` directly.
+
+### Enforced code limits
+
+Biome fails the build on any of these. Hitting one is a signal to split, never to raise it.
+
+| Limit | Value |
+|---|---|
+| Lines per function | 80, blank lines skipped |
+| Lines per file | 400, blank lines skipped |
+| Cognitive complexity | 10 |
+| Parameters per function | 4 |
+
+Banned outright: type assertions outside `test/` (`as const` excepted), `Record<string, unknown>`, `Record<string, any>`, `object`, `Function`, `any`, non-null assertions, relative imports outside `test/`, and every comment that is not a `/** */` docstring. Explanations belong in `docs/solutions/`, enforced by `scripts/check-comments.mjs`.
 
 ### High-level technical design
 
@@ -680,14 +699,14 @@ U1 gates everything. U14 lands second, because every provider and every model ca
 
 **Goal.** One gateway client and two pure model calls.
 
-**Requirements.** R36, R51, R52, R54, R62, R63. Implements KTD5, KTD6, KTD19, KTD20, KTD24.
+**Requirements.** R36, R51, R52, R54, R62, R63, R67. Implements KTD5, KTD6, KTD19, KTD20, KTD24, KTD26.
 
 **Dependencies.** U1, U14.
 
 **Files.** `src/core/model.ts`, `src/core/synthesize.ts`, `src/core/judge.ts`, `test/synthesize.spec.ts`, `test/judge.spec.ts`
 
 **Approach.**
-1. `model.ts` builds the provider once: `createOpenAICompatible({ name: 'aigw', baseURL: 'https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/compat', headers: { 'cf-aig-authorization': 'Bearer ' + token } }).chatModel('dynamic/<route>')`.
+1. `model.ts` exports `reasoningModel(env)` and `workerModel(env)`. Both build a provider the same way, differing only in the route name they select — `MODEL_ROUTE_REASONING` for the judge, `MODEL_ROUTE_WORKER` for the synthesizer, per R67. The shape is: `createOpenAICompatible({ name: 'aigw', baseURL: 'https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/compat', headers: { 'cf-aig-authorization': 'Bearer ' + token } }).chatModel('dynamic/<route>')`.
 2. `synthesize(icp, feedback)` calls `generateText` with `instructions` (not `system`) and `output: Output.object({ schema })`. The schema returns `{ query, systemPrompt, dataSources }`. `dataSources` is validated locally against the closed provider enum and capped at 5 before it reaches Exa.
 3. `judge(icp, rows)` calls `generateText` with `Output.object({ schema })` returning `{ verdicts: [{ index, keep, reason }] }`. One call for the whole batch, never one per row.
 4. The two call sites take opposite cache headers. `synthesize` sends `cf-aig-skip-cache`; `judge` sends `cf-aig-cache-ttl`. Neither call has tools. If either ever gains a tool, it must also gain an explicit `stopWhen` — the `generateText` default is `isStepCount(1)`, which would stop after one step. Record this in a comment at both call sites.
@@ -706,6 +725,7 @@ U1 gates everything. U14 lands second, because every provider and every model ca
 - The gateway client sends `cf-aig-authorization` and targets a URL ending in `/compat`.
 - `synthesize` sends `cf-aig-skip-cache` on every call. This is the R62 guard and covers AE13.
 - `judge` sends `cf-aig-cache-ttl` and never sends `cf-aig-skip-cache`.
+- `judge` selects `MODEL_ROUTE_REASONING`; `synthesize` selects `MODEL_ROUTE_WORKER`. A test asserts the route name in each request body, because swapping them is invisible at runtime.
 - A test asserts no code path lets `synthesize` reach the gateway without the skip-cache header, because the failure is silent.
 
 **Verification.** Both calls are schema-validated, both survive a model failure, and neither can emit an invalid `dataSources` entry.
