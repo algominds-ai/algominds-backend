@@ -14,6 +14,7 @@
 		"test:watch": "vitest",
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
+		"db:migrate": "drizzle-kit migrate",
 		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
 		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs"
 	},

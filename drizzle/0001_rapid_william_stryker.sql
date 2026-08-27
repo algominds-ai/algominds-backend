@@ -1,0 +1,2 @@
+DROP INDEX "evidence_subject_kind_seen_idx";--> statement-breakpoint
+CREATE INDEX "evidence_subject_kind_seen_idx" ON "evidence" USING btree ("subject_type","subject_id","kind","seen_at" DESC NULLS LAST);
