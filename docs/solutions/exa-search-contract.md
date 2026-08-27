@@ -84,3 +84,26 @@ companies.
 
 One 100-result call returns more usable companies, with better data, in one
 sixtieth of the time.
+
+## The Agent API is a different endpoint with a provider array
+
+`POST /agent/runs` takes `query` (the only required field) plus:
+
+| Field | Values |
+|---|---|
+| `systemPrompt` | source preference, novelty, and duplication guidance |
+| `outputSchema` | JSON Schema for `output.structured` |
+| `effort` | `minimal` `low` `medium` `high` `xhigh` `auto` `max` |
+| `previousRunId` | chains a run onto an earlier one |
+| `dataSources` | up to 5 entries of `{ "provider": ... }` |
+| `budget` | `{ "maxCostDollars": 1 to 100 }`, default cap $5 |
+| `input.data` | records the agent should work from |
+| `metadata` | caller-provided strings |
+
+`dataSources` is the provider array. Allowed values:
+
+```
+fiber, financial_datasets, similarweb, baselayer, affiliate, particle, jinko
+```
+
+`/search` has no provider array. Only `/agent/runs` does.
