@@ -3,26 +3,21 @@
 	"plugins": [
 		{
 			"path": "./lint/anti-slop/no-chained-type-assertions.grit",
-			"includes": [
-				"**",
-				"!test/**"
-			]
+			"includes": ["**", "!test/**"]
 		},
 		{
 			"path": "./lint/anti-slop/no-module-mocking.grit",
-			"includes": [
-				"**"
-			]
+			"includes": ["**"]
 		},
 		"./lint/anti-slop/no-unknown-type-aliases.grit",
 		{
 			"path": "./lint/rules/no-type-assertions.grit",
-			"includes": [
-				"**",
-				"!test/**"
-			]
+			"includes": ["**", "!test/**"]
 		},
-		"./lint/rules/no-loose-record.grit"
+		{
+			"path": "./lint/rules/no-loose-record.grit",
+			"includes": ["**", "!test/**"]
+		}
 	],
 	"vcs": {
 		"enabled": true,
@@ -95,10 +90,7 @@
 					"options": {
 						"patterns": [
 							{
-								"group": [
-									"./*",
-									"../*"
-								],
+								"group": ["./*", "../*"],
 								"message": "Use @/* imports \u2014 relative paths are forbidden."
 							}
 						]
@@ -109,10 +101,7 @@
 	},
 	"overrides": [
 		{
-			"includes": [
-				"worker-configuration.d.ts",
-				"drizzle/**"
-			],
+			"includes": ["worker-configuration.d.ts", "drizzle/**"],
 			"formatter": {
 				"enabled": false
 			},
@@ -124,9 +113,7 @@
 			}
 		},
 		{
-			"includes": [
-				"test/**"
-			],
+			"includes": ["test/**"],
 			"linter": {
 				"rules": {
 					"style": {

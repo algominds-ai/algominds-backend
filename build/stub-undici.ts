@@ -1,4 +1,3 @@
-
 const reject = (prop: string): never => {
 	throw new Error(
 		`undici is not available on Workers (accessed "${prop}"). Use the global fetch.`,
