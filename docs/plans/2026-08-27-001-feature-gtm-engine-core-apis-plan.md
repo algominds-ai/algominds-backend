@@ -79,6 +79,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R68. Employment is verified by the same call that finds the person. Exa `/search` with `category: "linkedin profile"` and a summary schema returns `currentTitle` and `currentCompany` alongside the profile URL, so no second lookup and no per-person agent loop exist.
 - R69. Apollo People Search runs as an independent second list, never as the primary. It returns `last_name_obfuscated` and no LinkedIn URL, so it cannot feed an email finder on its own. Its value is coverage: it finds people Exa missed.
 - R70. Every Apollo filter key is validated against a closed allow-list before the request leaves. Apollo silently ignores an unknown key and returns unfiltered results, so a typo would widen the search with no error.
+- R71. `currentTitle` from a people search is normalised before use. Exa returns the LinkedIn headline verbatim when the headline occupies the title field, so a real result was `SVP of Sales @ Ramp (I'm hiring - ramp.com/careers)`. Personalisation tolerates that; title filtering does not. Strip anything after an `@`, a parenthesis, or a pipe, and keep the raw headline as evidence.
 - R44. Find people caps the number of companies searched in one run. The default is 100, and the run reports how many it skipped. One `/search` call covers a company, so the ceiling is calls, not loops.
 
 #### Enrich
@@ -967,7 +968,7 @@ before the network.
 3. Per company, one `/search`: `category: "linkedin profile"`, `type: "keyword"`, and a
    `contents.summary.schema` of `{ fullName, currentTitle, currentCompany, location }`.
    Measured at three people in 4.5s for $0.010.
-4. `currentCompany` is the employment check. A person whose `currentCompany` does not match the
+4. Normalise `currentTitle` per R71 before any title comparison, keeping the raw headline as an evidence row. `currentCompany` is the employment check. A person whose `currentCompany` does not match the
    target company is recorded with lowered confidence, not dropped, and both claims persist.
 5. Apollo People Search runs alongside as a free second list. Match its rows to Exa's by first
    name plus company; an Apollo row with no Exa match is a coverage candidate with no email
@@ -978,6 +979,7 @@ before the network.
 **Test scenarios.**
 - A company whose search returns nobody yields `{ domain, people: [], reason }` and the run
   still succeeds.
+- A headline of `SVP of Sales @ Ramp (I'm hiring - ramp.com/careers)` normalises to `SVP of Sales`, and the raw headline survives as evidence.
 - `currentCompany` differing from the target lowers confidence and keeps both claims.
 - The same LinkedIn URL under two companies collapses to one person; two people sharing a name
   with different URLs stay separate.
