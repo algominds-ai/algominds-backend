@@ -10,12 +10,25 @@ import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
 import { recordModelCall } from "@/core/cost";
 
+const PROVIDER_NAME = "aigw";
+
+/**
+ * `supportsStructuredOutputs` makes the SDK send the real JSON schema
+ * instead of a bare `json_object`, and `require_parameters` makes
+ * OpenRouter pick a provider that honours it. See
+ * `docs/solutions/structured-output-routing.md`.
+ */
+const STRUCTURED_ROUTING = {
+	[PROVIDER_NAME]: { provider: { require_parameters: true } },
+};
+
 async function gatewayModel(env: Env, route: string): Promise<LanguageModel> {
 	const token = await env.CF_AIG_TOKEN.get();
 	return createOpenAICompatible({
-		name: "aigw",
+		name: PROVIDER_NAME,
 		baseURL: env.AI_GATEWAY_BASE_URL,
 		headers: { "cf-aig-authorization": `Bearer ${token}` },
+		supportsStructuredOutputs: true,
 	}).chatModel(route);
 }
 
@@ -72,6 +85,7 @@ async function attemptStructured<T>(
 			prompt: params.prompt,
 			output: Output.object({ schema: params.schema }),
 			headers: params.headers,
+			providerOptions: STRUCTURED_ROUTING,
 			include: { responseBody: true },
 		});
 		recordModelCall(ledger, op, params.configuredId, {
