@@ -755,6 +755,7 @@ recorded baseline of 9, 24, 30, and 297.
 | A writing test reaches production rows, because no Cloudflare isolation covers a Hyperdrive connection | High | KTD8 points test bindings at their own database through the env-var override; writing tests also clean up |
 | Enrich cannot measure its ceiling in dollars, because `EnrichOutcome` carries no cost | Medium | U7 threads cost back before the ceiling is applied to that path |
 | The cap check pushes `runFindCompaniesRounds` past the 80-line function limit | Low | U7 extracts it as a helper rather than inlining |
+| Any holder of the one shared bearer token can read any account's rows through the two new routes | High once a second account exists | Accepted for now: one account in practice. The tenant boundary this plan creates is a data model, not an enforced boundary, until token-to-account authentication lands. Named here so nobody mistakes the `account` table for access control |
 
 ---
 
@@ -772,7 +773,13 @@ recorded baseline of 9, 24, 30, and 297.
 - Filtering or suppressing people below an employment-confidence threshold. The
   signal exists and is recorded; nothing acts on it yet.
 - Authentication that maps a bearer token to an account. This plan creates the
-  tenant; it does not change who may call the API.
+  tenant; it does not change who may call the API. Until it lands, the two new
+  read routes serve any run to any token holder — see the risks table.
+- A retention and deletion path for the vendor data U9 stores verbatim. Person
+  records carry personal data: names, titles, locations, and, once enrichment
+  runs, email addresses. This plan commits to keeping the vendor's object whole
+  and sets no retention period, so nothing here answers a deletion request. The
+  capture is deliberate and the gap is real; closing it is separate work.
 
 ### Not in Scope
 
