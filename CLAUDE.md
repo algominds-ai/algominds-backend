@@ -12,10 +12,15 @@ copy its content into this file.
 
 ## Commands
 
+**`bun run gate` is the gate.** It runs all six checks and prints a pass/fail line per check.
+No subset of it counts as passing — `biome check` alone is one of six, not the linter.
+
 ```bash
+bun run gate                      # THE gate: types, biome, comments, language, tests, bundle
+
 bun install --frozen-lockfile
 bunx tsc --noEmit
-bun run lint                      # biome check .
+bun run lint                      # biome + comments + language
 bun run test                      # vitest on the real Workers runtime
 bunx wrangler deploy --dry-run    # bundle check — must stay clean
 bunx wrangler dev

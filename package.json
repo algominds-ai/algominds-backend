@@ -14,7 +14,8 @@
 		"test:watch": "vitest",
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"gate": "bun scripts/gate.mjs"
 	},
 	"dependencies": {
 		"@ai-sdk/mcp": "2.0.39",
