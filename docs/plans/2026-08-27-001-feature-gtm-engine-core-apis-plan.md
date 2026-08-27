@@ -153,14 +153,13 @@ The three capability functions, their Workflows, their routes, the provider cont
 - **`previousRunId`.** No documented cost saving, and it is unavailable under Zero Data Retention.
 - **`POST /agent/runs/{id}/stop`.** Documented as supported only on `max` effort runs. We use fixed `high`. Use `cancel` instead.
 - **Apollo `mixed_companies/search`.** It costs 1 credit per page. Exa finds companies.
-- **No Findymail and no Firecrawl in v1.** (session-settled: user-directed.) Both keys exist in the environment. Findymail finds and verifies email and would be a stronger verifier than Apollo's `email_status` flag, but nothing is measured yet; Firecrawl overlaps what Exa and BrightData already do. Adding either is one file and one array entry once a measurement justifies it.
+- **No Firecrawl in v1.** It overlaps what Exa `/search` already returns. Findymail is now the email channel; the earlier decision to cut it was reversed by live evidence.
 - **No Exa Agent API.** Slower and dearer than `/search` for the same result, and it accepts no hard filters. Measured side by side.
 - **No BrightData in v1.** It cannot discover people; it needs a LinkedIn URL as input, and obtaining that costs an Exa search that already returns the profile. Cheaper per fetch, but only as an addition. Its live-trigger price is unreadable — the billing endpoint returns 403 for our token. Keep it for deep profiles later: 34 fields including a full experience array.
 - **No Apollo enrichment.** `bulk_match` charged a credit and returned no email, no `email_status` and no `employment_history`.
 - **No Clay at all in v1.** It costs 6-20 Data Credits per person at about $0.05 each, it is last in every waterfall, and its domain-filter field name is undocumented. Adding it later is one file and one array entry — which is the provider design doing its job. The Appendix keeps its contract for that day.
 - **No phone channel in v1.** Phone reveal is the most expensive call in the stack at 1+8 credits, and it is the only thing that would need an async vendor webhook. Cutting it removes the webhook route, its authentication scheme, and `step.waitForEvent` entirely. The workflow this serves writes email. Adding phone later is one provider entry and one route.
 - **No raw-payload column.** `evidence` stores only fields we read. A raw provider response for a company can name a person who never became a `person` row, creating a deletion path we would then have to build and schedule. Storing less removes the problem instead of managing it.
-- **BrightData discovery mode.** Profile-by-URL only. The `discover_by` shape is undocumented, and profile-by-URL answers the only question we ask.
 - **A separate email-verification vendor in v1.** Apollo `email_status` is the source.
 - **Crunchbase.** It is not in the Exa `dataSources` provider enum. It is not an entitlement that can be switched on.
 - **A critic tool loop for companies.** Grounding already ships the proof per field.
@@ -182,7 +181,7 @@ The three capability functions, their Workflows, their routes, the provider cont
 - AE1. Covers R4, R5, R29. Ask for 10 seed fintech companies in SF that announced a GTM hire. Exa returns 14 rows. Three have a null `evidenceUrl`. Two have an `evidenceDate` from 2025. One domain is already in Postgres. The gate drops 6 at zero cost. The judge rejects 1. Round 2 runs with those 7 reject reasons. The result is `{ found: 10, rounds: 2, status: 'complete', costDollars: 1.00 }`.
 - AE2. Covers R6. Day 31 on a narrow ICP. Round 1 returns 12 rows and the gate finds all 12 already in Postgres. The run stops at round 1 and returns `{ found: 0, status: 'exhausted' }`. It does not spend $1.50 to learn the same thing three times.
 - AE3. Covers R29. A row has `linkedinUrl` set, and no `output.grounding` entry has `field` equal to `structured.companies[3].linkedinUrl`. The gate nulls that field. The row survives because `linkedinUrl` is optional per R28.
-- AE4. Covers R10. Apollo reports a person as VP Sales at acme.com. The BrightData profile reports globex.com with a start date last month. Both persist as evidence rows. The newer wins. The Acme row drops in confidence and is not deleted.
+- AE4. Covers R10. The people search returns a person whose `currentCompany` is Globex while the target company was Acme. Both claims persist as evidence rows. Confidence on the Acme claim drops. Nothing is deleted, and no second lookup is made.
 - AE5. Covers R14, R16. `enrich(person, ['email'])`. Apollo `bulk_match` returns an address with `email_status: "guessed"`. The waterfall does **not** stop. It tries the next provider. If nothing returns `verified`, the result is `{ email: {...}, status: 'unknown' }` and the address is not sendable.
 - AE6. Covers R1, R2. Add Hunter.io as an MCP email provider. The diff is one line in the `EMAIL` array. No other file changes. It works on the next run.
 - AE7. Covers R32. `findCompanies` writes 10 domains, then the next round reads the exclusion list. The read returns all 10. It does not return a stale pre-write result.
@@ -214,7 +213,7 @@ The three capability functions, their Workflows, their routes, the provider cont
 - KTD23. **Feed our resolved rates back to the gateway as `cf-aig-custom-cost`.** We already fetch OpenRouter's real prices for the ledger, so sending them costs one header. Cloudflare's own figure is a self-described estimate, and its spend limits enforce on that figure. Pushing the true rate makes KTD20's hard ceiling accurate rather than approximate, and it closes the loop: one price source drives both our report and the platform's enforcement. Governs R61.
 - KTD22. **`GET /api/v1/generation?id=` is the recorded upgrade path, not the v1 choice.** It returns the real `total_cost`, `cache_discount`, and `upstream_inference_cost` for one generation rather than a computed figure. It costs one extra round trip per model call, needs the OpenRouter key we do not hold when the gateway uses stored keys, and depends on the gateway passing OpenRouter's `gen-…` id through the `/compat` response, which is unverified. Take it only if per-call exactness starts to matter. Governs R55.
 - KTD20. **An AI Gateway spend limit is the hard ceiling on model spend.** Cost-based budgets return 429 when exceeded and scope by model, provider, or custom metadata. We already send `cf-aig-metadata`, so this costs one dashboard rule and no code. R44's loop cap and R8's round cap stay; this is the backstop under both. Governs R54.
-- KTD16. **`findPeople` caps validation loops per run before the loop starts.** `isStepCount(8)` bounds one person. Nothing bounded the count of people, so a wide ICP could run hundreds of loops before the cost report arrives. Governs R44.
+- KTD16. **`findPeople` caps the companies it searches, before the first search fires.** Nothing else bounds a wide ICP, and the cost report arrives too late to help. Governs R44.
 - KTD8. **There is no tool loop anywhere.** "Is this person still employed here" was the one question thought to need a live lookup. It does not: `currentCompany` comes back inside the people search. With that gone, no capability needs an agent. Governs R9, R10, R68.
 - KTD9. **Every Exa response's `requestId` is stored with the run.** `/search` returns one on success and on error, and it is the only handle Exa support can trace. Governs R38.
 - KTD10. **The Workflow instance id is the only idempotency mechanism.** `createBatch` is documented as idempotent on a caller-supplied id. Governs R24.
@@ -417,7 +416,7 @@ algo-backend/
         mcp.ts
         exa.ts
         apollo.ts
-        brightdata.ts
+        findymail.ts
         index.ts
       db/
         schema.ts
@@ -446,7 +445,8 @@ U1 gates everything. U14 lands second, because every provider and every model ca
 - Cloudflare Hyperdrive and PlanetScale: `developers.cloudflare.com/hyperdrive/planetscale/`. Carries the cache-invalidation caveat behind KTD3.
 - Apollo API pricing: `docs.apollo.io/docs/api-pricing`. People API Search is 0 credits; enrichment is 1-9.
 - Clay pricing: `clay.com/pricing`. Data Credits at about $0.05, 6-20 per enriched person. This refuted the "Clay is free" assumption and moved Clay out of discovery.
-- BrightData Dataset API v3: `docs.brightdata.com/api-reference/scrapers/asynchronous-requests`. LinkedIn profile dataset id `gd_l1viktl72bvl7bjuj0`.
+- Live vendor probes, 2026-08-27: `docs/solutions/vendor-probe-findings.md`. Authoritative wherever it contradicts vendor documentation.
+- BrightData Dataset API v3, retained for a possible deep-profile follow-up: dataset id `gd_l1viktl72bvl7bjuj0`, snapshot ready in 7.3s for one profile.
 - npm registry, 2026-08-27, for every version pin and for the `undici` and `cross-spawn` transitive dependencies behind KTD4.
 - *Meta v. Bright Data* (N.D. Cal. 2024) and the hiQ v. LinkedIn settlement, behind RK3.
 
@@ -556,7 +556,7 @@ U1 gates everything. U14 lands second, because every provider and every model ca
    ```
 3. Exa is the only `reported` caller. Its `costDollars` breakdown maps straight through, and each `dataSources` provider becomes its own entry so Fiber and Similarweb show separately.
 4. If the response is a gateway cache hit, record zero and stop. A cached response is billed at zero regardless of any custom cost. Otherwise resolve the model: read `cf-aig-model` from `result.response.headers`, and use `result.response.modelId` only when the header is absent. Never price by the configured id: the route chooses the model, and a spend limit falls back to a cheaper one. Then `metered` the call from `result.usage`: `inputTokens` at `pricing.prompt` and `outputTokens` at `pricing.completion`. The AI Gateway returns no dollars in the response, so tokens times rate is the only inline path. Cloudflare's own figure is a best-effort estimate published to analytics, so ours is not less accurate — it is just ours, and it arrives in time to act on.
-5. Apollo is `metered` in `credits`. BrightData is `metered` in `records`. Exa Connect providers arrive inside the Exa `reported` detail.
+5. Findymail is `metered` in `credits`, and is the only metered caller in v1. Exa and the gateway both report dollars inline.
 6. `log.ts` emits one JSON line per external call: `{ provider, operation, ms, ok, costDollars, requestId }`.
 7. Configure an AI Gateway spend limit scoped by the `cf-aig-metadata` we already send. That is the hard ceiling; the ledger is the report. A 429 from the gateway means the budget is spent, and the step must not retry it as a transient error.
 
@@ -954,7 +954,7 @@ before the network.
 
 **Goal.** One search call per company. No agent, no second lookup.
 
-**Requirements.** R9, R10, R11, R12, R21, R30, R44, R48, R68, R69. Covers AE4. Implements KTD8, KTD28.
+**Requirements.** R9, R10, R11, R12, R21, R30, R44, R48, R68, R69. Covers AE4. Implements KTD8, KTD16, KTD28.
 
 **Dependencies.** U4, U8, U9.
 
@@ -1060,7 +1060,7 @@ Non-negotiable assertions that must exist somewhere in the suite:
 10. `recordVerdict` cannot be called without a `citationUrl`.
 12. No file under `src/core/` imports from `src/routes.ts` or `src/workflows/`. Enforce with a static import check, not a convention.
 13. `synthesize` cannot reach the gateway without `cf-aig-skip-cache`.
-14. `findPeople` issues zero BrightData requests once its loops have started.
+14. `findPeople` constructs no `ToolLoopAgent` and makes no profile-fetch call of its own.
 
 ---
 
