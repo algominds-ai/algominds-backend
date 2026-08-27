@@ -38,7 +38,7 @@ the same way before U5, the one unit that can lose data.
 
 ## Problem Frame
 
-Six defects, each measured, not assumed.
+Seven defects, each measured, not assumed.
 
 1. **No tenant exists.** No column in any table names a user, account, or
    organisation. `icp.domain` is free text, unindexed and not unique. Nobody
@@ -62,8 +62,13 @@ Six defects, each measured, not assumed.
    provider flag that dropped the JSON schema so the model never ran, two Exa
    fields that do not exist, an invalid enum value, and a result count that
    made the target unreachable.
+7. **`/enrich` silently enriches nothing.** `subjectsForRun` is documented as
+   returning "every person produced by the find-people run" but filters on
+   `company.run_id`, which only ever holds a **companies** run id. Passing the
+   people run id the route's own test uses matches zero rows. The test asserts
+   a 202 and never the join, so it passes while the feature does nothing.
 
-A seventh defect blocks the work itself: **`drizzle-kit` cannot connect.**
+An eighth defect blocks the work itself: **`drizzle-kit` cannot connect.**
 `DATABASE_URL` names a database `app` that does not exist; the real tables are
 in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 
@@ -77,7 +82,7 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R2 | A `run` table holds one row per capability run, keyed by the runId the route already generates, carrying account, icp, capability, status, spend, and timestamps. |
 | R3 | `company.run_id` is a foreign key to `run.id`. Existing rows keep their run. |
 | R4 | `POST /people/find` scopes by a companies runId or an explicit domain array. It never loads a company from an earlier run. |
-| R5 | `maxCompanies` leaves the HTTP contract and lives in `src/config.ts` as a spend cap. |
+| R5 | `maxCompanies` leaves the HTTP contract and lives in `src/config.ts` as a bound on how many companies one people run searches. It bounds cost and time; it is not the spend ceiling, which is R8 and R9. |
 | R6 | Indexes exist on `person(company_id)`, `company(run_id)`, `company(icp_id, found_at desc)`, and `icp(account_id)`. |
 | R7 | Every `step.do` call carries an explicit `StepConfig`. Steps that pay a vendor retry at most twice. |
 | R8 | A run stops starting new paid work once its spend reaches the per-run ceiling, keeps everything it already found, and reports terminal status `capped` with the spend. |
@@ -87,6 +92,8 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R12 | Everything the vendor returns for a company or a person is stored, not only the fields the pipeline reads. |
 | R13 | Tests exercise real SQL, a real workflow, and the shape of every vendor request the code can emit. |
 | R14 | `bun run gate` stays green, and the measured end-to-end behaviour is unchanged. |
+| R15 | `/enrich` resolves its subjects from the run the caller names. A run id that matches no company is reported, never silently enriched as empty. |
+| R16 | Tests that write to the database run against a database that holds no production rows. |
 
 ---
 
@@ -104,6 +111,11 @@ So the per-run ceiling **breaks the loop and returns normally** with
 
 `NonRetryableError` is correct for R9 only — the daily account cap, checked
 before any work, where there is nothing partial to lose.
+
+A separately dispatched repository review reached the same conclusion
+independently, noting that the existing `FindCompaniesStatus` values already
+travel as a field inside the payload rather than as Cloudflare's own instance
+status. `capped` joins them there.
 
 *(session-settled: user-directed — chosen over failing the run outright and
 over warn-only: failing loses work already paid for, warn-only leaves no cap.
@@ -162,6 +174,20 @@ No new column. The shape becomes `{ provider, entity, result }` — the vendor's
 own object stored verbatim under `entity`, keyed by `provider` so a second
 vendor sits beside it. `evidence` is unchanged: it stays the asserted-fact
 table, append-only; `data` is the raw capture.
+
+### KTD8. Tests get their own database
+
+Miniflare isolates the storage it simulates — KV, R2, D1, Durable Objects — and
+undoes writes at the end of each test file. A Hyperdrive connection is none of
+those. It is a real outbound TCP socket to a real server, so **no Cloudflare
+isolation mechanism touches it**, and `fileParallelism: false` only stops files
+racing each other.
+
+A test that writes therefore writes to whatever database the binding names. So
+tests point at their own database through
+`CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_<BINDING>`, which overrides
+`localConnectionString`. Production rows cannot be reached by a test that
+misbehaves, rather than merely being unlikely to be.
 
 ### KTD7. The vendor guard is a schema-conformance test, not a live call
 
@@ -441,6 +467,13 @@ matching the reported cost, gate green.
 indistinguishable from no ceiling, and only a test that drives spend past the
 line tells them apart.
 
+Two constraints found by inspection. `runFindCompaniesRounds` already runs
+about 50 lines against an 80-line limit, so the check is its own helper rather
+than inline code. And `EnrichOutcome` carries `subjectId`, `email`, and
+`linkedin` but **no cost**, unlike `FindCompaniesResult` and `FindPeopleResult`
+which both report `costDollars`. Enrich therefore needs cost threaded back
+before its ceiling can be measured in dollars at all.
+
 **Test scenarios.**
 - A scripted ledger past the per-run ceiling stops the next round.
 - A capped run returns the companies it already found, never an empty result.
@@ -451,6 +484,8 @@ line tells them apart.
   vendor call.
 - Overshoot is bounded: a round that begins under the ceiling is allowed to
   finish, and the recorded spend may exceed the cap by that one round (KTD2).
+- The enrich path reports a cost, so its ceiling measures dollars rather than
+  counting batches.
 
 **Verification.** Cap tests pass, an ordinary run is unaffected, gate green.
 
@@ -524,6 +559,18 @@ previous run discarded, gate green.
 3. `maxCompanies` leaves the request body and becomes a config cap (R5).
 4. A domain array normalises through the existing `normalizeDomain`, never a
    new normaliser.
+5. Dropping `icpId` from the payload means the workflow can no longer be handed
+   an ICP. It resolves one from the companies it loaded, through
+   `company.icp_id`. `FindPeoplePayloadSchema` and the `load-icp` step both
+   change accordingly.
+6. `createBatch` needs a stable id, and a domain array has no natural one. A
+   `runId` request scopes to that run id, mirroring how `/enrich` already does
+   it. A `domains` request scopes to a digest of the sorted, normalised
+   domains, so the same list on the same day is one run rather than many.
+
+**Patterns to follow.** `subjectsForRun` in `src/core/enrich.ts` already joins
+from a run id to companies. The company loader here is that query without the
+person join. Do not invent a second way to reach companies by run.
 
 **Test scenarios.**
 - A run id loads only that run's companies, proven with two runs on one profile
@@ -590,10 +637,16 @@ page, gate green.
 2. **Model layer.** Cover `src/core/model.ts`, which is untested and held two
    of the four defects. Assert the request body actually carries the JSON
    schema and the routing flag.
-3. **Workflow level.** Drive the real entrypoints. The route tests already
-   prove this works, given immediate termination and `fileParallelism: false`.
-4. **Real SQL.** Integration tests use the live local database, proven
-   possible and recorded in `docs/solutions/real-sql-in-workers-tests.md`.
+3. **Workflow level.** Drive the real entrypoints through
+   `introspectWorkflowInstance` from `cloudflare:test`, which the installed
+   plugin provides along with `disableSleeps` and `mockStepResult`. Each
+   instance must be disposed, or a completed instance leaks into the next test
+   and reads as already finished.
+4. **Real SQL against a test database.** Per KTD8, point the Hyperdrive
+   bindings at a database of their own through
+   `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_<BINDING>`. Miniflare's
+   storage isolation does not reach a TCP connection, so a writing test cleans
+   up after itself as well.
 5. Live vendor calls go in a separate opt-in script, never the gate, because
    each costs about $0.007.
 
@@ -613,11 +666,51 @@ regression test that passes on the broken version proves nothing.
 - A workflow step that throws a retryable error is retried no more than the
   configured limit.
 - Real SQL proves `person(company_id)` is used rather than scanned.
-- Every test cleans up its rows, since the database is shared.
+- Every writing test removes its rows, since no Cloudflare isolation reaches a
+  Hyperdrive connection.
+- A workflow test disposes its introspected instance, proven by a second test
+  in the same file starting from a clean instance.
+- Enriching a run id that matches no company reports that, rather than
+  reporting success over an empty set (R15).
 - No test uses `vi.mock`, which a Biome plugin bans.
 
 **Verification.** Each new test fails against `baseline-before-multitenancy`
 and passes after, gate green.
+
+### U13. Fix the enrich run scoping
+
+**Goal.** `/enrich` enriches the people the caller meant, or says it found none.
+
+**Requirements.** R15.
+
+**Dependencies.** U6.
+
+**Files.** `src/core/enrich.ts`, `src/workflows/enrich.ts`, `test/enrich.spec.ts`,
+`test/routes.spec.ts`.
+
+**Approach.**
+1. `subjectsForRun` filters `company.run_id`, which only a companies run ever
+   writes. Its own docstring claims it returns the people of a find-people run.
+   One of the two is wrong; the `run` table from U4 settles which by making a
+   run's capability explicit.
+2. Resolve subjects from the named run, following its capability rather than
+   assuming one.
+3. A run id that matches no company reports that outcome. Today it returns an
+   empty set that is indistinguishable from success.
+
+**Execution note.** Write the failing test first. The existing route test passes
+today against a broken join because it asserts only the 202 and never the rows —
+that is precisely how this shipped.
+
+**Test scenarios.**
+- A companies run id resolves the people of that run's companies.
+- A people run id resolves the same people, rather than an empty set.
+- A run id matching no company is reported, not returned as an empty success.
+- The existing route test additionally asserts the resolved subjects, not only
+  the 202.
+
+**Verification.** Enriching a real run resolves a non-empty subject list, and
+the new test fails against the baseline tag.
 
 ---
 
@@ -659,6 +752,9 @@ recorded baseline of 9, 24, 30, and 297.
 | Splitting two large files changes behaviour | Medium | U3 is a pure move, proven by existing tests passing with no assertion changed |
 | Shared test database causes cross-test interference | Medium | `fileParallelism` is already false; every writing test scopes and removes its own rows |
 | The Findymail rate is an unverified $0.01 placeholder | Low | Recorded in the plan; ceiling accuracy on Findymail-heavy runs is approximate until probed |
+| A writing test reaches production rows, because no Cloudflare isolation covers a Hyperdrive connection | High | KTD8 points test bindings at their own database through the env-var override; writing tests also clean up |
+| Enrich cannot measure its ceiling in dollars, because `EnrichOutcome` carries no cost | Medium | U7 threads cost back before the ceiling is applied to that path |
+| The cap check pushes `runFindCompaniesRounds` past the 80-line function limit | Low | U7 extracts it as a helper rather than inlining |
 
 ---
 
