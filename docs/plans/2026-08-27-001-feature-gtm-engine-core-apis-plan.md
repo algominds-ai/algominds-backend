@@ -183,13 +183,13 @@ The three capability functions, their Workflows, their routes, the provider cont
 
 - KTD1. **Call Exa over `fetch`, not `exa-js`.** Workers compatibility for the SDK is undocumented, and we need our own poll loop inside `step.do` regardless. Two functions: `startRun` and `getRun`. (session-settled: user-approved — chosen over `exa-js`: zero dependency and guaranteed Workers compatibility.) Governs R25, R26.
 - KTD2. **Fixed `effort: "high"` at a flat $0.50 per request.** `budget.maxCostDollars` is documented as compatibility-only. A fixed tier is the only reliable cost ceiling. Governs R8.
-- KTD3. **Two Hyperdrive configurations.** `HYPERDRIVE_CACHED` for ICP document reads. `HYPERDRIVE_DIRECT` with caching disabled for the dedupe read-after-write path. Cloudflare documents that Hyperdrive does not invalidate its cache on PlanetScale writes. Governs R32.
-- KTD4. **Alias `undici` and `cross-spawn` to stubs in the esbuild alias config.** `@ai-sdk/provider-utils@5.0.32` depends on `undici@^7`; Workers has global `fetch`. `@ai-sdk/mcp@2.0.39` depends on `cross-spawn@^7` for the stdio transport, which Workers cannot use. Both enter the bundle graph and break the build otherwise. Governs R41.
+- KTD3. **Two Hyperdrive configurations.** `HYPERDRIVE_CACHED` for ICP document reads. `HYPERDRIVE_DIRECT` with caching disabled for the dedupe read-after-write path. This is the documented remedy, not inference: Cloudflare states Hyperdrive does not invalidate cached reads on write, and prescribes "a cache-disabled Hyperdrive configuration for reads that must be fresh... reads immediately after a write", plus "if an ORM library owns the SQL, create separate database clients for each binding". Create it with `wrangler hyperdrive create <name> --connection-string="..." --caching-disabled`. Default cache is `max_age` 60s with `stale_while_revalidate` 15s, so a cached dedupe read could miss a write made seconds earlier. Two configurations share one origin connection budget; size the pool for both. Governs R32.
+- KTD4. **Alias `undici` and `cross-spawn` through wrangler's documented `alias` field.** `@ai-sdk/provider-utils@5.0.32` depends on `undici@^7`; Workers has a global `fetch`. `@ai-sdk/mcp@2.0.39` depends on `cross-spawn@^7` for the stdio transport, which Workers cannot use. Both enter the bundle graph and break the build otherwise. Cloudflare documents `alias` for exactly this — "provide an implementation of an NPM package that does not work on Workers, even if you only rely on that NPM package indirectly" — and offers three stub shapes: an alternative implementation, an empty no-op file, or a file with a top-level `throw`. We use a fourth: a module exporting a `Proxy` that throws on any property access. A top-level `throw` would fire at import time and kill the Worker at startup, because these packages are imported at module scope; an empty file would fail silently if the code were ever reached. The `Proxy` imports cleanly and fails loudly only on real use. Three lines. Governs R41.
 - KTD5. **Use `generateText` with `Output.object()`, never `generateObject`.** `generateObject` carries a `@deprecated` tag in `ai@7`. Governs R36.
 - KTD6. **Provider secrets arrive through `toolsContext` for tool-shaped providers and through `Env` for waterfall-shaped providers.** `ai@7` `toolsContext` is keyed by tool name and passed at call time, which is exactly the per-provider key injection path. Governs R27, R40.
 - KTD7. **`grounding.field` matching is a string comparison against a computed path, plus a domain check on URL fields.** For row index `i` and field `f`, the expected path is `structured.companies[i].f`. The gate builds that string and looks for an exact match in `output.grounding`. Presence alone proves nothing about truth, so for a URL-valued field the gate also requires one citation at that path to share the value's registrable domain. This stays inside KD4: it is one more string comparison, not a model call. Governs R29, R42.
 - KTD15. **The waterfall re-throws a tagged retryable error and swallows everything else.** One error class, one `instanceof` check. Without it, `.catch(() => null)` converts a 429 into a miss before `step.do` ever sees it, and the retry configuration is dead code. Governs R3, R43.
-- KTD17. **Webhook authentication is a static secret plus a per-run nonce, both in the `webhook_url`.** Apollo cannot hold our bearer token, so R35 is unsatisfiable on that route. Two constant-time comparisons cost nothing and close both internet noise and cross-run replay. Governs R47.
+- KTD17. **Webhook authentication is a static secret plus a per-run nonce, both in the `webhook_url`.** Apollo cannot hold our bearer token, so R35 is unsatisfiable on that route. Two constant-time comparisons cost nothing and close both internet noise and cross-run replay. The Workflow can build that URL because `WorkflowEvent` carries `instanceId` and `workflowName`, so it knows its own identity inside `run`. Governs R47.
 - KTD18. **`evidence.raw` gets its own 30-day purge on a Cron Trigger.** One extra handler and one wrangler line. Without it, a company-scoped raw blob is a personal-data sink with no deletion path. Governs R50.
 - KTD16. **`findPeople` caps validation loops per run before the loop starts.** `isStepCount(8)` bounds one person. Nothing bounded the count of people, so a wide ICP could run hundreds of loops before the cost report arrives. Governs R44.
 - KTD8. **The per-person validity check is the only `ToolLoopAgent` in the system.** "Is this person still employed here" needs a live lookup, which is what a tool loop is for. Companies need no loop because grounding already ships the proof. Governs R4, R9, R10.
@@ -394,7 +394,7 @@ algo-backend/
 - A1. `ai@7` bundles and runs on the Workers runtime once `undici` is aliased. The `engines: {node: '>=22'}` field is metadata that Wrangler does not enforce, and the package is ESM-only with pure-JS dependencies. U1 proves or disproves this before any other unit starts.
 - A2. `@ai-sdk/mcp` `http` transport works on Workers once `cross-spawn` is aliased. The transport is fetch-based. Cloudflare's own MCP client uses the same transport class successfully.
 - A3. Drizzle's `postgres-js` adapter works over Hyperdrive. Cloudflare documents the `postgres` driver working over Hyperdrive; Drizzle wraps that driver instance.
-- A4. Hyperdrive bindings work inside a `step.do` callback. Workflows run as ordinary Worker code with normal `env` bindings.
+- A4. Hyperdrive bindings work inside a `step.do` callback. Workflows run as ordinary Worker code with normal `env` bindings. The two-configuration pattern itself is documented; only its use from inside a Workflow step is not. U2's read-after-write test proves it on the real runtime before any capability is built.
 - A5. Apollo returns an `email_status` field on `people/match`. If the field name differs, the change is one line inside `apollo.ts`.
 - A6. Clay's `/search/filters-mode` accepts a company-domain filter. The exact field name is discovered when `clay.ts` is written. Clay is last in every waterfall, so a delay there blocks nothing.
 
@@ -455,7 +455,12 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 **Approach.**
 1. `bun init`. Install the exact pins from the Planning Contract. Commit `bun.lock`.
 2. `wrangler.jsonc`: `compatibility_date` at `2026-08-04` or later, `compatibility_flags: ["nodejs_compat"]`, `limits: { cpu_ms: 300000, subrequests: 50000 }`, `observability: { enabled: true }`.
-3. Alias `undici` and `cross-spawn` to the stub files through the wrangler `alias` field. Each stub exports a `Proxy` that throws a named error on any property access, so an accidental real use fails loudly instead of silently.
+3. Alias `undici` and `cross-spawn` to the stub files through the wrangler `alias` field:
+   ```jsonc
+   { "alias": { "undici": "./build/stub-undici.ts",
+                "cross-spawn": "./build/stub-cross-spawn.ts" } }
+   ```
+   Each stub exports a `Proxy` that throws a named error on any property access. Do not use a top-level `throw`: these packages are imported at module scope, so the Worker would die at startup rather than on misuse.
 4. `src/index.ts`: a Hono app with `GET /health` that imports `generateText` from `ai` and `createMCPClient` from `@ai-sdk/mcp` at module scope, so both enter the bundle graph.
 5. Run `wrangler deploy --dry-run`. A clean bundle proves A1 and A2.
 
@@ -487,7 +492,12 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - `test/db.spec.ts`
 
 **Approach.**
-1. Create two Hyperdrive configurations against the same PlanetScale Postgres database. `HYPERDRIVE_CACHED` keeps default caching. `HYPERDRIVE_DIRECT` has caching disabled. Bind both.
+1. Create two Hyperdrive configurations against the same PlanetScale Postgres database:
+   ```sh
+   wrangler hyperdrive create algo-cached --connection-string="..."
+   wrangler hyperdrive create algo-direct --connection-string="..." --caching-disabled
+   ```
+   Bind both as `HYPERDRIVE_CACHED` and `HYPERDRIVE_DIRECT`. Build the client inside the handler, never at module scope. Size the origin connection pool for both configurations together, not each alone.
 2. `client.ts` exports `db(env, mode: 'cached' | 'direct')`, which builds a `postgres` client from the matching `connectionString` and wraps it with Drizzle.
 3. Schema, four tables:
    - `icp` — `id`, `domain`, `product`, `doc jsonb`, `created_at`
@@ -520,7 +530,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** The extensibility surface, in three small files.
 
-**Requirements.** R1, R2, R3, R27, R43. Implements KTD5, KTD15. Covers AE6, AE9.
+**Requirements.** R1, R2, R3, R27, R43, R46. Implements KTD5, KTD15. Covers AE6, AE9.
 
 **Dependencies.** U1.
 
@@ -531,7 +541,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 **Approach.**
 1. `types.ts` holds `Channel` and `Provider<I, O>` exactly as written in the High-Level Technical Design. Nothing else.
 2. `waterfall.ts` holds `RetryableProviderError` and one `waterfall` function with an `accept` predicate defaulting to `() => true`. The catch re-throws `RetryableProviderError` and swallows everything else to `null`.
-3. `mcp.ts` holds `mcpProvider(cfg)`. It opens a client per call and closes it in a `finally`. Pass `maxRetries: 0` explicitly, because that is the documented default and being explicit stops a silent change from surprising us.
+3. `mcp.ts` holds `mcpProvider(cfg)`. Its `run` takes `(input, env)` and resolves `cfg.headers(env)` per call, never at array-build time. It opens a client per call and closes it in a `finally`. Pass `maxRetries: 0` explicitly, because that is the documented default and being explicit stops a silent change from surprising us.
 4. `index.ts` exports one array per channel: `COMPANY`, `PEOPLE`, `EMPLOYMENT`, `EMAIL`, `PHONE`, `LINKEDIN`. Arrays start empty and fill in U9 through U11.
 
 **Patterns to follow.** None. This is the pattern every provider follows.
@@ -544,6 +554,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - With `accept: o => o.status === 'verified'`, a provider returning `status: 'guessed'` does not stop the waterfall.
 - The waterfall calls providers in array order, proven by a call-order spy.
 - `mcpProvider` closes the client even when `execute` throws.
+- `mcpProvider` resolves `cfg.headers(env)` on every call. Two calls with different `env` values send different headers, proving nothing is captured at module scope. This is the R46 and R27 guard.
 - Adding a fourth entry to a channel array changes no other file. Assert by a test that imports only `index.ts`.
 
 **Verification.** All waterfall semantics hold, including the throw-is-a-miss rule.
@@ -672,7 +683,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 1. Hono app with a bearer-token middleware on every caller-facing route, and none on the webhook route. Compare with a constant-time equality helper, never `===`. The middleware accepts either of two configured tokens, so R49's rotation window works without a redeploy.
 2. `POST /companies/find`, `POST /people/find`, `POST /enrich` validate the body with Zod, then `createBatch` with the id `<capability>:<scopeId>:<YYYY-MM-DD>` and an explicit `retention`. Return `202 { runId }`.
 3. `GET /runs/{runId}` returns `await instance.status()`. Map an unknown id to 404, because `get` is documented to throw on a missing id.
-4. `POST /webhooks/apollo/phone` is **not** bearer-authenticated; Apollo cannot hold our token. It compares the static shared secret from the query string in constant time, then resolves the Workflow instance and calls `instance.sendEvent({ type: 'apollo-phone', payload })` with the nonce included. The Workflow compares the nonce against the one it generated. The route answers 200 at once and never does work inline.
+4. The Workflow builds the `webhook_url` from `event.instanceId` plus a freshly generated nonce, and passes it to `apolloPhone`. `POST /webhooks/apollo/phone` is **not** bearer-authenticated; Apollo cannot hold our token. It compares the static shared secret from the query string in constant time, then resolves the Workflow instance and calls `instance.sendEvent({ type: 'apollo-phone', payload })` with the nonce included. The Workflow compares the nonce against the one it generated. The route answers 200 at once and never does work inline.
 5. Every Workflow declaration in `wrangler.jsonc` sets `limits.subrequests` and `limits.steps` explicitly.
 
 **Patterns to follow.** The Hono-plus-Workflow binding pattern: routes reach bindings through `c.env`.
@@ -995,7 +1006,7 @@ Non-negotiable assertions that must exist somewhere in the suite:
 
 ## Risks and dependencies
 
-- RK1. **`ai@7` on the Workers runtime is unproven.** `@ai-sdk/provider-utils@5.0.32` depends on `undici@^7`. Mitigation: KTD4's alias, proven by U1 before anything else is built. If U1 fails, stop and report — the whole model layer depends on it.
+- RK1. **`ai@7` on the Workers runtime is unproven.** `@ai-sdk/provider-utils@5.0.32` depends on `undici@^7`. The `alias` mechanism is documented and Cloudflare names this exact scenario, so the remedy is known; what is unproven is whether anything else in the dependency tree also needs it. Mitigation: KTD4's alias, proven by U1 before anything else is built. If U1 fails, stop and report — the whole model layer depends on it.
 - RK2. **`@ai-sdk/mcp` depends on `cross-spawn`** for the stdio transport Workers cannot use. Same mitigation, same gate.
 - RK3. **LinkedIn terms-of-service exposure.** *Meta v. Bright Data* (N.D. Cal. 2024) settled CFAA claims in favour of public scraping, but LinkedIn has won on breach of contract before, and hiQ paid $500,000 to settle. Mitigation: use BrightData's packaged dataset path only, never our own scraper. Collection risk sits with BrightData. Recorded, not solved.
 - RK4. **Exa concurrency is one fifth of account QPS**, and the enterprise number is unpublished. No `Retry-After` is sent. Mitigation: R39's exponential backoff through `step.do`, plus the typed `CONCURRENCY_LIMIT_REACHED` branch from U4.
@@ -1003,7 +1014,7 @@ Non-negotiable assertions that must exist somewhere in the suite:
 - RK6. **Apollo `email_status` field name is assumed** (A5). Mitigation: it lives in one file. A rename is one line.
 - RK7. **Clay's domain-filter field name is undiscovered** (A6). Mitigation: Clay is last in every waterfall, so nothing blocks on it.
 - RK8. **Hyperdrive inside a Workflow step is undocumented** (A4). Mitigation: U2's read-after-write test proves it on the real runtime, and it runs before any capability is built.
-- RK9. **PlanetScale plus Hyperdrive caching.** Documented: Hyperdrive does not invalidate on PlanetScale writes. Mitigation is KTD3's second, cache-disabled configuration. Without it, AE7 fails silently and we re-deliver companies.
+- RK9. **PlanetScale plus Hyperdrive caching.** Documented: Hyperdrive does not invalidate on PlanetScale writes, and the default window is 60s plus a 15s stale-while-revalidate. KTD3's cache-disabled configuration is the vendor's own prescribed remedy, so this is a wiring risk, not a design risk. Without it, AE7 fails silently and we re-deliver companies we stored seconds earlier.
 
 ---
 
