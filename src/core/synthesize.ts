@@ -63,13 +63,20 @@ export type SynthesizeResult = {
 
 const SYNTHESIZE_INSTRUCTIONS = [
 	"You write one search request for a round of company discovery against an ideal customer",
-	"profile. Return a query string, a system prompt telling the search step what to extract",
-	'from each result, and a search shape. A search shape is either category "company" for a',
-	'broad semantic match on the ideal customer profile, or category "none" with a',
-	"startPublishedDate for companies showing a recent hiring or funding signal. Keep the query",
-	"faithful to every constraint in the profile, including team size, revenue, and which",
-	"functions the company does or does not have. When rejection reasons are given, change the",
-	"query enough to reach different companies without dropping any stated constraint.",
+	"profile. Return a query string, a system prompt, and a search shape.",
+	"The search runs against a fixed extraction schema with exactly five string fields: name,",
+	"domain, linkedinUrl, signal, and evidenceDate. The system prompt tells the extractor how to",
+	"fill those five fields and must name no other field. Write it so that signal holds the",
+	"concrete evidence that proves or disproves fit against the profile: the headcount, the",
+	"revenue, the sales structure, and the functions the company does or does not have, each with",
+	"the wording found on the page. Tell the extractor to leave signal empty rather than repeat",
+	"the query or invent a number.",
+	'A search shape is either category "company" for a broad semantic match on the profile, or',
+	'category "none" with a startPublishedDate for companies showing a recent hiring or funding',
+	"signal. Keep the query faithful to every constraint in the profile, including team size,",
+	"revenue, and which functions the company does or does not have. When rejection reasons are",
+	"given, change the query enough to reach different companies without dropping any stated",
+	"constraint.",
 ].join(" ");
 
 function synthesizePrompt(icp: IcpDoc, feedback: readonly string[]): string {
