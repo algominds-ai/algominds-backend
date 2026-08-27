@@ -71,10 +71,11 @@ async function postFindymail<T>(
 	env: Env,
 	schema: z.ZodType<T>,
 ): Promise<T | null> {
+	const apiKey = await env.FINDYMAIL_API_KEY.get();
 	const response = await fetch(`${FINDYMAIL_BASE_URL}${path}`, {
 		method: "POST",
 		headers: {
-			authorization: `Bearer ${env.FINDYMAIL_API_KEY}`,
+			authorization: `Bearer ${apiKey}`,
 			"content-type": "application/json",
 		},
 		body: JSON.stringify(body),
@@ -140,8 +141,9 @@ export async function findymailVerify(
 export async function findymailCredits(
 	env: Env,
 ): Promise<FindymailBalance | null> {
+	const apiKey = await env.FINDYMAIL_API_KEY.get();
 	const response = await fetch(`${FINDYMAIL_BASE_URL}/api/credits`, {
-		headers: { authorization: `Bearer ${env.FINDYMAIL_API_KEY}` },
+		headers: { authorization: `Bearer ${apiKey}` },
 	});
 	if (response.status === 429) {
 		throw new RetryableProviderError("findymail credits rate limited");

@@ -13,6 +13,13 @@ import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 type Handler = (init: RequestInit | undefined) => Response;
 
+function findymailEnv(): Env {
+	return {
+		...testEnv,
+		FINDYMAIL_API_KEY: { get: async () => "test-findymail-key" },
+	};
+}
+
 function fakeFindymail(handlers: Record<string, Handler>): typeof fetch {
 	return async (input, init) => {
 		const pathname = new URL(String(input)).pathname;
@@ -33,6 +40,34 @@ function requestedEmail(init: RequestInit | undefined): string {
 	const body: { email?: string } = JSON.parse(String(init?.body ?? "{}"));
 	return body.email ?? "";
 }
+
+describe("the outgoing request", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("sends the resolved secret as a bearer token, not the binding object", async () => {
+		const seenHeaders: Headers[] = [];
+		globalThis.fetch = async (input, init) => {
+			seenHeaders.push(new Headers(init?.headers));
+			return fakeFindymail({
+				"/api/search/linkedin": () =>
+					json({ contact: { email: "max@tryramp.com" } }),
+			})(input, init);
+		};
+
+		await findymailLinkedinProvider.run(
+			{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
+			findymailEnv(),
+		);
+
+		expect(seenHeaders[0]?.get("authorization")).toBe(
+			"Bearer test-findymail-key",
+		);
+	});
+});
 
 describe("the three-state verdict", () => {
 	const originalFetch = globalThis.fetch;
@@ -55,7 +90,7 @@ describe("the three-state verdict", () => {
 
 		const result = await findymailLinkedinProvider.run(
 			{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
-			testEnv,
+			findymailEnv(),
 		);
 
 		expect(result?.status).toBe("verified");
@@ -72,7 +107,7 @@ describe("the three-state verdict", () => {
 
 		const result = await findymailLinkedinProvider.run(
 			{ linkedinUrl: "linkedin.com/in/ghost" },
-			testEnv,
+			findymailEnv(),
 		);
 
 		expect(result?.status).toBe("invalid");
@@ -87,7 +122,7 @@ describe("the three-state verdict", () => {
 
 		const result = await findymailLinkedinProvider.run(
 			{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
-			testEnv,
+			findymailEnv(),
 		);
 
 		expect(result?.status).toBe("unknown");
@@ -137,8 +172,11 @@ describe("the two finders", () => {
 			domain: "stripe.com",
 		};
 
-		const byLinkedin = await findymailLinkedinProvider.run(input, testEnv);
-		const byName = await findymailNameProvider.run(input, testEnv);
+		const byLinkedin = await findymailLinkedinProvider.run(
+			input,
+			findymailEnv(),
+		);
+		const byName = await findymailNameProvider.run(input, findymailEnv());
 
 		expect(byLinkedin?.email).toBe("patrick.collison@arcinstitute.org");
 		expect(byLinkedin?.finder).toBe("linkedin");
@@ -153,7 +191,7 @@ describe("the two finders", () => {
 
 		const result = await findymailLinkedinProvider.run(
 			{ linkedinUrl: "linkedin.com/in/nobody" },
-			testEnv,
+			findymailEnv(),
 		);
 
 		expect(result).toBeNull();
@@ -167,7 +205,7 @@ describe("the two finders", () => {
 		await expect(
 			findymailLinkedinProvider.run(
 				{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
-				testEnv,
+				findymailEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
 	});
@@ -177,7 +215,7 @@ describe("the two finders", () => {
 
 		const result = await findymailNameProvider.run(
 			{ name: "Max Freeman" },
-			testEnv,
+			findymailEnv(),
 		);
 
 		expect(result).toBeNull();
@@ -201,7 +239,7 @@ describe("findymail cost metering", () => {
 
 		await findymailSearchLinkedin(
 			{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
-			testEnv,
+			findymailEnv(),
 			ledger,
 		);
 
@@ -222,7 +260,7 @@ describe("findymail cost metering", () => {
 		const ledger = new CostLedger();
 		const meterSpy = vi.spyOn(ledger, "metered");
 
-		await findymailVerify("max@tryramp.com", testEnv, ledger);
+		await findymailVerify("max@tryramp.com", findymailEnv(), ledger);
 
 		expect(meterSpy).toHaveBeenCalledTimes(1);
 		expect(meterSpy).toHaveBeenCalledWith(
@@ -243,7 +281,7 @@ describe("findymail cost metering", () => {
 
 		const result = await findymailLinkedinProvider.run(
 			{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
-			testEnv,
+			findymailEnv(),
 		);
 
 		expect(result?.ledger.total()).toBeCloseTo(0.02, 10);
@@ -269,7 +307,7 @@ describe("findymailCredits", () => {
 				}),
 		});
 
-		const balance = await findymailCredits(testEnv);
+		const balance = await findymailCredits(findymailEnv());
 
 		expect(balance).toEqual({ credits: 327654, verifierCredits: 374780 });
 	});
@@ -279,7 +317,7 @@ describe("findymailCredits", () => {
 			"/api/credits": () => new Response(null, { status: 429 }),
 		});
 
-		await expect(findymailCredits(testEnv)).rejects.toThrow(
+		await expect(findymailCredits(findymailEnv())).rejects.toThrow(
 			RetryableProviderError,
 		);
 	});

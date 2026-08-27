@@ -3,15 +3,18 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { createMCPClient } from "@ai-sdk/mcp";
 import { generateText } from "ai";
 import { Hono } from "hono";
+import { createApiRoutes } from "@/routes";
 
 const bundled = {
 	generateText: typeof generateText,
 	createMCPClient: typeof createMCPClient,
 };
 
-const app = new Hono();
+const app = new Hono<{ Bindings: Env }>();
 
 app.get("/health", (c) => c.json({ ok: true, bundled }));
+
+app.route("/", createApiRoutes());
 
 export default app;
 
