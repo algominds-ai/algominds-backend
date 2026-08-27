@@ -78,6 +78,11 @@ src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
 Break these and the product is wrong, not just untidy.
 
 - A provider that misses returns `null`. The waterfall moves on. Only a retryable error throws.
+- **Waterfall providers and direct dependencies fail differently, on purpose.** A waterfall
+  provider (Apollo, Findymail) returns `null` on a miss so the next one runs. A direct
+  dependency (Exa) has no next, so it throws: `RetryableProviderError` for 429 and 5xx,
+  Cloudflare's `NonRetryableError` from `cloudflare:workflows` for a bad request or a
+  response that does not match the expected shape.
 - Nothing holds an HTTP connection open waiting for a vendor.
 - `evidence` is append-only. Never delete a value; lower its confidence.
 - The dedupe read uses the cache-disabled Hyperdrive binding.
