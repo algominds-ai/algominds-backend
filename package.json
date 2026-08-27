@@ -4,18 +4,18 @@
 	"type": "module",
 	"author": "Lahfir",
 	"scripts": {
-		"dev": "wrangler dev",
-		"deploy": "wrangler deploy",
-		"build": "wrangler deploy --dry-run --outdir=dist",
+		"dev": "SFW_SHIM_DISABLE=1 wrangler dev",
+		"deploy": "SFW_SHIM_DISABLE=1 wrangler deploy",
+		"build": "SFW_SHIM_DISABLE=1 wrangler deploy --dry-run --outdir=dist",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check . && bun scripts/check-comments.mjs && bun scripts/check-language.mjs",
 		"lint:fix": "biome check --write . && bun scripts/check-comments.mjs && bun scripts/check-language.mjs",
-		"test": "vitest run",
+		"test": "SFW_SHIM_DISABLE=1 vitest run",
 		"test:watch": "vitest",
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
-		"cf-typegen": "wrangler types",
-		"gate": "bun scripts/gate.mjs"
+		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
+		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs"
 	},
 	"dependencies": {
 		"@ai-sdk/mcp": "2.0.39",
