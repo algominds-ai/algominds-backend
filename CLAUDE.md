@@ -59,8 +59,10 @@ src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
   unit ids (`R42`, `KTD3`, `AE7`, `U12`), no "milestone", "phase", "sub-phase", "the plan says".
   A test is named for the behaviour it proves, never the plan entry it traces to. Enforced by
   `scripts/check-language.mjs`.
-- **No type assertions.** `as X` is banned outside `test/` (`as const` is fine). Declare the
-  real type, or parse at the boundary with Zod and let inference carry it.
+- **No type assertions, anywhere.** `as X` is banned in src and test alike (`as const` is
+  fine). Declare the real type, annotate the variable, or parse at the boundary with Zod. Every
+  cast so far had a cleaner alternative: the real `env` from `cloudflare:workers`, `new
+  Headers()`, or a plain type annotation.
 - **No untyped bags.** `Record<string, unknown>`, `Record<string, any>`, `object`, and
   `Function` are banned. Declare the shape.
 - **Size limits, enforced:** 80 lines per function, 400 per file, cognitive complexity 10,

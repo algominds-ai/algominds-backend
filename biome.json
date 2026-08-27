@@ -1,23 +1,11 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
 	"plugins": [
-		{
-			"path": "./lint/anti-slop/no-chained-type-assertions.grit",
-			"includes": ["**", "!test/**"]
-		},
-		{
-			"path": "./lint/anti-slop/no-module-mocking.grit",
-			"includes": ["**"]
-		},
+		"./lint/anti-slop/no-chained-type-assertions.grit",
+		"./lint/anti-slop/no-module-mocking.grit",
 		"./lint/anti-slop/no-unknown-type-aliases.grit",
-		{
-			"path": "./lint/rules/no-type-assertions.grit",
-			"includes": ["**", "!test/**"]
-		},
-		{
-			"path": "./lint/rules/no-loose-record.grit",
-			"includes": ["**", "!test/**"]
-		}
+		"./lint/rules/no-type-assertions.grit",
+		"./lint/rules/no-loose-record.grit"
 	],
 	"vcs": {
 		"enabled": true,

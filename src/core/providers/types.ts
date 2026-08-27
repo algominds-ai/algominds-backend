@@ -3,7 +3,6 @@ export type Channel =
 	| "people"
 	| "employment"
 	| "email"
-	| "phone"
 	| "linkedin";
 
 export type Provider<I, O> = {

@@ -1,12 +1,11 @@
-const reject = (prop: string): never => {
-	throw new Error(
-		`cross-spawn is not available on Workers (accessed "${prop}"). The MCP stdio transport cannot run here — use transport { type: "http" }.`,
-	);
-};
+type UnavailableModule = { readonly [key: string]: never };
 
-export default new Proxy(
-	{},
-	{
-		get: (_t, prop) => reject(String(prop)),
+const unavailable: UnavailableModule = new Proxy(Object.create(null), {
+	get(_target, property) {
+		throw new Error(
+			`cross-spawn is not available on Workers (accessed "${String(property)}"). The MCP stdio transport cannot run here; use transport { type: "http" }.`,
+		);
 	},
-);
+});
+
+export default unavailable;
