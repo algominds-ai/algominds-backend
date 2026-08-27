@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { config } from "@/config";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
@@ -17,8 +18,8 @@ import { EMAIL } from "@/core/providers/index";
 import type { Provider } from "@/core/providers/types";
 import { waterfall } from "@/core/providers/waterfall";
 
-const EMAIL_TTL_DAYS = 90;
-const LINKEDIN_TTL_DAYS = 30;
+const EMAIL_TTL_DAYS = config.enrich.emailTtlDays;
+const LINKEDIN_TTL_DAYS = config.enrich.linkedinTtlDays;
 const SUBJECT_TYPE = "person";
 
 export type EnrichChannel = "email" | "linkedin";

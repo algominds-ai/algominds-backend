@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import type { Company } from "@/core/db/schema";
 import { generateStructured, workerModel } from "@/core/model";
@@ -19,7 +20,7 @@ export type PeopleCompany = Pick<Company, "id" | "domain" | "name">;
 
 export const DEFAULT_MAX_COMPANIES = 100;
 
-const RESULTS_PER_COMPANY = 3;
+const RESULTS_PER_COMPANY = config.people.resultsPerCompany;
 const MATCHED_CONFIDENCE = 1;
 const MISMATCHED_CONFIDENCE = 0.4;
 const NO_PEOPLE_REASON = "no people found for this company";

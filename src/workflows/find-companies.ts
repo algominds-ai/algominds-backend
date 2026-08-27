@@ -2,6 +2,7 @@ import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
+import { config } from "@/config";
 import type {
 	FindCompaniesDeps,
 	FindCompaniesOptions,
@@ -25,7 +26,7 @@ import { search } from "@/core/providers/exa";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema, synthesize } from "@/core/synthesize";
 
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = config.companies.maxRounds;
 const EVIDENCE_SOURCE = "exa";
 
 const FindCompaniesPayloadSchema = z.object({

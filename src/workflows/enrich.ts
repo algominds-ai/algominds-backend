@@ -1,5 +1,6 @@
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
+import { config } from "@/config";
 import type {
 	EnrichChannel,
 	EnrichOutcome,
@@ -7,7 +8,7 @@ import type {
 } from "@/core/enrich";
 import { enrich, subjectsForRun } from "@/core/enrich";
 
-const BATCH_SIZE = 5;
+const BATCH_SIZE = config.enrich.batchSize;
 
 export type EnrichWorkflowParams = {
 	runId: string;

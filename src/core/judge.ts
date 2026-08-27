@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import type { CompanyRow } from "@/core/gate";
 import { generateStructured, reasoningModel } from "@/core/model";
 import type { IcpDoc } from "@/core/synthesize";
 
-const JUDGE_CACHE_TTL_SECONDS = 86_400;
+const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 
 const VerdictSchema = z.object({
 	index: z.number().int().nonnegative(),

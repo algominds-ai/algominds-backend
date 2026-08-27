@@ -3,6 +3,7 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { config } from "@/config";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type { DbFactory } from "@/core/db/queries";
@@ -27,7 +28,7 @@ import { apolloPeopleSearch } from "@/core/providers/apollo";
 import { search } from "@/core/providers/exa";
 import { IcpDocSchema } from "@/core/synthesize";
 
-const BATCH_SIZE = 5;
+const BATCH_SIZE = config.people.batchSize;
 const EVIDENCE_SOURCE_EXA = "exa";
 const EVIDENCE_SOURCE_TARGET = "target";
 
