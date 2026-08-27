@@ -1,0 +1,44 @@
+import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
+import { WorkflowEntrypoint } from "cloudflare:workers";
+import type {
+	EnrichChannel,
+	EnrichOutcome,
+	EnrichSubject,
+} from "@/core/enrich";
+import { enrich } from "@/core/enrich";
+
+const BATCH_SIZE = 5;
+
+export type EnrichWorkflowParams = {
+	subjects: EnrichSubject[];
+	channels: EnrichChannel[];
+};
+
+/** Splits `subjects` into ordered groups of `BATCH_SIZE`. */
+export function toBatches(subjects: EnrichSubject[]): EnrichSubject[][] {
+	const batches: EnrichSubject[][] = [];
+	for (let start = 0; start < subjects.length; start += BATCH_SIZE) {
+		batches.push(subjects.slice(start, start + BATCH_SIZE));
+	}
+	return batches;
+}
+
+export class EnrichWorkflow extends WorkflowEntrypoint<
+	Env,
+	EnrichWorkflowParams
+> {
+	override async run(
+		event: WorkflowEvent<EnrichWorkflowParams>,
+		step: WorkflowStep,
+	): Promise<EnrichOutcome[]> {
+		const { subjects, channels } = event.payload;
+		const outcomes: EnrichOutcome[] = [];
+		for (const [index, batch] of toBatches(subjects).entries()) {
+			const batchOutcomes = await step.do(`enrich-batch-${index}`, () =>
+				enrich(batch, channels, { env: this.env }),
+			);
+			outcomes.push(...batchOutcomes);
+		}
+		return outcomes;
+	}
+}

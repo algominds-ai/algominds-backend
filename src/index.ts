@@ -5,6 +5,9 @@ import { generateText } from "ai";
 import { Hono } from "hono";
 import { createApiRoutes } from "@/routes";
 
+export { EnrichWorkflow } from "@/workflows/enrich";
+export { FindCompaniesWorkflow } from "@/workflows/find-companies";
+
 const bundled = {
 	generateText: typeof generateText,
 	createMCPClient: typeof createMCPClient,
@@ -18,20 +21,8 @@ app.route("/", createApiRoutes());
 
 export default app;
 
-export class FindCompaniesWorkflow extends WorkflowEntrypoint<Env> {
-	override async run(_event: WorkflowEvent<unknown>, _step: WorkflowStep) {
-		throw new Error("FindCompaniesWorkflow: not implemented");
-	}
-}
-
 export class FindPeopleWorkflow extends WorkflowEntrypoint<Env> {
 	override async run(_event: WorkflowEvent<unknown>, _step: WorkflowStep) {
 		throw new Error("FindPeopleWorkflow: not implemented");
-	}
-}
-
-export class EnrichWorkflow extends WorkflowEntrypoint<Env> {
-	override async run(_event: WorkflowEvent<unknown>, _step: WorkflowStep) {
-		throw new Error("EnrichWorkflow: not implemented");
 	}
 }

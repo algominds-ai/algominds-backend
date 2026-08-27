@@ -278,8 +278,7 @@ describe("synthesize: search shape", () => {
 		const result = await synthesize(icp, [], env);
 
 		expect(result.searchShape).toEqual({
-			category: null,
-			type: "keyword",
+			type: "neural",
 			startPublishedDate: "2026-08-01",
 		});
 	});
@@ -298,6 +297,7 @@ describe("synthesize: search shape", () => {
 		const result = await synthesize(icp, [], env);
 
 		expect(result.searchShape).toEqual({ category: "company", type: "neural" });
+		expect(result.searchShape.startPublishedDate).toBeUndefined();
 	});
 
 	it("defaults to a recent date when the signal shape is missing or has an invalid date", async () => {
@@ -314,12 +314,12 @@ describe("synthesize: search shape", () => {
 
 		const result = await synthesize(icp, [], env);
 
-		expect(result.searchShape.category).toBeNull();
-		if (result.searchShape.category === null) {
-			expect(
-				Number.isNaN(new Date(result.searchShape.startPublishedDate).getTime()),
-			).toBe(false);
-		}
+		expect(result.searchShape.category).toBeUndefined();
+		expect(
+			Number.isNaN(
+				new Date(result.searchShape.startPublishedDate ?? "").getTime(),
+			),
+		).toBe(false);
 	});
 });
 

@@ -11,9 +11,16 @@ export const IcpDocSchema = z.object({
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
 
-export type SearchShape =
-	| { category: "company"; type: "neural" }
-	| { category: null; type: "keyword"; startPublishedDate: string };
+/**
+ * The decision Exa's `/search` needs. `category` is present only for a
+ * broad semantic match on the ICP; it never appears together with
+ * `startPublishedDate`, because Exa rejects that combination outright.
+ */
+export type SearchShape = {
+	category?: "company";
+	type: "neural" | "keyword";
+	startPublishedDate?: string;
+};
 
 const DEFAULT_SIGNAL_WINDOW_DAYS = 30;
 
@@ -37,8 +44,7 @@ function normalizeSearchShape(
 	if (raw.category === "company")
 		return { category: "company", type: "neural" };
 	return {
-		category: null,
-		type: "keyword",
+		type: "neural",
 		startPublishedDate: isIsoDate(raw.startPublishedDate)
 			? raw.startPublishedDate
 			: defaultSignalDate(),
