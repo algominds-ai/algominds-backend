@@ -1,15 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
 	CostLedger,
-	customCostHeader,
 	isGatewayCacheHit,
 	isSpendLimitExceeded,
 	recordModelCall,
 	resolveModelId,
 } from "../src/core/cost";
 import { log } from "../src/core/log";
-import { FALLBACK, modelRate } from "../src/core/rates";
 
 describe("CostLedger.reported", () => {
 	it("maps an Exa dataSources breakdown straight through, so fiber shows on its own line", () => {
@@ -158,77 +156,32 @@ describe("model-call resolution", () => {
 });
 
 describe("recordModelCall", () => {
-	let originalFetch: typeof fetch;
-
-	const PRICING_DISTINCT_FROM_FALLBACK = {
-		prompt: "0.000005",
-		completion: "0.000025",
-	};
-
-	beforeEach(() => {
-		originalFetch = globalThis.fetch;
-		globalThis.fetch = vi.fn(async () =>
-			Response.json({
-				data: [
-					{
-						id: "anthropic/claude-sonnet-4.5",
-						pricing: PRICING_DISTINCT_FROM_FALLBACK,
-					},
-				],
-			}),
-		);
-	});
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
-	it("meters at the pinned fallback rate when the OpenRouter fetch fails, and the ledger still totals correctly", async () => {
-		globalThis.fetch = vi.fn(async () => new Response("boom", { status: 500 }));
+	it("records zero on a gateway cache hit, even though the gateway also reports a cost", () => {
 		const ledger = new CostLedger();
 
-		await recordModelCall(ledger, "synthesize", "anthropic/claude-sonnet-4.5", {
-			headers: new Headers(),
-			usage: { inputTokens: 12_000, outputTokens: 800 },
-		});
-
-		const fallback = FALLBACK["anthropic/claude-sonnet-4.5"];
-		const expected =
-			12_000 * (fallback?.prompt ?? 0) + 800 * (fallback?.completion ?? 0);
-		expect(ledger.total()).toBeCloseTo(expected, 10);
-	});
-
-	it("records zero on a gateway cache hit, even though usage reports tokens", async () => {
-		const ledger = new CostLedger();
-
-		await recordModelCall(ledger, "synthesize", "anthropic/claude-sonnet-4.5", {
+		recordModelCall(ledger, "synthesize", "dynamic/reasoning", {
 			headers: new Headers({ "cf-aig-cache-status": "HIT" }),
-			usage: { inputTokens: 12_000, outputTokens: 800 },
+			usage: { cost: 1.78e-6 },
 		});
 
 		expect(ledger.total()).toBe(0);
 	});
 
-	it("meters input and output tokens at the resolved model's rate when it is not a cache hit", async () => {
+	it("reports the gateway's own dollar cost under the model it actually used", () => {
 		const ledger = new CostLedger();
 
-		await recordModelCall(ledger, "synthesize", "anthropic/claude-sonnet-4.5", {
-			headers: new Headers(),
-			usage: { inputTokens: 12_000, outputTokens: 800 },
+		recordModelCall(ledger, "synthesize", "dynamic/reasoning", {
+			headers: new Headers({
+				"cf-aig-cache-status": "MISS",
+				"cf-aig-model": "deepseek/deepseek-v4-flash-0731",
+			}),
+			usage: { cost: 1.78e-6 },
 		});
 
-		const expected = 12_000 * 0.000005 + 800 * 0.000025;
-		expect(ledger.total()).toBeCloseTo(expected, 10);
-	});
-
-	it("sends cf-aig-custom-cost built from the same rate the ledger used for the same call", async () => {
-		const pricing = await modelRate("anthropic/claude-sonnet-4.5");
-		const header = customCostHeader(pricing);
-
-		expect(JSON.parse(header)).toEqual({
-			per_token_in: pricing.prompt,
-			per_token_out: pricing.completion,
-		});
+		expect(ledger.byProvider()["deepseek/deepseek-v4-flash-0731"]).toBeCloseTo(
+			1.78e-6,
+			12,
+		);
 	});
 });
 

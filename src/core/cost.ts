@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Pricing, Unit } from "@/core/rates";
-import { modelRate, rateFor } from "@/core/rates";
+import type { Unit } from "@/core/rates";
+import { RATES } from "@/core/rates";
 
 export type CostEntry = {
 	provider: string;
@@ -14,23 +14,23 @@ export type CostSummary = {
 	entries: CostEntry[];
 };
 
-const MICROS_PER_DOLLAR = 1_000_000;
+const NANOS_PER_DOLLAR = 1_000_000_000;
 
-function toMicros(dollars: number): number {
-	return Math.round(dollars * MICROS_PER_DOLLAR);
+function toNanos(dollars: number): number {
+	return Math.round(dollars * NANOS_PER_DOLLAR);
 }
 
-function toDollars(micros: number): number {
-	return micros / MICROS_PER_DOLLAR;
+function toDollars(nanos: number): number {
+	return nanos / NANOS_PER_DOLLAR;
 }
 
 /**
  * Accumulates dollar cost across external calls. Amounts are stored as
- * integer micro-dollars so `total()` and `byProvider()` never drift apart
+ * integer nano-dollars so `total()` and `byProvider()` never drift apart
  * over floating-point rounding.
  */
 export class CostLedger {
-	#entries: Array<{ provider: string; op: string; micros: number }> = [];
+	#entries: Array<{ provider: string; op: string; nanos: number }> = [];
 
 	/**
 	 * Records a dollar figure a vendor returned directly. When `detail` is
@@ -44,11 +44,11 @@ export class CostLedger {
 		detail?: Record<string, number>,
 	): void {
 		if (!detail || Object.keys(detail).length === 0) {
-			this.#entries.push({ provider, op, micros: toMicros(dollars) });
+			this.#entries.push({ provider, op, nanos: toNanos(dollars) });
 			return;
 		}
 		for (const [name, amount] of Object.entries(detail)) {
-			this.#entries.push({ provider: name, op, micros: toMicros(amount) });
+			this.#entries.push({ provider: name, op, nanos: toNanos(amount) });
 		}
 	}
 
@@ -57,30 +57,27 @@ export class CostLedger {
 	 * when no rate is configured, rather than recording a silent zero.
 	 */
 	metered(provider: string, op: string, units: number, unit: Unit): void {
-		const rate = rateFor(provider, unit);
+		const rate = RATES[provider]?.[unit];
 		if (rate === undefined) {
 			throw new Error(
 				`CostLedger.metered: no rate configured for provider "${provider}" unit "${unit}"`,
 			);
 		}
-		this.#entries.push({ provider, op, micros: toMicros(units * rate) });
+		this.#entries.push({ provider, op, nanos: toNanos(units * rate) });
 	}
 
 	total(): number {
-		const sum = this.#entries.reduce((acc, entry) => acc + entry.micros, 0);
+		const sum = this.#entries.reduce((acc, entry) => acc + entry.nanos, 0);
 		return toDollars(sum);
 	}
 
 	byProvider(): Record<string, number> {
-		const micros = new Map<string, number>();
+		const nanos = new Map<string, number>();
 		for (const entry of this.#entries) {
-			micros.set(
-				entry.provider,
-				(micros.get(entry.provider) ?? 0) + entry.micros,
-			);
+			nanos.set(entry.provider, (nanos.get(entry.provider) ?? 0) + entry.nanos);
 		}
 		return Object.fromEntries(
-			Array.from(micros, ([provider, m]) => [provider, toDollars(m)]),
+			Array.from(nanos, ([provider, m]) => [provider, toDollars(m)]),
 		);
 	}
 
@@ -91,7 +88,7 @@ export class CostLedger {
 			entries: this.#entries.map((entry) => ({
 				provider: entry.provider,
 				op: entry.op,
-				dollars: toDollars(entry.micros),
+				dollars: toDollars(entry.nanos),
 			})),
 		};
 	}
@@ -129,30 +126,22 @@ export function resolveModelId(
 	return configuredId;
 }
 
-/** Builds the `cf-aig-custom-cost` request header body for one model's price. */
-export function customCostHeader(pricing: Pricing): string {
-	return JSON.stringify({
-		per_token_in: pricing.prompt,
-		per_token_out: pricing.completion,
-	});
-}
-
 export type ModelCallResult = {
 	headers: Headers;
 	responseModelId?: string;
-	usage: { inputTokens: number; outputTokens: number };
+	usage: { cost: number };
 };
 
 /**
  * Records one model call into `ledger`: zero on a cache hit, otherwise the
- * resolved model's tokens at its OpenRouter rate.
+ * dollar cost the gateway returned for the resolved model.
  */
-export async function recordModelCall(
+export function recordModelCall(
 	ledger: CostLedger,
 	op: string,
 	configuredId: string,
 	result: ModelCallResult,
-): Promise<void> {
+): void {
 	const modelId = resolveModelId(
 		result.headers,
 		result.responseModelId,
@@ -162,9 +151,7 @@ export async function recordModelCall(
 		ledger.reported(modelId, op, 0);
 		return;
 	}
-	await modelRate(modelId);
-	ledger.metered(modelId, op, result.usage.inputTokens, "tokens_in");
-	ledger.metered(modelId, op, result.usage.outputTokens, "tokens_out");
+	ledger.reported(modelId, op, result.usage.cost);
 }
 
 const SpendLimitErrorSchema = z.object({

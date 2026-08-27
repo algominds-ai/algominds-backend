@@ -5,17 +5,19 @@ export type Citation = {
 	title?: string;
 };
 
+export type Confidence = "low" | "medium" | "high";
+
 export type GroundingEntry = {
 	field: string;
 	citations: Citation[];
-	confidence?: "low" | "medium" | "high" | null;
+	confidence?: Confidence | null;
 };
 
 const FIELD_NAMES = [
 	"name",
 	"domain",
 	"linkedinUrl",
-	"sourceUrl",
+	"evidenceUrl",
 	"signal",
 	"evidenceDate",
 ] as const;
@@ -24,8 +26,16 @@ export type CompanyField = (typeof FIELD_NAMES)[number];
 
 export type CompanyRow = { [K in CompanyField]: string | null };
 
+const REQUIRED_FIELDS: readonly CompanyField[] = [
+	"name",
+	"domain",
+	"evidenceUrl",
+];
+
 export type RejectReason =
-	| "ungrounded-required"
+	| "missing-required"
+	| "ungrounded"
+	| "low-confidence"
 	| "stale-evidence"
 	| "bad-date"
 	| "already-seen";
@@ -38,6 +48,7 @@ export type Reject = {
 export type GateOptions = {
 	freshnessDays: number;
 	seenDomains: ReadonlySet<string>;
+	confidenceFloor?: Confidence;
 };
 
 export type GateResult = {
@@ -45,88 +56,49 @@ export type GateResult = {
 	rejects: Reject[];
 };
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
+export type RowGrounding = {
+	citations: Citation[];
+	confidence: Confidence | null;
+};
 
-/** Collects every grounding entry's citations under its exact field path. */
-export function groundedFields(
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const ROW_INDEX = /^structured\.companies\[(\d+)\]/;
+const CONFIDENCE_RANK: { low: number; medium: number; high: number } = {
+	low: 0,
+	medium: 1,
+	high: 2,
+};
+
+function parseRowIndex(field: string): number | null {
+	const raw = ROW_INDEX.exec(field)?.[1];
+	return raw === undefined ? null : Number(raw);
+}
+
+/** Maps each grounded row index to its merged citations and latest confidence, ignoring any trailing field suffix such as `.sourceUrl`. */
+export function groundedRows(
 	grounding: readonly GroundingEntry[],
-): Map<string, Citation[]> {
-	const lookup = new Map<string, Citation[]>();
+): Map<number, RowGrounding> {
+	const lookup = new Map<number, RowGrounding>();
 	for (const entry of grounding) {
-		const existing = lookup.get(entry.field);
-		lookup.set(
-			entry.field,
-			existing ? [...existing, ...entry.citations] : entry.citations,
-		);
+		const index = parseRowIndex(entry.field);
+		if (index === null) continue;
+		const existing = lookup.get(index);
+		lookup.set(index, {
+			citations: existing
+				? [...existing.citations, ...entry.citations]
+				: entry.citations,
+			confidence: entry.confidence ?? null,
+		});
 	}
 	return lookup;
 }
 
-function fieldPath(index: number, field: CompanyField): string {
-	return `structured.companies[${index}].${field}`;
+function confidenceRank(confidence: Confidence | null): number {
+	return confidence === null ? -1 : CONFIDENCE_RANK[confidence];
 }
 
-/** Returns the citations grounding `field` at `index`, or `undefined` when no entry matches that exact indexed path. */
-export function isGrounded(
-	lookup: ReadonlyMap<string, Citation[]>,
-	index: number,
-	field: CompanyField,
-): Citation[] | undefined {
-	return lookup.get(fieldPath(index, field));
-}
-
-function isUrl(value: string): boolean {
-	try {
-		new URL(value);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-function tryNormalizeDomain(value: string): string | null {
-	try {
-		return normalizeDomain(value);
-	} catch {
-		return null;
-	}
-}
-
-/** True for a non-URL value, or a URL value whose registrable domain matches at least one citation. */
-export function isRelevant(
-	citations: readonly Citation[],
-	value: string,
-): boolean {
-	if (!isUrl(value)) return true;
-	const target = normalizeDomain(value);
-	return citations.some(
-		(citation) => tryNormalizeDomain(citation.url) === target,
-	);
-}
-
-function groundField(
-	lookup: ReadonlyMap<string, Citation[]>,
-	index: number,
-	field: CompanyField,
-	value: string,
-): string | null {
-	const citations = isGrounded(lookup, index, field);
-	if (!citations) return null;
-	return isRelevant(citations, value) ? value : null;
-}
-
-function groundRow(
-	lookup: ReadonlyMap<string, Citation[]>,
-	index: number,
-	row: CompanyRow,
-): CompanyRow {
-	const grounded = { ...row };
-	for (const field of FIELD_NAMES) {
-		const value = row[field];
-		if (value !== null)
-			grounded[field] = groundField(lookup, index, field, value);
-	}
-	return grounded;
+function missingRequiredField(row: CompanyRow): boolean {
+	return REQUIRED_FIELDS.some((field) => row[field] === null);
 }
 
 function dateRejectReason(
@@ -140,29 +112,36 @@ function dateRejectReason(
 	return parsed.getTime() < cutoff ? "stale-evidence" : null;
 }
 
-function rejectReason(row: CompanyRow, opts: GateOptions): RejectReason | null {
-	if (row.name === null || row.domain === null) return "ungrounded-required";
+function rejectReason(
+	row: CompanyRow,
+	grounding: RowGrounding | undefined,
+	opts: GateOptions,
+): RejectReason | null {
+	if (missingRequiredField(row)) return "missing-required";
+	if (!grounding) return "ungrounded";
+	const floor = opts.confidenceFloor ?? "medium";
+	if (confidenceRank(grounding.confidence) < confidenceRank(floor))
+		return "low-confidence";
 	const dateReason = dateRejectReason(row.evidenceDate, opts.freshnessDays);
 	if (dateReason) return dateReason;
-	return opts.seenDomains.has(normalizeDomain(row.domain))
-		? "already-seen"
-		: null;
+	const domain = row.domain;
+	if (domain === null) return "missing-required";
+	return opts.seenDomains.has(normalizeDomain(domain)) ? "already-seen" : null;
 }
 
-/** Nulls each ungrounded or off-domain field, then drops a row when a required field, its evidence date, or its domain fails. */
+/** Drops a row for a missing required field, missing or below-floor grounding, stale or malformed evidence, or an already-seen domain. */
 export function gate(
 	rows: readonly CompanyRow[],
 	grounding: readonly GroundingEntry[],
 	opts: GateOptions,
 ): GateResult {
-	const lookup = groundedFields(grounding);
+	const lookup = groundedRows(grounding);
 	const kept: CompanyRow[] = [];
 	const rejects: Reject[] = [];
 	rows.forEach((row, index) => {
-		const grounded = groundRow(lookup, index, row);
-		const reason = rejectReason(grounded, opts);
+		const reason = rejectReason(row, lookup.get(index), opts);
 		if (reason) rejects.push({ index, reason });
-		else kept.push(grounded);
+		else kept.push(row);
 	});
 	return { kept, rejects };
 }
