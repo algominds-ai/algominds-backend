@@ -53,8 +53,9 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 
 - R1. A new API provider costs one new file and one array entry. No other file changes.
 - R2. A new MCP provider costs one array entry and no new file.
-- R3. A provider that throws is a miss. The waterfall continues to the next provider. A provider failure never fails the run.
+- R3. A non-retryable provider error is a miss. The waterfall continues to the next provider. A provider failure never fails the run. Retryable errors follow R43.
 - R27. Every provider reads its credentials from `toolsContext` or from the `Env` binding passed as its second argument. A provider never closes over a module-level secret.
+- R43. A retryable provider error propagates out of the waterfall so the step's retry configuration can act on it. Once the retry budget is spent, the run treats it as a miss and moves to the next provider. Only a non-retryable error becomes a miss at once.
 
 #### Find companies
 
@@ -65,6 +66,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R8. Cost per ICP per day is capped by construction: 3 rounds at `effort: "high"` is $1.50 plus Connect provider calls.
 - R28. Every field in the company `outputSchema` is optional except `name` and `domain`. A required evidence field forces the agent to invent a value.
 - R29. The gate drops a field when no `output.grounding` entry has a `field` path matching that field, including its array index.
+- R42. Grounding presence is not grounding truth. For a field whose value is a URL, at least one citation at that field path must share the value's registrable domain. A `linkedinUrl` of `linkedin.com/in/x` cited only by a marketing blog is dropped.
 
 #### Find people
 
@@ -73,6 +75,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R11. People are deduplicated by LinkedIn URL, never by name plus company.
 - R12. One Workflow step covers a batch of 5 people. A retry redoes 5 lookups, not 60.
 - R30. Find people never calls a credit-consuming endpoint. Identity is free; contact details are the enrichment capability's job.
+- R44. Find people caps the total number of validation loops in one run. The cap is a construction-level ceiling, the same shape as R8's for find companies. The default is 100 people, and the run reports how many it skipped.
 
 #### Enrich
 
@@ -106,6 +109,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R35. Every HTTP route requires a bearer token compared in constant time. The webhook route additionally verifies the vendor signature where the vendor provides one.
 - R36. Every run records `costDollars` per provider and writes the total to the run output. Cost is a first-class return value, not a log line.
 - R37. Every external call logs `{ provider, operation, ms, ok, costDollars, requestId }` as one structured line.
+- R45. Every run's output carries `providerFailures: { [providerId]: count }`. A provider that misses every single time is then visible in the result, without anyone reading a log. A silent permanent miss caused by a bad key or an exhausted quota is the failure this catches.
 - R38. Exa `x-request-id` is captured on every Exa response, success or failure, and stored with the run.
 - R39. A 429 from any provider backs off with exponential delay through the `step.do` retry config. No provider documents `Retry-After`, so the retry config is the only backoff.
 - R40. Secrets are read from Cloudflare Secrets Store bindings. No secret appears in `wrangler.jsonc`.
@@ -161,6 +165,8 @@ The three capability functions, their Workflows, their routes, the provider cont
 - AE6. Covers R1, R2. Add Hunter.io as an MCP email provider. The diff is one line in the `EMAIL` array. No other file changes. It works on the next run.
 - AE7. Covers R32. `findCompanies` writes 10 domains, then the next round reads the exclusion list. The read returns all 10. It does not return a stale pre-write result.
 - AE8. Covers R6, R39. Exa returns 429 with `code: "CONCURRENCY_LIMIT_REACHED"`. The step retries with exponential backoff. The run completes. No `Retry-After` header is read, because none is sent.
+- AE9. Covers R3, R43. Apollo returns 429 inside an email waterfall. The waterfall re-throws, `step.do` retries, and the second attempt succeeds. Clay is never called, so no credit is spent. Had the waterfall swallowed the 429, Clay would have run and charged for work Apollo was about to do.
+- AE10. Covers R42. A row carries `linkedinUrl` of `https://linkedin.com/in/jane-doe`, and the only grounding citation at that exact field path points at `https://acme-blog.com/hiring`. The gate nulls the field with reason `ungrounded-domain`. Citation presence alone would have passed it.
 
 ---
 
@@ -174,7 +180,9 @@ The three capability functions, their Workflows, their routes, the provider cont
 - KTD4. **Alias `undici` and `cross-spawn` to stubs in the esbuild alias config.** `@ai-sdk/provider-utils@5.0.32` depends on `undici@^7`; Workers has global `fetch`. `@ai-sdk/mcp@2.0.39` depends on `cross-spawn@^7` for the stdio transport, which Workers cannot use. Both enter the bundle graph and break the build otherwise. Governs R41.
 - KTD5. **Use `generateText` with `Output.object()`, never `generateObject`.** `generateObject` carries a `@deprecated` tag in `ai@7`. Governs R36.
 - KTD6. **Provider secrets arrive through `toolsContext` for tool-shaped providers and through `Env` for waterfall-shaped providers.** `ai@7` `toolsContext` is keyed by tool name and passed at call time, which is exactly the per-provider key injection path. Governs R27, R40.
-- KTD7. **`grounding.field` matching is a string comparison against a computed path.** For row index `i` and field `f`, the expected path is `structured.companies[i].f`. The gate builds that string and looks for an exact match in `output.grounding`. Governs R29.
+- KTD7. **`grounding.field` matching is a string comparison against a computed path, plus a domain check on URL fields.** For row index `i` and field `f`, the expected path is `structured.companies[i].f`. The gate builds that string and looks for an exact match in `output.grounding`. Presence alone proves nothing about truth, so for a URL-valued field the gate also requires one citation at that path to share the value's registrable domain. This stays inside KD4: it is one more string comparison, not a model call. Governs R29, R42.
+- KTD15. **The waterfall re-throws a tagged retryable error and swallows everything else.** One error class, one `instanceof` check. Without it, `.catch(() => null)` converts a 429 into a miss before `step.do` ever sees it, and the retry configuration is dead code. Governs R3, R43.
+- KTD16. **`findPeople` caps validation loops per run before the loop starts.** `isStepCount(8)` bounds one person. Nothing bounded the count of people, so a wide ICP could run hundreds of loops before the cost report arrives. Governs R44.
 - KTD8. **The per-person validity check is the only `ToolLoopAgent` in the system.** "Is this person still employed here" needs a live lookup, which is what a tool loop is for. Companies need no loop because grounding already ships the proof. Governs R4, R9, R10.
 - KTD9. **`metadata` on the Exa request carries `{ icpId, capability, runDate }`.** Exa documents no idempotency key, so this is the audit trail that links an Exa run back to our Workflow instance. Governs R38.
 - KTD10. **The Workflow instance id is the only idempotency mechanism.** `createBatch` is documented as idempotent on a caller-supplied id. Governs R24.
@@ -267,12 +275,17 @@ export type Provider<I, O> = {
   run(input: I, env: Env): Promise<O | null>
 }
 
+export class RetryableProviderError extends Error {}
+
 export async function waterfall<I, O>(
   ps: Provider<I, O>[], input: I, env: Env,
   accept: (o: O) => boolean = () => true,
 ) {
   for (const p of ps) {
-    const out = await p.run(input, env).catch(() => null)
+    const out = await p.run(input, env).catch(e => {
+      if (e instanceof RetryableProviderError) throw e   // step.do retries
+      return null                                        // a miss, try the next
+    })
     if (out && accept(out)) return { ...out, source: p.id }
   }
   return null
@@ -280,6 +293,8 @@ export async function waterfall<I, O>(
 ```
 
 The `accept` predicate is what makes R16 one line: the email waterfall passes `o => o.status === 'verified'`; every other channel takes the default.
+
+The single `instanceof` is what makes R43 work. A 429 reaches `step.do`, which retries with backoff. Everything else is a miss and the loop moves on. Once the retry budget is spent, `step.do` gives up and the caller records the miss.
 
 MCP is an adapter that returns a `Provider`, not a second system.
 
@@ -415,7 +430,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Prove `ai@7` and `@ai-sdk/mcp` run on the Workers runtime before any product code exists.
 
-**Requirements.** R41. Validates A1 and A2.
+**Requirements.** R41. Implements KTD4, KTD13, KTD14. Validates A1 and A2.
 
 **Dependencies.** None.
 
@@ -450,7 +465,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Four tables, two Hyperdrive configurations, and the queries the capabilities need.
 
-**Requirements.** R18, R19, R20, R32. Covers AE7.
+**Requirements.** R18, R19, R20, R32. Implements KTD3. Covers AE7.
 
 **Dependencies.** U1.
 
@@ -489,7 +504,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** The extensibility surface, in three small files.
 
-**Requirements.** R1, R2, R3, R27. Covers AE6.
+**Requirements.** R1, R2, R3, R27, R43. Implements KTD5, KTD15. Covers AE6, AE9.
 
 **Dependencies.** U1.
 
@@ -499,7 +514,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Approach.**
 1. `types.ts` holds `Channel` and `Provider<I, O>` exactly as written in the High-Level Technical Design. Nothing else.
-2. `waterfall.ts` holds one function with an `accept` predicate defaulting to `() => true`.
+2. `waterfall.ts` holds `RetryableProviderError` and one `waterfall` function with an `accept` predicate defaulting to `() => true`. The catch re-throws `RetryableProviderError` and swallows everything else to `null`.
 3. `mcp.ts` holds `mcpProvider(cfg)`. It opens a client per call and closes it in a `finally`. Pass `maxRetries: 0` explicitly, because that is the documented default and being explicit stops a silent change from surprising us.
 4. `index.ts` exports one array per channel: `COMPANY`, `PEOPLE`, `EMPLOYMENT`, `EMAIL`, `PHONE`, `LINKEDIN`. Arrays start empty and fill in U9 through U11.
 
@@ -507,7 +522,8 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Test scenarios.**
 - Three fake providers where the first returns `null`: the waterfall returns the second's result with `source` set to the second's id.
-- The first provider throws: the waterfall still reaches the second, and nothing propagates.
+- The first provider throws an ordinary error: the waterfall still reaches the second, and nothing propagates.
+- The first provider throws `RetryableProviderError`: the waterfall re-throws it and **does not** call the second provider. This is AE9 and the R43 guard.
 - Every provider misses: the waterfall returns `null`, not a throw.
 - With `accept: o => o.status === 'verified'`, a provider returning `status: 'guessed'` does not stop the waterfall.
 - The waterfall calls providers in array order, proven by a call-order spy.
@@ -522,7 +538,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Two functions and a typed error taxonomy. No SDK.
 
-**Requirements.** R25, R26, R38, R39. Covers AE8.
+**Requirements.** R25, R26, R38, R39. Implements KTD1, KTD11, KTD12. Covers AE8.
 
 **Dependencies.** U1.
 
@@ -573,7 +589,8 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 **Test scenarios.**
 - `synthesize` emits `dataSources` containing only slugs from the closed enum. An invented slug is dropped, not passed through.
 - `synthesize` never emits more than 5 `dataSources`.
-- `synthesize` given three reject reasons produces a query string different from the round-1 query. Assert difference, not content.
+- `synthesize` given three reject reasons produces a query string different from the round-1 query.
+- The round-2 query still carries every core scoping term from the ICP document — industry, stage, and geography. A synthesizer that drops geography to escape `already-seen` fails this test. Difference alone is not enough; drift is the failure this catches.
 - `judge` returns one verdict per input row, and the indices line up with the input order.
 - `NoObjectGeneratedError` on the first call and success on the retry returns the retry's result.
 - Two consecutive failures return the documented neutral fallback and do not throw.
@@ -587,7 +604,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** The free check that catches all four named failures.
 
-**Requirements.** R4, R28, R29. Covers AE1, AE3.
+**Requirements.** R4, R28, R29, R42. Implements KTD7. Covers AE1, AE3, AE10.
 
 **Dependencies.** U4.
 
@@ -595,10 +612,12 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Approach.**
 1. `groundedFields(grounding)` builds a `Set<string>` of every `field` path present.
-2. `isGrounded(set, index, field)` compares against the computed path `structured.companies[${index}].${field}`, matching the documented example exactly.
+2. `isGrounded(map, index, field)` compares against the computed path `structured.companies[${index}].${field}`, matching the documented example exactly. The map holds the citation list per path, not just the path, because R42 needs the citation URLs.
+2b. `isRelevant(citations, value)` runs only when `value` parses as a URL. It returns true when at least one citation URL shares the value's registrable domain. Reuse the same normalizer U2 uses for company domains, so the two cannot drift.
 3. `gate(rows, grounding, opts)` runs four checks in order and returns `{ kept, rejects }` where each reject carries `{ index, reason }`:
    - a required field is null,
    - a field present in the row has no grounding entry — null that field, and drop the row only if the field was required,
+   - a URL-valued field whose citations all point at a different registrable domain — null that field, same required rule,
    - `evidenceDate` is older than `opts.freshnessDays`,
    - the normalized domain is in `opts.seenDomains`.
 4. The gate never counts. Counting belongs to the caller.
@@ -609,6 +628,10 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - A row with `linkedinUrl` set and no matching grounding path has that field nulled, and the row survives because `linkedinUrl` is optional.
 - The same case where the field is required drops the row with reason `ungrounded-required`.
 - Grounding for `structured.companies[0].linkedinUrl` does not ground `structured.companies[1].linkedinUrl`. Index matching is exact.
+- `linkedinUrl` of `https://linkedin.com/in/jane` cited only by `https://someblog.com/post` is nulled with reason `ungrounded-domain`, even though a grounding entry exists at the exact path. This is AE10 and the answer to the invented-URL failure.
+- The same `linkedinUrl` cited by `https://www.linkedin.com/in/jane` survives. Subdomain and `www` differences do not fail the check.
+- A non-URL field such as `signal` is never subjected to the domain check. It passes on presence alone.
+- A field whose value is an unparseable string is treated as a non-URL field, never as a failed URL check.
 - `evidenceDate` at `freshnessDays - 1` survives; at `freshnessDays + 1` it is rejected with reason `stale-evidence`.
 - A malformed `evidenceDate` is rejected with reason `bad-date`, never parsed as `NaN` and silently kept.
 - A domain in `seenDomains` is rejected with reason `already-seen`, after normalization.
@@ -623,7 +646,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Routes that start work and never wait for it.
 
-**Requirements.** R22, R23, R24, R33, R34, R35, R40.
+**Requirements.** R22, R23, R24, R33, R34, R35, R40. Implements KTD10.
 
 **Dependencies.** U2.
 
@@ -656,7 +679,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** The deterministic round loop.
 
-**Requirements.** R4, R5, R6, R7, R8, R28, R29. Covers AE1, AE2, AE7, AE8.
+**Requirements.** R4, R5, R6, R7, R8, R28, R29. Implements KTD2, KTD9. Covers AE1, AE2, AE7, AE8.
 
 **Dependencies.** U5, U6, U7.
 
@@ -791,7 +814,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Free identification, then one live validity check per person.
 
-**Requirements.** R9, R10, R11, R12, R30. Covers AE4. Implements KTD8.
+**Requirements.** R9, R10, R11, R12, R30, R44. Covers AE4. Implements KTD8, KTD16.
 
 **Dependencies.** U8, U9, U10.
 
@@ -804,6 +827,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 4. Step 3: one `ToolLoopAgent` per person. Tools: `fetchLinkedInProfile` (BrightData), `exaSearch`, and `recordVerdict`. `stopWhen: [isStepCount(8), hasToolCall('recordVerdict')]`. Tool credentials arrive through `toolsContext`, keyed by tool name.
 5. The agent writes evidence rows. It never deletes a value; it lowers `confidence` and appends the newer claim.
 6. Batch 5 people per `step.do` with `Promise.all`.
+7. Before step 3 starts, truncate the candidate list to `opts.maxPeople` (default 100) and record `skippedPeople`. The cap is applied up front, not discovered mid-run, so the ceiling is known before a single loop opens.
 
 **Execution note.** Write the conflict case first — Apollo and BrightData disagreeing on the employer — because R10's keep-both rule is where a naive implementation silently drops data.
 
@@ -819,6 +843,8 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - No call path in this unit reaches `bulk_match`, `people/match`, or any reveal flag. This is the R30 guard.
 - A `fetchLinkedInProfile` tool failure returns `tool-error` and the loop continues to try `exaSearch`.
 - `toolsContext` supplies the BrightData token, and no token is read from module scope.
+- 250 candidates with `maxPeople: 100` opens exactly 100 loops and returns `skippedPeople: 150`. The cap is applied before any loop starts, asserted by a spy on the agent constructor.
+- The worst case is bounded and asserted: `maxPeople` multiplied by 8 steps is the ceiling on model calls for the unit.
 
 **Verification.** Identity costs nothing, conflicts keep both sides, and the loop always terminates.
 
@@ -864,7 +890,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 
 **Goal.** Cost is a return value, not a log line.
 
-**Requirements.** R36, R37, R38.
+**Requirements.** R36, R37, R38, R45.
 
 **Dependencies.** U12, U13.
 
@@ -873,7 +899,7 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 **Approach.**
 1. `log.ts` exports one function that emits a single JSON line: `{ provider, operation, ms, ok, costDollars, requestId }`.
 2. `cost.ts` accumulates per-provider dollars for a run. Exa cost comes from the response's `costDollars` breakdown, which already splits `agentCompute`, `search`, `emails`, `phoneNumbers`, and per-provider `dataSources`. Apollo and Clay cost is credits multiplied by a configured rate.
-3. Every capability's return value carries `costDollars: { total, byProvider }`.
+3. Every capability's return value carries `costDollars: { total, byProvider }` and `providerFailures: { [providerId]: count }`.
 4. Wire `observability: { enabled: true }` in `wrangler.jsonc` so the lines land in Workers Logs.
 
 **Test scenarios.**
@@ -882,6 +908,8 @@ U1 gates everything. U2, U3, U4, U5 are independent after U1 and can land in par
 - A failed call still logs with `ok: false` and its `requestId`.
 - Exa's `x-request-id` reaches the log line on both a success and a failure.
 - A capability with zero external calls returns `costDollars.total` of 0, not `undefined`.
+- A provider that returns `null` on all 20 calls in a run shows `20` under its id in `providerFailures`. This is the bad-key and exhausted-quota signal from R45.
+- A provider that succeeds once and misses twice shows `2`, not `3`.
 
 **Verification.** Every run reports what it spent, broken down by provider.
 
@@ -911,6 +939,9 @@ Non-negotiable assertions that must exist somewhere in the suite:
 3. The dedupe read uses the direct Hyperdrive binding.
 4. `undici` and `cross-spawn` stubs throw by name.
 5. `unknown` email status is never sendable.
+6. A `RetryableProviderError` is re-thrown by the waterfall, not swallowed.
+7. A URL field cited only by a foreign domain is nulled.
+8. `findPeople` truncates to `maxPeople` before opening any loop.
 
 ---
 
