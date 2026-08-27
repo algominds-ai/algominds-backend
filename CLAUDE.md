@@ -123,6 +123,13 @@ we are billed at.
   cacheReadTokens` at `input_cache_read`, not `prompt`.
 - OpenRouter pricing carries an `overrides` array for tiered rates above a prompt-token
   threshold. Ignoring it under-reports big batches.
+- **Never let the synthesizer hit the AI Gateway cache.** It must send `cf-aig-skip-cache`.
+  A cached synthesizer returns yesterday's query, Exa returns yesterday's companies, the gate
+  rejects them all as already-seen, and the run reports `exhausted` on a healthy ICP. Nothing
+  errors. The judge is the opposite: cache it.
+- BrightData profiles are fetched in ONE batched trigger before the per-person loops open.
+  The trigger body is an array. Per-person triggers plus polls would be ~700 req/hr against a
+  limit near 120.
 
 ## Not in this project
 
