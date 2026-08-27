@@ -101,7 +101,7 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R2 | A `run` table holds one row per capability run, keyed by the runId the route already generates, carrying account, icp, capability, status, spend, and timestamps. |
 | R3 | `company.run_id` is a foreign key to `run.id`. Existing rows keep their run. |
 | R4 | `POST /people/find` scopes by a companies runId or an explicit domain array. It never loads a company from an earlier run. |
-| R5 | `maxCompanies` leaves the HTTP contract and lives in `src/config.ts` as a bound on how many companies one people run searches. It bounds cost and time; it is not the spend ceiling, which is R8 and R9. |
+| R5 | The caller's `maxCompanies` wins. Config supplies the fallback when the caller gives none, and a ceiling that clamps an unreasonable request. A clamp is always reported, never silent. It bounds cost and time; it is not the spend ceiling, which is R8 and R9. |
 | R6 | Indexes exist on `person(company_id)`, `company(run_id)`, `company(icp_id, found_at desc)`, and `icp(account_id)`. |
 | R7 | Every `step.do` call carries an explicit `StepConfig`. Steps that pay a vendor retry at most twice. |
 | R8 | A run stops starting new paid work once its spend reaches the per-run ceiling, keeps everything it already found, and reports terminal status `capped` with the spend. |
@@ -632,7 +632,10 @@ previous run discarded, gate green.
    array, and no longer accepts `icpId`.
 2. Company loading filters by `run_id`, replacing the `icp_id` filter that
    pulls every historical row.
-3. `maxCompanies` leaves the request body and becomes a config cap (R5).
+3. `maxCompanies` stays in the request body. The caller's number wins; config
+   fills in when the caller gives none, and clamps a request beyond the
+   ceiling. A clamp reports through `skippedCompanies`, which already exists —
+   the request is never silently shrunk (R5).
 4. A domain array normalises through the existing `normalizeDomain`, never a
    new normaliser.
 5. Dropping `icpId` from the payload means the workflow can no longer be handed
@@ -657,7 +660,10 @@ person join. Do not invent a second way to reach companies by run.
 - Domains differing only by `www.` or case resolve to the same company.
 - An unknown run id yields an empty set, not every company for the profile.
 - A domain naming no known company is reported, not silently dropped.
-- `maxCompanies` in the body is no longer accepted.
+- A caller asking for more companies than the config fallback gets their
+  number, not the fallback.
+- A request beyond the ceiling is clamped and the clamp is reported, rather
+  than the caller believing they got everything.
 
 **Verification.** A second people run against an older run id searches only
 that run's companies, gate green.
