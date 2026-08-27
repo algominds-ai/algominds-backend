@@ -1051,28 +1051,31 @@ Per-unit gate: a unit is not done until its own listed test scenarios pass and t
 
 Non-negotiable assertions that must exist somewhere in the suite:
 
-1. No code path calls an Apollo reveal flag from `findPeople`.
-2. No code path calls Exa `/stop`.
-3. The dedupe read uses the direct Hyperdrive binding.
-4. `undici` and `cross-spawn` stubs throw by name.
-5. `unknown` email status is never sendable.
-6. A `RetryableProviderError` is re-thrown by the waterfall, not swallowed.
-7. A URL field cited only by a foreign domain is nulled.
-8. `findPeople` truncates to `maxPeople` before opening any loop.
-10. `recordVerdict` cannot be called without a `citationUrl`.
-12. No file under `src/core/` imports from `src/routes.ts` or `src/workflows/`. Enforce with a static import check, not a convention.
-13. `synthesize` cannot reach the gateway without `cf-aig-skip-cache`.
-14. `findPeople` constructs no `ToolLoopAgent` and makes no profile-fetch call of its own.
+1. No code path calls an Apollo reveal flag, `people/match`, or `bulk_match`.
+2. `undici` and `cross-spawn` stubs throw naming their own package.
+3. The dedupe read uses the cache-disabled Hyperdrive binding.
+4. An `unknown` email status is never sendable.
+5. A `RetryableProviderError` is re-thrown by the waterfall, not swallowed.
+6. A row whose field echoes the search query is rejected.
+7. `findPeople` truncates to `maxCompanies` before any search fires.
+8. No `ToolLoopAgent` is constructed anywhere in `src/`.
+9. A secret binding is resolved with `.get()`, and the resolved value is asserted in the
+   outgoing header — not merely that a header is present.
+10. No file under `src/core/` imports from `src/routes.ts` or `src/workflows/`.
+11. A workflow instance started by a test is terminated in `afterEach`.
 
 ---
 
 ## Definition of Done
 
 **Global.**
-- All 14 units land, and every unit's test scenarios pass.
+- All 13 units land, and every unit's test scenarios pass. The Clay unit was cut after probing: no key exists for it, and it costs 6-20 credits per person for work Findymail does for one.
 - The four global gates are green on a clean checkout.
 - `wrangler deploy --dry-run` produces no unresolved-import warning.
 - Every secret is in a Secrets Store binding. `wrangler.jsonc` contains no secret value.
+- A live end-to-end run additionally needs a Postgres database and its two Hyperdrive
+  configurations. See `docs/solutions/running-it-locally.md`. Until those exist the suite
+  passes on injected fakes, which is correct for a test but is not a running system.
 - The five non-negotiable assertions above exist and pass.
 - Exact version pins hold, and `bun.lock` is committed.
 - Dead code from abandoned attempts is deleted, not left in the diff.
