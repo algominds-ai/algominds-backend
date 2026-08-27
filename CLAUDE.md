@@ -112,8 +112,8 @@ we are billed at.
 - Exa `/stop` works only on `max` effort. Use `/cancel`.
 - Apollo People **Search** is free and returns no email or phone. `bulk_match` costs credits and
   takes 10 people per call. Never set a reveal flag from `findPeople`.
-- Clay is not free. ~$0.05 per Data Credit, 6-20 per person. It is last in every waterfall and
-  never used for discovery.
+- Clay is not free (~$0.05/Data Credit, 6-20 per person) and is NOT in v1. Adding it is one
+  file plus one array entry.
 - AI Gateway never returns cost to the caller. `cf-aig-custom-cost` is a REQUEST header for
   telling it your price. Cost reaches analytics, logs, and OTel only.
 - Price the model `cf-aig-model` names, never the configured id. A dynamic route falls back to
@@ -131,11 +131,17 @@ we are billed at.
   The trigger body is an array. Per-person triggers plus polls would be ~700 req/hr against a
   limit near 120.
 
+## Deliberately out of v1
+
+Phone (most expensive call, and the only thing needing an async vendor webhook) · Clay ·
+a raw-payload column on `evidence`. Each is one file or one array entry to add later. That
+is the point of the provider design.
+
 ## Not in this project
 
 Websets. The Exa MCP server. Redis or BullMQ. A queue product. Service bindings or RPC. A
-plugin framework. A `runs` table. `budget.maxCostDollars`. `auto`/`max` effort.
-`previousRunId`. Apollo company search. BrightData discovery mode. A separate email-verification
-vendor. `WorkflowAgent` from `@ai-sdk/workflow`.
+plugin framework. A `runs` table. A cron. `step.waitForEvent`. `budget.maxCostDollars`.
+`auto`/`max` effort. `previousRunId`. Apollo company search. BrightData discovery mode.
+A separate email-verification vendor. `WorkflowAgent` from `@ai-sdk/workflow`.
 
 The daily end-to-end workflow and the campaign push are separate plans, not this one.
