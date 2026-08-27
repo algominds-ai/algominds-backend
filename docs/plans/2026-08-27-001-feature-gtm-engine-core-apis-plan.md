@@ -103,13 +103,13 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R21. `src/core/` takes plain arguments. It knows nothing about HTTP and nothing about Workflows.
 - R22. The HTTP shape is job style. `POST` starts work and returns `202 { runId }`. `GET /runs/{runId}` returns `{ status, output }`.
 - R23. There is no `runs` table. `env.WF.get(id).status()` returns `{ status, output }`. The last Workflow step also writes final rows to Postgres.
-- R24. Workflow instance ids are `<capability>:<scopeId>:<YYYY-MM-DD>`. `createBatch` is idempotent, so a repeat trigger on the same day is a free no-op.
+- R24. Workflow instance ids are `<capability>_<scopeId>_<YYYY-MM-DD>`. Cloudflare's validator accepts only `^[a-zA-Z0-9_][a-zA-Z0-9-_]*$`, so a colon is rejected at runtime with `WorkflowError: Workflow instance has invalid id`. `createBatch` is idempotent on a caller-supplied id, so a repeat trigger on the same day is a free no-op.
 - R25. Every provider call is one `step.do` with an explicit config. Each provider hides its own poll loop. Nothing in v1 needs `step.waitForEvent`.
 - R26. Nothing holds an HTTP connection open to wait for a slow vendor.
 
 #### Operations
 
-- R35. Every HTTP route requires a bearer token compared in constant time.
+- R35. Every job-starting and run-reading route requires a bearer token compared in constant time. `GET /health` is deliberately public: an uptime monitor must reach it without a credential, and it starts no work and reveals nothing. A secret that cannot be resolved fails closed as 401 rather than crashing.
 - R48. Content returned by any tool is untrusted data, never an instruction. Every agent that holds tools states this in its `instructions`, and every verdict it records carries the citation URL it relied on.
 - R36. Every run records `costDollars` per provider and writes the total to the run output. Cost is a first-class return value, not a log line.
 - R37. Every external call logs `{ provider, operation, ms, ok, costDollars, requestId }` as one structured line.
@@ -124,7 +124,7 @@ Code decides **whether** a fact is acceptable. A model decides only **what to as
 - R61. Each model request carries a `cf-aig-custom-cost` header built from the OpenRouter rates the ledger already resolved. The gateway then computes its analytics and enforces its spend limit against the real price instead of its own estimate.
 - R62. The synthesizer sends `cf-aig-skip-cache` on every call. A cached synthesizer returns yesterday's query for the same ICP, Exa then returns yesterday's companies, and R7's daily uniqueness fails with no error anywhere. This is the one place gateway caching is actively harmful.
 - R63. The judge sets `cf-aig-cache-ttl`. The same rows should produce the same verdicts, so a cached judge is free money on a retry. A cache hit also costs zero per R60.
-- R64. The three job-starting routes are rate-limited at the Cloudflare edge, not in application code. Without it, one client loop triggers unbounded paid Exa runs.
+- R64. The three job-starting routes are rate-limited at the Cloudflare edge, not in application code, so a handler bug cannot bypass the limit. The thresholds live in `docs/solutions/edge-rate-limits.md` so they are reviewable and change in the same pull request as the code that depends on them. Nothing in the repository applies them automatically.
 - R65. Profile data arrives inside the people search. `contents.summary.schema` returns the structured profile and `contents.text` returns the full body, so there is no separate profile fetch to batch.
 - R54. An AI Gateway spend limit is configured as the platform-level ceiling on model spend, scoped by the `cf-aig-metadata` the run already sends. The ledger reports; the gateway enforces. A 429 carrying a spend-limit body is not a transient error and must not be retried.
 - R38. Exa `x-request-id` is captured on every Exa response, success or failure, and stored with the run.
@@ -217,7 +217,7 @@ The three capability functions, their Workflows, their routes, the provider cont
 - KTD16. **`findPeople` caps the companies it searches, before the first search fires.** Nothing else bounds a wide ICP, and the cost report arrives too late to help. Governs R44.
 - KTD8. **There is no tool loop anywhere.** "Is this person still employed here" was the one question thought to need a live lookup. It does not: `currentCompany` comes back inside the people search. With that gone, no capability needs an agent. Governs R9, R10, R68.
 - KTD9. **Every Exa response's `requestId` is stored with the run.** `/search` returns one on success and on error, and it is the only handle Exa support can trace. Governs R38.
-- KTD10. **The Workflow instance id is the only idempotency mechanism.** `createBatch` is documented as idempotent on a caller-supplied id. Governs R24.
+- KTD10. **The Workflow instance id is the only idempotency mechanism.** `createBatch` is idempotent on a caller-supplied id. The id uses underscores, not colons: Cloudflare's instance-id validator is `^[a-zA-Z0-9_][a-zA-Z0-9-_]*$` and rejects a colon at runtime. Governs R24.
 - KTD27. **Freshness is enforced at the source, not only in the gate.** `startPublishedDate` on the signal search removes stale evidence before it is ever returned, which is cheaper and more reliable than rejecting it afterwards. The gate's date check stays as the second line. Governs R4, R8.
 - KTD28. **One `/search` call does discovery, profile fetch and structured extraction together.** `contents.summary.schema` returns typed JSON per result, so a separate extraction step never exists. Measured: three people with name, title, current employer and profile URL in 4.5s for $0.010. Governs R68.
 - KTD13. **`bun` for package management, `vitest` with `@cloudflare/vitest-pool-workers` for tests.** Tests must run on the real Workers runtime, because the whole risk surface is runtime compatibility.
