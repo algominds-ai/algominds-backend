@@ -47,6 +47,7 @@ import type {
 	Run,
 } from "../src/core/db/schema";
 import {
+	account,
 	company,
 	evidence,
 	normalizeDomain,
@@ -393,12 +394,14 @@ describe("ensureAccount", () => {
 			domain: "acme.com",
 			createdAt: new Date("2026-01-01T00:00:00.000Z"),
 		};
+		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
 		const buildDb: DbFactory<AccountConnection> = () => ({
 			insert: () => ({
 				values: () => ({
-					onConflictDoNothing: () => ({
-						returning: () => Promise.resolve([]),
-					}),
+					onConflictDoNothing: (config) => {
+						conflictTarget = config?.target;
+						return { returning: () => Promise.resolve([]) };
+					},
 				}),
 			}),
 			select: () => ({
@@ -410,6 +413,7 @@ describe("ensureAccount", () => {
 
 		const result = await ensureAccount(env, "Acme", "acme.com", buildDb);
 
+		expect(conflictTarget).toEqual([account.domain]);
 		expect(result).toEqual(existing);
 	});
 });

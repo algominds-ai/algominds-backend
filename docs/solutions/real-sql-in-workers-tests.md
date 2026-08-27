@@ -41,3 +41,17 @@ rows from `icp`. It passed in 2.15 seconds against the live local database.
   reason.
 - This depends on `localConnectionString`. Remove it and every such test
   fails at connect time.
+
+## A `null` step mock does not suppress the step
+
+`mockStepResult({ name: "open-run" }, null)` leaves the step running for real.
+The value has to be defined; `{ id: "x" }` works where `null` does not.
+
+The symptom is misleading. The step executes, fails against a database that
+holds nothing it needs, and the instance reaches `errored` — so a test waiting
+for `complete` waits until its own timeout and reports a hang rather than the
+failure underneath. Two tests looked like a workflow deadlock for several runs
+before the cause turned out to be the mock value.
+
+Mock every step a workflow test does not intend to execute, and give each one a
+defined value.

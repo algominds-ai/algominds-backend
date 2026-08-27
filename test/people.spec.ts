@@ -450,7 +450,12 @@ describe("FindPeopleWorkflow", () => {
 			};
 
 			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "load-icp" }, icp);
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "load-companies" }, companies);
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "people-batch-1" }, batchOne);
@@ -483,7 +488,12 @@ describe("FindPeopleWorkflow", () => {
 		);
 		try {
 			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "load-icp" }, icp);
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "load-companies" }, []);
 				await m.mockStepResult({ name: "save-people" }, null);
 			});
