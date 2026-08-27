@@ -1,0 +1,49 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "algo-backend",
+	"main": "src/index.ts",
+	"account_id": "558c97456d4a969cb82bee23d2054613",
+	"compatibility_date": "2026-08-27",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": { "enabled": true },
+
+	// Neither package can run on Workers; both arrive transitively.
+	// See docs/plans/…-plan.md KTD4. Do not remove.
+	"alias": {
+		"undici": "./build/stub-undici.ts",
+		"cross-spawn": "./build/stub-cross-spawn.ts"
+	},
+
+	// Two configs against ONE database. `direct` has caching disabled and is
+	// used for dedupe reads, because Hyperdrive does not invalidate on write.
+	// Create with:
+	//   wrangler hyperdrive create algo-cached --connection-string="postgres://…"
+	//   wrangler hyperdrive create algo-direct  --connection-string="postgres://…" --caching-disabled
+	"hyperdrive": [
+		{ "binding": "HYPERDRIVE_CACHED", "id": "<algo-cached-id>" },
+		{ "binding": "HYPERDRIVE_DIRECT", "id": "<algo-direct-id>" }
+	],
+
+	"workflows": [
+		{
+			"binding": "FIND_COMPANIES",
+			"name": "find-companies",
+			"class_name": "FindCompaniesWorkflow"
+		},
+		{
+			"binding": "FIND_PEOPLE",
+			"name": "find-people",
+			"class_name": "FindPeopleWorkflow"
+		},
+		{ "binding": "ENRICH", "name": "enrich", "class_name": "EnrichWorkflow" }
+	],
+
+	// Create with: wrangler secrets-store secret create <store> --name <NAME> --scopes workers
+	"secrets_store_secrets": [
+		{ "binding": "EXA_API_KEY", "store_id": "<store-id>", "secret_name": "exa-api-key" },
+		{ "binding": "APOLLO_API_KEY", "store_id": "<store-id>", "secret_name": "apollo-api-key" },
+		{ "binding": "BRIGHTDATA_TOKEN", "store_id": "<store-id>", "secret_name": "brightdata-token" },
+		{ "binding": "AI_GATEWAY_TOKEN", "store_id": "<store-id>", "secret_name": "ai-gateway-token" },
+		{ "binding": "API_BEARER_TOKEN", "store_id": "<store-id>", "secret_name": "api-bearer-token" }
+	]
+}

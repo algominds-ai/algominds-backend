@@ -458,20 +458,14 @@ U1 gates everything. U14 lands second, because every provider and every model ca
 **Dependencies.** None.
 
 **Files.**
-- `package.json`, `tsconfig.json`, `wrangler.jsonc`, `vitest.config.ts`, `.gitignore`
-- `build/stub-undici.ts`, `build/stub-cross-spawn.ts`
-- `src/index.ts`
-- `test/bundle.spec.ts`
+- `src/index.ts` (to write)
+- `test/bundle.spec.ts` (to write)
+- already on disk: `package.json`, `tsconfig.json`, `wrangler.jsonc`, `vitest.config.ts`, `drizzle.config.ts`, `biome.json`, `lint/anti-slop/*.grit`, `build/stub-*.ts`
 
 **Approach.**
-1. `bun init`. Install the exact pins from the Planning Contract. Commit `bun.lock`.
-2. `wrangler.jsonc`: `compatibility_date` at `2026-08-04` or later, `compatibility_flags: ["nodejs_compat"]`, `limits: { cpu_ms: 300000, subrequests: 50000 }`, `observability: { enabled: true }`.
-3. Alias `undici` and `cross-spawn` to the stub files through the wrangler `alias` field:
-   ```jsonc
-   { "alias": { "undici": "./build/stub-undici.ts",
-                "cross-spawn": "./build/stub-cross-spawn.ts" } }
-   ```
-   Each stub exports a `Proxy` that throws a named error on any property access. Do not use a top-level `throw`: these packages are imported at module scope, so the Worker would die at startup rather than on misuse.
+1. Config is already scaffolded on disk: `package.json`, `tsconfig.json`, `wrangler.jsonc`, `vitest.config.ts`, `drizzle.config.ts`, `biome.json`, `lint/anti-slop/*.grit`, and both stubs in `build/`. Run `bun install --frozen-lockfile` and commit `bun.lock`.
+2. `wrangler.jsonc` is written: `compatibility_date` 2026-08-27, `compatibility_flags: ["nodejs_compat"]`, `observability` on, both Hyperdrive bindings, three Workflow bindings, five Secrets Store bindings. Placeholder ids marked `<…>` must be filled from the resource-creation commands before the first deploy.
+3. The `alias` field and both stubs are already in place. Each stub exports a `Proxy` that throws a named error on any property access. Do not replace them with a top-level `throw`: these packages are imported at module scope, so the Worker would die at startup rather than on misuse.
 4. `src/index.ts`: a Hono app with `GET /health` that imports `generateText` from `ai` and `createMCPClient` from `@ai-sdk/mcp` at module scope, so both enter the bundle graph.
 5. Run `wrangler deploy --dry-run`. A clean bundle proves A1 and A2.
 
@@ -483,7 +477,7 @@ U1 gates everything. U14 lands second, because every provider and every model ca
 - `wrangler deploy --dry-run` exits 0 and emits no unresolved-import warning.
 - `GET /health` returns 200 under `vitest` with `@cloudflare/vitest-pool-workers`, proving the module-scope imports evaluate on the real runtime.
 - Importing the `undici` stub and touching any property throws an error whose message names `undici`.
-- `tsc --noEmit` exits 0.
+- `tsc --noEmit` exits 0 and `biome check .` exits 0.
 
 **Verification.** The bundle builds, the health route answers on the Workers pool, and both stubs throw by name.
 
@@ -992,6 +986,7 @@ Run these in order. Each must pass before the next.
 | Install | `bun install --frozen-lockfile` | Everything |
 | Types | `bunx tsc --noEmit` | Everything |
 | Bundle | `bunx wrangler deploy --dry-run` | U1 and every later unit |
+| Lint | `bun run lint` (`biome check .`) | Every unit |
 | Tests | `bun run test` (`vitest run`) | Every unit |
 | Migrations | `bunx drizzle-kit push` against a scratch database | U2 |
 | Local run | `bunx wrangler dev`, then `GET /health` returns 200 | U1, U7 |

@@ -1,0 +1,27 @@
+// Rule logic adapted from dmmulroy/anti-slop's `no-module-mocking`
+// (MIT License, see ./LICENSE). Copyright (c) 2026 Dillon Mulroy.
+//
+// Adapted to this repo's test runtime: upstream targets Vitest/Jest
+// (`vi.mock`/`jest.mock`), this repo runs on `bun:test`, whose surface is
+// `mock.module()`. All three forms are matched. Applies to test files as well
+// as production source (see biome.json's plugins entry): the dependency-injection
+// pass that removed the test-side seams has landed, so a module mock in a test is
+// now a defect rather than pending work. Two console test helpers are named
+// exceptions there, not a blanket carve-out. Those two exclusions are written as
+// `!**/<basename>` because that is the only negation form biome's plugin
+// `includes` actually honours — a repo-relative path spelling was measured and
+// silently failed to exclude, so the rule still errored on both files. The cost
+// is that the exclusion matches by basename anywhere in the repo; do not respell
+// it as a path expecting it to narrow.
+engine biome(1.0)
+language js(typescript, jsx)
+
+or {
+	`mock.module($_, $_)` as $call,
+	`vi.mock($_, $_)` as $call,
+	`vi.mock($_)` as $call,
+	`jest.mock($_, $_)` as $call,
+	`jest.mock($_)` as $call
+} where {
+	register_diagnostic(span=$call, message="Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.", severity="error")
+}

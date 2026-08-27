@@ -1,0 +1,14 @@
+// Rule logic adapted from dmmulroy/anti-slop's `no-chained-type-assertions`
+// (MIT License, see ./LICENSE). Copyright (c) 2026 Dillon Mulroy.
+//
+// Scoped to non-test source only (see biome.json's plugins entry): adversarial
+// test fixtures legitimately construct malformed values through chained
+// assertions, and schema parsing cannot replace that.
+engine biome(1.0)
+language js(typescript, jsx)
+
+TsAsExpression(expression=$inner) as $outer where {
+	$inner <: TsAsExpression(),
+	not $outer <: `$_ as const`,
+	register_diagnostic(span=$outer, message="This assertion chain discards type evidence. Keep the original precise type, or parse untrusted input at its boundary before narrowing it.", severity="error")
+}

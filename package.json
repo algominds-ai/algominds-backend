@@ -1,0 +1,37 @@
+{
+	"name": "algo-backend",
+	"private": true,
+	"type": "module",
+	"author": "Lahfir",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"build": "wrangler deploy --dry-run --outdir=dist",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"db:generate": "drizzle-kit generate",
+		"db:push": "drizzle-kit push",
+		"cf-typegen": "wrangler types"
+	},
+	"dependencies": {
+		"@ai-sdk/mcp": "2.0.39",
+		"@ai-sdk/openai-compatible": "3.0.39",
+		"ai": "7.0.83",
+		"drizzle-orm": "0.45.2",
+		"hono": "4.13.5",
+		"postgres": "3.4.9",
+		"zod": "4.4.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.1",
+		"@cloudflare/vitest-pool-workers": "0.22.0",
+		"@cloudflare/workers-types": "5.20260827.1",
+		"drizzle-kit": "0.31.10",
+		"typescript": "7.0.2",
+		"vitest": "4.1.11",
+		"wrangler": "4.127.0"
+	}
+}

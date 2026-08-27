@@ -15,6 +15,7 @@ copy its content into this file.
 ```bash
 bun install --frozen-lockfile
 bunx tsc --noEmit
+bun run lint                      # biome check .
 bun run test                      # vitest on the real Workers runtime
 bunx wrangler deploy --dry-run    # bundle check — must stay clean
 bunx wrangler dev
@@ -47,6 +48,7 @@ src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
   tests do not count — runtime compatibility is the main risk here.
 - **Non-trivial logic leaves one runnable check behind.** A branch, a loop, a parser, or a
   money path gets a test. Trivial one-liners do not.
+- **No relative imports.** Biome bans `./*` and `../*` outside `test/`. Use `@/*`.
 - **Repo-relative paths everywhere.** Never absolute.
 - **Mark deliberate shortcuts** with a `ponytail:` comment naming the ceiling and the upgrade
   path, so simple reads as intent rather than ignorance.

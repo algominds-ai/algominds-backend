@@ -1,0 +1,13 @@
+// Rule logic adapted from dmmulroy/anti-slop's `no-unknown-type-aliases`
+// (MIT License, see ./LICENSE). Copyright (c) 2026 Dillon Mulroy.
+//
+// Matches only a type alias whose full body is exactly `unknown` (structural
+// snippet match, not `contains`). An alias containing `unknown` inside a
+// dictionary shape (e.g. `Record<string, unknown>`) is a different defect,
+// covered by no-unsafe-dictionary-type.grit, not this rule.
+engine biome(1.0)
+language js(typescript, jsx)
+
+`type $_ = unknown` as $decl where {
+	register_diagnostic(span=$decl, message="This type alias hides `unknown`. Keep `unknown` explicit at the parsing boundary or on an allowed `cause` field; otherwise use the parsed owner type.", severity="error")
+}
