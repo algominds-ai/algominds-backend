@@ -346,6 +346,12 @@ move out, and the orchestration stays.
 pass untouched apart from import paths — that is the proof the split was
 faithful.
 
+Split for the code that is coming, not for today's line count. `companies.ts`
+receives the cap check helper from U7 and the fuller capture from U9;
+`people.ts` receives the run-scoped loading from U10. Leave each file enough
+room for those before declaring the split done, or a second split lands
+mid-plan.
+
 **Test scenarios.**
 - The existing `companies.spec.ts` and `people.spec.ts` suites pass with no
   assertion changed.
@@ -462,9 +468,18 @@ matching the reported cost, gate green.
 
 **Dependencies.** U3, U6.
 
-**Files.** `src/config.ts`, `src/core/companies.ts`, `src/core/people.ts`,
+**Files.** `src/config.ts`, `src/core/companies.ts`,
 `src/workflows/find-companies.ts`, `src/workflows/find-people.ts`,
-`test/companies.spec.ts`, `test/people.spec.ts`.
+`src/workflows/enrich.ts`, `test/companies.spec.ts`, `test/people.spec.ts`.
+
+The check goes where the loop is. `runRounds` in `src/core/companies.ts` has a
+per-round point; the people and enrich batch loops live in `runBatches` in
+`src/workflows/find-people.ts` and in the loop in `src/workflows/enrich.ts`.
+`findPeople` in `src/core/people.ts` processes one batch and has no loop, so
+nothing goes there.
+
+The account id for the daily check comes from the already-loaded icp row once
+`icp.account_id` exists after U5. No extra lookup is needed.
 
 **Approach.**
 1. Add `perRunDollars: 2.00` and `perAccountDailyDollars: 50.00` to
@@ -661,8 +676,20 @@ page, gate green.
 5. Live vendor calls go in a separate opt-in script, never the gate, because
    each costs about $0.007.
 
-**Execution note.** Write each test so it fails against the pre-fix code. A
-regression test that passes on the broken version proves nothing.
+**Execution note.** These tests fall into two classes, and conflating them
+makes the Definition of Done unsatisfiable.
+
+A **regression test** covers behaviour this plan introduces or repairs. It must
+fail against `baseline-before-multitenancy` and pass after. The cap, the
+run-scoped company load, the retry limits, index usage, the enrich join, and
+the repeated start are all in this class.
+
+A **forward guard** covers behaviour that is already correct at the baseline
+tag. Verified at that tag: `neural` is not in the type enum, `includeText` and
+`excludeText` appear zero times, and both `supportsStructuredOutputs: true` and
+the routing flag are set. Tests for those pass at baseline by design. Their
+value is that the defect cannot come back unnoticed, which is exactly how it
+arrived the first time. Do not claim they fail against baseline.
 
 **Test scenarios.**
 - A request carrying `includeText` fails the conformance test.
@@ -781,7 +808,9 @@ recorded baseline of 9, 24, 30, and 297.
 3. Baseline row counts unchanged, or changed only by rows a test created and
    removed.
 4. The end-to-end run matches or beats the recorded baseline.
-5. Each new regression test demonstrably fails against the baseline tag.
+5. Each new **regression** test demonstrably fails against the baseline tag.
+   Forward guards pass at baseline by design and carry no such claim; U12 says
+   which test is which.
 6. No `push --force` was ever run.
 
 ---
@@ -800,6 +829,7 @@ recorded baseline of 9, 24, 30, and 297.
 | A writing test reaches production rows, because no Cloudflare isolation covers a Hyperdrive connection | High | KTD8 points test bindings at their own database through the env-var override; writing tests also clean up |
 | Enrich cannot measure its ceiling in dollars, because `EnrichOutcome` carries no cost | Medium | U7 threads cost back before the ceiling is applied to that path |
 | The cap check pushes `runFindCompaniesRounds` past the 80-line function limit | Low | U7 extracts it as a helper rather than inlining |
+| One split is not enough, and a file crosses 400 lines again mid-plan | Medium | U3 sizes the split against what U7, U9, and U10 add, not against today's count |
 | Any holder of the one shared bearer token can read any account's rows through the two new routes | High once a second account exists | Accepted for now: one account in practice. The tenant boundary this plan creates is a data model, not an enforced boundary, until token-to-account authentication lands. Named here so nobody mistakes the `account` table for access control |
 
 ---
