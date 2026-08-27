@@ -21,8 +21,8 @@ export type SearchShape = {
 
 const DEFAULT_SIGNAL_WINDOW_DAYS = 30;
 
-function isIsoDate(value: string | undefined): value is string {
-	return value !== undefined && !Number.isNaN(new Date(value).getTime());
+function isIsoDate(value: string | null): value is string {
+	return value !== null && !Number.isNaN(new Date(value).getTime());
 }
 
 function defaultSignalDate(): string {
@@ -32,7 +32,7 @@ function defaultSignalDate(): string {
 
 const SearchShapeModelSchema = z.object({
 	category: z.enum(["company", "none"]),
-	startPublishedDate: z.string().optional(),
+	startPublishedDate: z.string().nullable(),
 });
 
 function normalizeSearchShape(

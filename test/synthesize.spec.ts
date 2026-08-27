@@ -102,7 +102,10 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 		: { content: JSON.stringify(value), cost };
 }
 
-const companyShape = { category: "company" as const };
+const companyShape = {
+	category: "company" as const,
+	startPublishedDate: null,
+};
 
 function signalShape(startPublishedDate: string): {
 	category: "none";
@@ -305,7 +308,7 @@ describe("synthesize: search shape", () => {
 				objectReply({
 					query: "q",
 					systemPrompt: "s",
-					searchShape: { category: "none" },
+					searchShape: { category: "none", startPublishedDate: null },
 				}),
 			),
 		]);
