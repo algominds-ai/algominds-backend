@@ -38,3 +38,18 @@ Every script in `package.json` that starts workerd sets `SFW_SHIM_DISABLE=1`:
 `dev`, `deploy`, `build`, `test`, `gate`, `cf-typegen`. Package installs still go
 through the firewall — only the Workers runtime is exempted, and only for
 outbound requests it makes itself.
+
+## A second effect, once the network worked
+
+With outbound fetch restored, the route tests' Workflow instances began doing
+real work instead of failing instantly. They share one Workers runtime with every
+other test file, and the contention made an unrelated health check in
+`test/bundle.spec.ts` fail — deterministically, and in a file that had done
+nothing wrong.
+
+Two changes fix it. Each route test terminates its instance immediately after
+reading the 202, rather than waiting for `afterEach`. And `vitest.config.ts` sets
+`fileParallelism: false`, because the Workers pool shares a runtime across files
+and cannot honestly run them concurrently while any of them starts durable work.
+
+Three consecutive full gate runs pass with both in place.

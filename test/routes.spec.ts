@@ -41,6 +41,19 @@ const SCOPES: readonly string[] = [
 	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
 ];
 
+async function terminateRun(runId: string | undefined): Promise<void> {
+	if (runId === undefined) return;
+	const bindings: Workflow[] = [
+		testEnv.FIND_COMPANIES,
+		testEnv.FIND_PEOPLE,
+		testEnv.ENRICH,
+	];
+	for (const binding of bindings) {
+		const instance = await binding.get(runId).catch(() => null);
+		await instance?.terminate().catch(() => undefined);
+	}
+}
+
 async function terminateStartedRuns(): Promise<void> {
 	const today = new Date().toISOString().slice(0, 10);
 	const bindings: [Workflow, string][] = [
@@ -149,6 +162,7 @@ describe("POST /companies/find", () => {
 		);
 		const elapsedMs = Date.now() - started;
 		const body: { runId?: string } = await response.json();
+		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
@@ -185,6 +199,7 @@ describe("POST /people/find and /enrich", () => {
 			postInit({ icpId }, TOKEN),
 		);
 		const body: { runId?: string } = await response.json();
+		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
@@ -199,6 +214,7 @@ describe("POST /people/find and /enrich", () => {
 			postInit({ runId: sourceRun, channels: ["email"] }, TOKEN),
 		);
 		const body: { runId?: string } = await response.json();
+		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);

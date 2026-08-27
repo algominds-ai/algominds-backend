@@ -13,4 +13,7 @@ export default defineConfig({
 			"@": resolve("src"),
 		},
 	},
+	test: {
+		fileParallelism: false,
+	},
 });
