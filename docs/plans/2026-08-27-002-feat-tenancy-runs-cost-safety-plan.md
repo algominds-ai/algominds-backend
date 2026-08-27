@@ -513,6 +513,13 @@ matching the reported cost, gate green.
 
 **Dependencies.** U3, U6.
 
+**Two gaps U6 left, which belong here.** `src/workflows/enrich.ts` opens no run
+row, so its spend is invisible to the daily account ceiling — the one
+capability whose cost rests on an unconfirmed rate. And a workflow that dies
+between opening and closing a run leaves that row at `running` with no
+`finished_at` forever, which the daily sum then counts as spend that never
+resolves. Both must be closed here or the ceiling reads the wrong number.
+
 **Files.** `src/config.ts`, `src/core/companies.ts`,
 `src/workflows/find-companies.ts`, `src/workflows/find-people.ts`,
 `src/workflows/enrich.ts`, `test/companies.spec.ts`, `test/people.spec.ts`.
