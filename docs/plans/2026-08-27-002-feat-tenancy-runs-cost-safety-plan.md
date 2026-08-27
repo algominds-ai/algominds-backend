@@ -94,7 +94,7 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R6 | Indexes exist on `person(company_id)`, `company(run_id)`, `company(icp_id, found_at desc)`, and `icp(account_id)`. |
 | R7 | Every `step.do` call carries an explicit `StepConfig`. Steps that pay a vendor retry at most twice. |
 | R8 | A run stops starting new paid work once its spend reaches the per-run ceiling, keeps everything it already found, and reports terminal status `capped` with the spend. |
-| R9 | A run refuses to start when its account has already reached the daily ceiling. |
+| R9 | A run refuses to start when its account has already reached the daily ceiling. Two runs starting at once for one account cannot both pass the check. |
 | R10 | A run's spend and status are persisted, so R9 is answerable across instances. |
 | R11 | A workflow returns a bounded summary. Rows are read through paginated routes. |
 | R12 | Everything the vendor returns for a company or a person is stored, not only the fields the pipeline reads. |
@@ -137,11 +137,24 @@ report it in the response; Findymail reports nothing at all. A pre-call check
 can only compare spend already banked against the cap.
 
 The ceiling is therefore a **floor on when to stop**, not a hard ceiling never
-crossed. Overshoot is bounded by one call, about $0.089 for a 100-result Exa
-search. The plan states this rather than implying a guarantee it cannot make.
+crossed. Overshoot is bounded by **one whole checked interval**, and an interval
+is not one call:
 
-A second caveat: the Findymail rate is a $0.01 placeholder, never confirmed,
-so ceiling accuracy on Findymail-heavy runs rests on a guess.
+| Capability | One interval | Paid calls inside it |
+|---|---|---|
+| find-companies | one round | synthesize, one Exa search, judge — about $0.045 measured |
+| find-people | one batch | `batchSize` is 5 and the searches run under `Promise.all`, so five Exa searches plus Apollo calls |
+| enrich | one batch | five subjects through the email and LinkedIn waterfall |
+
+So a people run can overshoot by roughly five searches, not one. Quoting a
+single-call figure understates the bound on two of the three capabilities.
+
+A second caveat, and it is larger than it looks. `RATES` holds exactly one
+entry, `findymail`, at an unconfirmed $0.01. Exa and the gateway report their
+real cost, so they are accurate. Findymail is the **only** priced call on the
+enrichment path, which means the enrichment ceiling is wrong by whatever
+multiple the true rate differs from the guess. That is not accuracy at the
+margins; it is the whole signal for that capability.
 
 ### KTD3. Read-after-write goes through the cache-disabled binding
 
@@ -415,8 +428,17 @@ counts are unchanged, gate green.
    against the existing rows.
 
 **Execution note.** This is the only unit that can lose data. Take a fresh dump
-first. Never run `push --force`. Backfill is hand-written SQL inside the
-migration, which is the whole reason for KTD4.
+first, and re-verify the restore the way the Goal Capsule describes. Never run
+`push --force`. Backfill is hand-written SQL inside the migration, which is the
+whole reason for KTD4.
+
+**The migration must run inside one transaction.** Postgres can roll back DDL,
+so a failure partway through the three steps leaves the database untouched
+rather than half-migrated with `icp.account_id` constrained but no run rows.
+Confirm the wrapping before running it live; do not assume the tool provides
+it. If it does not, wrap the file by hand. Without this the restore is the only
+recovery, and a restore is a worse outcome than a transaction that never
+committed.
 
 **Test scenarios.**
 - After migration, no `icp` row has a null `account_id`.
@@ -425,6 +447,8 @@ migration, which is the whole reason for KTD4.
   key.
 - Inserting a company with an unknown `run_id` is rejected.
 - The four baseline row counts are unchanged: 9, 24, 30, 297.
+- A deliberately failing backfill leaves the schema exactly as it was, proving
+  the transaction wraps the whole file.
 
 **Verification.** Baseline counts hold, constraints present, gate green.
 
@@ -488,6 +512,11 @@ The account id for the daily check comes from the already-loaded icp row once
    ceiling. Over it, break and return with status `capped` (KTD1).
 3. At workflow start, compare the account's day against the daily ceiling.
    Over it, throw `NonRetryableError` before any paid work.
+4. That check is read-then-decide, so two runs starting together for one
+   account would both read a total under the cap and both proceed. Serialise it
+   per account — a Postgres advisory lock keyed on the account id, held across
+   the read and the decision — so concurrent starts cannot each spend a full
+   per-run ceiling past the daily one.
 
 **Execution note.** Write the cap tests first. A ceiling that never fires is
 indistinguishable from no ceiling, and only a test that drives spend past the
@@ -508,6 +537,8 @@ before its ceiling can be measured in dollars at all.
 - A run under the ceiling is untouched and still reports `complete`.
 - An account already over the daily ceiling refuses to start and performs no
   vendor call.
+- Two runs started together for one account near the daily ceiling do not both
+  pass. The account ends at most one run's worth past the cap, not two.
 - Overshoot is bounded: a round that begins under the ceiling is allowed to
   finish, and the recorded spend may exceed the cap by that one round (KTD2).
 - The enrich path reports a cost, so its ceiling measures dollars rather than
@@ -811,6 +842,13 @@ recorded baseline of 9, 24, 30, and 297.
 5. Each new **regression** test demonstrably fails against the baseline tag.
    Forward guards pass at baseline by design and carry no such claim; U12 says
    which test is which.
+
+   Checking out the tag does not revert the database, so a test that asserts
+   against the new tables would fail to compile rather than fail on behaviour —
+   which satisfies the letter of this item while proving nothing. The procedure:
+   restore the baseline dump into a separate database, point the checked-out
+   baseline code at it, and confirm the failure is behavioural. A compile error
+   does not count.
 6. No `push --force` was ever run.
 
 ---
@@ -825,7 +863,9 @@ recorded baseline of 9, 24, 30, and 297.
 | A capped run returns nothing and loses paid work | High | KTD1 returns rather than throws; a test asserts rows come back with status `capped` |
 | Splitting two large files changes behaviour | Medium | U3 is a pure move, proven by existing tests passing with no assertion changed |
 | Shared test database causes cross-test interference | Medium | `fileParallelism` is already false; every writing test scopes and removes its own rows |
-| The Findymail rate is an unverified $0.01 placeholder | Low | Recorded in the plan; ceiling accuracy on Findymail-heavy runs is approximate until probed |
+| The Findymail rate is an unverified $0.01 placeholder, and it is the only priced call on the enrichment path | Medium | The enrichment ceiling is wrong by whatever multiple the true rate differs from the guess. Probe the real rate before relying on that ceiling; the companies and people ceilings are unaffected, since Exa and the gateway report real cost |
+| Two runs start together for one account and both pass the daily check | Medium | U7 serialises the check per account with an advisory lock, and a test starts two runs at the boundary |
+| The migration fails partway and leaves a half-migrated schema | High | U5 requires the whole file to run in one transaction, proven by a deliberately failing backfill that leaves the schema untouched |
 | A writing test reaches production rows, because no Cloudflare isolation covers a Hyperdrive connection | High | KTD8 points test bindings at their own database through the env-var override; writing tests also clean up |
 | Enrich cannot measure its ceiling in dollars, because `EnrichOutcome` carries no cost | Medium | U7 threads cost back before the ceiling is applied to that path |
 | The cap check pushes `runFindCompaniesRounds` past the 80-line function limit | Low | U7 extracts it as a helper rather than inlining |
