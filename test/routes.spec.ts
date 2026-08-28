@@ -37,6 +37,7 @@ const SCOPES: readonly string[] = [
 	"77777777-7777-4777-8777-777777777777",
 	"88888888-8888-4888-8888-888888888888",
 	"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
 	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
 	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
 ];
@@ -152,7 +153,7 @@ describe("POST /companies/find", () => {
 		expect(statusResponse.status).toBe(404);
 	});
 
-	it("returns 202 with a runId built from capability, icpId and today, without waiting", async () => {
+	it("returns 202 with a runId built from capability, icpId and today, and reports the run as new", async () => {
 		const icpId = "66666666-6666-4666-8666-666666666666";
 		const started = Date.now();
 
@@ -161,16 +162,17 @@ describe("POST /companies/find", () => {
 			postInit({ icpId, count: 3 }, TOKEN),
 		);
 		const elapsedMs = Date.now() - started;
-		const body: { runId?: string } = await response.json();
+		const body: { runId?: string; status?: string } = await response.json();
 		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
 		expect(body.runId).toBe(`companies_${icpId}_${today}`);
+		expect(body.status).toBe("started");
 		expect(elapsedMs).toBeLessThan(2000);
 	});
 
-	it("creates one instance for two same-day requests with the same icpId", async () => {
+	it("creates one instance for two same-day requests with the same icpId and count, reporting the second as existing", async () => {
 		const icpId = "77777777-7777-4777-8777-777777777777";
 
 		const first = await authedCall(
@@ -181,12 +183,40 @@ describe("POST /companies/find", () => {
 			"/companies/find",
 			postInit({ icpId, count: 4 }, TOKEN),
 		);
-		const firstBody: { runId: string } = await first.json();
-		const secondBody: { runId: string } = await second.json();
+		const firstBody: { runId: string; status?: string } = await first.json();
+		const secondBody: { runId: string; status?: string } = await second.json();
+		const statusResponse = await authedCall(
+			`/runs/${secondBody.runId}`,
+			authedGetInit(),
+		);
 
 		expect(first.status).toBe(202);
-		expect(second.status).toBe(202);
-		expect(firstBody.runId).toBe(secondBody.runId);
+		expect(firstBody.status).toBe("started");
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(firstBody.runId);
+		expect(statusResponse.status).toBe(200);
+	});
+
+	it("reports the existing run when a repeat arrives with a different count, instead of presenting the new count as accepted", async () => {
+		const icpId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+
+		const first = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 10 }, TOKEN),
+		);
+		const second = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 50 }, TOKEN),
+		);
+		const firstBody: { runId: string; status?: string } = await first.json();
+		const secondBody: { runId: string; status?: string } = await second.json();
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(firstBody.runId);
 	});
 });
 

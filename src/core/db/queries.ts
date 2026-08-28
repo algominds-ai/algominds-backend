@@ -147,6 +147,7 @@ export type RunUpdateConnection = UpdateWhereConnection<
 	typeof run,
 	Pick<NewRun, "status" | "costDollars" | "finishedAt">
 >;
+export type RunLookupConnection = SelectLimitConnection<typeof run, Run>;
 export type AccountSpendConnection = SelectWhereConnection<
 	typeof run,
 	{ costDollars: typeof run.costDollars },
@@ -254,6 +255,24 @@ export async function openRun(
 	const row = existing[0];
 	if (!row) throw new Error(`openRun: no run for id ${newRun.id}`);
 	return row;
+}
+
+/**
+ * The run row for `runId`, if one exists, read through the cache-disabled
+ * binding so a start from earlier in this same request is never missed.
+ */
+export async function findRun(
+	env: DbEnv,
+	runId: string,
+	buildDb: DbFactory<RunLookupConnection> = db,
+): Promise<Run | undefined> {
+	const connection = buildDb(env, "direct");
+	const rows = await connection
+		.select()
+		.from(run)
+		.where(eq(run.id, runId))
+		.limit(1);
+	return rows[0];
 }
 
 /** Records a run's terminal status and spend, and stamps `finished_at`. */

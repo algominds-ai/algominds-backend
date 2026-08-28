@@ -2,7 +2,7 @@ import type { Context, Next } from "hono";
 import { Hono } from "hono";
 import { z } from "zod";
 import { config } from "@/config";
-import { createIcp, ensureAccount } from "@/core/db/queries";
+import { createIcp, ensureAccount, findRun } from "@/core/db/queries";
 
 type ApiEnv = { Bindings: Env };
 
@@ -118,8 +118,12 @@ async function startJob<Body>(
 	}
 	const job = await config.toJob(parsed.data, c.env);
 	const runId = buildRunId(config.capability, job.scopeId);
+	const existing = await findRun(c.env, runId);
+	if (existing) {
+		return c.json({ runId, icpId: existing.icpId, status: "existing" }, 200);
+	}
 	await config.workflow.createBatch([{ id: runId, params: job.params }]);
-	return c.json({ runId, icpId: job.icpId }, 202);
+	return c.json({ runId, icpId: job.icpId, status: "started" }, 202);
 }
 
 function workflowForCapability(

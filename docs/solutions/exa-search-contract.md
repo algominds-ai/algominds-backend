@@ -231,3 +231,55 @@ about thirteen minutes. That rules the agent out as the first enrichment
 provider and rules it in as the next one: Findymail first because it is fast
 and cheap, the agent after it for the misses, where slow and evidenced beats
 empty.
+
+## `category: "people"` returns structured person records too
+
+The people path currently sends `category: "linkedin profile"`, which is not in
+Exa's category enum and is accepted only as a loose hint, together with
+`contents.summary.schema` LLM extraction. That is the same shape removed from
+the company path for being slow and lossy.
+
+`category: "people"` is a real category and behaves like `company`. Measured at
+the same $0.007, it returns `entities[0].properties`:
+
+```
+name, firstName, lastName, location, workHistory, educationHistory, research
+```
+
+`workHistory` is the important one. Each entry carries a title, dates, and the
+employer as an object with an `id`:
+
+```
+title    "Chief Executive Officer, Technical Founder"
+dates    { from: "2021-02-01", to: null }
+company  { id: "https://exa.ai/library/organization/lrjlz4ht43v",
+           name: "Graphlit, by Unstruk Data" }
+```
+
+`to: null` marks the current role, and that `company.id` is the same identifier
+the `company` category returns.
+
+## This is the fix for the employment name collisions
+
+A previous run matched roughly a third of thirty people to a different company
+sharing a name — two "Passage" companies, an "Aspiro Therapeutics" against an
+"Aspiro". The code compares company name strings, so a collision is inevitable.
+
+With `workHistory`, employment is checkable by identifier: a person belongs to
+the target company when a work entry has `to: null` and a `company.id` equal to
+the company's own. No string comparison, no model judgement, no confidence
+score to threshold.
+
+The existing `employmentConfidence` of 0.4 records the doubt but nothing acts
+on it. Matching on id removes the doubt instead of scoring it.
+
+## Overlap and repeated work, as it stands
+
+| Scope | Mechanism |
+|---|---|
+| Companies across runs | `seenDomains`, a 90-day window, rejecting `already-seen` |
+| People within one run | `dedupeAcrossCompanies`, keyed on LinkedIn URL |
+| People across runs | none |
+
+The third row is a real gap. `person.linkedin_url` is unique, so a repeat
+insert is discarded, but the paid search that found the person again still ran.
