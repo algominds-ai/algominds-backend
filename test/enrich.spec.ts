@@ -2,6 +2,7 @@ import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import { toBatches } from "../src/core/batches";
 import type { DbMode } from "../src/core/db/client";
 import type {
 	DbFactory,
@@ -30,7 +31,6 @@ import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
 import { exaAgentEmailProvider } from "../src/core/providers/exa/agent-email";
 import type { Provider } from "../src/core/providers/types";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
-import { toBatches } from "../src/workflows/enrich";
 
 type Handler = (init: RequestInit | undefined) => Response;
 
@@ -978,7 +978,7 @@ describe("EnrichWorkflow", () => {
 			id: `subject-${i}`,
 		}));
 
-		const batches = toBatches(subjects);
+		const batches = toBatches(subjects, 5);
 
 		expect(batches.map((batch) => batch.length)).toEqual([5, 5, 2]);
 		expect(batches[0]?.[0]?.id).toBe("subject-0");

@@ -2,6 +2,7 @@ import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
+import { toBatches } from "@/core/batches";
 import {
 	accountSpendToday,
 	closeRun,
@@ -29,14 +30,6 @@ export type EnrichWorkflowResult = {
 };
 
 /** Splits `subjects` into ordered groups of `BATCH_SIZE`. */
-export function toBatches(subjects: EnrichSubject[]): EnrichSubject[][] {
-	const batches: EnrichSubject[][] = [];
-	for (let start = 0; start < subjects.length; start += BATCH_SIZE) {
-		batches.push(subjects.slice(start, start + BATCH_SIZE));
-	}
-	return batches;
-}
-
 export class EnrichWorkflow extends WorkflowEntrypoint<
 	Env,
 	EnrichWorkflowParams
@@ -83,7 +76,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 
 		const outcomes: EnrichOutcome[] = [];
 		let costDollars = 0;
-		for (const [index, batch] of toBatches(subjects).entries()) {
+		for (const [index, batch] of toBatches(subjects, BATCH_SIZE).entries()) {
 			const batchResult = await step.do(
 				`enrich-batch-${index}`,
 				config.stepConfig.paidCall,

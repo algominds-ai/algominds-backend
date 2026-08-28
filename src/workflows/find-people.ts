@@ -3,6 +3,7 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
+import { toBatches } from "@/core/batches";
 import { knownPeopleDomains } from "@/core/db/known-people";
 import {
 	accountSpendToday,
@@ -112,16 +113,6 @@ function batchDeps(
 }
 
 /** Splits `companies` into ordered groups of `BATCH_SIZE`, for one durable step each. */
-export function toBatches(
-	companies: readonly PeopleCompany[],
-): PeopleCompany[][] {
-	const batches: PeopleCompany[][] = [];
-	for (let start = 0; start < companies.length; start += BATCH_SIZE) {
-		batches.push(companies.slice(start, start + BATCH_SIZE));
-	}
-	return batches;
-}
-
 function mergeResults(
 	batches: readonly FindPeopleResult[],
 	skippedCompanies: number,
@@ -360,7 +351,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const resolved = await resolvePlan(icp, this.env, step);
 		const opts: FindPeopleOptions = { icp, env: this.env, plan: resolved };
 		const run = await runBatches(
-			toBatches(scoped),
+			toBatches(scoped, BATCH_SIZE),
 			opts,
 			step,
 			event.instanceId,
