@@ -135,6 +135,14 @@ describe("gate — a profile page is not the company's own site", () => {
 		expect(result.rejects[0]?.reason).toBe("not-a-company-domain");
 	});
 
+	it("rejects a link-in-bio page standing in for a company site", () => {
+		const rows = [companyRow({ domain: "linktr.ee" })];
+
+		const result = gate(rows, [{}], { seenDomains: new Set() });
+
+		expect(result.rejects[0]?.reason).toBe("not-a-company-domain");
+	});
+
 	it("keeps a real company domain that merely contains a host name", () => {
 		const rows = [companyRow({ domain: "github-metrics.io" })];
 

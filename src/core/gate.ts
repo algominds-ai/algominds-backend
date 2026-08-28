@@ -50,6 +50,14 @@ const NOT_A_COMPANY_DOMAIN = new Set([
 	"producthunt.com",
 	"glassdoor.com",
 	"indeed.com",
+	"linktr.ee",
+	"bio.link",
+	"beacons.ai",
+	"taplink.cc",
+	"campsite.bio",
+	"solo.to",
+	"allmylinks.com",
+	"lnk.bio",
 ]);
 
 export type Reject = {
