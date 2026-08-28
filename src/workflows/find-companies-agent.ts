@@ -4,7 +4,7 @@ import type { FindCompaniesDeps } from "@/core/companies";
 import {
 	buildAgentRunRequest,
 	toExaSearchResult,
-} from "@/core/company-agent-search";
+} from "@/core/companies/agent-search";
 import { CostLedger } from "@/core/cost";
 import { recentDomains } from "@/core/db/queries";
 import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";

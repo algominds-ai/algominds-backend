@@ -3,7 +3,7 @@ import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import type { FindPeopleDeps, FindPeopleOptions } from "../src/core/people";
 import { findPeople } from "../src/core/people";
-import type { PeopleCompany } from "../src/core/person-candidates";
+import type { PeopleCompany } from "../src/core/people/candidates";
 import { agentPersonSearch } from "../src/workflows/find-people-agent";
 
 const originalFetch = globalThis.fetch;

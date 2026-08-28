@@ -2,7 +2,7 @@ import type { WorkflowStep } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import type { FindPeopleDeps } from "@/core/people";
-import type { PeopleCompany } from "@/core/person-candidates";
+import type { PeopleCompany } from "@/core/people/candidates";
 import {
 	buildPersonAgentRunRequest,
 	getAgentPeopleRun,

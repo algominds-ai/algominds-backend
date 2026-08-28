@@ -1,8 +1,8 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import type { CompanyRow } from "../src/core/gate";
-import { judge } from "../src/core/judge";
+import type { CompanyRow } from "../src/core/companies/gate";
+import { judge } from "../src/core/companies/judge";
 import type { IcpDoc } from "../src/core/synthesize";
 
 const env: Env = {

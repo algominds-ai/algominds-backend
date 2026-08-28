@@ -11,8 +11,11 @@ import type {
 	FindCompaniesStatus,
 } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
-import type { CompanyCapture } from "@/core/company-candidates";
-import { toCompanyData } from "@/core/company-candidates";
+import type { CompanyCapture } from "@/core/companies/candidates";
+import { toCompanyData } from "@/core/companies/candidates";
+import type { CompanyRow } from "@/core/companies/gate";
+import { gate } from "@/core/companies/gate";
+import { judge } from "@/core/companies/judge";
 import {
 	accountSpendToday,
 	appendEvidence,
@@ -25,9 +28,6 @@ import {
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
-import type { CompanyRow } from "@/core/gate";
-import { gate } from "@/core/gate";
-import { judge } from "@/core/judge";
 import { search } from "@/core/providers/exa/search";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { IcpDocSchema, synthesize } from "@/core/synthesize";

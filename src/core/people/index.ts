@@ -11,7 +11,7 @@ import type {
 	PersonData,
 	PersonEntity,
 	PersonMatch,
-} from "@/core/person-candidates";
+} from "@/core/people/candidates";
 import {
 	apolloMatchesPerson,
 	buildPersonSearchRequest,
@@ -21,7 +21,7 @@ import {
 	toPersonCandidate,
 	toPersonClaim,
 	toPersonData,
-} from "@/core/person-candidates";
+} from "@/core/people/candidates";
 import type {
 	ApolloCandidate,
 	ApolloSearchFilters,

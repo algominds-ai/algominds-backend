@@ -1,11 +1,11 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { buildAgentRunRequest } from "../src/core/company-agent-search";
-import { buildSearchRequest } from "../src/core/company-candidates";
+import { buildAgentRunRequest } from "../src/core/companies/agent-search";
+import { buildSearchRequest } from "../src/core/companies/candidates";
 import { CostLedger } from "../src/core/cost";
-import type { PeopleCompany } from "../src/core/person-candidates";
-import { buildPersonSearchRequest } from "../src/core/person-candidates";
+import type { PeopleCompany } from "../src/core/people/candidates";
+import { buildPersonSearchRequest } from "../src/core/people/candidates";
 import { startAgentRun } from "../src/core/providers/exa/agent";
 import { search } from "../src/core/providers/exa/search";
 import type { SearchPlan } from "../src/core/synthesize";

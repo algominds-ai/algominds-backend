@@ -957,7 +957,7 @@ describe("toPersonData", () => {
 });
 
 async function unitSource(): Promise<string> {
-	const core = await rawSource("../src/core/people.ts");
+	const core = await rawSource("../src/core/people/index.ts");
 	const workflow = await rawSource("../src/workflows/find-people.ts");
 	return `${core}\n${workflow}`;
 }

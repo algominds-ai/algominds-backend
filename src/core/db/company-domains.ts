@@ -1,5 +1,5 @@
 import { inArray } from "drizzle-orm";
-import { companyExaId } from "@/core/company-candidates";
+import { companyExaId } from "@/core/companies/candidates";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type { DbFactory, SelectWhereConnection } from "@/core/db/queries";

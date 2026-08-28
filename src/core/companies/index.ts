@@ -2,23 +2,23 @@ import { config } from "@/config";
 import type {
 	CompanyCapture,
 	FindCompaniesReject,
-} from "@/core/company-candidates";
+} from "@/core/companies/candidates";
 import {
 	buildSearchRequest,
 	collectDomains,
 	countUnseen,
 	filterEntities,
-} from "@/core/company-candidates";
-import { CostLedger } from "@/core/cost";
-import { normalizeDomain } from "@/core/db/schema";
+} from "@/core/companies/candidates";
 import type {
 	CompanyRow,
 	GateOptions,
 	GateResult,
 	Reject,
 	SearchResult,
-} from "@/core/gate";
-import type { JudgeResult, Verdict } from "@/core/judge";
+} from "@/core/companies/gate";
+import type { JudgeResult, Verdict } from "@/core/companies/judge";
+import { CostLedger } from "@/core/cost";
+import { normalizeDomain } from "@/core/db/schema";
 import type {
 	ExaSearchRequest,
 	ExaSearchResult,

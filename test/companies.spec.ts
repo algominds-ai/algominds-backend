@@ -8,16 +8,16 @@ import type {
 	FindCompaniesResult,
 } from "../src/core/companies";
 import { findCompanies } from "../src/core/companies";
-import { toExaSearchResult } from "../src/core/company-agent-search";
+import { toExaSearchResult } from "../src/core/companies/agent-search";
 import type {
 	CompanyCapture,
 	CompanyMatch,
-} from "../src/core/company-candidates";
-import { toCompanyData } from "../src/core/company-candidates";
+} from "../src/core/companies/candidates";
+import { toCompanyData } from "../src/core/companies/candidates";
+import type { CompanyRow } from "../src/core/companies/gate";
+import { gate } from "../src/core/companies/gate";
+import type { Verdict } from "../src/core/companies/judge";
 import { CostLedger } from "../src/core/cost";
-import type { CompanyRow } from "../src/core/gate";
-import { gate } from "../src/core/gate";
-import type { Verdict } from "../src/core/judge";
 import type { ExaAgentCompany } from "../src/core/providers/exa/agent";
 import type {
 	CompanyEntity,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CompanyRow } from "../src/core/gate";
-import { gate } from "../src/core/gate";
+import type { CompanyRow } from "../src/core/companies/gate";
+import { gate } from "../src/core/companies/gate";
 
 function companyRow(overrides: Partial<CompanyRow> = {}): CompanyRow {
 	return {

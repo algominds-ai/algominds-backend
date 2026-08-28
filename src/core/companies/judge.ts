@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { config } from "@/config";
+import type { CompanyRow } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
-import type { CompanyRow } from "@/core/gate";
 import { generateStructured, reasoningModel } from "@/core/model";
 import type { IcpDoc } from "@/core/synthesize";
 

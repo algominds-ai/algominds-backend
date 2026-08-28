@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
-import { companyExaId } from "@/core/company-candidates";
+import { companyExaId } from "@/core/companies/candidates";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {

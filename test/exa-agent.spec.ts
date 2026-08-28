@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	buildAgentRunRequest,
 	toExaSearchResult,
-} from "../src/core/company-agent-search";
+} from "../src/core/companies/agent-search";
 import { CostLedger } from "../src/core/cost";
 import { getAgentRun, startAgentRun } from "../src/core/providers/exa/agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";

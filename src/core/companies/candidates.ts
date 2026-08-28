@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { config } from "@/config";
+import type { CompanyRow, SearchResult } from "@/core/companies/gate";
 import { normalizeDomain } from "@/core/db/schema";
-import type { CompanyRow, SearchResult } from "@/core/gate";
 import type {
 	CompanyEntity,
 	ExaResult,
