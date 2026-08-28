@@ -5,6 +5,7 @@ import {
 	apolloPeopleSearch,
 } from "../src/core/providers/apollo";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
+import apolloCapture from "./fixtures/apollo-people-search.json";
 
 function apolloEnv(): Env {
 	return {
@@ -156,5 +157,43 @@ describe("apollo source", () => {
 		expect(compiled).not.toContain("reveal_phone_number");
 		expect(compiled).not.toContain("people/match");
 		expect(compiled).not.toContain("bulk_match");
+	});
+});
+
+describe("the parser against a real Apollo response", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("reads a response whose phone flag is the string Apollo really sends", async () => {
+		globalThis.fetch = async () =>
+			new Response(JSON.stringify(apolloCapture), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+
+		const result = await apolloPeopleSearch.run(
+			{ q_organization_domains_list: ["voltasoftware.com"] },
+			apolloEnv(),
+		);
+
+		expect(result).not.toBeNull();
+		expect(result?.candidates.length).toBeGreaterThan(0);
+	});
+
+	it("reads that string flag as a person who has a phone", async () => {
+		globalThis.fetch = async () =>
+			new Response(JSON.stringify(apolloCapture), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+
+		const result = await apolloPeopleSearch.run(
+			{ q_organization_domains_list: ["voltasoftware.com"] },
+			apolloEnv(),
+		);
+
+		expect(result?.candidates[0]?.hasDirectPhone).toBe(true);
 	});
 });

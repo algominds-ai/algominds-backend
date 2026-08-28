@@ -1,0 +1,74 @@
+{
+	"total_entries": 27,
+	"people": [
+		{
+			"id": "66f5772cd3b2a70001b319ac",
+			"first_name": "Mario",
+			"last_name_obfuscated": "Ar***v",
+			"title": "Fractional CMO",
+			"last_refreshed_at": "2026-08-07T19:06:01.000+00:00",
+			"has_email": true,
+			"has_city": true,
+			"has_state": true,
+			"has_country": true,
+			"has_direct_phone": "Yes",
+			"organization": {
+				"name": "Volta Software",
+				"has_industry": true,
+				"has_phone": false,
+				"has_city": true,
+				"has_state": true,
+				"has_country": true,
+				"has_zip_code": false,
+				"has_revenue": false,
+				"has_employee_count": true
+			}
+		},
+		{
+			"id": "60c0f70a18982400016d887b",
+			"first_name": "Paul",
+			"last_name_obfuscated": "Gu***n",
+			"title": "Co-Founder, Chairman & Co-CEO",
+			"last_refreshed_at": "2026-08-07T11:24:55.000+00:00",
+			"has_email": true,
+			"has_city": true,
+			"has_state": true,
+			"has_country": true,
+			"has_direct_phone": "Yes",
+			"organization": {
+				"name": "Volta Software",
+				"has_industry": true,
+				"has_phone": false,
+				"has_city": true,
+				"has_state": true,
+				"has_country": true,
+				"has_zip_code": false,
+				"has_revenue": false,
+				"has_employee_count": true
+			}
+		},
+		{
+			"id": "6943f66d3ad82f0001403254",
+			"first_name": "Mario",
+			"last_name_obfuscated": "Pa***i",
+			"title": "Co-Founder & Co-CEO",
+			"last_refreshed_at": "2026-06-29T15:01:22.432+00:00",
+			"has_email": true,
+			"has_city": true,
+			"has_state": true,
+			"has_country": true,
+			"has_direct_phone": "Yes",
+			"organization": {
+				"name": "Volta Software",
+				"has_industry": true,
+				"has_phone": false,
+				"has_city": true,
+				"has_state": true,
+				"has_country": true,
+				"has_zip_code": false,
+				"has_revenue": false,
+				"has_employee_count": true
+			}
+		}
+	]
+}

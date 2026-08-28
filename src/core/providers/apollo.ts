@@ -31,7 +31,7 @@ const ApolloPersonSchema = z.object({
 		.nullable()
 		.optional(),
 	has_email: z.boolean(),
-	has_direct_phone: z.boolean(),
+	has_direct_phone: z.union([z.boolean(), z.string()]).nullish(),
 	last_refreshed_at: z.string().nullable().optional(),
 });
 
@@ -56,6 +56,12 @@ export type ApolloSearchResult = {
 	candidates: ApolloCandidate[];
 };
 
+/** Apollo reports the phone flag as a boolean on some rows and as "Yes" on others. */
+function hasPhone(reported: boolean | string | null | undefined): boolean {
+	if (typeof reported === "boolean") return reported;
+	return typeof reported === "string" && reported.toLowerCase() === "yes";
+}
+
 function toCandidate(
 	person: z.infer<typeof ApolloPersonSchema>,
 ): ApolloCandidate {
@@ -66,7 +72,7 @@ function toCandidate(
 		title: person.title ?? null,
 		organizationName: person.organization?.name ?? null,
 		hasEmail: person.has_email,
-		hasDirectPhone: person.has_direct_phone,
+		hasDirectPhone: hasPhone(person.has_direct_phone),
 		lastRefreshedAt: person.last_refreshed_at ?? null,
 	};
 }
