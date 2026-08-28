@@ -18,6 +18,7 @@ export const config = {
 		exaAgentMaxPollAttempts: 24,
 	},
 	people: {
+		seenPeopleWindowDays: 90,
 		resultsPerCompany: 3,
 		batchSize: 5,
 	},

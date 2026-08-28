@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
+import { normalizeDomain } from "@/core/db/schema";
 import { generateStructured, workerModel } from "@/core/model";
 import type {
 	ApolloOnlyCandidate,
@@ -140,6 +141,27 @@ export function truncateCompanies(
 ): { companies: PeopleCompany[]; skipped: number } {
 	const limited = companies.slice(0, max);
 	return { companies: limited, skipped: Math.max(0, companies.length - max) };
+}
+
+/**
+ * Splits `companies` into those not already in `knownDomains` and the
+ * domains of those that are, so a company whose people are already resolved
+ * is reported rather than silently dropped.
+ */
+export function splitKnownCompanies(
+	companies: readonly PeopleCompany[],
+	knownDomains: ReadonlySet<string>,
+): { companies: PeopleCompany[]; skipped: string[] } {
+	const unsearched: PeopleCompany[] = [];
+	const skipped: string[] = [];
+	for (const candidate of companies) {
+		if (knownDomains.has(normalizeDomain(candidate.domain))) {
+			skipped.push(candidate.domain);
+		} else {
+			unsearched.push(candidate);
+		}
+	}
+	return { companies: unsearched, skipped };
 }
 
 type PeopleContext = { env: Env; ledger: CostLedger; deps: FindPeopleDeps };

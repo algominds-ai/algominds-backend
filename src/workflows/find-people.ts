@@ -4,6 +4,7 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
 import { companiesForDomains } from "@/core/db/company-domains";
+import { knownPeopleDomains } from "@/core/db/known-people";
 import {
 	accountSpendToday,
 	appendEvidence,
@@ -15,6 +16,7 @@ import {
 	savePeople,
 } from "@/core/db/queries";
 import type { NewEvidence, NewPerson } from "@/core/db/schema";
+import { normalizeDomain } from "@/core/db/schema";
 import type {
 	CompanyPeopleResult,
 	FindPeopleDeps,
@@ -27,6 +29,7 @@ import {
 	decisionMakerTitles,
 	findPeople,
 	resolveMaxCompanies,
+	splitKnownCompanies,
 	toPersonData,
 	truncateCompanies,
 } from "@/core/people";
@@ -50,7 +53,10 @@ const FindPeoplePayloadSchema = z.union([
 
 type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
 
-type FindPeopleWorkflowResult = FindPeopleResult & { unknownDomains: string[] };
+type FindPeopleWorkflowResult = FindPeopleResult & {
+	unknownDomains: string[];
+	knownDomains: string[];
+};
 
 /**
  * What the workflow reports back: counts and spend. The per-company row
@@ -63,6 +69,7 @@ export type FindPeopleSummary = {
 	peopleFound: number;
 	costDollars: number;
 	unknownDomains: string[];
+	knownDomains: string[];
 };
 
 function summarizeFindPeople(
@@ -77,6 +84,7 @@ function summarizeFindPeople(
 		),
 		costDollars: result.costDollars,
 		unknownDomains: result.unknownDomains,
+		knownDomains: result.knownDomains,
 	};
 }
 
@@ -336,9 +344,22 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			}),
 		);
 
+		const known = await step.do(
+			"known-people",
+			config.stepConfig.databaseCall,
+			() =>
+				knownPeopleDomains(this.env, accountId, {
+					days: config.people.seenPeopleWindowDays,
+				}),
+		);
+		const filtered = splitKnownCompanies(
+			target.companies,
+			new Set(known.map(normalizeDomain)),
+		);
+
 		const effectiveMax = resolveMaxCompanies(payload.maxCompanies);
 		const { companies: scoped, skipped } = truncateCompanies(
-			target.companies,
+			filtered.companies,
 			effectiveMax,
 		);
 		const opts: FindPeopleOptions = { icp, env: this.env };
@@ -346,6 +367,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const result: FindPeopleWorkflowResult = {
 			...mergeResults(batches, skipped),
 			unknownDomains: target.unknownDomains,
+			knownDomains: filtered.skipped,
 		};
 
 		await step.do("save-people", config.stepConfig.databaseCall, () =>

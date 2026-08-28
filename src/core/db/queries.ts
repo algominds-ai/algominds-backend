@@ -1,3 +1,4 @@
+import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
 import { companyExaId } from "@/core/company-candidates";
@@ -32,7 +33,7 @@ export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
 export interface SelectWhereConnection<TTable, TColumns, TRow> {
 	select(columns: TColumns): {
 		from(table: TTable): {
-			where(condition: unknown): Promise<TRow[]>;
+			where(condition: SQL | undefined): Promise<TRow[]>;
 		};
 	};
 }
@@ -40,7 +41,7 @@ export interface SelectWhereConnection<TTable, TColumns, TRow> {
 interface SelectLimitConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
-			where(condition: unknown): {
+			where(condition: SQL | undefined): {
 				limit(count: number): Promise<TRow[]>;
 			};
 		};
@@ -50,7 +51,7 @@ interface SelectLimitConnection<TTable, TRow> {
 interface SelectAllWhereConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
-			where(condition: unknown): Promise<TRow[]>;
+			where(condition: SQL | undefined): Promise<TRow[]>;
 		};
 	};
 }
@@ -58,7 +59,7 @@ interface SelectAllWhereConnection<TTable, TRow> {
 interface UpdateWhereConnection<TTable, TValues> {
 	update(table: TTable): {
 		set(values: TValues): {
-			where(condition: unknown): Promise<unknown>;
+			where(condition: SQL | undefined): Promise<never[]>;
 		};
 	};
 }
@@ -66,8 +67,8 @@ interface UpdateWhereConnection<TTable, TValues> {
 export interface SelectOrderedConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
-			where(condition: unknown): {
-				orderBy(order: unknown): {
+			where(condition: SQL | undefined): {
+				orderBy(order: SQL): {
 					limit(count: number): Promise<TRow[]>;
 				};
 			};
@@ -101,7 +102,7 @@ interface AppendConnection<TTable, TNewRow, TRow> {
 
 export interface DeleteTransaction {
 	delete(table: typeof evidence | typeof person): {
-		where(condition: unknown): Promise<unknown>;
+		where(condition: SQL | undefined): Promise<never[]>;
 	};
 }
 

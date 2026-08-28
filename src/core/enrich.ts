@@ -1,4 +1,5 @@
 import { NonRetryableError } from "cloudflare:workflows";
+import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
@@ -95,9 +96,9 @@ export interface RunPeopleConnection {
 		from(table: typeof person): {
 			innerJoin(
 				table: typeof company,
-				condition: unknown,
+				condition: SQL | undefined,
 			): {
-				where(condition: unknown): Promise<PersonCompanyRow[]>;
+				where(condition: SQL | undefined): Promise<PersonCompanyRow[]>;
 			};
 		};
 	};
@@ -106,7 +107,7 @@ export interface RunPeopleConnection {
 export interface RunCompanyExistsConnection {
 	select(columns: { id: typeof company.id }): {
 		from(table: typeof company): {
-			where(condition: unknown): Promise<{ id: string }[]>;
+			where(condition: SQL | undefined): Promise<{ id: string }[]>;
 		};
 	};
 }
@@ -128,7 +129,7 @@ function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
 	};
 }
 
-function runCompanyCondition(run: Run): unknown {
+function runCompanyCondition(run: Run): SQL | undefined {
 	if (run.capability === "companies") return eq(company.runId, run.id);
 	if (run.capability === "people") return eq(company.icpId, run.icpId);
 	throw new NonRetryableError(
@@ -138,7 +139,7 @@ function runCompanyCondition(run: Run): unknown {
 
 async function companiesExistFor(
 	env: DbEnv,
-	condition: unknown,
+	condition: SQL | undefined,
 	buildDb: DbFactory<RunCompanyExistsConnection> = db,
 ): Promise<boolean> {
 	const connection = buildDb(env, "direct");
@@ -151,7 +152,7 @@ async function companiesExistFor(
 
 async function runPeopleFor(
 	env: DbEnv,
-	condition: unknown,
+	condition: SQL | undefined,
 	buildDb: DbFactory<RunPeopleConnection> = db,
 ): Promise<PersonCompanyRow[]> {
 	const connection = buildDb(env, "direct");

@@ -23,6 +23,7 @@ import {
 	findPeople,
 	normalizeTitle,
 	resolveMaxCompanies,
+	splitKnownCompanies,
 	toPersonData,
 } from "../src/core/people";
 import type { ApolloSearchResult } from "../src/core/providers/apollo";
@@ -473,6 +474,42 @@ describe("findPeople: maxCompanies", () => {
 	});
 });
 
+describe("splitKnownCompanies", () => {
+	it("holds back a company whose domain is already known", () => {
+		const known = testCompany({ domain: "known.com", name: "Known Co" });
+		const fresh = testCompany({ domain: "fresh.com", name: "Fresh Co" });
+
+		const result = splitKnownCompanies([known, fresh], new Set(["known.com"]));
+
+		expect(result.companies).toEqual([fresh]);
+		expect(result.skipped).toEqual(["known.com"]);
+	});
+
+	it("keeps every company when none is already known", () => {
+		const companies = [
+			testCompany({ domain: "a.com", name: "A Co" }),
+			testCompany({ domain: "b.com", name: "B Co" }),
+		];
+
+		const result = splitKnownCompanies(companies, new Set());
+
+		expect(result.companies).toEqual(companies);
+		expect(result.skipped).toEqual([]);
+	});
+
+	it("normalizes a domain before comparing it against the known set", () => {
+		const company = testCompany({
+			domain: "https://WWW.Acme.com/careers",
+			name: "Acme",
+		});
+
+		const result = splitKnownCompanies([company], new Set(["acme.com"]));
+
+		expect(result.companies).toEqual([]);
+		expect(result.skipped).toEqual(["https://WWW.Acme.com/careers"]);
+	});
+});
+
 describe("resolveMaxCompanies", () => {
 	it("uses the caller's own number even when it is above the configured fallback", () => {
 		const requested = config.limits.defaultMaxCompaniesPerPeopleRun + 50;
@@ -885,6 +922,7 @@ const SCOPES = [
 	"domains-batches-test",
 	"unknown-run-test",
 	"people-found-test",
+	"known-people-test",
 ];
 
 async function terminateStartedRuns(): Promise<void> {
@@ -944,6 +982,7 @@ describe("FindPeopleWorkflow: runId", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
@@ -964,6 +1003,7 @@ describe("FindPeopleWorkflow: runId", () => {
 				peopleFound: 0,
 				costDollars: 0.05 + 0.02,
 				unknownDomains: [],
+				knownDomains: [],
 			});
 		} finally {
 			await instance.dispose();
@@ -989,6 +1029,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "save-people" }, {});
@@ -1007,6 +1048,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 				peopleFound: 0,
 				costDollars: 0,
 				unknownDomains: [],
+				knownDomains: [],
 			});
 		} finally {
 			await instance.dispose();
@@ -1051,6 +1093,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
@@ -1070,6 +1113,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 				peopleFound: 0,
 				costDollars: 0.01,
 				unknownDomains: ["missing.com"],
+				knownDomains: [],
 			});
 		} finally {
 			await instance.dispose();
@@ -1088,6 +1132,72 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 				params: { runId: `companies_never-opened-${instanceId}` },
 			});
 			await instance.waitForStatus("errored");
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("FindPeopleWorkflow: skipping companies with already-known people", () => {
+	it("excludes a company already known and reports it separately from a truncated one", async () => {
+		const instanceId = "known-people-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_PEOPLE,
+			instanceId,
+		);
+		try {
+			const known = testCompany({ domain: "known-co.com", name: "Known Co" });
+			const fresh = Array.from({ length: 5 }, (_, i) =>
+				testCompany({ domain: `fresh-${i}.com`, name: `Fresh ${i}` }),
+			);
+			const theOnlyMockedBatch: FindPeopleResult = {
+				companies: fresh.map((c) => ({
+					domain: c.domain,
+					people: [],
+					apolloOnly: [],
+					reason: "no people found for this company",
+				})),
+				searched: 5,
+				skippedCompanies: 0,
+				costDollars: 0.05,
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-companies" },
+					{
+						companies: [known, ...fresh],
+						icpId: "icp-1",
+						unknownDomains: [],
+					},
+				);
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "known-people" }, [known.domain]);
+				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "close-run" }, { id: "x" });
+				await m.mockStepResult({ name: "people-batch-0" }, theOnlyMockedBatch);
+				await m.mockStepResult({ name: "save-people" }, {});
+			});
+
+			await testEnv.FIND_PEOPLE.create({
+				id: instanceId,
+				params: { runId: "companies_icp-1_test" },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual({
+				searched: 5,
+				skippedCompanies: 0,
+				peopleFound: 0,
+				costDollars: 0.05,
+				unknownDomains: [],
+				knownDomains: ["known-co.com"],
+			});
 		} finally {
 			await instance.dispose();
 		}
@@ -1160,6 +1270,7 @@ describe("FindPeopleWorkflow: the summary output", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
@@ -1179,6 +1290,7 @@ describe("FindPeopleWorkflow: the summary output", () => {
 				peopleFound: 3,
 				costDollars: 0.02,
 				unknownDomains: [],
+				knownDomains: [],
 			});
 		} finally {
 			await instance.dispose();

@@ -53,6 +53,12 @@ companies:
   exaAgentMaxPollAttempts: 24
 
 people:
+  # A company whose people were already found inside this window is not
+  # searched again. Companies have the same guard on their own domains
+  # (companies.seenDomainsWindowDays); people had none, so a repeat run paid a
+  # vendor search for someone already stored — the unique constraint on
+  # linkedin_url only discarded the duplicate row after the search was paid for.
+  seenPeopleWindowDays: 90
   resultsPerCompany: 3
   batchSize: 5
 

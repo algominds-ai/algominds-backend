@@ -1,3 +1,4 @@
+import type { SQL } from "drizzle-orm";
 import { and, asc, eq, gt } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
@@ -15,10 +16,10 @@ export interface PersonPageConnection {
 		from(table: typeof person): {
 			innerJoin(
 				table: typeof company,
-				condition: unknown,
+				condition: SQL | undefined,
 			): {
-				where(condition: unknown): {
-					orderBy(order: unknown): {
+				where(condition: SQL | undefined): {
+					orderBy(order: SQL): {
 						limit(count: number): Promise<{ person: Person }[]>;
 					};
 				};
