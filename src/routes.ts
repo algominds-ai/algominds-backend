@@ -106,6 +106,19 @@ type JobConfig<Body> = {
 	toJob: (body: Body, env: Env) => Promise<Job>;
 };
 
+/** Whether an instance already exists for `runId`, per the Workflows engine itself. */
+async function instanceExists(
+	workflow: Workflow<unknown>,
+	runId: string,
+): Promise<boolean> {
+	try {
+		await workflow.get(runId);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 async function startJob<Body>(
 	c: Context<ApiEnv>,
 	schema: z.ZodType<Body>,
@@ -118,9 +131,12 @@ async function startJob<Body>(
 	}
 	const job = await config.toJob(parsed.data, c.env);
 	const runId = buildRunId(config.capability, job.scopeId);
-	const existing = await findRun(c.env, runId);
-	if (existing) {
-		return c.json({ runId, icpId: existing.icpId, status: "existing" }, 200);
+	if (await instanceExists(config.workflow, runId)) {
+		const existing = await findRun(c.env, runId);
+		return c.json(
+			{ runId, icpId: existing?.icpId ?? job.icpId, status: "existing" },
+			200,
+		);
 	}
 	await config.workflow.createBatch([{ id: runId, params: job.params }]);
 	return c.json({ runId, icpId: job.icpId, status: "started" }, 202);
