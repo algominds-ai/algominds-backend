@@ -1,8 +1,7 @@
 import type { Context } from "hono";
 import type { z } from "zod";
 import { config } from "@/config";
-import { createIcp, ensureAccount, findRun } from "@/core/db/queries";
-import { normalizeDomain } from "@/core/db/schema";
+import { createIcp, findRun, loadIcp } from "@/core/db/queries";
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
@@ -25,17 +24,21 @@ type IcpRef = z.infer<typeof icpRef>;
 
 /**
  * Uses the given ICP, or stores the free-text prompt as a new one under the
- * seller the request names, falling back to the deployment's configured one.
+ * organization the caller's key proves. The caller never names it.
  */
-export async function resolveIcpId(env: Env, body: IcpRef): Promise<string> {
-	if ("icpId" in body) return body.icpId;
-	const domain = normalizeDomain(body.seller?.domain ?? config.seller.domain);
-	const name = body.seller?.name ?? body.seller?.domain ?? config.seller.name;
-	const sellerAccount = await ensureAccount(env, name, domain);
+export async function resolveIcpId(
+	env: Env,
+	body: IcpRef,
+	organizationId: string,
+): Promise<string | null> {
+	if ("icpId" in body) {
+		const owned = await loadIcp(env, body.icpId);
+		return owned?.organizationId === organizationId ? owned.id : null;
+	}
 	const row = await createIcp(env, {
 		description: body.prompt,
-		domain,
-		accountId: sellerAccount.id,
+		domain: config.seller.domain,
+		organizationId,
 	});
 	return row.id;
 }
@@ -52,12 +55,18 @@ export async function domainsScopeId(
 	return `dom-${hex.slice(0, 12)}`;
 }
 
-export type Job = { scopeId: string; params: unknown; icpId?: string };
+/** `sourceRunId` names a run this job reads, which the caller must own. */
+export type Job = {
+	scopeId: string;
+	params: unknown;
+	icpId?: string;
+	sourceRunId?: string;
+};
 
 export type JobConfig<Body> = {
 	capability: Capability;
 	workflow: Workflow<unknown>;
-	toJob: (body: Body, env: Env) => Promise<Job>;
+	toJob: (body: Body, env: Env, organizationId: string) => Promise<Job | null>;
 };
 
 /** Whether an instance already exists for `runId`, per the Workflows engine itself. */
@@ -83,7 +92,15 @@ export async function startJob<Body>(
 	if (!parsed.success) {
 		return c.json({ issues: parsed.error.issues }, 400);
 	}
-	const job = await config.toJob(parsed.data, c.env);
+	const organizationId = c.get("organizationId");
+	const job = await config.toJob(parsed.data, c.env, organizationId);
+	if (job === null) return c.json({ error: "unknown profile" }, 404);
+	if (job.sourceRunId !== undefined) {
+		const source = await findRun(c.env, job.sourceRunId);
+		if (!source || source.organizationId !== organizationId) {
+			return c.json({ error: "unknown run" }, 404);
+		}
+	}
 	const runId = buildRunId(config.capability, job.scopeId);
 	if (await instanceExists(config.workflow, runId)) {
 		const existing = await findRun(c.env, runId);

@@ -615,7 +615,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
@@ -689,7 +689,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });

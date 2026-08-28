@@ -4,17 +4,13 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import { toBatches } from "@/core/batches";
 import {
-	accountSpendToday,
 	closeRun,
 	findRun,
 	openRun,
+	organizationSpendToday,
 	recordRunSpend,
 } from "@/core/db/queries";
-import type {
-	EnrichChannel,
-	EnrichOutcome,
-	EnrichSubject,
-} from "@/core/enrich";
+import type { EnrichChannel, EnrichOutcome } from "@/core/enrich";
 import { enrich, subjectsForRun } from "@/core/enrich";
 
 const BATCH_SIZE = config.enrich.batchSize;
@@ -50,12 +46,15 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			async () => {
 				const row = await findRun(this.env, runId);
 				if (!row) throw new NonRetryableError(`enrich: unknown run ${runId}`);
-				return { accountId: row.accountId, icpId: row.icpId };
+				return { organizationId: row.organizationId, icpId: row.icpId };
 			},
 		);
 
 		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
-			const spent = await accountSpendToday(this.env, source.accountId);
+			const spent = await organizationSpendToday(
+				this.env,
+				source.organizationId,
+			);
 			if (spent >= config.spend.perAccountDailyDollars) {
 				throw new NonRetryableError(
 					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
@@ -67,7 +66,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {
 				id: event.instanceId,
-				accountId: source.accountId,
+				organizationId: source.organizationId,
 				icpId: source.icpId,
 				capability: "enrich",
 				status: "running",

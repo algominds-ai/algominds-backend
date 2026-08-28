@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOTS = ["src", "test", "build", "scripts"];
+const GENERATED = ["src/core/db/auth-schema.ts", "src/config.ts"];
 const EXT = /\.(ts|tsx|mts|cts|mjs|js)$/;
 
 function walk(dir, out = []) {
@@ -82,6 +83,7 @@ function collectFiles() {
 
 let failed = 0;
 for (const file of collectFiles()) {
+	if (GENERATED.includes(relative(".", file))) continue;
 	for (const hit of findComments(readFileSync(file, "utf8"))) {
 		console.error(
 			`${relative(".", file)}:${hit.line}  ${hit.kind} comment — rename until the code says it, or put the explanation in docs/solutions/`,

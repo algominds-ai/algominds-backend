@@ -93,7 +93,7 @@ describe("FindPeopleWorkflow: runId", () => {
 				);
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
@@ -150,7 +150,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 				);
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
@@ -224,7 +224,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 				);
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
@@ -317,7 +317,7 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 				);
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
@@ -422,7 +422,7 @@ describe("FindPeopleWorkflow: the summary output", () => {
 				);
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
@@ -494,7 +494,7 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 				);
 				await m.mockStepResult(
 					{ name: "load-icp" },
-					{ doc: icp, accountId: "account-1" },
+					{ doc: icp, organizationId: "org-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(

@@ -17,11 +17,11 @@ import type { CompanyRow } from "@/core/companies/gate";
 import { gate } from "@/core/companies/gate";
 import { judge } from "@/core/companies/judge";
 import {
-	accountSpendToday,
 	appendEvidence,
 	closeRun,
 	loadIcp,
 	openRun,
+	organizationSpendToday,
 	recentDomains,
 	recordRunSpend,
 	saveCompanies,
@@ -280,7 +280,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindCompaniesSummary> {
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
-		const { doc: icp, accountId } = await step.do(
+		const { doc: icp, organizationId } = await step.do(
 			"load-icp",
 			config.stepConfig.databaseCall,
 			async () => {
@@ -292,13 +292,13 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				}
 				return {
 					doc: IcpDocSchema.parse(icpRow.doc),
-					accountId: icpRow.accountId,
+					organizationId: icpRow.organizationId,
 				};
 			},
 		);
 
 		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
-			const spent = await accountSpendToday(this.env, accountId);
+			const spent = await organizationSpendToday(this.env, organizationId);
 			if (spent >= config.spend.perAccountDailyDollars) {
 				throw new NonRetryableError(
 					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
@@ -310,7 +310,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {
 				id: event.instanceId,
-				accountId,
+				organizationId,
 				icpId: payload.icpId,
 				capability: "companies",
 				status: "running",

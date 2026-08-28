@@ -2,13 +2,13 @@ import type { SQL } from "drizzle-orm";
 import { and, asc, eq, gt, gte } from "drizzle-orm";
 import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
+import { organization } from "../src/core/db/auth-schema";
 import type { DbEnv, DbMode } from "../src/core/db/client";
 import { db } from "../src/core/db/client";
 import type { KnownPeopleConnection } from "../src/core/db/known-people";
 import { knownPeopleDomains } from "../src/core/db/known-people";
+import { organizationForSlug } from "../src/core/db/organizations";
 import type {
-	AccountConnection,
-	AccountSpendConnection,
 	CompanyInsertConnection,
 	CompanyRunConnection,
 	DbFactory,
@@ -17,22 +17,24 @@ import type {
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
 	IcpConnection,
+	Organization,
+	OrganizationConnection,
+	OrganizationSpendConnection,
 	PersonInsertConnection,
 	RunOpenConnection,
 	RunUpdateConnection,
 	TransactableConnection,
 } from "../src/core/db/queries";
 import {
-	accountSpendToday,
 	appendEvidence,
 	closeRun,
 	companiesForRun,
 	cutoffDate,
 	deletePerson,
-	ensureAccount,
 	latestEvidence,
 	loadIcp,
 	openRun,
+	organizationSpendToday,
 	recentDomains,
 	recordRunSpend,
 	saveCompanies,
@@ -45,7 +47,6 @@ import type {
 } from "../src/core/db/run-pages";
 import { companiesPage, peoplePage } from "../src/core/db/run-pages";
 import type {
-	Account,
 	Company,
 	Evidence,
 	Icp,
@@ -57,7 +58,6 @@ import type {
 	Run,
 } from "../src/core/db/schema";
 import {
-	account,
 	company,
 	evidence,
 	normalizeDomain,
@@ -188,7 +188,7 @@ describe("knownPeopleDomains", () => {
 
 		const result = await knownPeopleDomains(
 			env,
-			"account-1",
+			"org-1",
 			{ days: 90 },
 			buildDb,
 		);
@@ -197,7 +197,7 @@ describe("knownPeopleDomains", () => {
 		expect(result).toEqual(["acme.com"]);
 	});
 
-	it("joins company to run to person to evidence, and scopes to the account, the person's evidence, and the window", async () => {
+	it("joins company to run to person to evidence, and scopes to the organization, the person's evidence, and the window", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const now = new Date("2026-08-27T00:00:00.000Z");
 		let firstJoin: unknown;
@@ -231,14 +231,14 @@ describe("knownPeopleDomains", () => {
 			}),
 		});
 
-		await knownPeopleDomains(env, "account-1", { days: 90, now }, buildDb);
+		await knownPeopleDomains(env, "org-1", { days: 90, now }, buildDb);
 
 		expect(firstJoin).toEqual(eq(company.runId, run.id));
 		expect(secondJoin).toEqual(eq(person.companyId, company.id));
 		expect(thirdJoin).toEqual(eq(evidence.subjectId, person.id));
 		expect(recordedCondition).toEqual(
 			and(
-				eq(run.accountId, "account-1"),
+				eq(run.organizationId, "org-1"),
 				eq(evidence.subjectType, "person"),
 				eq(evidence.kind, "fullName"),
 				gte(evidence.seenAt, cutoffDate(90, now)),
@@ -252,7 +252,7 @@ describe("loadIcp", () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const row: Icp = {
 			id: "icp-1",
-			accountId: "account-1",
+			organizationId: "org-1",
 			domain: "acme.com",
 			product: "widgets",
 			doc: null,
@@ -491,17 +491,19 @@ describe("deletePerson", () => {
 	});
 });
 
-describe("ensureAccount", () => {
-	it("returns an existing account rather than creating a second one for the same domain", async () => {
+describe("organizationForSlug", () => {
+	it("returns an existing organization rather than creating a second one for the same slug", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const existing: Account = {
-			id: "account-1",
+		const existing: Organization = {
+			id: "org-1",
 			name: "Acme",
-			domain: "acme.com",
+			slug: "acme.com",
+			logo: null,
 			createdAt: new Date("2026-01-01T00:00:00.000Z"),
+			metadata: null,
 		};
 		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
-		const buildDb: DbFactory<AccountConnection> = () => ({
+		const buildDb: DbFactory<OrganizationConnection> = () => ({
 			insert: () => ({
 				values: () => ({
 					onConflictDoNothing: (config) => {
@@ -512,14 +514,14 @@ describe("ensureAccount", () => {
 			}),
 			select: () => ({
 				from: () => ({
-					where: () => Promise.resolve([existing]),
+					where: () => ({ limit: () => Promise.resolve([existing]) }),
 				}),
 			}),
 		});
 
-		const result = await ensureAccount(env, "Acme", "acme.com", buildDb);
+		const result = await organizationForSlug(env, "acme.com", "Acme", buildDb);
 
-		expect(conflictTarget).toEqual([account.domain]);
+		expect(conflictTarget).toEqual([organization.slug]);
 		expect(result).toEqual(existing);
 	});
 });
@@ -529,7 +531,7 @@ describe("openRun", () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const newRun: NewRun = {
 			id: "companies_icp-1_2026-08-27",
-			accountId: "account-1",
+			organizationId: "org-1",
 			icpId: "icp-1",
 			capability: "companies",
 			status: "running",
@@ -567,7 +569,7 @@ describe("openRun", () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const newRun: NewRun = {
 			id: "companies_icp-1_2026-08-27",
-			accountId: "account-1",
+			organizationId: "org-1",
 			icpId: "icp-1",
 			capability: "companies",
 			status: "running",
@@ -655,11 +657,11 @@ describe("recordRunSpend", () => {
 	});
 });
 
-describe("accountSpendToday", () => {
+describe("organizationSpendToday", () => {
 	it("reads through the direct binding, never cached", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		let recordedMode: DbMode | undefined;
-		const buildDb: DbFactory<AccountSpendConnection> = (_env, mode) => {
+		const buildDb: DbFactory<OrganizationSpendConnection> = (_env, mode) => {
 			recordedMode = mode;
 			return {
 				select: () => ({
@@ -670,9 +672,9 @@ describe("accountSpendToday", () => {
 			};
 		};
 
-		await accountSpendToday(
+		await organizationSpendToday(
 			env,
-			"account-1",
+			"org-1",
 			new Date("2026-08-27T12:00:00.000Z"),
 			buildDb,
 		);
@@ -680,12 +682,12 @@ describe("accountSpendToday", () => {
 		expect(recordedMode).toBe("direct");
 	});
 
-	it("filters to the named account and to today, summing every matching row", async () => {
+	it("filters to the named organization and to today, summing every matching row", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const now = new Date("2026-08-27T12:00:00.000Z");
 		let recordedCondition: unknown;
 		const rows = [{ costDollars: 1.5 }, { costDollars: 2.25 }];
-		const buildDb: DbFactory<AccountSpendConnection> = () => ({
+		const buildDb: DbFactory<OrganizationSpendConnection> = () => ({
 			select: () => ({
 				from: () => ({
 					where: (condition) => {
@@ -696,12 +698,12 @@ describe("accountSpendToday", () => {
 			}),
 		});
 
-		const total = await accountSpendToday(env, "account-1", now, buildDb);
+		const total = await organizationSpendToday(env, "org-1", now, buildDb);
 
 		expect(total).toBe(3.75);
 		expect(recordedCondition).toEqual(
 			and(
-				eq(run.accountId, "account-1"),
+				eq(run.organizationId, "org-1"),
 				gte(run.startedAt, startOfUtcDay(now)),
 			),
 		);
@@ -918,7 +920,7 @@ function testRun(fields: {
 }): Run {
 	return {
 		id: fields.id,
-		accountId: "account-1",
+		organizationId: "org-1",
 		icpId: fields.icpId ?? "icp-1",
 		capability: fields.capability,
 		status: "complete",

@@ -22,12 +22,12 @@ describe("the indexes the read paths depend on exist in the real schema", () => 
 		expect(plan).not.toContain("Seq Scan");
 	});
 
-	it("reads an account's runs newest first through run_account_started_idx", async () => {
+	it("reads an organization's runs newest first through run_organization_started_idx", async () => {
 		const plan = await queryPlan(
-			sql`select id from run where account_id = '00000000-0000-0000-0000-000000000000' order by started_at desc`,
+			sql`select id from run where organization_id = '00000000-0000-0000-0000-000000000000' order by started_at desc`,
 		);
 
-		expect(plan).toContain("run_account_started_idx");
+		expect(plan).toContain("run_organization_started_idx");
 	});
 
 	it("reads an ICP's recent domains through an index rather than scanning", async () => {

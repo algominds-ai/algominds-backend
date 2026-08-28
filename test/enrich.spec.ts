@@ -605,7 +605,7 @@ function fakeRunPeople(
 function runRow(overrides: Partial<Run> = {}): Run {
 	return {
 		id: "companies_icp-1_2026-08-27",
-		accountId: "account-1",
+		organizationId: "org-1",
 		icpId: "icp-1",
 		capability: "companies",
 		status: "running",

@@ -1,0 +1,28 @@
+import { apiKey } from "@better-auth/api-key";
+import { organization } from "better-auth/plugins/organization";
+
+export const ORGANIZATION_KEY_PREFIX = "ak_";
+export const ORGANIZATION_KEY_CONFIG_ID = "org-keys";
+
+/**
+ * Everything about the auth surface except the database, so the runtime
+ * instance and the schema generator describe the same thing. Keys carry no
+ * quota of their own: rate limiting belongs at the edge, where a handler bug
+ * cannot bypass it, and the plugin's default of ten requests a day would stop
+ * a real run long before it finished.
+ */
+export const authOptions = {
+	appName: "algo",
+	emailAndPassword: { enabled: true },
+	plugins: [
+		organization(),
+		apiKey([
+			{
+				configId: ORGANIZATION_KEY_CONFIG_ID,
+				defaultPrefix: ORGANIZATION_KEY_PREFIX,
+				references: "organization",
+				rateLimit: { enabled: false },
+			},
+		]),
+	],
+};

@@ -6,11 +6,11 @@ import { config } from "@/config";
 import { toBatches } from "@/core/batches";
 import { knownPeopleDomains } from "@/core/db/known-people";
 import {
-	accountSpendToday,
 	appendEvidence,
 	closeRun,
 	loadIcp,
 	openRun,
+	organizationSpendToday,
 	recordRunSpend,
 	savePeople,
 } from "@/core/db/queries";
@@ -293,7 +293,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			() => loadTargetCompanies(this.env, payload),
 		);
 
-		const { doc: icp, accountId } = await step.do(
+		const { doc: icp, organizationId } = await step.do(
 			"load-icp",
 			config.stepConfig.databaseCall,
 			async () => {
@@ -305,13 +305,13 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 				}
 				return {
 					doc: IcpDocSchema.parse(icpRow.doc),
-					accountId: icpRow.accountId,
+					organizationId: icpRow.organizationId,
 				};
 			},
 		);
 
 		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
-			const spent = await accountSpendToday(this.env, accountId);
+			const spent = await organizationSpendToday(this.env, organizationId);
 			if (spent >= config.spend.perAccountDailyDollars) {
 				throw new NonRetryableError(
 					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
@@ -323,7 +323,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {
 				id: event.instanceId,
-				accountId,
+				organizationId,
 				icpId: target.icpId,
 				capability: "people",
 				status: "running",
@@ -334,7 +334,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			"known-people",
 			config.stepConfig.databaseCall,
 			() =>
-				knownPeopleDomains(this.env, accountId, {
+				knownPeopleDomains(this.env, organizationId, {
 					days: config.people.seenPeopleWindowDays,
 				}),
 		);
