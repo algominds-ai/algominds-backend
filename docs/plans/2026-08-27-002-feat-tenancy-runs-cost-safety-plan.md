@@ -116,6 +116,8 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R17 | A start request that matches a run already in flight or finished says so. It never returns 202 as though it began new work. |
 | R18 | Companies can be sourced from Exa's `/search` or its Agent API, chosen by config. Both produce the same company shape, and the filter, gate, and judge do not branch on which ran. |
 | R19 | The Agent API is available as an enrichment provider in the existing waterfall, after the faster providers rather than in front of them. |
+| R20 | People search uses Exa's `people` category and its structured record. Employment is settled by the employer's identifier, never by comparing company name strings. |
+| R21 | A person already found for an account is not searched for again inside the dedupe window. |
 
 ---
 
@@ -920,6 +922,76 @@ provenance; the agent names where it found it, which is what the append-only
 
 **Verification.** A person Findymail cannot resolve is resolved by the agent,
 and the evidence row carries the source.
+
+### U17. Search people by category and match employment by id
+
+**Goal.** Stop matching people to the wrong company of the same name.
+
+**Requirements.** R20.
+
+**Dependencies.** U9, U10.
+
+**Files.** `src/core/person-candidates.ts`, `src/core/people.ts`,
+`test/people.spec.ts`.
+
+**Approach.**
+1. The request sends `category: "linkedin profile"`, which is not a real
+   category, plus `contents.summary.schema` LLM extraction — the same shape
+   removed from the company path for being slow and lossy. Send
+   `category: "people"` and read `entities[0].properties` instead.
+2. `workHistory` carries each role's title, dates, and employer as an object
+   with an `id`. A person works at the target company when an entry has
+   `to: null` and a `company.id` matching the company's own.
+3. That replaces `normalizeCompanyName` and `companiesMatch`, which compare
+   strings and cannot tell two firms of the same name apart.
+
+**The defect this closes.** A measured run matched roughly a third of thirty
+people to a different company sharing a name: two "Passage" companies, an
+"Aspiro Therapeutics" against an "Aspiro". `employmentConfidence` recorded the
+doubt at 0.4 and nothing acted on it. Matching by identifier removes the doubt
+rather than scoring it.
+
+**Test scenarios.**
+- A person whose current role names the target company's id is matched.
+- A person at a different company with the same name is not matched. Use the
+  measured "Passage" case.
+- A person whose matching role has ended (`to` is set) is not treated as
+  current.
+- A person with no work history is reported, not silently dropped.
+- The request sends the real category and no summary schema.
+
+**Verification.** The measured collision case resolves correctly, and the test
+fails against the current string comparison.
+
+### U18. Skip people already found for this account
+
+**Goal.** Stop paying to find the same person twice.
+
+**Requirements.** R21.
+
+**Dependencies.** U6, U10.
+
+**Files.** `src/core/db/queries.ts`, `src/core/people.ts`,
+`test/db.spec.ts`, `test/people.spec.ts`.
+
+**Approach.** Companies already skip domains seen in a 90-day window; people
+have no equivalent. `person.linkedin_url` is unique, so a repeat insert is
+discarded — but the paid search that found the person again already ran, which
+is the cost this unit removes.
+
+Read the people already known for the account and skip the companies whose
+decision makers are already resolved, following the shape `recentDomains`
+already uses, including its cache-disabled read.
+
+**Test scenarios.**
+- A company whose people are already known is not searched again.
+- A company with no known people is searched.
+- The read uses the cache-disabled binding, since a person written earlier in
+  the same run must be visible.
+- The window is honoured: a person found long ago is searched for again.
+
+**Verification.** A second people run over the same companies performs
+measurably fewer paid searches than the first.
 
 ---
 
