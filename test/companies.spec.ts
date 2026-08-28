@@ -1,6 +1,7 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
+import { config } from "../src/config";
 import type {
 	FindCompaniesDeps,
 	FindCompaniesOptions,
@@ -636,6 +637,79 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				rounds: 1,
 				status: "complete",
 				costDollars: 0.05,
+				rejects: [],
+				searches: [plan],
+			});
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
+	it("stops after the round that crossed the ceiling, reports capped, and still returns the rows it paid for", async () => {
+		const instanceId = "spend-ceiling-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			const requested = 50;
+			const companies: CompanyRow[] = ["paid-1.com", "paid-2.com"].map(
+				(domain, i) => ({
+					name: `Paid ${i}`,
+					domain,
+					linkedinUrl: null,
+					evidenceUrl: `https://${domain}`,
+					signal: null,
+					evidenceDate: null,
+				}),
+			);
+			const plan: SearchPlan = {
+				query: "fintech companies",
+				angle: "angle-1",
+				userLocation: null,
+				countries: [],
+				minWorkforce: null,
+				maxWorkforce: null,
+			};
+			const overTheCeiling = config.spend.perRunDollars + 0.01;
+			const roundOne: FindCompaniesResult = {
+				companies,
+				requested,
+				found: companies.length,
+				rounds: 1,
+				status: "short",
+				costDollars: overTheCeiling,
+				rejects: [],
+				searches: [plan],
+				captures: {},
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "round_1" }, roundOne);
+				await m.mockStepResult({ name: "save-companies" }, {});
+				await m.mockStepResult({ name: "close-run" }, {});
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: "icp-spend-ceiling", count: requested },
+			});
+			await instance.waitForStatus("complete");
+
+			expect(await instance.getOutput()).toEqual({
+				requested,
+				found: companies.length,
+				rounds: 1,
+				status: "capped",
+				costDollars: overTheCeiling,
 				rejects: [],
 				searches: [plan],
 			});

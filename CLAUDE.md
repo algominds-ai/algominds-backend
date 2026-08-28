@@ -12,11 +12,11 @@ copy its content into this file.
 
 ## Commands
 
-**`bun run gate` is the gate.** It runs all six checks and prints a pass/fail line per check.
-No subset of it counts as passing — `biome check` alone is one of six, not the linter.
+**`bun run gate` is the gate.** It runs every check and prints a pass/fail line per check.
+No subset of it counts as passing — `biome check` alone is one of them, not the linter.
 
 ```bash
-bun run gate                      # THE gate: types, biome, comments, language, tests, bundle
+bun run gate                      # THE gate: config, types, biome, comments, language, steps, tests, bundle
 
 bun install --frozen-lockfile
 bunx tsc --noEmit
