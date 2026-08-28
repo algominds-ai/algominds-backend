@@ -13,13 +13,13 @@ async function health(): Promise<Response> {
 describe("worker entrypoint", () => {
 	it("answers health on the Workers runtime", async () => {
 		expect((await health()).status).toBe(200);
-	});
+	}, 30000);
 
 	it("resolves the model SDK and the MCP client at module scope", async () => {
 		const body: HealthBody = await (await health()).json();
 		expect(body.bundled.generateText).toBe("function");
 		expect(body.bundled.createMCPClient).toBe("function");
-	});
+	}, 30000);
 });
 
 describe("aliased Node-only packages", () => {

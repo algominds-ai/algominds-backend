@@ -1,18 +1,29 @@
+import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { config } from "../src/config";
 import type {
 	FindCompaniesDeps,
 	FindCompaniesOptions,
+	FindCompaniesResult,
 } from "../src/core/companies";
 import { findCompanies } from "../src/core/companies";
+import { toExaSearchResult } from "../src/core/companies/agent-search";
+import type {
+	CompanyCapture,
+	CompanyMatch,
+} from "../src/core/companies/candidates";
+import { toCompanyData } from "../src/core/companies/candidates";
+import type { CompanyRow } from "../src/core/companies/gate";
+import { gate } from "../src/core/companies/gate";
+import type { Verdict } from "../src/core/companies/judge";
 import { CostLedger } from "../src/core/cost";
-import { gate } from "../src/core/gate";
-import type { Verdict } from "../src/core/judge";
+import type { ExaAgentCompany } from "../src/core/providers/exa/agent";
 import type {
 	CompanyEntity,
 	ExaResult,
 	ExaSearchRequest,
-} from "../src/core/providers/exa";
+} from "../src/core/providers/exa/search";
 import type {
 	IcpDoc,
 	SearchPlan,
@@ -43,19 +54,23 @@ function goodResult(
 	overrides: Partial<CompanyEntity> = {},
 ): ExaResult {
 	return {
+		id: `https://exa.ai/library/organization/${domain}`,
 		url: `https://${domain}/`,
 		title: `Company ${domain}`,
 		summary: null,
 		company: entity({ name: `Company ${domain}`, ...overrides }),
+		person: null,
 	};
 }
 
 function entitylessResult(id: number): ExaResult {
 	return {
+		id: null,
 		url: `https://example.com/missing-${id}`,
 		title: `NoEntity${id}`,
 		summary: null,
 		company: null,
+		person: null,
 	};
 }
 
@@ -391,5 +406,315 @@ describe("findCompanies — dependency wiring", () => {
 
 		expect(result.status).toBe("complete");
 		expect(result.companies).toHaveLength(1);
+	});
+});
+
+describe("findCompanies — capturing the vendor payload", () => {
+	it("captures the full entity, including fields the row itself never reads", async () => {
+		const richFields: Partial<CompanyEntity> = {
+			workforceTotal: 42,
+			foundedYear: 2018,
+			revenueAnnual: 5_000_000,
+			fundingTotal: 1_200_000,
+		};
+		const { search } = scriptedSearch([[goodResult("rich.com", richFields)]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.captures["rich.com"]?.entity).toEqual(
+			entity({ name: "Company rich.com", ...richFields }),
+		);
+	});
+
+	it("captures a result missing its score and published date with those fields null, not a thrown error", async () => {
+		const { search } = scriptedSearch([[goodResult("noscore.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const match: CompanyMatch | undefined =
+			result.captures["noscore.com"]?.result;
+		expect(match).toEqual({
+			id: "https://exa.ai/library/organization/noscore.com",
+			url: "https://noscore.com/",
+			title: "Company noscore.com",
+			publishedDate: null,
+			score: null,
+		});
+	});
+
+	it("keeps the saved row to exactly the fields evidence reads, holding the vendor capture on the side", async () => {
+		const { search } = scriptedSearch([[goodResult("shape.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(Object.keys(result.companies[0] ?? {}).sort()).toEqual([
+			"domain",
+			"evidenceDate",
+			"evidenceUrl",
+			"linkedinUrl",
+			"name",
+			"signal",
+		]);
+	});
+});
+
+describe("findCompanies — captures across sources", () => {
+	it("captures an agent-sourced company under the same shape as a search-sourced one", async () => {
+		const agentCompany: ExaAgentCompany = {
+			name: "Agent Co",
+			website: "https://agentco.com",
+			description: "found by the agent",
+			foundedYear: 2020,
+			workforceTotal: 12,
+			city: "Austin",
+			country: "United States",
+			revenueAnnual: null,
+			fundingTotal: null,
+		};
+		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
+		const { search } = scriptedSearch([agentSearchResult.results]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const capture: CompanyCapture | undefined = result.captures["agentco.com"];
+		expect(capture ? Object.keys(capture).sort() : []).toEqual([
+			"entity",
+			"result",
+		]);
+		expect(capture ? Object.keys(capture.entity).sort() : []).toEqual(
+			Object.keys(entity()).sort(),
+		);
+		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
+			"id",
+			"publishedDate",
+			"score",
+			"title",
+			"url",
+		]);
+	});
+});
+
+describe("toCompanyData", () => {
+	it("names the provider that produced the capture", () => {
+		const capture: CompanyCapture = {
+			entity: entity(),
+			result: {
+				id: "https://exa.ai/library/organization/example",
+				url: "https://example.com/",
+				title: "Example",
+				publishedDate: null,
+				score: null,
+			},
+		};
+
+		expect(toCompanyData(capture, "exa-search")).toEqual({
+			provider: "exa-search",
+			entity: capture.entity,
+			result: capture.result,
+		});
+		expect(toCompanyData(capture, "exa-agent").provider).toBe("exa-agent");
+	});
+});
+
+const WORKFLOW_SCOPES = ["summary-size-test"];
+
+async function terminateWorkflowRuns(): Promise<void> {
+	for (const scope of WORKFLOW_SCOPES) {
+		const instance = await testEnv.FIND_COMPANIES.get(scope).catch(() => null);
+		await instance?.terminate().catch(() => undefined);
+	}
+}
+
+afterEach(terminateWorkflowRuns);
+
+describe("FindCompaniesWorkflow: the summary output", () => {
+	it("returns a bounded summary that does not grow with the number of companies found", async () => {
+		const instanceId = "summary-size-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			const count = 50;
+			const domains = Array.from({ length: count }, (_, i) => `co-${i}.com`);
+			const companies: CompanyRow[] = domains.map((domain, i) => ({
+				name: `Co ${i}`,
+				domain,
+				linkedinUrl: null,
+				evidenceUrl: `https://${domain}`,
+				signal: null,
+				evidenceDate: null,
+			}));
+			const captures: Record<string, CompanyCapture> = Object.fromEntries(
+				domains.map((domain) => [
+					domain,
+					{
+						entity: entity({ name: domain }),
+						result: {
+							id: null,
+							url: `https://${domain}/`,
+							title: domain,
+							publishedDate: null,
+							score: null,
+						},
+					},
+				]),
+			);
+			const plan: SearchPlan = {
+				query: "fintech companies",
+				angle: "angle-1",
+				userLocation: null,
+				countries: [],
+				minWorkforce: null,
+				maxWorkforce: null,
+			};
+			const roundResult: FindCompaniesResult = {
+				companies,
+				requested: count,
+				found: count,
+				rounds: 1,
+				status: "complete",
+				costDollars: 0.05,
+				rejects: [],
+				searches: [plan],
+				captures,
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "round_1" }, roundResult);
+				await m.mockStepResult({ name: "save-companies" }, {});
+				await m.mockStepResult({ name: "close-run" }, {});
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: "icp-summary-test", count },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual({
+				requested: count,
+				found: count,
+				rounds: 1,
+				status: "complete",
+				costDollars: 0.05,
+				rejects: [],
+				searches: [plan],
+			});
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
+	it("stops after the round that crossed the ceiling, reports capped, and still returns the rows it paid for", async () => {
+		const instanceId = "spend-ceiling-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			const requested = 50;
+			const companies: CompanyRow[] = ["paid-1.com", "paid-2.com"].map(
+				(domain, i) => ({
+					name: `Paid ${i}`,
+					domain,
+					linkedinUrl: null,
+					evidenceUrl: `https://${domain}`,
+					signal: null,
+					evidenceDate: null,
+				}),
+			);
+			const plan: SearchPlan = {
+				query: "fintech companies",
+				angle: "angle-1",
+				userLocation: null,
+				countries: [],
+				minWorkforce: null,
+				maxWorkforce: null,
+			};
+			const overTheCeiling = config.spend.perRunDollars + 0.01;
+			const roundOne: FindCompaniesResult = {
+				companies,
+				requested,
+				found: companies.length,
+				rounds: 1,
+				status: "short",
+				costDollars: overTheCeiling,
+				rejects: [],
+				searches: [plan],
+				captures: {},
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "round_1" }, roundOne);
+				await m.mockStepResult({ name: "save-companies" }, {});
+				await m.mockStepResult({ name: "close-run" }, {});
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: "icp-spend-ceiling", count: requested },
+			});
+			await instance.waitForStatus("complete");
+
+			expect(await instance.getOutput()).toEqual({
+				requested,
+				found: companies.length,
+				rounds: 1,
+				status: "capped",
+				costDollars: overTheCeiling,
+				rejects: [],
+				searches: [plan],
+			});
+		} finally {
+			await instance.dispose();
+		}
 	});
 });

@@ -131,3 +131,319 @@ Two consequences:
   vendor does not reject it. It has to assert the opposite: that our own code
   never sends a field outside the measured request schema. That check is free
   and belongs in the gate.
+
+## The Agent API can cap its own spend; `/search` cannot
+
+`POST /agent/runs` accepts a native per-run spending limit:
+
+```
+budget.maxCostDollars   $1 to $100, for effort "auto" and "max" only
+                        default $5 for auto, $20 for max
+```
+
+That is a hard cap Exa enforces itself, which is stronger than checking a
+ledger after each call. It is tempting for spend safety. It is still the wrong
+tool for company discovery, for three measured reasons:
+
+- It exists only on `/agent/runs`. `/search` has no budget field.
+- Its floor is $1. One `/search` round costs $0.089, so the minimum budget is
+  more than eleven times a whole round.
+- The Agent API is far slower. `/search` returned 92 structured company records
+  in 1.6 seconds.
+
+It also caps only Exa. A run pays Apollo, Findymail, and the model gateway too,
+and Exa's budget cannot see any of that. A ledger check across every vendor
+can.
+
+Use `effort: "auto"` with `budget.maxCostDollars` if a deep-research path is
+ever added, where the work is genuinely open-ended and a vendor-enforced
+ceiling is worth its price. Do not use it for the discovery path.
+
+## Correction: the Agent API is cheaper than `/search` at a fixed effort
+
+An earlier section here, and two statements made while planning, said the Agent
+API was slower and dearer. Measured on 2026-08-27 with the same query:
+
+| | `/search` + `category: company` | `/agent/runs` + `effort: low` |
+|---|---|---|
+| Wall clock | 1.6 s | 5 s |
+| Cost | $0.089 | **$0.025** |
+| Companies returned | 92 | 2 |
+
+The "$1 minimum budget" applies only to `budget.maxCostDollars` on the metered
+`auto` and `max` efforts. A fixed effort has no budget floor. The claim was
+wrong for `low`.
+
+## The two endpoints answer different questions
+
+`/search` returns breadth: 92 company records with structured fields, which our
+own filter and judge then sort. `/agent/runs` returns a short, evidenced list —
+it stopped at two with `stopReason: "schema_satisfied"`, because the schema
+asked for companies and never asked how many.
+
+The agent's evidence is the kind a judge would otherwise have to infer, naming
+the founder and the operating model in prose. Ask for a count in the schema, or
+raise the effort, to get more rows.
+
+## The async shape
+
+`POST /agent/runs` returns immediately with an id and `status: "running"`. Poll
+`GET /agent/runs/{id}` until `status` is `completed`. The probe took 5 seconds.
+
+The completed run carries `output.text`, `output.structured` matching the
+supplied `outputSchema`, `usage`, and an itemised `costDollars`:
+
+```
+costDollars: { total, agentCompute, search, emails, phoneNumbers }
+usage:       { agentComputeUnits, searches, emails, phoneNumbers }
+```
+
+`emails` and `phoneNumbers` are billable lines, so the agent can return contact
+details. That overlaps the enrichment path, not only discovery.
+
+`dataSources: [{ "provider": "fiber" }]` is accepted without error.
+
+## The agent finds contact details, with provenance
+
+Measured: asking for the founder's work email at one named company returned a
+complete person record in 26 seconds for $0.025.
+
+```
+fullName     Kirk Marple
+title        Founder and Chief Executive Officer, Graphlit
+email        kirk@graphlit.com
+linkedinUrl  https://www.linkedin.com/in/kirkmarple
+source       https://www.linkedin.com/posts/kirkmarple_...
+```
+
+Two things matter here.
+
+**It cites a source.** Findymail returns an address and nothing about where it
+came from. A cited URL is exactly what the append-only `evidence` table stores,
+so a later reviewer can judge the value rather than trust it.
+
+**The billable email counter stayed at zero.** `usage.emails` was 0 and
+`costDollars.emails` was $0. The address came from search, not from a dedicated
+lookup, so the whole run billed as ordinary agent compute plus search.
+
+**Twenty-six seconds is the constraint.** Thirty people run serially would take
+about thirteen minutes. That rules the agent out as the first enrichment
+provider and rules it in as the next one: Findymail first because it is fast
+and cheap, the agent after it for the misses, where slow and evidenced beats
+empty.
+
+## `category: "people"` returns structured person records too
+
+The people path currently sends `category: "linkedin profile"`, which is not in
+Exa's category enum and is accepted only as a loose hint, together with
+`contents.summary.schema` LLM extraction. That is the same shape removed from
+the company path for being slow and lossy.
+
+`category: "people"` is a real category and behaves like `company`. Measured at
+the same $0.007, it returns `entities[0].properties`:
+
+```
+name, firstName, lastName, location, workHistory, educationHistory, research
+```
+
+`workHistory` is the important one. Each entry carries a title, dates, and the
+employer as an object with an `id`:
+
+```
+title    "Chief Executive Officer, Technical Founder"
+dates    { from: "2021-02-01", to: null }
+company  { id: "https://exa.ai/library/organization/lrjlz4ht43v",
+           name: "Graphlit, by Unstruk Data" }
+```
+
+`to: null` marks the current role, and that `company.id` is the same identifier
+the `company` category returns.
+
+## This is the fix for the employment name collisions
+
+A previous run matched roughly a third of thirty people to a different company
+sharing a name — two "Passage" companies, an "Aspiro Therapeutics" against an
+"Aspiro". The code compares company name strings, so a collision is inevitable.
+
+With `workHistory`, employment is checkable by identifier: a person belongs to
+the target company when a work entry has `to: null` and a `company.id` equal to
+the company's own. No string comparison, no model judgement, no confidence
+score to threshold.
+
+The existing `employmentConfidence` of 0.4 records the doubt but nothing acts
+on it. Matching on id removes the doubt instead of scoring it.
+
+## Overlap and repeated work, as it stands
+
+| Scope | Mechanism |
+|---|---|
+| Companies across runs | `seenDomains`, a 90-day window, rejecting `already-seen` |
+| People within one run | `dedupeAcrossCompanies`, keyed on LinkedIn URL |
+| People across runs | none |
+
+The third row is a real gap. `person.linkedin_url` is unique, so a repeat
+insert is discarded, but the paid search that found the person again still ran.
+
+## Second correction: agent cost scales with the work requested
+
+The comparison above used a run that returned two companies for $0.025 and drew
+a general conclusion from it. That was wrong. Asked for ten companies with the
+same prompt, the agent cost **$0.905**.
+
+Head to head, both producing ten companies:
+
+| | `/search` pipeline | `/agent/runs`, effort low |
+|---|---|---|
+| Companies | 10 | 10 |
+| Wall clock | 158 s | 48 s |
+| Cost | $0.1375 | $0.905 |
+
+The `/search` figure is the entire pipeline: the Exa call, the synthesizer, and
+the judge. The agent figure is the agent alone, before any judging.
+
+So the agent is about 6.6 times dearer for the same output, not cheaper. The
+earlier $0.025 measured a run that stopped at two rows with
+`stopReason: "schema_satisfied"` and had barely worked.
+
+Its targeting was good: all ten were US companies with headcounts from 0 to 18,
+inside the profile. Speed and quality are real. Cost is the trade.
+
+`exa-search` stays the default for discovery. The agent earns its price where
+evidence matters more than volume, or where search cannot reach at all — which
+is why it sits last in the enrichment waterfall rather than first.
+
+**The lesson worth keeping:** measure at the size you intend to run. A probe
+that returns two rows says nothing about a request for a hundred.
+
+## The request schemas are checked against the spec, not written from memory
+
+The category enum had been written from memory. It invented four values Exa
+does not have — `research paper`, `pdf`, `github`, `linkedin profile` — and
+omitted one it does, `publication`. Because `linkedin profile` was in our enum,
+the people path could send it and nothing objected.
+
+An enum copied from memory is a comment, not a constraint.
+
+Compared mechanically against `api.exa.ai/openapi.json`, the `/search` request
+schema now matches exactly:
+
+| | Spec | Ours |
+|---|---|---|
+| Fields we send that the spec does not define | — | none |
+| `numResults` | 1 to 100 | 1 to 100 |
+| `includeDomains`, `excludeDomains` | 1200 | 1200 |
+| `type` | instant, fast, auto, deep-lite, deep, deep-reasoning | identical |
+| `category` | company, publication, news, personal site, financial report, people | identical |
+| agent `effort` | minimal, low, medium, high, xhigh, auto, max | identical |
+| agent `dataSources` | 7 providers, at most 5 | identical |
+
+Modelling fewer fields than the spec is safe. Sending more is not.
+
+## Where model output reaches a vendor, and what stops it
+
+Only two values the model produces travel to a vendor: the search `query`,
+which is free text by design, and `userLocation`.
+
+`userLocation` passes two checks. The synthesizer nulls anything that is not
+two characters and uppercases the rest; the request schema then rejects
+anything failing `/^[A-Z]{2}$/`. It was `.length(2)`, which accepted `zz` and
+`Z9` — shape without membership.
+
+Everything else the model emits — the country list, the headcount bounds, the
+decision-maker titles — either filters records we already hold or is a field
+the vendor genuinely accepts as free text.
+
+Apollo sends only two of its nine declared fields, both correctly typed, and
+its schema is `.strict()` so an unknown field cannot leave.
+`person_seniorities` and `organization_num_employees_ranges` have fixed
+vocabularies at Apollo's end and are declared as plain strings here. They are
+unused today; typing them properly is owed before anything fills them from a
+model.
+
+## Fixtures are captured, not written
+
+A mock that returns an invented shape proves only that our code handles our own
+imagination. That is precisely how several defects shipped this week: the
+fixtures were written from documentation, the documentation was wrong, the
+tests passed, and the feature was dead.
+
+`test/exa.spec.ts` fed the parser a result shaped like this:
+
+```
+{ url, title, publishedDate }
+```
+
+A real result carries:
+
+```
+{ id, url, title, publishedDate, author, image,
+  entities: [{ id, type, version, properties: { ... } }] }
+```
+
+`entities` was missing entirely — the one field the whole company pipeline
+reads. Entity parsing could have broken without a single test noticing.
+
+`test/fixtures/` now holds verbatim captures:
+
+| File | What it is |
+|---|---|
+| `exa-search-company.json` | a real `/search` response, `category: "company"`, three results |
+| `exa-agent-run-completed.json` | a real completed agent run |
+| `exa-agent-run-person.json` | a real agent run returning a contact with a cited source |
+
+`test/vendor-fixtures.spec.ts` runs the real parser over them.
+
+**A fixture has to be captured with the request the code actually sends.** The
+first agent capture used a different `outputSchema` than the production builder
+sends, so it exercised a contract we do not use. It was recaptured with
+production's own nine fields. A fixture from a different request is as
+misleading as an invented one.
+
+## Which filters each entity category really accepts
+
+The spec says the `company` and `people` categories both reject
+`excludeDomains`. Probed, that is wrong for `company`:
+
+| Filter | `category: company` | `category: people` |
+|---|---|---|
+| `startPublishedDate`, `endPublishedDate` | 400 | 400 |
+| `includeDomains` | works | works |
+| `excludeDomains` | **works** | 400 |
+
+The restriction is not uniform across the two entity categories, so a single
+shared list of unsupported fields is wrong. The guard keys on the category.
+
+## Domain format, measured
+
+`includeDomains` accepts a bare hostname, a full URL, and a `www.` prefix
+interchangeably — all three returned the same result for the same site. A
+domain that matches nothing returns zero results rather than being ignored, so
+the filter is real.
+
+A wildcard is not supported here. `*.graphlit.com` returns:
+
+> The company category does not support the following filters: includeUrls.
+
+Exa rewrites a wildcard into `includeUrls` internally, and the company category
+rejects that — so the error names a parameter the caller never sent.
+`normalizeDomain` produces bare hostnames, which is the safe form.
+
+## `excludeDomains` excludes urls, not companies
+
+Worth knowing before reaching for it as a deduplication tool. Excluding
+`graphlit.com` from a search that otherwise returns it:
+
+```
+without exclusion:  graphlit.com, graphwise.ai, graph.build, ...
+excluding graphlit: linkedin.com/company/graphlit, graphora.io, ...
+```
+
+The domain is gone and the same company returns through its LinkedIn URL. So
+`excludeDomains` cannot replace the `already-seen` check, which keys on the
+company's own domain after normalisation.
+
+## Date format
+
+Both date filters are rejected outright by the entity categories, so the
+question of their format does not arise on the company or people paths. The
+`SearchPlan` the synthesizer produces carries no date for this reason.

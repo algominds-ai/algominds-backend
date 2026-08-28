@@ -1,33 +1,45 @@
-import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
+import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import { toBatches } from "../src/core/batches";
+import type { DbMode } from "../src/core/db/client";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
+	RunLookupConnection,
 } from "../src/core/db/queries";
 import type {
 	Company,
 	Evidence,
 	NewEvidence,
 	Person,
+	Run,
 } from "../src/core/db/schema";
+import { company } from "../src/core/db/schema";
 import type {
 	EnrichDeps,
-	EnrichOutcome,
 	EnrichSubject,
 	LinkedinInput,
 	LinkedinResult,
+	RunCompanyExistsConnection,
 	RunPeopleConnection,
+	SubjectsDeps,
 } from "../src/core/enrich";
 import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
+import { exaAgentEmailProvider } from "../src/core/providers/exa/agent-email";
 import type { Provider } from "../src/core/providers/types";
-import { toBatches } from "../src/workflows/enrich";
+import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 type Handler = (init: RequestInit | undefined) => Response;
 
 function findymailEnv(): Env {
-	return { ...testEnv, FINDYMAIL_API_KEY: { get: async () => "test-key" } };
+	return {
+		...testEnv,
+		FINDYMAIL_API_KEY: { get: async () => "test-key" },
+		EXA_API_KEY: { get: async () => "test-exa-key" },
+	};
 }
 
 function fakeFindymail(handlers: Record<string, Handler>): typeof fetch {
@@ -150,7 +162,7 @@ describe("channel selection", () => {
 		}));
 		const subjects: EnrichSubject[] = [{ id: "subject-1", domain: "acme.com" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({ linkedinProviders: [hits] }),
@@ -171,7 +183,7 @@ describe("channel selection", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/known" },
 		];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({ linkedinProviders: [provider] }),
@@ -209,7 +221,7 @@ describe("the email waterfall", () => {
 			},
 		];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email?.status).toBe("unknown");
 		expect(results[0]?.email?.value).toBe("ghost@acme.com");
@@ -220,7 +232,7 @@ describe("the email waterfall", () => {
 		globalThis.fetch = fakeFindymail({});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email).toEqual({
 			status: "unknown",
@@ -240,9 +252,289 @@ describe("the email waterfall", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/sales-team" },
 		];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email?.status).toBe("unknown");
+	});
+});
+
+function fakeVendors(
+	findymail: Record<string, Handler>,
+	exa: Record<string, Handler>,
+): typeof fetch {
+	return async (input, init) => {
+		const url = new URL(String(input));
+		const table = url.hostname === "api.exa.ai" ? exa : findymail;
+		const handler = table[url.pathname];
+		return handler ? handler(init) : new Response(null, { status: 404 });
+	};
+}
+
+function completedAgentRun(overrides: { output?: unknown } = {}) {
+	return {
+		id: "agent-run-1",
+		status: "completed",
+		output: {
+			structured: {
+				fullName: "Kirk Marple",
+				title: "Founder and Chief Executive Officer",
+				email: "kirk@graphlit.com",
+				linkedinUrl: "https://www.linkedin.com/in/kirkmarple",
+				source: "https://www.linkedin.com/posts/kirkmarple_hiring",
+			},
+		},
+		costDollars: { total: 0.025, agentCompute: 0.02, search: 0.005 },
+		...overrides,
+	};
+}
+
+describe("the exa agent email provider in the waterfall", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("never reaches the agent once an earlier provider verifies an email", async () => {
+		let agentStarted = false;
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () =>
+					json({ contact: { email: "max@tryramp.com" } }),
+				"/api/verify": (init) =>
+					json({ email: requestedEmail(init), verified: true }),
+			},
+			{
+				"/agent/runs": () => {
+					agentStarted = true;
+					return json({ id: "agent-run-1", status: "running" });
+				},
+			},
+		);
+		const subjects: EnrichSubject[] = [
+			{
+				id: "subject-1",
+				name: "Max Freeman",
+				domain: "tryramp.com",
+				linkedinUrl: "https://linkedin.com/in/max",
+			},
+		];
+
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
+
+		expect(agentStarted).toBe(false);
+		expect(results[0]?.email?.status).toBe("verified");
+	});
+
+	it("falls through to the agent when every findymail provider misses", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () => new Response(null, { status: 404 }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => json(completedAgentRun()),
+			},
+		);
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
+		];
+
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
+
+		expect(results[0]?.email?.value).toBe("kirk@graphlit.com");
+	});
+
+	it("records the agent's cited source url as evidence, not just a finder label", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () => new Response(null, { status: 404 }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => json(completedAgentRun()),
+			},
+		);
+		const evidenceSink: NewEvidence[] = [];
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
+		];
+
+		await enrich(
+			subjects,
+			["email"],
+			baseDeps({ writeEvidence: fakeWriteEvidence(evidenceSink) }),
+		);
+
+		const emailRow = evidenceSink.find((row) => row.kind === "email");
+		expect(emailRow?.value).toBe("kirk@graphlit.com");
+		expect(emailRow?.source).toBe(
+			"https://www.linkedin.com/posts/kirkmarple_hiring",
+		);
+	});
+});
+
+describe("enrichment records real spend", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("reports a findymail hit's metered cost into the ledger the caller can read", async () => {
+		globalThis.fetch = fakeFindymail({
+			"/api/search/linkedin": () =>
+				json({ contact: { email: "max@tryramp.com" } }),
+			"/api/verify": (init) =>
+				json({ email: requestedEmail(init), verified: true }),
+		});
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/max" },
+		];
+
+		const { costDollars } = await enrich(subjects, ["email"], baseDeps());
+
+		expect(costDollars).toBeGreaterThan(0);
+	});
+
+	it("reports an agent-provider hit's cost, rather than building a ledger that is thrown away", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () => new Response(null, { status: 404 }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => json(completedAgentRun()),
+			},
+		);
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
+		];
+
+		const { costDollars } = await enrich(subjects, ["email"], baseDeps());
+
+		expect(costDollars).toBeGreaterThan(0);
+	});
+
+	it("still reports what every provider spent trying, when every one misses", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () =>
+					json({ contact: { email: "ghost@acme.com" } }),
+				"/api/verify": (init) =>
+					json({ email: requestedEmail(init), verified: false }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{ "/agent/runs": () => new Response(null, { status: 404 }) },
+		);
+		const subjects: EnrichSubject[] = [
+			{
+				id: "subject-1",
+				name: "Ghost Person",
+				domain: "acme.com",
+				linkedinUrl: "https://linkedin.com/in/ghost",
+			},
+		];
+
+		const { outcomes, costDollars } = await enrich(
+			subjects,
+			["email"],
+			baseDeps(),
+		);
+
+		expect(outcomes[0]?.email?.status).toBe("unknown");
+		expect(costDollars).toBeGreaterThan(0);
+	});
+});
+
+describe("the exa agent email provider's own error contract", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("returns null without throwing when the agent completes with no email", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json(completedAgentRun({ output: { structured: { email: null } } })),
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Nobody Found", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result).toBeNull();
+	});
+
+	it("misses rather than throwing when the agent is rate limited, so the caller's batch is not billed twice", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{ "/agent/runs": () => new Response(null, { status: 429 }) },
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result).toBeNull();
+	});
+
+	it("keeps polling a run it already paid for when one poll is rate limited, rather than failing the caller", async () => {
+		let polls = 0;
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => {
+					polls += 1;
+					if (polls === 1) return new Response(null, { status: 429 });
+					return json(
+						completedAgentRun({
+							output: { structured: { email: "found@acme.com" } },
+						}),
+					);
+				},
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(polls).toBeGreaterThan(1);
+		expect(result?.contact?.email).toBe("found@acme.com");
+	}, 20000);
+
+	it("raises a non-retryable error, not a retryable one, when the run terminates as failed", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json({ id: "agent-run-1", status: "failed" }),
+			},
+		);
+
+		let caught: unknown;
+		try {
+			await exaAgentEmailProvider.run(
+				{ name: "Someone", domain: "acme.com" },
+				findymailEnv(),
+			);
+		} catch (error) {
+			caught = error;
+		}
+
+		expect(caught).toBeInstanceOf(NonRetryableError);
+		expect(caught).not.toBeInstanceOf(RetryableProviderError);
 	});
 });
 
@@ -256,81 +548,202 @@ describe("isSendable", () => {
 	});
 });
 
-function fakeRunPeople(
-	rows: { person: Person; company: Company }[],
-): DbFactory<RunPeopleConnection> {
+type Recorded = { condition?: unknown; mode?: DbMode };
+
+function fakeFindRun(row: Run | undefined): DbFactory<RunLookupConnection> {
 	return () => ({
 		select: () => ({
 			from: () => ({
-				innerJoin: () => ({
-					where: () => Promise.resolve(rows),
+				where: () => ({
+					limit: () => Promise.resolve(row ? [row] : []),
 				}),
 			}),
 		}),
 	});
 }
 
+function fakeCompanyExists(
+	rows: { id: string }[],
+	recorded: Recorded = {},
+): DbFactory<RunCompanyExistsConnection> {
+	return (_env, mode) => {
+		recorded.mode = mode;
+		return {
+			select: () => ({
+				from: () => ({
+					where: (condition) => {
+						recorded.condition = condition;
+						return Promise.resolve(rows);
+					},
+				}),
+			}),
+		};
+	};
+}
+
+function fakeRunPeople(
+	rows: { person: Person; company: Company }[],
+	recorded: Recorded = {},
+): DbFactory<RunPeopleConnection> {
+	return (_env, mode) => {
+		recorded.mode = mode;
+		return {
+			select: () => ({
+				from: () => ({
+					innerJoin: () => ({
+						where: (condition) => {
+							recorded.condition = condition;
+							return Promise.resolve(rows);
+						},
+					}),
+				}),
+			}),
+		};
+	};
+}
+
+function runRow(overrides: Partial<Run> = {}): Run {
+	return {
+		id: "companies_icp-1_2026-08-27",
+		accountId: "account-1",
+		icpId: "icp-1",
+		capability: "companies",
+		status: "running",
+		costDollars: 0,
+		startedAt: new Date("2026-08-27T00:00:00.000Z"),
+		finishedAt: null,
+		...overrides,
+	};
+}
+
+function personCompanyRows(
+	companyRow: Company,
+): { person: Person; company: Company }[] {
+	return [
+		{
+			person: {
+				id: "person-1",
+				companyId: companyRow.id,
+				linkedinUrl: "https://linkedin.com/in/a",
+				name: "Ada",
+				title: "VP",
+				data: null,
+			},
+			company: companyRow,
+		},
+		{
+			person: {
+				id: "person-2",
+				companyId: companyRow.id,
+				linkedinUrl: null,
+				name: null,
+				title: null,
+				data: null,
+			},
+			company: companyRow,
+		},
+	];
+}
+
+const EXPECTED_SUBJECTS = [
+	{
+		id: "person-1",
+		domain: "acme.com",
+		name: "Ada",
+		linkedinUrl: "https://linkedin.com/in/a",
+	},
+	{ id: "person-2", domain: "acme.com" },
+];
+
 describe("subjectsForRun", () => {
-	it("maps every person joined to their company's domain, for one run", async () => {
+	it("resolves the people of a companies run's companies, reading through the direct binding", async () => {
+		const run = runRow({
+			id: "companies_icp-1_2026-08-27",
+			capability: "companies",
+		});
 		const companyRow: Company = {
 			id: "company-1",
 			icpId: "icp-1",
 			domain: "acme.com",
 			name: "Acme",
 			data: null,
-			runId: "people_run_1",
+			runId: run.id,
 			foundAt: new Date(),
 		};
-		const rows = [
-			{
-				person: {
-					id: "person-1",
-					companyId: "company-1",
-					linkedinUrl: "https://linkedin.com/in/a",
-					name: "Ada",
-					title: "VP",
-					data: null,
-				},
-				company: companyRow,
-			},
-			{
-				person: {
-					id: "person-2",
-					companyId: "company-1",
-					linkedinUrl: null,
-					name: null,
-					title: null,
-					data: null,
-				},
-				company: companyRow,
-			},
-		];
+		const existsRecorded: Recorded = {};
+		const peopleRecorded: Recorded = {};
+		const deps: SubjectsDeps = {
+			findRun: fakeFindRun(run),
+			companyExists: fakeCompanyExists([{ id: companyRow.id }], existsRecorded),
+			runPeople: fakeRunPeople(personCompanyRows(companyRow), peopleRecorded),
+		};
 
-		const subjects = await subjectsForRun(
-			testEnv,
-			"people_run_1",
-			fakeRunPeople(rows),
-		);
+		const subjects = await subjectsForRun(testEnv, run.id, deps);
 
-		expect(subjects).toEqual([
-			{
-				id: "person-1",
-				domain: "acme.com",
-				name: "Ada",
-				linkedinUrl: "https://linkedin.com/in/a",
-			},
-			{ id: "person-2", domain: "acme.com" },
-		]);
+		expect(subjects).toEqual(EXPECTED_SUBJECTS);
+		expect(existsRecorded.condition).toEqual(eq(company.runId, run.id));
+		expect(peopleRecorded.condition).toEqual(eq(company.runId, run.id));
+		expect(existsRecorded.mode).toBe("direct");
+		expect(peopleRecorded.mode).toBe("direct");
 	});
 
-	it("returns an empty list when a run has no people", async () => {
-		const subjects = await subjectsForRun(
-			testEnv,
-			"people_run_empty",
-			fakeRunPeople([]),
-		);
+	it("resolves the same people for a people run id, rather than an empty set", async () => {
+		const run = runRow({ id: "people_icp-1_2026-08-27", capability: "people" });
+		const companyRow: Company = {
+			id: "company-1",
+			icpId: run.icpId,
+			domain: "acme.com",
+			name: "Acme",
+			data: null,
+			runId: "companies_icp-1_2026-08-26",
+			foundAt: new Date(),
+		};
+		const existsRecorded: Recorded = {};
+		const peopleRecorded: Recorded = {};
+		const deps: SubjectsDeps = {
+			findRun: fakeFindRun(run),
+			companyExists: fakeCompanyExists([{ id: companyRow.id }], existsRecorded),
+			runPeople: fakeRunPeople(personCompanyRows(companyRow), peopleRecorded),
+		};
 
-		expect(subjects).toEqual([]);
+		const subjects = await subjectsForRun(testEnv, run.id, deps);
+
+		expect(subjects).toEqual(EXPECTED_SUBJECTS);
+		expect(existsRecorded.condition).toEqual(eq(company.icpId, run.icpId));
+		expect(peopleRecorded.condition).toEqual(eq(company.icpId, run.icpId));
+	});
+
+	it("throws rather than returning an empty list when the run matches no company", async () => {
+		const run = runRow({
+			id: "companies_icp-2_2026-08-27",
+			capability: "companies",
+		});
+		const deps: SubjectsDeps = {
+			findRun: fakeFindRun(run),
+			companyExists: fakeCompanyExists([]),
+			runPeople: fakeRunPeople([]),
+		};
+
+		await expect(subjectsForRun(testEnv, run.id, deps)).rejects.toThrow(
+			NonRetryableError,
+		);
+	});
+
+	it("throws when the run id matches no run at all", async () => {
+		const deps: SubjectsDeps = { findRun: fakeFindRun(undefined) };
+
+		await expect(subjectsForRun(testEnv, "unknown_run", deps)).rejects.toThrow(
+			NonRetryableError,
+		);
+	});
+
+	it("throws for a capability that carries no company scope", async () => {
+		const run = runRow({ id: "enrich_icp-1_2026-08-27", capability: "enrich" });
+		const deps: SubjectsDeps = { findRun: fakeFindRun(run) };
+
+		await expect(subjectsForRun(testEnv, run.id, deps)).rejects.toThrow(
+			NonRetryableError,
+		);
 	});
 });
 
@@ -347,7 +760,7 @@ describe("the email evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["email"],
 			baseDeps({ readEvidence: fakeReadEvidence(cached), now: () => now }),
@@ -374,7 +787,7 @@ describe("the email evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["email"],
 			baseDeps({ readEvidence: fakeReadEvidence(cached), now: () => now }),
@@ -401,7 +814,7 @@ describe("the linkedin evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({
@@ -435,7 +848,7 @@ describe("the linkedin evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({
@@ -463,7 +876,7 @@ describe("the linkedin waterfall", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1", name: "Someone" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({ linkedinProviders: [first, second] }),
@@ -491,7 +904,11 @@ describe("enrich() result shape", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/max" },
 		];
 
-		const results = await enrich(subjects, ["email", "linkedin"], baseDeps());
+		const { outcomes: results } = await enrich(
+			subjects,
+			["email", "linkedin"],
+			baseDeps(),
+		);
 
 		expect(results[0]?.email?.status).toBe("verified");
 		expect(results[0]?.linkedin).toEqual({
@@ -519,7 +936,7 @@ describe("enrich() result shape", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["email", "linkedin"],
 			baseDeps({
@@ -536,7 +953,11 @@ describe("enrich() result shape", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/plain" },
 		];
 
-		const results = await enrich(subjects, ["linkedin"], baseDeps());
+		const { outcomes: results } = await enrich(
+			subjects,
+			["linkedin"],
+			baseDeps(),
+		);
 
 		expect(results).toEqual([
 			{
@@ -557,115 +978,10 @@ describe("EnrichWorkflow", () => {
 			id: `subject-${i}`,
 		}));
 
-		const batches = toBatches(subjects);
+		const batches = toBatches(subjects, 5);
 
 		expect(batches.map((batch) => batch.length)).toEqual([5, 5, 2]);
 		expect(batches[0]?.[0]?.id).toBe("subject-0");
 		expect(batches[2]?.[1]?.id).toBe("subject-11");
-	});
-
-	it("resolves a run into subjects and runs one step per batch", async () => {
-		const instanceId = "enrich_workflow_batches_test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.ENRICH,
-			instanceId,
-		);
-		try {
-			const subjects: EnrichSubject[] = Array.from({ length: 6 }, (_, i) => ({
-				id: `subject-${i}`,
-			}));
-			const batchZero: EnrichOutcome[] = Array.from({ length: 5 }, (_, i) => ({
-				subjectId: `subject-${i}`,
-				linkedin: {
-					status: "found",
-					value: `https://linkedin.com/in/${i}`,
-					source: "subject",
-				},
-			}));
-			const batchOne: EnrichOutcome[] = [
-				{
-					subjectId: "subject-5",
-					linkedin: {
-						status: "found",
-						value: "https://linkedin.com/in/5",
-						source: "subject",
-					},
-				},
-			];
-			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
-				await m.mockStepResult({ name: "enrich-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "enrich-batch-1" }, batchOne);
-			});
-
-			await testEnv.ENRICH.create({
-				id: instanceId,
-				params: { runId: "people_run_batches", channels: ["linkedin"] },
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await instance.getOutput();
-			expect(output).toEqual([...batchZero, ...batchOne]);
-		} finally {
-			await instance.dispose();
-		}
-	});
-
-	it("a run resolving to three people enriches three", async () => {
-		const instanceId = "enrich_workflow_three_people_test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.ENRICH,
-			instanceId,
-		);
-		try {
-			const subjects: EnrichSubject[] = [
-				{ id: "person-a" },
-				{ id: "person-b" },
-				{ id: "person-c" },
-			];
-			const outcomes: EnrichOutcome[] = subjects.map((subject) => ({
-				subjectId: subject.id,
-				linkedin: { status: "unknown", value: null, source: null },
-			}));
-			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
-				await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
-			});
-
-			await testEnv.ENRICH.create({
-				id: instanceId,
-				params: { runId: "people_run_three", channels: ["linkedin"] },
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await instance.getOutput();
-			expect(output).toEqual(outcomes);
-		} finally {
-			await instance.dispose();
-		}
-	});
-
-	it("a run resolving to no people returns an empty list without throwing", async () => {
-		const instanceId = "enrich_workflow_no_people_test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.ENRICH,
-			instanceId,
-		);
-		try {
-			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "resolve-subjects" }, []);
-			});
-
-			await testEnv.ENRICH.create({
-				id: instanceId,
-				params: { runId: "people_run_empty", channels: ["email"] },
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await instance.getOutput();
-			expect(output).toEqual([]);
-		} finally {
-			await instance.dispose();
-		}
 	});
 });

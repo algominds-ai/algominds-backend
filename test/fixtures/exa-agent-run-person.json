@@ -1,0 +1,122 @@
+{
+	"id": "agent_run_4889065cbccd4dadb8223114b8bade9f",
+	"object": "agent_run",
+	"status": "completed",
+	"stopReason": "schema_satisfied",
+	"createdAt": "2026-08-27T23:43:58.003Z",
+	"completedAt": "2026-08-27T23:44:22.047Z",
+	"request": {
+		"query": "Find the work email address for the founder or CEO of Graphlit (graphlit.com), a Seattle software company.",
+		"outputSchema": {
+			"type": "object",
+			"required": ["people"],
+			"properties": {
+				"people": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["fullName", "title", "email", "linkedinUrl", "source"],
+						"properties": {
+							"email": {
+								"type": "string"
+							},
+							"title": {
+								"type": "string"
+							},
+							"source": {
+								"type": "string"
+							},
+							"fullName": {
+								"type": "string"
+							},
+							"linkedinUrl": {
+								"type": "string"
+							}
+						},
+						"additionalProperties": false
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"effort": "low",
+		"dataSources": [
+			{
+				"provider": "fiber"
+			}
+		]
+	},
+	"output": {
+		"text": "Kirk Marple is identified as Graphlit\u2019s founder and CEO, with the work email kirk@graphlit.com. The address is explicitly published in Graphlit-related materials and a LinkedIn post; the profile-based email enrichment service did not return an additional result.",
+		"structured": {
+			"people": [
+				{
+					"email": "kirk@graphlit.com",
+					"title": "Founder and Chief Executive Officer, Graphlit",
+					"source": "https://www.linkedin.com/posts/kirkmarple_after-five-years-im-making-the-hard-call-activity-7479908273509294080-aBv9",
+					"fullName": "Kirk Marple",
+					"linkedinUrl": "https://www.linkedin.com/in/kirkmarple"
+				}
+			]
+		},
+		"grounding": [
+			{
+				"field": "structured.people[0].fullName",
+				"citations": [
+					{
+						"url": "https://www.linkedin.com/in/kirkmarple",
+						"title": "Kirk Marple \u2014 LinkedIn profile"
+					}
+				],
+				"confidence": "high"
+			},
+			{
+				"field": "structured.people[0].title",
+				"citations": [
+					{
+						"url": "https://www.linkedin.com/in/kirkmarple",
+						"title": "Kirk Marple \u2014 LinkedIn profile"
+					}
+				],
+				"confidence": "high"
+			},
+			{
+				"field": "structured.people[0].email",
+				"citations": [
+					{
+						"url": "https://www.linkedin.com/posts/kirkmarple_after-five-years-im-making-the-hard-call-activity-7479908273509294080-aBv9",
+						"title": "Graphlit to Wind Down After Five Years \u2014 Kirk Marple on LinkedIn"
+					},
+					{
+						"url": "https://docs.graphlit.dev/api-guides/use-cases/knowledge-graph/knowledge-graph-from-emails.md",
+						"title": "Knowledge Graph from Emails \u2014 Graphlit documentation"
+					}
+				],
+				"confidence": "high"
+			},
+			{
+				"field": "structured.people[0].linkedinUrl",
+				"citations": [
+					{
+						"url": "https://www.linkedin.com/in/kirkmarple",
+						"title": "Kirk Marple \u2014 LinkedIn profile"
+					}
+				],
+				"confidence": "high"
+			}
+		]
+	},
+	"usage": {
+		"agentComputeUnits": 0.1,
+		"searches": 3,
+		"emails": 0,
+		"phoneNumbers": 0
+	},
+	"costDollars": {
+		"total": 0.025,
+		"agentCompute": 0.01,
+		"search": 0.015,
+		"emails": 0,
+		"phoneNumbers": 0
+	}
+}

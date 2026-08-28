@@ -1,7 +1,26 @@
+import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
+import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import { config } from "../src/config";
+import { db } from "../src/core/db/client";
+import {
+	createIcp,
+	ensureAccount,
+	openRun,
+	saveCompanies,
+	savePeople,
+} from "../src/core/db/queries";
+import {
+	account,
+	company,
+	icp as icpTable,
+	person,
+	run,
+} from "../src/core/db/schema";
+import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
+import { constantTimeEqual } from "../src/http/auth";
 import app from "../src/index";
-import { constantTimeEqual } from "../src/routes";
 
 const BASE = "https://algo.test";
 const TOKEN = "routes-spec-bearer-token";
@@ -37,6 +56,7 @@ const SCOPES: readonly string[] = [
 	"77777777-7777-4777-8777-777777777777",
 	"88888888-8888-4888-8888-888888888888",
 	"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
 	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
 	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
 ];
@@ -72,6 +92,47 @@ async function terminateStartedRuns(): Promise<void> {
 }
 
 afterEach(terminateStartedRuns);
+
+async function expectEnrichResolvesSubjects(
+	sourceRun: string,
+	subjects: EnrichSubject[],
+	outcomes: EnrichOutcome[],
+): Promise<void> {
+	const today = new Date().toISOString().slice(0, 10);
+	const runId = `enrich_${sourceRun}_${today}`;
+	const instance = await introspectWorkflowInstance(testEnv.ENRICH, runId);
+	try {
+		await instance.modify(async (m) => {
+			await m.mockStepResult(
+				{ name: "load-source-run" },
+				{ accountId: "account-1", icpId: "icp-1" },
+			);
+			await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+			await m.mockStepResult({ name: "open-run" }, { id: runId });
+			await m.mockStepResult({ name: "close-run" }, { id: runId });
+			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
+			await m.mockStepResult(
+				{ name: "enrich-batch-0" },
+				{ outcomes, costDollars: 0.02 },
+			);
+		});
+
+		const response = await authedCall(
+			"/enrich",
+			postInit({ runId: sourceRun, channels: ["linkedin"] }, TOKEN),
+		);
+		const body: { runId?: string } = await response.json();
+
+		expect(response.status).toBe(202);
+		expect(body.runId).toBe(runId);
+
+		await instance.waitForStatus("complete");
+		const output = await instance.getOutput();
+		expect(output).toEqual({ outcomes, costDollars: 0.02 });
+	} finally {
+		await instance.dispose();
+	}
+}
 
 const ICP_A = "11111111-1111-4111-8111-111111111111";
 
@@ -152,7 +213,7 @@ describe("POST /companies/find", () => {
 		expect(statusResponse.status).toBe(404);
 	});
 
-	it("returns 202 with a runId built from capability, icpId and today, without waiting", async () => {
+	it("returns 202 with a runId built from capability, icpId and today, and reports the run as new", async () => {
 		const icpId = "66666666-6666-4666-8666-666666666666";
 		const started = Date.now();
 
@@ -161,16 +222,17 @@ describe("POST /companies/find", () => {
 			postInit({ icpId, count: 3 }, TOKEN),
 		);
 		const elapsedMs = Date.now() - started;
-		const body: { runId?: string } = await response.json();
+		const body: { runId?: string; status?: string } = await response.json();
 		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
 		expect(body.runId).toBe(`companies_${icpId}_${today}`);
+		expect(body.status).toBe("started");
 		expect(elapsedMs).toBeLessThan(2000);
 	});
 
-	it("creates one instance for two same-day requests with the same icpId", async () => {
+	it("creates one instance for two same-day requests with the same icpId and count, reporting the second as existing", async () => {
 		const icpId = "77777777-7777-4777-8777-777777777777";
 
 		const first = await authedCall(
@@ -181,44 +243,120 @@ describe("POST /companies/find", () => {
 			"/companies/find",
 			postInit({ icpId, count: 4 }, TOKEN),
 		);
-		const firstBody: { runId: string } = await first.json();
-		const secondBody: { runId: string } = await second.json();
+		const firstBody: { runId: string; status?: string } = await first.json();
+		const secondBody: { runId: string; status?: string } = await second.json();
+		const statusResponse = await authedCall(
+			`/runs/${secondBody.runId}`,
+			authedGetInit(),
+		);
 
 		expect(first.status).toBe(202);
-		expect(second.status).toBe(202);
-		expect(firstBody.runId).toBe(secondBody.runId);
+		expect(firstBody.status).toBe("started");
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(firstBody.runId);
+		expect(statusResponse.status).toBe(200);
+	});
+
+	it("reports the existing run when a repeat arrives with a different count, instead of presenting the new count as accepted", async () => {
+		const icpId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+
+		const first = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 10 }, TOKEN),
+		);
+		const second = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 50 }, TOKEN),
+		);
+		const firstBody: { runId: string; status?: string } = await first.json();
+		const secondBody: { runId: string; status?: string } = await second.json();
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(firstBody.runId);
 	});
 });
 
 describe("POST /people/find and /enrich", () => {
-	it("starts a people/find run scoped by icpId", async () => {
-		const icpId = "88888888-8888-4888-8888-888888888888";
+	it("starts a people/find run scoped by a companies runId", async () => {
+		const companiesRunId =
+			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
 
 		const response = await authedCall(
 			"/people/find",
-			postInit({ icpId }, TOKEN),
+			postInit({ runId: companiesRunId }, TOKEN),
 		);
-		const body: { runId?: string } = await response.json();
+		const body: { runId?: string; icpId?: string } = await response.json();
 		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`people_${icpId}_${today}`);
+		expect(body.runId).toBe(`people_${companiesRunId}_${today}`);
+		expect(body.icpId).toBeUndefined();
 	});
 
-	it("starts an enrich run scoped by the people-find run it enriches", async () => {
-		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
+	it("rejects a people/find body with neither runId nor domains", async () => {
+		const response = await authedCall("/people/find", postInit({}, TOKEN));
+		expect(response.status).toBe(400);
+	});
 
+	it("rejects a people/find body carrying both runId and domains", async () => {
 		const response = await authedCall(
-			"/enrich",
-			postInit({ runId: sourceRun, channels: ["email"] }, TOKEN),
+			"/people/find",
+			postInit(
+				{
+					runId: "companies_dd000000-0000-4000-8000-000000000000_2026-08-27",
+					domains: ["acme.com"],
+				},
+				TOKEN,
+			),
 		);
-		const body: { runId?: string } = await response.json();
-		await terminateRun(body.runId);
-		const today = new Date().toISOString().slice(0, 10);
+		expect(response.status).toBe(400);
+	});
 
-		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`enrich_${sourceRun}_${today}`);
+	it("scopes a domains request to a digest of the normalised list, deduping case and www", async () => {
+		const first = await authedCall(
+			"/people/find",
+			postInit({ domains: ["Acme.com", "https://www.beta.com"] }, TOKEN),
+		);
+		const second = await authedCall(
+			"/people/find",
+			postInit({ domains: ["www.BETA.com", "acme.com"] }, TOKEN),
+		);
+		const firstBody: { runId: string; status?: string } = await first.json();
+		const secondBody: { runId: string; status?: string } = await second.json();
+		await terminateRun(firstBody.runId);
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(firstBody.runId);
+	});
+
+	it("starts an enrich run scoped by the people-find run it enriches, and resolves its actual subjects rather than just accepting the request", async () => {
+		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
+		const subjects: EnrichSubject[] = [
+			{
+				id: "person-route-test",
+				linkedinUrl: "https://linkedin.com/in/route-test",
+			},
+		];
+		const outcomes: EnrichOutcome[] = [
+			{
+				subjectId: "person-route-test",
+				linkedin: {
+					status: "found",
+					value: "https://linkedin.com/in/route-test",
+					source: "subject",
+				},
+			},
+		];
+
+		await expectEnrichResolvesSubjects(sourceRun, subjects, outcomes);
 	});
 
 	it("rejects an enrich body with an unknown channel", async () => {
@@ -265,5 +403,248 @@ describe("GET /runs/:runId", () => {
 		expect(statusResponse.status).toBe(200);
 		expect(typeof status.status).toBe("string");
 		expect(status.output == null).toBe(true);
+	});
+});
+
+type PageSeed = {
+	accountId: string;
+	icpId: string;
+	runId: string;
+	companyIds: string[];
+};
+
+async function seedRunWithCompanies(
+	label: string,
+	companyCount: number,
+): Promise<PageSeed> {
+	const acct = await ensureAccount(
+		testEnv,
+		`routes-page-test-${label}`,
+		`routes-page-test-${label}-${crypto.randomUUID()}.internal`,
+	);
+	const icpRow = await createIcp(testEnv, {
+		description: "seed icp for run-page route tests",
+		domain: acct.domain,
+		accountId: acct.id,
+	});
+	const runId = `companies_${label}`;
+	await openRun(testEnv, {
+		id: runId,
+		accountId: acct.id,
+		icpId: icpRow.id,
+		capability: "companies",
+		status: "complete",
+	});
+	const saved = await saveCompanies(
+		testEnv,
+		Array.from({ length: companyCount }, (_, i) => ({
+			icpId: icpRow.id,
+			runId,
+			domain: `${label}-${i}.com`,
+			name: `${label} Co ${i}`,
+		})),
+	);
+	return {
+		accountId: acct.id,
+		icpId: icpRow.id,
+		runId,
+		companyIds: saved.map((row) => row.id),
+	};
+}
+
+async function cleanupPageSeed(seed: PageSeed): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(person)
+		.where(inArray(person.companyId, seed.companyIds));
+	await connection.delete(company).where(eq(company.runId, seed.runId));
+	await connection.delete(run).where(eq(run.id, seed.runId));
+	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	await connection.delete(account).where(eq(account.id, seed.accountId));
+}
+
+type CompanyPageBody = {
+	rows: Array<{ id: string; domain: string }>;
+	nextCursor: string | null;
+	limit: number;
+};
+
+describe("GET /runs/:runId/companies and /runs/:runId/people: auth and 404", () => {
+	it("rejects a companies-page request with no bearer token", async () => {
+		const response = await publicCall(
+			"/runs/companies_no-token-test/companies",
+		);
+		expect(response.status).toBe(401);
+	});
+
+	it("rejects a people-page request with no bearer token", async () => {
+		const response = await publicCall("/runs/companies_no-token-test/people");
+		expect(response.status).toBe(401);
+	});
+
+	it("returns 404, not an empty 200, for the companies page of an unknown run id", async () => {
+		const response = await authedCall(
+			"/runs/companies_never-existed-route-test/companies",
+			authedGetInit(),
+		);
+		expect(response.status).toBe(404);
+	});
+
+	it("returns 404, not an empty 200, for the people page of an unknown run id", async () => {
+		const response = await authedCall(
+			"/runs/companies_never-existed-route-test/people",
+			authedGetInit(),
+		);
+		expect(response.status).toBe(404);
+	});
+});
+
+describe("GET /runs/:runId/companies and /runs/:runId/people: pagination", () => {
+	it("pages through a run's companies with no duplicate and no gap", async () => {
+		const label = `routes-companies-${crypto.randomUUID()}`;
+		const seed = await seedRunWithCompanies(label, 5);
+		try {
+			const first = await authedCall(
+				`/runs/${seed.runId}/companies?limit=2`,
+				authedGetInit(),
+			);
+			const firstBody: CompanyPageBody = await first.json();
+
+			expect(first.status).toBe(200);
+			expect(firstBody.rows).toHaveLength(2);
+			expect(firstBody.limit).toBe(2);
+			expect(firstBody.nextCursor).not.toBeNull();
+
+			const second = await authedCall(
+				`/runs/${seed.runId}/companies?limit=2&cursor=${firstBody.nextCursor}`,
+				authedGetInit(),
+			);
+			const secondBody: CompanyPageBody = await second.json();
+
+			expect(secondBody.rows).toHaveLength(2);
+			expect(secondBody.nextCursor).not.toBeNull();
+
+			const third = await authedCall(
+				`/runs/${seed.runId}/companies?limit=2&cursor=${secondBody.nextCursor}`,
+				authedGetInit(),
+			);
+			const thirdBody: CompanyPageBody = await third.json();
+
+			expect(thirdBody.rows).toHaveLength(1);
+			expect(thirdBody.nextCursor).toBeNull();
+
+			const seenIds = [
+				...firstBody.rows,
+				...secondBody.rows,
+				...thirdBody.rows,
+			].map((row) => row.id);
+			expect(new Set(seenIds)).toEqual(new Set(seed.companyIds));
+			expect(seenIds).toHaveLength(seed.companyIds.length);
+		} finally {
+			await cleanupPageSeed(seed);
+		}
+	});
+});
+
+describe("GET /runs/:runId/companies: the page-size ceiling", () => {
+	it("clamps a limit above the configured maximum and reports the clamped value", async () => {
+		const label = `routes-clamp-${crypto.randomUUID()}`;
+		const seed = await seedRunWithCompanies(label, 1);
+		try {
+			const response = await authedCall(
+				`/runs/${seed.runId}/companies?limit=999999`,
+				authedGetInit(),
+			);
+			const body: CompanyPageBody = await response.json();
+
+			expect(response.status).toBe(200);
+			expect(body.limit).toBe(config.limits.maxRunPageSize);
+			expect(body.limit).toBeLessThan(999999);
+		} finally {
+			await cleanupPageSeed(seed);
+		}
+	});
+
+	it("returns people for the given run's companies only, not another run's", async () => {
+		const labelA = `routes-people-a-${crypto.randomUUID()}`;
+		const labelB = `routes-people-b-${crypto.randomUUID()}`;
+		const seedA = await seedRunWithCompanies(labelA, 1);
+		const seedB = await seedRunWithCompanies(labelB, 1);
+		try {
+			const companyIdA = seedA.companyIds[0];
+			const companyIdB = seedB.companyIds[0];
+			if (!companyIdA || !companyIdB)
+				throw new Error("seed produced no company");
+
+			await savePeople(testEnv, [
+				{
+					companyId: companyIdA,
+					linkedinUrl: `https://linkedin.com/in/${labelA}`,
+					name: "Person A",
+					title: "VP of Sales",
+				},
+			]);
+			await savePeople(testEnv, [
+				{
+					companyId: companyIdB,
+					linkedinUrl: `https://linkedin.com/in/${labelB}`,
+					name: "Person B",
+					title: "VP of Sales",
+				},
+			]);
+
+			const response = await authedCall(
+				`/runs/${seedA.runId}/people`,
+				authedGetInit(),
+			);
+			const body: { rows: Array<{ linkedinUrl: string | null }> } =
+				await response.json();
+
+			expect(response.status).toBe(200);
+			expect(body.rows).toHaveLength(1);
+			expect(body.rows[0]?.linkedinUrl).toBe(
+				`https://linkedin.com/in/${labelA}`,
+			);
+		} finally {
+			await cleanupPageSeed(seedA);
+			await cleanupPageSeed(seedB);
+		}
+	});
+});
+
+describe("POST /companies/find: the brand a run sells for", () => {
+	it("creates the profile under the seller the request names", async () => {
+		const domain = `probe-${crypto.randomUUID()}.example`;
+		const response = await authedCall(
+			"/companies/find",
+			postInit(
+				{
+					prompt: "seed stage fintech companies",
+					seller: { domain, name: "Probe Brand" },
+					count: 1,
+				},
+				TOKEN,
+			),
+		);
+
+		expect([200, 202]).toContain(response.status);
+		const body: { icpId?: string } = await response.json();
+		expect(body.icpId).toBeDefined();
+	});
+
+	it("rejects a seller with no domain rather than guessing one", async () => {
+		const response = await authedCall(
+			"/companies/find",
+			postInit(
+				{
+					prompt: "seed stage fintech companies",
+					seller: { name: "No Domain" },
+					count: 1,
+				},
+				TOKEN,
+			),
+		);
+
+		expect(response.status).toBe(400);
 	});
 });

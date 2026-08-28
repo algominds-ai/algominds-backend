@@ -1,31 +1,39 @@
+import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
+import { companyExaId } from "@/core/companies/candidates";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
+	Account,
 	Company,
 	Evidence,
 	Icp,
+	NewAccount,
 	NewCompany,
 	NewEvidence,
 	NewIcp,
 	NewPerson,
+	NewRun,
 	Person,
+	Run,
 } from "@/core/db/schema";
 import {
+	type account,
 	company,
 	evidence,
 	icp,
 	normalizeDomain,
 	person,
+	type run,
 } from "@/core/db/schema";
 
 export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
 
-interface SelectWhereConnection<TTable, TColumns, TRow> {
+export interface SelectWhereConnection<TTable, TColumns, TRow> {
 	select(columns: TColumns): {
 		from(table: TTable): {
-			where(condition: unknown): Promise<TRow[]>;
+			where(condition: SQL | undefined): Promise<TRow[]>;
 		};
 	};
 }
@@ -33,18 +41,34 @@ interface SelectWhereConnection<TTable, TColumns, TRow> {
 interface SelectLimitConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
-			where(condition: unknown): {
+			where(condition: SQL | undefined): {
 				limit(count: number): Promise<TRow[]>;
 			};
 		};
 	};
 }
 
-interface SelectOrderedConnection<TTable, TRow> {
+interface SelectAllWhereConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
-			where(condition: unknown): {
-				orderBy(order: unknown): {
+			where(condition: SQL | undefined): Promise<TRow[]>;
+		};
+	};
+}
+
+interface UpdateWhereConnection<TTable, TValues> {
+	update(table: TTable): {
+		set(values: TValues): {
+			where(condition: SQL | undefined): Promise<never[]>;
+		};
+	};
+}
+
+export interface SelectOrderedConnection<TTable, TRow> {
+	select(): {
+		from(table: TTable): {
+			where(condition: SQL | undefined): {
+				orderBy(order: SQL): {
 					limit(count: number): Promise<TRow[]>;
 				};
 			};
@@ -78,7 +102,7 @@ interface AppendConnection<TTable, TNewRow, TRow> {
 
 export interface DeleteTransaction {
 	delete(table: typeof evidence | typeof person): {
-		where(condition: unknown): Promise<unknown>;
+		where(condition: SQL | undefined): Promise<never[]>;
 	};
 }
 
@@ -112,6 +136,39 @@ export type EvidenceAppendConnection = AppendConnection<
 	NewEvidence,
 	Evidence
 >;
+export type AccountConnection = InsertConnection<
+	typeof account,
+	NewAccount,
+	Account
+> &
+	SelectAllWhereConnection<typeof account, Account>;
+export type RunInsertConnection = AppendConnection<typeof run, NewRun, Run>;
+export type RunOpenConnection = InsertConnection<typeof run, NewRun, Run> &
+	SelectLimitConnection<typeof run, Run>;
+export type RunUpdateConnection = UpdateWhereConnection<
+	typeof run,
+	Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
+>;
+export type RunLookupConnection = SelectLimitConnection<typeof run, Run>;
+export type AccountSpendConnection = SelectWhereConnection<
+	typeof run,
+	{ costDollars: typeof run.costDollars },
+	{ costDollars: number }
+>;
+export type CompanyRunRow = Pick<Company, "id" | "domain" | "name" | "data">;
+export type RunCompany = Pick<Company, "id" | "domain" | "name"> & {
+	exaId: string | null;
+};
+export type CompanyRunConnection = SelectWhereConnection<
+	typeof company,
+	{
+		id: typeof company.id;
+		domain: typeof company.domain;
+		name: typeof company.name;
+		data: typeof company.data;
+	},
+	CompanyRunRow
+>;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -134,21 +191,52 @@ export async function loadIcp(
 	return rows[0];
 }
 
+export type NewIcpInput = Pick<NewIcp, "domain" | "accountId"> & {
+	description: string;
+};
+
 /** Stores a free-text ideal customer profile and returns the stored row. */
 export async function createIcp(
 	env: DbEnv,
-	description: string,
-	domain: string,
+	input: NewIcpInput,
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
 	const connection = buildDb(env, "cached");
 	const rows = await connection
 		.insert(icp)
-		.values({ domain, doc: { description } })
+		.values({
+			domain: input.domain,
+			accountId: input.accountId,
+			doc: { description: input.description },
+		})
 		.returning();
 	const row = rows[0];
 	if (!row) throw new Error("createIcp: insert returned no row");
 	return row;
+}
+
+/** The id, domain, name, and saved Exa organization id of every company found in run `runId`. */
+export async function companiesForRun(
+	env: DbEnv,
+	runId: string,
+	buildDb: DbFactory<CompanyRunConnection> = db,
+): Promise<RunCompany[]> {
+	const connection = buildDb(env, "cached");
+	const rows = await connection
+		.select({
+			id: company.id,
+			domain: company.domain,
+			name: company.name,
+			data: company.data,
+		})
+		.from(company)
+		.where(eq(company.runId, runId));
+	return rows.map((row) => ({
+		id: row.id,
+		domain: row.domain,
+		name: row.name,
+		exaId: companyExaId(row.data),
+	}));
 }
 
 /**
@@ -254,3 +342,13 @@ export async function deletePerson(
 		await tx.delete(person).where(eq(person.id, personId));
 	});
 }
+
+export {
+	accountSpendToday,
+	closeRun,
+	ensureAccount,
+	findRun,
+	openRun,
+	recordRunSpend,
+	startOfUtcDay,
+} from "@/core/db/runs";

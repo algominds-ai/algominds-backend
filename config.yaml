@@ -1,0 +1,124 @@
+# Every tunable number in the engine. Edit here, then run `bun run config`.
+# src/config.ts is generated from this file and is never edited by hand.
+
+# Hard ceilings on what one request may ask for. A caller's number wins up to
+# these; beyond them the request is clamped and the clamp is reported, never
+# silently applied. They exist so a single request cannot force unbounded work.
+limits:
+  # Three rounds return at most 300 candidates, so asking for more than this
+  # can never be satisfied anyway. The cap makes that explicit at the boundary.
+  maxCompaniesPerRequest: 300
+  # How many companies a people run searches when the caller gives no
+  # maxCompanies. The caller's own number always wins over this.
+  defaultMaxCompaniesPerPeopleRun: 100
+  # Each company in a people run is its own paid search, so this one bounds
+  # real spend rather than just effort. Matches maxCompaniesPerRequest: one
+  # companies run can never hold more companies than that, so no people run
+  # needs to search wider than one full run.
+  # Structural bound only: a companies run can hold at most maxCompaniesPerRequest
+  # companies, so a people run over it cannot exceed that either. The spend
+  # ceiling is the tighter limit in practice. Measured at about $0.010 per
+  # company, 300 companies is roughly $3.00 against a $2.00 per-run ceiling, so
+  # a run this large stops on spend and reports capped. That is money winning
+  # over count, which is the intended order.
+  maxCompaniesPerPeopleRun: 300
+  # The most rows GET /runs/{runId}/companies and GET /runs/{runId}/people
+  # return in one page. A caller's own limit wins up to this; beyond it the
+  # request is clamped and the response reports the limit actually used, so
+  # the clamp is never silent.
+  maxRunPageSize: 200
+
+# The brand this deployment sells for. A request that names its own seller
+# wins over this; the fallback exists so a single-brand deployment need not
+# repeat itself on every call.
+seller:
+  domain: algominds.ai
+  name: Algominds
+
+companies:
+  # Rounds of search per run. Each round is one paid Exa call plus two model calls.
+  maxRounds: 3
+  # Exa returns at most 100 records per call. Fewer makes the requested count unreachable.
+  resultsPerRound: 100
+  # Candidates sent to the judge, as a multiple of the requested count.
+  judgeCandidateMultiple: 3
+  # How much of a company description reaches the judge.
+  descriptionChars: 600
+  # Window for treating a domain as already seen.
+  seenDomainsWindowDays: 90
+  # Which vendor supplies raw company candidates before filter, gate, and judge run.
+  # exa-search is one fast, cheap /search call per round. exa-agent trades speed and
+  # cost for evidenced rows via Exa's /agent/runs, polled to completion.
+  companySource: exa-search
+  # Effort Exa's agent spends per run when companySource is exa-agent. Measured:
+  # "low" returns in about 5 seconds for $0.025. Do not set "max": the vendor
+  # requires a beta request header for it that this client does not send.
+  exaAgentEffort: low
+  # Seconds between polls of a running exa-agent run.
+  exaAgentPollIntervalSeconds: 5
+  # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls at
+  # 5 seconds is 2 minutes, well past the measured 5-second completion time.
+  exaAgentMaxPollAttempts: 24
+
+people:
+  # A company whose people were already found inside this window is not
+  # searched again. Companies have the same guard on their own domains
+  # (companies.seenDomainsWindowDays); people had none, so a repeat run paid a
+  # vendor search for someone already stored — the unique constraint on
+  # linkedin_url only discarded the duplicate row after the search was paid for.
+  seenPeopleWindowDays: 90
+  resultsPerCompany: 3
+  batchSize: 5
+  # Which vendor supplies raw people candidates before the Apollo coverage
+  # pass. exa-search is one fast, cheap /search call per company. exa-agent
+  # trades speed and cost for evidenced rows via Exa's /agent/runs, polled to
+  # completion, once per company in the batch.
+  peopleSource: exa-search
+  # Effort Exa's agent spends per run when peopleSource is exa-agent.
+  exaAgentEffort: low
+  # Seconds between polls of a running exa-agent run.
+  exaAgentPollIntervalSeconds: 5
+  # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls
+  # at 5 seconds is 2 minutes, well past the measured 5-second completion time.
+  exaAgentMaxPollAttempts: 24
+
+enrich:
+  batchSize: 5
+  emailTtlDays: 90
+  linkedinTtlDays: 30
+
+# Spend ceilings. These stop work; they do not merely report it.
+spend:
+  # A single run stops starting new paid work once it has already spent this
+  # much. Cost is only knowable after a call returns, so this stops the NEXT
+  # round or batch, never the one in flight. Overshoot is bounded by one whole
+  # interval: about $0.045 for a companies round, more for a people batch of
+  # five. Measured runs: a companies run is $0.137, a people run over ten
+  # companies is $0.100.
+  perRunDollars: 2.00
+  # An account refuses to start a new run once its day already costs this much.
+  # Checked before any paid work, so a refused run spends nothing. Covers
+  # company, people, and enrich runs alike.
+  perAccountDailyDollars: 50.00
+
+judge:
+  cacheTtlSeconds: 86400
+
+# Retry and timeout budgets for Cloudflare Workflow steps.
+# Cloudflare's own default is 5 retries and a 10 minute timeout on every step.
+stepConfig:
+  # Steps that bill a vendor on every attempt. A retry re-runs the whole paid
+  # call, so the limit stays low. The timeout must clear the slowest real run:
+  # a companies round has been measured at about 100 seconds.
+  paidCall:
+    retries:
+      limit: 2
+      delay: 10 seconds
+    timeout: 5 minutes
+  # Steps that only touch the database, where a retry is free. A transient blip
+  # is worth retrying and costs nothing, so this keeps Cloudflare's default.
+  databaseCall:
+    retries:
+      limit: 5
+      delay: 1 second
+    timeout: 60 seconds

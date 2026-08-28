@@ -13,7 +13,8 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": true
+		"ignoreUnknown": true,
+		"includes": ["**", "!docs"]
 	},
 	"formatter": {
 		"enabled": true,

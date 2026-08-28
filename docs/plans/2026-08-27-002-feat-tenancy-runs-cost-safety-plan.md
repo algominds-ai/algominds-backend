@@ -25,6 +25,17 @@ its R constraints. A unit overrides neither.
 seconds for $0.134, then 30 people in 127 seconds for $0.100. Every unit ends
 with `bun run gate` green and that behaviour intact.
 
+**Greenfield revision.** The user confirmed mid-execution that the local data is
+disposable. That deleted the plan's largest risk rather than mitigating it: the
+database and the migration history were rebuilt from scratch, `icp.account_id`
+and `company.run_id` are `NOT NULL` from the first migration, and no backfill
+exists to go wrong. U5 is withdrawn. Its transaction-wrapping requirement, its
+truncate-prompt exposure, and its restore rehearsal are all moot.
+
+The consequence is real and deliberate: a company cannot be inserted before its
+run row exists, so U6 is now a prerequisite for the pipeline working at all,
+not a follow-on.
+
 **Recovery point.** Git tag `baseline-before-multitenancy` at `a702c72`.
 Database dump at `algo-backend-backups/algo-2026-08-27-baseline.sql`, holding
 icp 9, company 24, person 30, evidence 297.
@@ -90,7 +101,7 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R2 | A `run` table holds one row per capability run, keyed by the runId the route already generates, carrying account, icp, capability, status, spend, and timestamps. |
 | R3 | `company.run_id` is a foreign key to `run.id`. Existing rows keep their run. |
 | R4 | `POST /people/find` scopes by a companies runId or an explicit domain array. It never loads a company from an earlier run. |
-| R5 | `maxCompanies` leaves the HTTP contract and lives in `src/config.ts` as a bound on how many companies one people run searches. It bounds cost and time; it is not the spend ceiling, which is R8 and R9. |
+| R5 | The caller's `maxCompanies` wins. Config supplies the fallback when the caller gives none, and a ceiling that clamps an unreasonable request. A clamp is always reported, never silent. It bounds cost and time; it is not the spend ceiling, which is R8 and R9. |
 | R6 | Indexes exist on `person(company_id)`, `company(run_id)`, `company(icp_id, found_at desc)`, and `icp(account_id)`. |
 | R7 | Every `step.do` call carries an explicit `StepConfig`. Steps that pay a vendor retry at most twice. |
 | R8 | A run stops starting new paid work once its spend reaches the per-run ceiling, keeps everything it already found, and reports terminal status `capped` with the spend. |
@@ -103,6 +114,10 @@ in `algo`. Verified: `drizzle-kit pull` exits 1 and creates nothing.
 | R15 | `/enrich` resolves its subjects from the run the caller names. A run id that matches no company is reported, never silently enriched as empty. |
 | R16 | Tests that write to the database run against a database that holds no production rows. |
 | R17 | A start request that matches a run already in flight or finished says so. It never returns 202 as though it began new work. |
+| R18 | Companies can be sourced from Exa's `/search` or its Agent API, chosen by config. Both produce the same company shape, and the filter, gate, and judge do not branch on which ran. |
+| R19 | The Agent API is available as an enrichment provider in the existing waterfall, after the faster providers rather than in front of them. |
+| R20 | People search uses Exa's `people` category and its structured record. Employment is settled by the employer's identifier, never by comparing company name strings. |
+| R21 | A person already found for an account is not searched for again inside the dedupe window. |
 
 ---
 
@@ -408,7 +423,15 @@ generated default, so the application always supplies `run.id`.
 **Verification.** Migration applies to the live database, the four baseline row
 counts are unchanged, gate green.
 
-### U5. Backfill tenancy and the run history, then constrain
+### U5. Withdrawn
+
+The greenfield revision above removed this unit's reason to exist. The
+constraints it would have reached by backfill are declared final in U4's
+migration instead. Nothing replaces it.
+
+The original text follows, struck for the record.
+
+### U5. Backfill tenancy and the run history, then constrain (WITHDRAWN)
 
 **Goal.** Existing data gets an account and a run, and the constraints land.
 
@@ -491,6 +514,13 @@ matching the reported cost, gate green.
 **Requirements.** R8, R9, R14.
 
 **Dependencies.** U3, U6.
+
+**Two gaps U6 left, which belong here.** `src/workflows/enrich.ts` opens no run
+row, so its spend is invisible to the daily account ceiling — the one
+capability whose cost rests on an unconfirmed rate. And a workflow that dies
+between opening and closing a run leaves that row at `running` with no
+`finished_at` forever, which the daily sum then counts as spend that never
+resolves. Both must be closed here or the ceiling reads the wrong number.
 
 **Files.** `src/config.ts`, `src/core/companies.ts`,
 `src/workflows/find-companies.ts`, `src/workflows/find-people.ts`,
@@ -613,7 +643,10 @@ previous run discarded, gate green.
    array, and no longer accepts `icpId`.
 2. Company loading filters by `run_id`, replacing the `icp_id` filter that
    pulls every historical row.
-3. `maxCompanies` leaves the request body and becomes a config cap (R5).
+3. `maxCompanies` stays in the request body. The caller's number wins; config
+   fills in when the caller gives none, and clamps a request beyond the
+   ceiling. A clamp reports through `skippedCompanies`, which already exists —
+   the request is never silently shrunk (R5).
 4. A domain array normalises through the existing `normalizeDomain`, never a
    new normaliser.
 5. Dropping `icpId` from the payload means the workflow can no longer be handed
@@ -638,7 +671,10 @@ person join. Do not invent a second way to reach companies by run.
 - Domains differing only by `www.` or case resolve to the same company.
 - An unknown run id yields an empty set, not every company for the profile.
 - A domain naming no known company is reported, not silently dropped.
-- `maxCompanies` in the body is no longer accepted.
+- A caller asking for more companies than the config fallback gets their
+  number, not the fallback.
+- A request beyond the ceiling is clamped and the clamp is reported, rather
+  than the caller believing they got everything.
 
 **Verification.** A second people run against an older run id searches only
 that run's companies, gate green.
@@ -649,7 +685,11 @@ that run's companies, gate green.
 
 **Requirements.** R11.
 
-**Dependencies.** U6, U10.
+**Dependencies.** U6, U9, U10.
+
+**Carried from U9.** The vendor capture rides on `FindCompaniesResult` as
+`captures`. Drop it from the trimmed summary alongside the row arrays, or the
+size problem this unit exists to solve comes back through a different field.
 
 **Files.** `src/routes.ts`, `src/core/db/queries.ts`,
 `src/workflows/find-companies.ts`, `src/workflows/find-people.ts`,
@@ -815,6 +855,148 @@ that is precisely how this shipped.
 **Verification.** Enriching a real run resolves a non-empty subject list, and
 the new test fails against the baseline tag.
 
+### U15. Add the Agent API as a second company source
+
+**Goal.** Either endpoint can find companies, chosen by one config value.
+
+**Requirements.** R18.
+
+**Dependencies.** U3.
+
+**Files.** `src/core/providers/exa-agent.ts` (new), `config.yaml`,
+`src/workflows/find-companies.ts`, `test/exa-agent.spec.ts` (new).
+
+**Approach.** `findCompanies` already takes `search` as an injected dependency,
+so a second source needs no change to the round loop, the filter, the gate, or
+the judge. The agent's output maps onto the existing `CompanyEntity`; a field it
+cannot supply is null, as `revenueAnnual` already is on the search path.
+
+The agent is asynchronous: start a run, then poll until it completes. The
+workflow waits with `step.sleep`, which is free and does not count toward the
+step limit. The provider file does HTTP only and owns no waiting.
+
+**Measured, and the reason this unit exists.** At `effort: "low"` the agent cost
+$0.025 against `/search`'s $0.089 for the same query, in 5 seconds against 1.6.
+It returned 2 companies to `/search`'s 92, stopping at
+`stopReason: "schema_satisfied"` because the schema never asked for a count. So
+the requested count goes into both the query text and the output schema.
+
+**Test scenarios.**
+- The start call sends the query, the effort, the fiber data source, and a
+  schema that asks for the requested count.
+- A completed run maps onto `CompanyEntity`, with unavailable fields null.
+- A 429 is retryable; a 400 is not.
+- A response that does not match the expected shape is rejected rather than
+  half-parsed.
+- A `failed` or `canceled` run surfaces, rather than reading as empty success.
+- Reported cost reaches the ledger.
+
+**Verification.** The same prompt run through each source produces comparable
+rows, and the run row records which source ran and what it cost.
+
+### U16. Add the Agent API as an enrichment provider
+
+**Goal.** A contact the fast providers miss is still found, with provenance.
+
+**Requirements.** R19.
+
+**Dependencies.** U15.
+
+**Files.** `src/core/providers/index.ts`, `src/core/enrich.ts`,
+`test/enrich.spec.ts`.
+
+**Approach.** The waterfall already takes an array of providers, each returning
+null on a miss so the next one runs. This adds one entry.
+
+Placement is the whole decision. Measured: the agent returned a founder's work
+email with a cited source URL in 26 seconds for $0.025. Thirty people run
+serially would take about thirteen minutes, so it goes **after** Findymail, not
+before. Fast and cheap first; slow, dearer, and evidenced for the misses.
+
+The cited source is the reason to bother. Findymail returns an address with no
+provenance; the agent names where it found it, which is what the append-only
+`evidence` table stores.
+
+**Test scenarios.**
+- A miss from the earlier provider falls through to the agent.
+- A hit from the earlier provider never reaches the agent, so the slow path
+  costs nothing on the common case.
+- A found address is recorded with its source URL, not just the value.
+- An agent miss returns null and does not throw, so the waterfall continues.
+
+**Verification.** A person Findymail cannot resolve is resolved by the agent,
+and the evidence row carries the source.
+
+### U17. Search people by category and match employment by id
+
+**Goal.** Stop matching people to the wrong company of the same name.
+
+**Requirements.** R20.
+
+**Dependencies.** U9, U10.
+
+**Files.** `src/core/person-candidates.ts`, `src/core/people.ts`,
+`test/people.spec.ts`.
+
+**Approach.**
+1. The request sends `category: "linkedin profile"`, which is not a real
+   category, plus `contents.summary.schema` LLM extraction — the same shape
+   removed from the company path for being slow and lossy. Send
+   `category: "people"` and read `entities[0].properties` instead.
+2. `workHistory` carries each role's title, dates, and employer as an object
+   with an `id`. A person works at the target company when an entry has
+   `to: null` and a `company.id` matching the company's own.
+3. That replaces `normalizeCompanyName` and `companiesMatch`, which compare
+   strings and cannot tell two firms of the same name apart.
+
+**The defect this closes.** A measured run matched roughly a third of thirty
+people to a different company sharing a name: two "Passage" companies, an
+"Aspiro Therapeutics" against an "Aspiro". `employmentConfidence` recorded the
+doubt at 0.4 and nothing acted on it. Matching by identifier removes the doubt
+rather than scoring it.
+
+**Test scenarios.**
+- A person whose current role names the target company's id is matched.
+- A person at a different company with the same name is not matched. Use the
+  measured "Passage" case.
+- A person whose matching role has ended (`to` is set) is not treated as
+  current.
+- A person with no work history is reported, not silently dropped.
+- The request sends the real category and no summary schema.
+
+**Verification.** The measured collision case resolves correctly, and the test
+fails against the current string comparison.
+
+### U18. Skip people already found for this account
+
+**Goal.** Stop paying to find the same person twice.
+
+**Requirements.** R21.
+
+**Dependencies.** U6, U10.
+
+**Files.** `src/core/db/queries.ts`, `src/core/people.ts`,
+`test/db.spec.ts`, `test/people.spec.ts`.
+
+**Approach.** Companies already skip domains seen in a 90-day window; people
+have no equivalent. `person.linkedin_url` is unique, so a repeat insert is
+discarded — but the paid search that found the person again already ran, which
+is the cost this unit removes.
+
+Read the people already known for the account and skip the companies whose
+decision makers are already resolved, following the shape `recentDomains`
+already uses, including its cache-disabled read.
+
+**Test scenarios.**
+- A company whose people are already known is not searched again.
+- A company with no known people is searched.
+- The read uses the cache-disabled binding, since a person written earlier in
+  the same run must be visible.
+- The window is honoured: a person found long ago is searched for again.
+
+**Verification.** A second people run over the same companies performs
+measurably fewer paid searches than the first.
+
 ---
 
 ## Verification Contract
@@ -857,7 +1039,7 @@ recorded baseline of 9, 24, 30, and 297.
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| A truncate prompt answered wrongly during U5 destroys a table | Highest | Versioned migrations rather than `push` (KTD4); a fresh dump before U5; `--force` never used |
+| ~~A truncate prompt answered wrongly during U5 destroys a table~~ | Withdrawn | Versioned migrations rather than `push` (KTD4); a fresh dump before U5; `--force` never used |
 | The migration tool silently targets an empty database | High | U1 confirms the four tables through `DATABASE_URL` before any migration; a clean diff against an empty database looks identical to a correct one |
 | The daily spend sum reads a stale cached value and the cap is passable | High | KTD3 routes it through `HYPERDRIVE_DIRECT`, asserted by test |
 | A capped run returns nothing and loses paid work | High | KTD1 returns rather than throws; a test asserts rows come back with status `capped` |
@@ -865,7 +1047,7 @@ recorded baseline of 9, 24, 30, and 297.
 | Shared test database causes cross-test interference | Medium | `fileParallelism` is already false; every writing test scopes and removes its own rows |
 | The Findymail rate is an unverified $0.01 placeholder, and it is the only priced call on the enrichment path | Medium | The enrichment ceiling is wrong by whatever multiple the true rate differs from the guess. Probe the real rate before relying on that ceiling; the companies and people ceilings are unaffected, since Exa and the gateway report real cost |
 | Two runs start together for one account and both pass the daily check | Medium | U7 serialises the check per account with an advisory lock, and a test starts two runs at the boundary |
-| The migration fails partway and leaves a half-migrated schema | High | U5 requires the whole file to run in one transaction, proven by a deliberately failing backfill that leaves the schema untouched |
+| ~~The migration fails partway and leaves a half-migrated schema~~ | Withdrawn | U5 requires the whole file to run in one transaction, proven by a deliberately failing backfill that leaves the schema untouched |
 | A writing test reaches production rows, because no Cloudflare isolation covers a Hyperdrive connection | High | KTD8 points test bindings at their own database through the env-var override; writing tests also clean up |
 | Enrich cannot measure its ceiling in dollars, because `EnrichOutcome` carries no cost | Medium | U7 threads cost back before the ceiling is applied to that path |
 | The cap check pushes `runFindCompaniesRounds` past the 80-line function limit | Low | U7 extracts it as a helper rather than inlining |

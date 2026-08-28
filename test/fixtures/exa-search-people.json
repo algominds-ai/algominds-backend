@@ -1,0 +1,441 @@
+{
+	"requestId": "bc5bdcc334a90ecdcfe6488ed52a565c",
+	"resolvedSearchType": "",
+	"results": [
+		{
+			"id": "https://exa.ai/library/person/2wr56lj8gbj",
+			"title": "Kirk Marple",
+			"url": "https://www.linkedin.com/in/kirkmarple",
+			"publishedDate": "2026-08-24T14:27:52.000Z",
+			"image": "https://static.licdn.com/aero-v1/sc/h/9c8pery4andzj6ohjkjp54ma2",
+			"entities": [
+				{
+					"id": "https://exa.ai/library/person/2wr56lj8gbj",
+					"type": "person",
+					"version": 1,
+					"properties": {
+						"name": "Kirk Marple",
+						"firstName": "Kirk",
+						"lastName": "Marple",
+						"location": "Seattle, Washington, United States",
+						"workHistory": [
+							{
+								"title": "Chief Executive Officer, Technical Founder",
+								"location": "Seattle, Washington, United States",
+								"dates": { "from": "2021-02-01", "to": null },
+								"company": {
+									"id": "https://exa.ai/library/organization/lrjlz4ht43v",
+									"name": "Graphlit, by Unstruk Data"
+								}
+							},
+							{
+								"title": "Chief Technology Officer",
+								"location": null,
+								"dates": { "from": "2019-07-01", "to": "2021-02-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/349jn405zwx",
+									"name": "Kespry"
+								}
+							},
+							{
+								"title": "Chief Technology Officer",
+								"location": null,
+								"dates": { "from": "2018-01-01", "to": "2019-06-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/gl2n7pxzjy0",
+									"name": "HEROFi, Inc."
+								}
+							},
+							{
+								"title": "VP Product Development",
+								"location": null,
+								"dates": { "from": "2017-03-01", "to": "2017-12-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/r7q512b04cf",
+									"name": "STATS LLC"
+								}
+							},
+							{
+								"title": "Senior Streaming & Multimedia Architect",
+								"location": null,
+								"dates": { "from": "2016-03-01", "to": "2017-03-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/9g8sthg7x4s",
+									"name": "General Motors"
+								}
+							},
+							{
+								"title": "Chief Software Architect, Founder",
+								"location": null,
+								"dates": { "from": "2001-02-01", "to": "2015-05-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/bxn1pw4qckf",
+									"name": "Wohler Technologies, Inc."
+								}
+							},
+							{
+								"title": "Software Development Manager",
+								"location": null,
+								"dates": { "from": "1994-08-01", "to": "2000-07-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/gxl16rnpqtq",
+									"name": "Microsoft"
+								}
+							}
+						],
+						"educationHistory": [
+							{
+								"degree": "M.Sc. Computer Science",
+								"dates": null,
+								"institution": {
+									"id": "https://exa.ai/library/organization/np52841zl52",
+									"name": "The University of British Columbia"
+								}
+							},
+							{
+								"degree": "B.Sc. Computer Science",
+								"dates": null,
+								"institution": {
+									"id": null,
+									"name": "Kutztown University of Pennsylvania"
+								}
+							}
+						],
+						"research": null
+					}
+				}
+			]
+		},
+		{
+			"id": "https://exa.ai/library/person/lnwr4551zfq",
+			"title": "Abaho Katabarwa",
+			"url": "https://www.linkedin.com/in/abaho-katabarwa",
+			"author": "Exa",
+			"image": "https://media.licdn.com/dms/image/v2/C5603AQGKsM3rVNx8UA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1517588750169?e=2147483647&v=beta&t=dUWrhEqV_tH-Yx65qn87A0q1rfmpTT4Mt9I7WZMT7n0",
+			"entities": [
+				{
+					"id": "https://exa.ai/library/person/lnwr4551zfq",
+					"type": "person",
+					"version": 1,
+					"properties": {
+						"name": "Abaho Katabarwa",
+						"firstName": "Abaho",
+						"lastName": "Katabarwa",
+						"location": "Seattle, Washington, United States",
+						"workHistory": [
+							{
+								"title": "Founder",
+								"location": "Seattle, WA",
+								"dates": { "from": "2024-09-01", "to": null },
+								"company": { "id": null, "name": "LLMGraph" }
+							},
+							{
+								"title": "Software Engineer",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2020-02-01", "to": "2024-09-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/gxl16rnpqtq",
+									"name": "Microsoft - Semantic Machines"
+								}
+							},
+							{
+								"title": "Software Engineer Intern",
+								"location": "Greater Boston Area",
+								"dates": { "from": "2019-06-01", "to": "2019-08-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/gxl16rnpqtq",
+									"name": "Microsoft"
+								}
+							},
+							{
+								"title": "CS2470 Deep Learning Teaching Assistant",
+								"location": "Providence, Rhode Island Area",
+								"dates": { "from": "2019-09-01", "to": "2019-12-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/dh4s93wg602",
+									"name": "Brown University"
+								}
+							},
+							{
+								"title": "Software Engineer",
+								"location": "Redwood City",
+								"dates": { "from": "2015-06-01", "to": "2018-06-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/6rcjs4rx9pq",
+									"name": "Bowers & Wilkins"
+								}
+							},
+							{
+								"title": "Lead Curriculum Developer",
+								"location": null,
+								"dates": { "from": "2017-08-01", "to": "2018-01-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/4y0l25347hj",
+									"name": "StreetCode Academy"
+								}
+							},
+							{
+								"title": "Instructor",
+								"location": "East Palo Alto",
+								"dates": { "from": "2016-12-01", "to": "2018-01-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/4y0l25347hj",
+									"name": "StreetCode Academy"
+								}
+							},
+							{
+								"title": "Software Engineer",
+								"location": "San Jose",
+								"dates": { "from": "2014-06-01", "to": "2014-09-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/b03hcwlq9p4",
+									"name": "Cisco"
+								}
+							},
+							{
+								"title": "Residential Computing Consultant",
+								"location": "Stanford, CA",
+								"dates": { "from": "2014-08-01", "to": "2015-06-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/12jzvmdv31x",
+									"name": "Stanford University Residential Computing"
+								}
+							},
+							{
+								"title": "Mechanical Design Engineer",
+								"location": "Stanford, California",
+								"dates": { "from": "2012-03-01", "to": "2013-10-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/12jzvmdv31x",
+									"name": "Stanford Solar Decathlon"
+								}
+							},
+							{
+								"title": "Summer Technology Analyst",
+								"location": "Manhattan, New York",
+								"dates": { "from": "2013-06-01", "to": "2013-09-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/84qtcwhrlb9",
+									"name": "Goldman Sachs"
+								}
+							},
+							{
+								"title": "Mechanical Team Member",
+								"location": null,
+								"dates": { "from": "2012-01-01", "to": "2012-06-01" },
+								"company": { "id": null, "name": "Stanford Solar Car" }
+							},
+							{
+								"title": "Tutor",
+								"location": null,
+								"dates": { "from": "2012-01-01", "to": "2012-06-01" },
+								"company": { "id": null, "name": "EPASA Tutor, Haas Center" }
+							},
+							{
+								"title": "Research Assistant",
+								"location": null,
+								"dates": { "from": "2011-09-01", "to": "2011-10-01" },
+								"company": { "id": null, "name": "Perimeter Pediatric" }
+							},
+							{
+								"title": "Intern",
+								"location": null,
+								"dates": { "from": "2011-05-01", "to": "2011-09-01" },
+								"company": { "id": null, "name": "Perimeter Pediatric" }
+							}
+						],
+						"educationHistory": [
+							{
+								"degree": "Masters Computer Science",
+								"dates": { "from": "2018", "to": "2019" },
+								"institution": {
+									"id": "https://exa.ai/library/organization/dh4s93wg602",
+									"name": "Brown University"
+								}
+							},
+							{
+								"degree": null,
+								"dates": { "from": "2007", "to": "2011" },
+								"institution": { "id": null, "name": "Lakeside High School" }
+							},
+							{
+								"degree": "Bachelor of Science (BSc) Computer Science",
+								"dates": { "from": "2011", "to": "2015" },
+								"institution": {
+									"id": "https://exa.ai/library/organization/12jzvmdv31x",
+									"name": "Stanford University"
+								}
+							}
+						],
+						"research": null
+					}
+				}
+			]
+		},
+		{
+			"id": "https://exa.ai/library/person/brfjjytcnd0",
+			"title": "Gajanan C.",
+			"url": "https://www.linkedin.com/in/stealth-cto",
+			"author": "Exa",
+			"image": "https://static.licdn.com/aero-v1/sc/h/9c8pery4andzj6ohjkjp54ma2",
+			"entities": [
+				{
+					"id": "https://exa.ai/library/person/brfjjytcnd0",
+					"type": "person",
+					"version": 1,
+					"properties": {
+						"name": "Gajanan C.",
+						"firstName": "Gajanan",
+						"lastName": "C",
+						"location": "Fremont, California, United States",
+						"workHistory": [
+							{
+								"title": "Founder - Open Source Project",
+								"location": "United States",
+								"dates": { "from": "2025-11-01", "to": null },
+								"company": { "id": null, "name": "GraphLite AI" }
+							},
+							{
+								"title": "Strategic Advisor",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2025-03-01", "to": null },
+								"company": { "id": null, "name": "https://spearhead.so/" }
+							},
+							{
+								"title": "Founder, CTO",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2024-11-01", "to": null },
+								"company": { "id": null, "name": "DeepGraph AI" }
+							},
+							{
+								"title": "Chief Technology Officer",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2022-06-01", "to": "2024-07-01" },
+								"company": {
+									"id": null,
+									"name": "Dgraph Labs ( Now known as Hypermode )"
+								}
+							},
+							{
+								"title": "Technical Leader",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2020-05-01", "to": "2022-06-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/mcz1pvgkv4g",
+									"name": "Amazon Web Services (AWS)"
+								}
+							},
+							{
+								"title": "Chief Systems Architect",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2017-08-01", "to": "2020-05-01" },
+								"company": { "id": null, "name": "Visa, Inc." }
+							},
+							{
+								"title": "Organizer and Co-founder",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2014-01-01", "to": "2017-08-01" },
+								"company": {
+									"id": null,
+									"name": "Big Data Security and Data Governance Meetup"
+								}
+							},
+							{
+								"title": "Co-Founder and CTO",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2015-01-01", "to": "2017-03-01" },
+								"company": { "id": null, "name": "Acumio: Big Data Startup" }
+							},
+							{
+								"title": "Lead Architect",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2014-01-01", "to": "2015-01-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/cblflwbq8z9",
+									"name": "Dataguise"
+								}
+							},
+							{
+								"title": "Lead Engineer",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2009-01-01", "to": "2014-01-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/nc130wb19hk",
+									"name": "MarkLogic"
+								}
+							},
+							{
+								"title": "Technical Consultant",
+								"location": "San Francisco Bay Area",
+								"dates": { "from": "2009-01-01", "to": "2009-01-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/rrwprckls21",
+									"name": "Raj Abhyanker, LLP"
+								}
+							},
+							{
+								"title": "Principal Engineer (Architect)",
+								"location": "Pleasanton, CA",
+								"dates": { "from": "2007-01-01", "to": "2009-01-01" },
+								"company": { "id": null, "name": "EMC (Documentum)" }
+							},
+							{
+								"title": "Senior Staff Software Engineer",
+								"location": "Dublin, CA",
+								"dates": { "from": "2003-01-01", "to": "2007-01-01" },
+								"company": { "id": null, "name": "Sybase Inc." }
+							},
+							{
+								"title": "Senior Software Engineer",
+								"location": "Fremont, CA",
+								"dates": { "from": "2000-01-01", "to": "2003-01-01" },
+								"company": {
+									"id": "https://exa.ai/library/organization/xsz3gl51gvk",
+									"name": "Versant Corporation"
+								}
+							},
+							{
+								"title": "Asst. Professor",
+								"location": "Sangli-Miraj and Kupwad, Maharashtra, India",
+								"dates": { "from": "1988-01-01", "to": "1994-01-01" },
+								"company": {
+									"id": null,
+									"name": "Walchand College of Engineering, Sangli"
+								}
+							}
+						],
+						"educationHistory": [
+							{
+								"degree": "Doctor of Philosophy (Ph.D.) Computer Science",
+								"dates": { "from": "1994", "to": "1997" },
+								"institution": {
+									"id": "https://exa.ai/library/organization/46005294ngz",
+									"name": "Nanyang Technological University Singapore"
+								}
+							},
+							{
+								"degree": "Bachelor's Degree Electrical Engg. with Spec. in Electronics",
+								"dates": { "from": "1982", "to": "1986" },
+								"institution": {
+									"id": null,
+									"name": "Walchand College of Engineering, Sangli"
+								}
+							},
+							{
+								"degree": "M. Tech Computer Science and Data Processing",
+								"dates": { "from": "1990", "to": "1992" },
+								"institution": {
+									"id": "https://exa.ai/library/organization/38fc7shj39x",
+									"name": "Indian Institute of Technology, Kharagpur"
+								}
+							}
+						],
+						"research": null
+					}
+				}
+			]
+		}
+	],
+	"searchTime": 903.8,
+	"costDollars": { "total": 0.007, "search": { "neural": 0.007 } }
+}

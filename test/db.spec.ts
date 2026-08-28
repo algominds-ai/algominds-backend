@@ -1,9 +1,16 @@
-import type { IndexColumn } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
+import { and, asc, eq, gt, gte } from "drizzle-orm";
+import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import type { DbEnv, DbMode } from "../src/core/db/client";
 import { db } from "../src/core/db/client";
+import type { KnownPeopleConnection } from "../src/core/db/known-people";
+import { knownPeopleDomains } from "../src/core/db/known-people";
 import type {
+	AccountConnection,
+	AccountSpendConnection,
 	CompanyInsertConnection,
+	CompanyRunConnection,
 	DbFactory,
 	DeleteTransaction,
 	DomainsConnection,
@@ -11,31 +18,51 @@ import type {
 	EvidenceReadConnection,
 	IcpConnection,
 	PersonInsertConnection,
+	RunOpenConnection,
+	RunUpdateConnection,
 	TransactableConnection,
 } from "../src/core/db/queries";
 import {
+	accountSpendToday,
 	appendEvidence,
+	closeRun,
+	companiesForRun,
 	cutoffDate,
 	deletePerson,
+	ensureAccount,
 	latestEvidence,
 	loadIcp,
+	openRun,
 	recentDomains,
+	recordRunSpend,
 	saveCompanies,
 	savePeople,
+	startOfUtcDay,
 } from "../src/core/db/queries";
 import type {
+	CompanyPageConnection,
+	PersonPageConnection,
+} from "../src/core/db/run-pages";
+import { companiesPage, peoplePage } from "../src/core/db/run-pages";
+import type {
+	Account,
+	Company,
 	Evidence,
 	Icp,
 	NewCompany,
 	NewEvidence,
 	NewPerson,
+	NewRun,
 	Person,
+	Run,
 } from "../src/core/db/schema";
 import {
+	account,
 	company,
 	evidence,
 	normalizeDomain,
 	person,
+	run,
 } from "../src/core/db/schema";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
@@ -124,11 +151,108 @@ describe("recentDomains", () => {
 	});
 });
 
+function knownCompanyRow(domain: string): Company {
+	return {
+		id: "company-1",
+		icpId: "icp-1",
+		domain,
+		name: "Acme",
+		data: null,
+		runId: "run-1",
+		foundAt: new Date("2026-01-01T00:00:00.000Z"),
+	};
+}
+
+describe("knownPeopleDomains", () => {
+	it("reads through the direct binding, never cached", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let recordedMode: DbMode | undefined;
+		const rows = [{ company: knownCompanyRow("acme.com") }];
+
+		const buildDb: DbFactory<KnownPeopleConnection> = (_env, mode) => {
+			recordedMode = mode;
+			return {
+				select: () => ({
+					from: () => ({
+						innerJoin: () => ({
+							innerJoin: () => ({
+								innerJoin: () => ({
+									where: () => Promise.resolve(rows),
+								}),
+							}),
+						}),
+					}),
+				}),
+			};
+		};
+
+		const result = await knownPeopleDomains(
+			env,
+			"account-1",
+			{ days: 90 },
+			buildDb,
+		);
+
+		expect(recordedMode).toBe("direct");
+		expect(result).toEqual(["acme.com"]);
+	});
+
+	it("joins company to run to person to evidence, and scopes to the account, the person's evidence, and the window", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const now = new Date("2026-08-27T00:00:00.000Z");
+		let firstJoin: unknown;
+		let secondJoin: unknown;
+		let thirdJoin: unknown;
+		let recordedCondition: unknown;
+
+		const buildDb: DbFactory<KnownPeopleConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					innerJoin: (_runTable, condition) => {
+						firstJoin = condition;
+						return {
+							innerJoin: (_personTable, condition2) => {
+								secondJoin = condition2;
+								return {
+									innerJoin: (_evidenceTable, condition3) => {
+										thirdJoin = condition3;
+										return {
+											where: (condition4: unknown) => {
+												recordedCondition = condition4;
+												return Promise.resolve([]);
+											},
+										};
+									},
+								};
+							},
+						};
+					},
+				}),
+			}),
+		});
+
+		await knownPeopleDomains(env, "account-1", { days: 90, now }, buildDb);
+
+		expect(firstJoin).toEqual(eq(company.runId, run.id));
+		expect(secondJoin).toEqual(eq(person.companyId, company.id));
+		expect(thirdJoin).toEqual(eq(evidence.subjectId, person.id));
+		expect(recordedCondition).toEqual(
+			and(
+				eq(run.accountId, "account-1"),
+				eq(evidence.subjectType, "person"),
+				eq(evidence.kind, "fullName"),
+				gte(evidence.seenAt, cutoffDate(90, now)),
+			),
+		);
+	});
+});
+
 describe("loadIcp", () => {
 	it("reads through the cached binding, not direct", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const row: Icp = {
 			id: "icp-1",
+			accountId: "account-1",
 			domain: "acme.com",
 			product: "widgets",
 			doc: null,
@@ -181,6 +305,7 @@ describe("saveCompanies", () => {
 					icpId: "icp-1",
 					domain: "https://WWW.Acme.com/careers",
 					name: "Acme",
+					runId: "run-1",
 				},
 			],
 			buildDb,
@@ -204,7 +329,7 @@ describe("saveCompanies", () => {
 
 		await saveCompanies(
 			env,
-			[{ icpId: "icp-1", domain: "acme.com", name: "Acme" }],
+			[{ icpId: "icp-1", domain: "acme.com", name: "Acme", runId: "run-1" }],
 			buildDb,
 		);
 
@@ -340,8 +465,8 @@ describe("latestEvidence", () => {
 describe("deletePerson", () => {
 	it("deletes every evidence row for the subject, then the person row, in one transaction", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const deletedTables: unknown[] = [];
-		const wherePredicates: unknown[] = [];
+		const deletedTables: PgTable[] = [];
+		const wherePredicates: (SQL | undefined)[] = [];
 
 		const fakeTx: DeleteTransaction = {
 			delete: (table) => {
@@ -349,7 +474,7 @@ describe("deletePerson", () => {
 				return {
 					where: (predicate) => {
 						wherePredicates.push(predicate);
-						return Promise.resolve();
+						return Promise.resolve([]);
 					},
 				};
 			},
@@ -363,5 +488,535 @@ describe("deletePerson", () => {
 
 		expect(deletedTables).toEqual([evidence, person]);
 		expect(wherePredicates).toHaveLength(2);
+	});
+});
+
+describe("ensureAccount", () => {
+	it("returns an existing account rather than creating a second one for the same domain", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const existing: Account = {
+			id: "account-1",
+			name: "Acme",
+			domain: "acme.com",
+			createdAt: new Date("2026-01-01T00:00:00.000Z"),
+		};
+		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
+		const buildDb: DbFactory<AccountConnection> = () => ({
+			insert: () => ({
+				values: () => ({
+					onConflictDoNothing: (config) => {
+						conflictTarget = config?.target;
+						return { returning: () => Promise.resolve([]) };
+					},
+				}),
+			}),
+			select: () => ({
+				from: () => ({
+					where: () => Promise.resolve([existing]),
+				}),
+			}),
+		});
+
+		const result = await ensureAccount(env, "Acme", "acme.com", buildDb);
+
+		expect(conflictTarget).toEqual([account.domain]);
+		expect(result).toEqual(existing);
+	});
+});
+
+describe("openRun", () => {
+	it("writes a row whose primary key is the supplied run id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const newRun: NewRun = {
+			id: "companies_icp-1_2026-08-27",
+			accountId: "account-1",
+			icpId: "icp-1",
+			capability: "companies",
+			status: "running",
+		};
+		const storedRun: Run = {
+			...newRun,
+			costDollars: 0,
+			startedAt: new Date("2026-08-27T00:00:00.000Z"),
+			finishedAt: null,
+		};
+		const buildDb: DbFactory<RunOpenConnection> = () => ({
+			insert: () => ({
+				values: (values: NewRun | NewRun[]) => {
+					expect(values).toEqual(newRun);
+					return {
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([storedRun]),
+						}),
+					};
+				},
+			}),
+			select: () => ({
+				from: () => ({
+					where: () => ({ limit: () => Promise.resolve([storedRun]) }),
+				}),
+			}),
+		});
+
+		const result = await openRun(env, newRun, buildDb);
+
+		expect(result.id).toBe(newRun.id);
+	});
+
+	it("returns the existing run when a retried step re-inserts the same id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const newRun: NewRun = {
+			id: "companies_icp-1_2026-08-27",
+			accountId: "account-1",
+			icpId: "icp-1",
+			capability: "companies",
+			status: "running",
+		};
+		const storedRun: Run = {
+			...newRun,
+			costDollars: 0,
+			startedAt: new Date("2026-08-27T00:00:00.000Z"),
+			finishedAt: null,
+		};
+		const modes: DbMode[] = [];
+		const buildDb: DbFactory<RunOpenConnection> = (_env, mode) => {
+			modes.push(mode);
+			return {
+				insert: () => ({
+					values: () => ({
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([]),
+						}),
+					}),
+				}),
+				select: () => ({
+					from: () => ({
+						where: () => ({ limit: () => Promise.resolve([storedRun]) }),
+					}),
+				}),
+			};
+		};
+
+		const result = await openRun(env, newRun, buildDb);
+
+		expect(result.id).toBe(newRun.id);
+		expect(modes).toContain("direct");
+	});
+});
+
+describe("closeRun", () => {
+	it("records the terminal status and the spend", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let setValues:
+			| Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
+			| undefined;
+		const buildDb: DbFactory<RunUpdateConnection> = () => ({
+			update: () => ({
+				set: (values) => {
+					setValues = values;
+					return { where: () => Promise.resolve([]) };
+				},
+			}),
+		});
+
+		await closeRun(
+			env,
+			"run-1",
+			{ status: "complete", costDollars: 4.5 },
+			buildDb,
+		);
+
+		expect(setValues?.status).toBe("complete");
+		expect(setValues?.costDollars).toBe(4.5);
+		expect(setValues?.finishedAt).toBeInstanceOf(Date);
+	});
+});
+
+describe("recordRunSpend", () => {
+	it("writes the spend so far without ending the run", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let setValues:
+			| Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
+			| undefined;
+		const buildDb: DbFactory<RunUpdateConnection> = () => ({
+			update: () => ({
+				set: (values) => {
+					setValues = values;
+					return { where: () => Promise.resolve([]) };
+				},
+			}),
+		});
+
+		await recordRunSpend(env, "run-1", 1.25, buildDb);
+
+		expect(setValues?.costDollars).toBe(1.25);
+		expect(setValues?.finishedAt).toBeUndefined();
+		expect(setValues?.status).toBeUndefined();
+	});
+});
+
+describe("accountSpendToday", () => {
+	it("reads through the direct binding, never cached", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let recordedMode: DbMode | undefined;
+		const buildDb: DbFactory<AccountSpendConnection> = (_env, mode) => {
+			recordedMode = mode;
+			return {
+				select: () => ({
+					from: () => ({
+						where: () => Promise.resolve([]),
+					}),
+				}),
+			};
+		};
+
+		await accountSpendToday(
+			env,
+			"account-1",
+			new Date("2026-08-27T12:00:00.000Z"),
+			buildDb,
+		);
+
+		expect(recordedMode).toBe("direct");
+	});
+
+	it("filters to the named account and to today, summing every matching row", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const now = new Date("2026-08-27T12:00:00.000Z");
+		let recordedCondition: unknown;
+		const rows = [{ costDollars: 1.5 }, { costDollars: 2.25 }];
+		const buildDb: DbFactory<AccountSpendConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: (condition) => {
+						recordedCondition = condition;
+						return Promise.resolve(rows);
+					},
+				}),
+			}),
+		});
+
+		const total = await accountSpendToday(env, "account-1", now, buildDb);
+
+		expect(total).toBe(3.75);
+		expect(recordedCondition).toEqual(
+			and(
+				eq(run.accountId, "account-1"),
+				gte(run.startedAt, startOfUtcDay(now)),
+			),
+		);
+	});
+});
+
+describe("companiesForRun", () => {
+	it("filters by run id and reads the saved Exa organization id off data", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let recordedCondition: unknown;
+		const rows = [
+			{
+				id: "company-1",
+				domain: "acme.com",
+				name: "Acme",
+				data: { provider: "exa-search", result: { id: "exa-org-1" } },
+			},
+		];
+		const buildDb: DbFactory<CompanyRunConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: (condition) => {
+						recordedCondition = condition;
+						return Promise.resolve(rows);
+					},
+				}),
+			}),
+		});
+
+		const result = await companiesForRun(env, "run-1", buildDb);
+
+		expect(result).toEqual([
+			{ id: "company-1", domain: "acme.com", name: "Acme", exaId: "exa-org-1" },
+		]);
+		expect(recordedCondition).toEqual(eq(company.runId, "run-1"));
+	});
+
+	it("reports no Exa id for a company saved without one", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [
+			{ id: "company-2", domain: "agentco.com", name: "Agent Co", data: null },
+		];
+		const buildDb: DbFactory<CompanyRunConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: () => Promise.resolve(rows),
+				}),
+			}),
+		});
+
+		const result = await companiesForRun(env, "run-2", buildDb);
+
+		expect(result[0]?.exaId).toBeNull();
+	});
+});
+
+function companyRow(id: string): Company {
+	return {
+		id,
+		icpId: "icp-1",
+		domain: `${id}.com`,
+		name: id,
+		data: null,
+		runId: "run-1",
+		foundAt: new Date("2026-01-01T00:00:00.000Z"),
+	};
+}
+
+function recordingCompanyPageDb(
+	rows: Company[],
+	spy: { condition?: unknown; order?: unknown; limit?: number },
+): DbFactory<CompanyPageConnection> {
+	return () => ({
+		select: () => ({
+			from: () => ({
+				where: (condition: unknown) => {
+					spy.condition = condition;
+					return {
+						orderBy: (order: unknown) => {
+							spy.order = order;
+							return {
+								limit: (count: number) => {
+									spy.limit = count;
+									return Promise.resolve(rows);
+								},
+							};
+						},
+					};
+				},
+			}),
+		}),
+	});
+}
+
+describe("companiesPage", () => {
+	it("filters by run id and orders by id ascending when there is no cursor", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [companyRow("company-1"), companyRow("company-2")];
+		const spy: { condition?: unknown; order?: unknown; limit?: number } = {};
+		const buildDb = recordingCompanyPageDb(rows, spy);
+
+		const page = await companiesPage(
+			env,
+			"run-1",
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(eq(company.runId, "run-1"));
+		expect(spy.order).toEqual(asc(company.id));
+		expect(spy.limit).toBe(6);
+		expect(page.rows).toEqual(rows);
+		expect(page.nextCursor).toBeNull();
+	});
+
+	it("adds an id-greater-than-cursor condition when a cursor is given", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingCompanyPageDb([], spy);
+
+		await companiesPage(
+			env,
+			"run-1",
+			{ limit: 5, cursor: "company-1" },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(
+			and(eq(company.runId, "run-1"), gt(company.id, "company-1")),
+		);
+	});
+
+	it("reports the last row's id as the next cursor only when a row is left over", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [companyRow("c1"), companyRow("c2"), companyRow("c3")];
+		const buildDb = recordingCompanyPageDb(rows, {});
+
+		const page = await companiesPage(
+			env,
+			"run-1",
+			{ limit: 2, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page.rows.map((row) => row.id)).toEqual(["c1", "c2"]);
+		expect(page.nextCursor).toBe("c2");
+	});
+
+	it("reports no next cursor when the read exactly fills the limit", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [companyRow("c1"), companyRow("c2")];
+		const buildDb = recordingCompanyPageDb(rows, {});
+
+		const page = await companiesPage(
+			env,
+			"run-1",
+			{ limit: 2, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page.rows).toEqual(rows);
+		expect(page.nextCursor).toBeNull();
+	});
+});
+
+function personRow(id: string): Person {
+	return {
+		id,
+		companyId: "company-1",
+		linkedinUrl: `https://linkedin.com/in/${id}`,
+		name: id,
+		title: null,
+		data: null,
+	};
+}
+
+function recordingPersonPageDb(
+	rows: Person[],
+	spy: { join?: unknown; condition?: unknown; order?: unknown; limit?: number },
+): DbFactory<PersonPageConnection> {
+	return () => ({
+		select: () => ({
+			from: () => ({
+				innerJoin: (_table: typeof company, condition: unknown) => {
+					spy.join = condition;
+					return {
+						where: (condition: unknown) => {
+							spy.condition = condition;
+							return {
+								orderBy: (order: unknown) => {
+									spy.order = order;
+									return {
+										limit: (count: number) => {
+											spy.limit = count;
+											return Promise.resolve(
+												rows.map((row) => ({ person: row })),
+											);
+										},
+									};
+								},
+							};
+						},
+					};
+				},
+			}),
+		}),
+	});
+}
+
+function testRun(fields: {
+	id: string;
+	capability: string;
+	icpId?: string;
+}): Run {
+	return {
+		id: fields.id,
+		accountId: "account-1",
+		icpId: fields.icpId ?? "icp-1",
+		capability: fields.capability,
+		status: "complete",
+		costDollars: 0,
+		startedAt: new Date("2026-08-28T00:00:00Z"),
+		finishedAt: null,
+	};
+}
+
+describe("peoplePage", () => {
+	it("joins on the person's company, filters by run id, and orders by id ascending", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [personRow("person-1")];
+		const spy: {
+			join?: unknown;
+			condition?: unknown;
+			order?: unknown;
+			limit?: number;
+		} = {};
+		const buildDb = recordingPersonPageDb(rows, spy);
+
+		const page = await peoplePage(
+			env,
+			testRun({ id: "run-1", capability: "companies" }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.join).toEqual(eq(person.companyId, company.id));
+		expect(spy.condition).toEqual(eq(company.runId, "run-1"));
+		expect(spy.order).toEqual(asc(person.id));
+		expect(spy.limit).toBe(6);
+		expect(page.rows).toEqual(rows);
+		expect(page.nextCursor).toBeNull();
+	});
+
+	it("adds an id-greater-than-cursor condition when a cursor is given", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		await peoplePage(
+			env,
+			testRun({ id: "run-1", capability: "companies" }),
+			{ limit: 5, cursor: "person-1" },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(
+			and(eq(company.runId, "run-1"), gt(person.id, "person-1")),
+		);
+	});
+
+	it("reports the last row's id as the next cursor only when a row is left over", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [personRow("p1"), personRow("p2"), personRow("p3")];
+		const buildDb = recordingPersonPageDb(rows, {});
+
+		const page = await peoplePage(
+			env,
+			testRun({ id: "run-1", capability: "companies" }),
+			{ limit: 2, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page.rows.map((row) => row.id)).toEqual(["p1", "p2"]);
+		expect(page.nextCursor).toBe("p2");
+	});
+});
+
+describe("peoplePage scopes by what the run covers", () => {
+	it("reads a people run through its profile, not through a company run id it never owned", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		await peoplePage(
+			env,
+			testRun({ id: "people_x", capability: "people", icpId: "icp-7" }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(eq(company.icpId, "icp-7"));
+	});
+
+	it("still reads a companies run through its own run id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		await peoplePage(
+			env,
+			testRun({ id: "companies_x", capability: "companies" }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(eq(company.runId, "companies_x"));
 	});
 });

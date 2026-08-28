@@ -1,20 +1,28 @@
 import { config } from "@/config";
-import { CostLedger } from "@/core/cost";
-import { normalizeDomain } from "@/core/db/schema";
+import type {
+	CompanyCapture,
+	FindCompaniesReject,
+} from "@/core/companies/candidates";
+import {
+	buildSearchRequest,
+	collectDomains,
+	countUnseen,
+	filterEntities,
+} from "@/core/companies/candidates";
 import type {
 	CompanyRow,
 	GateOptions,
 	GateResult,
 	Reject,
 	SearchResult,
-} from "@/core/gate";
-import type { JudgeResult, Verdict } from "@/core/judge";
+} from "@/core/companies/gate";
+import type { JudgeResult, Verdict } from "@/core/companies/judge";
+import { CostLedger } from "@/core/cost";
+import { normalizeDomain } from "@/core/db/schema";
 import type {
-	CompanyEntity,
-	ExaResult,
 	ExaSearchRequest,
 	ExaSearchResult,
-} from "@/core/providers/exa";
+} from "@/core/providers/exa/search";
 import type {
 	IcpDoc,
 	SearchPlan,
@@ -22,11 +30,13 @@ import type {
 	SynthesizeResult,
 } from "@/core/synthesize";
 
+export type { FindCompaniesReject };
+
+const SPEND_PER_RUN = config.spend.perRunDollars;
+
 const {
 	maxRounds: MAX_ROUNDS,
-	resultsPerRound: RESULTS_PER_ROUND,
 	judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE,
-	descriptionChars: DESCRIPTION_CHARS,
 	seenDomainsWindowDays: SEEN_DOMAINS_WINDOW_DAYS,
 } = config.companies;
 
@@ -58,13 +68,7 @@ export type FindCompaniesDeps = {
 	) => Promise<JudgeResult>;
 };
 
-export type FindCompaniesStatus = "complete" | "short" | "exhausted";
-
-export type FindCompaniesReject = {
-	domain: string | null;
-	reason: string;
-	stage: "filter" | "gate" | "judge";
-};
+export type FindCompaniesStatus = "complete" | "short" | "exhausted" | "capped";
 
 export type FindCompaniesResult = {
 	companies: CompanyRow[];
@@ -75,130 +79,8 @@ export type FindCompaniesResult = {
 	costDollars: number;
 	rejects: FindCompaniesReject[];
 	searches: SearchPlan[];
+	captures: Record<string, CompanyCapture>;
 };
-
-function buildSearchRequest(plan: SearchPlan): ExaSearchRequest {
-	return {
-		query: plan.query,
-		category: "company",
-		numResults: RESULTS_PER_ROUND,
-		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
-	};
-}
-
-function describeCompany(entity: CompanyEntity): string {
-	const facts: string[] = [];
-	if (entity.workforceTotal !== null)
-		facts.push(`headcount ${entity.workforceTotal}`);
-	if (entity.country !== null)
-		facts.push(`${entity.city ? `${entity.city}, ` : ""}${entity.country}`);
-	if (entity.foundedYear !== null) facts.push(`founded ${entity.foundedYear}`);
-	if (entity.revenueAnnual !== null)
-		facts.push(`annual revenue ${entity.revenueAnnual} USD`);
-	if (entity.fundingTotal !== null)
-		facts.push(`funding raised ${entity.fundingTotal} USD`);
-	const description = (entity.description ?? "").slice(0, DESCRIPTION_CHARS);
-	return [facts.join("; "), description].filter(Boolean).join(". ");
-}
-
-function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
-	return {
-		name: entity.name ?? result.title,
-		domain: normalizeDomain(result.url),
-		linkedinUrl: null,
-		evidenceUrl: result.url,
-		signal: describeCompany(entity) || null,
-		evidenceDate: result.publishedDate ?? null,
-	};
-}
-
-function toSearchResult(result: ExaResult): SearchResult {
-	return {
-		...(result.score !== undefined ? { score: result.score } : {}),
-	};
-}
-
-function entityRejectReason(
-	entity: CompanyEntity,
-	plan: SearchPlan,
-): string | null {
-	const { country } = entity;
-	if (plan.countries.length > 0 && country !== null) {
-		const allowed = plan.countries.some(
-			(name) => name.toLowerCase() === country.toLowerCase(),
-		);
-		if (!allowed) return `headquarters in ${country}`;
-	}
-	const staff = entity.workforceTotal;
-	if (staff === null) return null;
-	if (plan.maxWorkforce !== null && staff > plan.maxWorkforce)
-		return `headcount ${staff} above the limit of ${plan.maxWorkforce}`;
-	if (plan.minWorkforce !== null && staff < plan.minWorkforce)
-		return `headcount ${staff} below the floor of ${plan.minWorkforce}`;
-	return null;
-}
-
-type FilterOutcome = {
-	rows: CompanyRow[];
-	results: SearchResult[];
-	rejects: FindCompaniesReject[];
-};
-
-/** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
-function filterEntities(
-	results: readonly ExaResult[],
-	plan: SearchPlan,
-): FilterOutcome {
-	const outcome: FilterOutcome = { rows: [], results: [], rejects: [] };
-	for (const result of results) {
-		const entity = result.company;
-		if (!entity) {
-			outcome.rejects.push({
-				domain: normalizeDomain(result.url),
-				reason: "no company record in the result",
-				stage: "filter",
-			});
-			continue;
-		}
-		const reason = entityRejectReason(entity, plan);
-		if (reason) {
-			outcome.rejects.push({
-				domain: normalizeDomain(result.url),
-				reason,
-				stage: "filter",
-			});
-			continue;
-		}
-		outcome.rows.push(toCompanyRow(result, entity));
-		outcome.results.push(toSearchResult(result));
-	}
-	return outcome;
-}
-
-function rowDomain(row: CompanyRow): string | null {
-	return row.domain ? normalizeDomain(row.domain) : null;
-}
-
-function collectDomains(rows: readonly CompanyRow[]): Set<string> {
-	const domains = new Set<string>();
-	for (const row of rows) {
-		const domain = rowDomain(row);
-		if (domain) domains.add(domain);
-	}
-	return domains;
-}
-
-function countUnseen(
-	rows: readonly CompanyRow[],
-	seen: ReadonlySet<string>,
-): number {
-	let count = 0;
-	for (const row of rows) {
-		const domain = rowDomain(row);
-		if (domain && !seen.has(domain)) count += 1;
-	}
-	return count;
-}
 
 function toGateRejects(
 	rows: readonly CompanyRow[],
@@ -231,6 +113,11 @@ function applyVerdicts(
 	return { accepted, judgeRejects };
 }
 
+/** Dollars already banked by earlier rounds. Cost is only known after a call returns, so this can stop the next round but never the one in flight. */
+function spentSoFar(ledgers: readonly CostLedger[]): number {
+	return CostLedger.merge(...ledgers).total();
+}
+
 function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
 	return Array.from(new Set(rejects.map((reject) => reject.reason)));
 }
@@ -252,6 +139,7 @@ type RoundOutcome = {
 	verdicts: Verdict[];
 	unseenCount: number;
 	ledger: CostLedger;
+	captures: Record<string, CompanyCapture>;
 };
 
 async function runRound(
@@ -289,6 +177,7 @@ async function runRound(
 		verdicts: judged.verdicts,
 		unseenCount,
 		ledger: CostLedger.merge(synthesized.ledger, searchLedger, judged.ledger),
+		captures: filtered.captures,
 	};
 }
 
@@ -301,6 +190,7 @@ type RoundsAccumulator = {
 	rounds: number;
 	status: FindCompaniesStatus;
 	searches: SearchPlan[];
+	captures: Record<string, CompanyCapture>;
 };
 
 async function runRounds(
@@ -312,6 +202,7 @@ async function runRounds(
 	const rejects: FindCompaniesReject[] = [];
 	const ledgers: CostLedger[] = [];
 	const searches: SearchPlan[] = [];
+	const captures: Record<string, CompanyCapture> = {};
 	const pastAngles: string[] = [];
 	const maxRounds = opts.maxRounds ?? MAX_ROUNDS;
 	let feedback: string[] = [];
@@ -319,6 +210,10 @@ async function runRounds(
 	let rounds = 0;
 
 	for (let round = 0; round < maxRounds; round++) {
+		if (spentSoFar(ledgers) >= SPEND_PER_RUN) {
+			status = "capped";
+			break;
+		}
 		rounds += 1;
 		const outcome = await runRound(
 			{
@@ -334,6 +229,7 @@ async function runRounds(
 		ledgers.push(outcome.ledger);
 		searches.push(outcome.plan);
 		pastAngles.push(outcome.plan.angle);
+		Object.assign(captures, outcome.captures);
 		for (const domain of collectDomains(outcome.rows))
 			input.seenDomains.add(domain);
 
@@ -360,7 +256,7 @@ async function runRounds(
 			break;
 		}
 	}
-	return { companies, rejects, ledgers, rounds, status, searches };
+	return { companies, rejects, ledgers, rounds, status, searches, captures };
 }
 
 /**
@@ -392,5 +288,6 @@ export async function findCompanies(
 		costDollars: CostLedger.merge(...outcome.ledgers).total(),
 		rejects: outcome.rejects,
 		searches: outcome.searches,
+		captures: outcome.captures,
 	};
 }

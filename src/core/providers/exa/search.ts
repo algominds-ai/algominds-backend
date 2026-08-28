@@ -7,16 +7,15 @@ const JsonValueSchema = z.json();
 
 type Json = z.infer<typeof JsonValueSchema>;
 
+const ISO_COUNTRY_CODE = /^[A-Z]{2}$/;
+
 const EXA_CATEGORIES = [
 	"company",
-	"research paper",
+	"publication",
 	"news",
-	"pdf",
-	"github",
 	"personal site",
-	"people",
 	"financial report",
-	"linkedin profile",
+	"people",
 ] as const;
 
 const EXA_SEARCH_TYPES = [
@@ -33,7 +32,7 @@ const ExaSearchRequestSchema = z.object({
 	numResults: z.number().int().min(1).max(100).optional(),
 	type: z.enum(EXA_SEARCH_TYPES).optional(),
 	category: z.enum(EXA_CATEGORIES).optional(),
-	userLocation: z.string().length(2).optional(),
+	userLocation: z.string().regex(ISO_COUNTRY_CODE).optional(),
 	startPublishedDate: z.string().optional(),
 	endPublishedDate: z.string().optional(),
 	includeDomains: z.array(z.string()).max(1200).optional(),
@@ -51,25 +50,26 @@ const ExaSearchRequestSchema = z.object({
 export type ExaSearchRequest = z.input<typeof ExaSearchRequestSchema>;
 
 type ValidatedRequest = z.infer<typeof ExaSearchRequestSchema>;
+type ExaCategory = (typeof EXA_CATEGORIES)[number];
 
-const ENTITY_INDEX_CATEGORIES = ["company", "people"];
+type FilterField = keyof ValidatedRequest;
 
-const ENTITY_INDEX_UNSUPPORTED = [
-	"startPublishedDate",
-	"endPublishedDate",
-	"excludeDomains",
-] as const;
+const UNSUPPORTED_BY_CATEGORY: Partial<
+	Record<ExaCategory, readonly FilterField[]>
+> = {
+	company: ["startPublishedDate", "endPublishedDate"],
+	people: ["startPublishedDate", "endPublishedDate", "excludeDomains"],
+};
 
 function rejectEntityIndexFilters(req: ValidatedRequest): void {
 	const category = req.category;
 	if (category === undefined) return;
-	if (!ENTITY_INDEX_CATEGORIES.includes(category)) return;
-	const present = ENTITY_INDEX_UNSUPPORTED.filter(
-		(field) => req[field] !== undefined,
-	);
+	const unsupported = UNSUPPORTED_BY_CATEGORY[category];
+	if (!unsupported) return;
+	const present = unsupported.filter((field) => req[field] !== undefined);
 	if (present.length === 0) return;
 	throw new NonRetryableError(
-		`Exa: category "${category}" does not support ${present.join(" or ")}; the company and people categories use dedicated indices that only support semantic search.`,
+		`Exa: category "${category}" does not support ${present.join(" or ")}.`,
 	);
 }
 
@@ -109,19 +109,41 @@ const CompanyPropertiesSchema = z.object({
 		.nullish(),
 });
 
-const EntitySchema = z.object({
-	type: z.string(),
-	properties: CompanyPropertiesSchema,
+const PersonWorkHistoryCompanySchema = z.object({
+	id: z.string().nullish(),
+	name: z.string().nullish(),
 });
 
+const PersonWorkHistoryEntrySchema = z.object({
+	title: z.string().nullish(),
+	dates: z
+		.object({ from: z.string().nullish(), to: z.string().nullish() })
+		.nullish(),
+	company: PersonWorkHistoryCompanySchema.nullish(),
+});
+
+const PersonPropertiesSchema = z.object({
+	name: z.string().nullish(),
+	firstName: z.string().nullish(),
+	lastName: z.string().nullish(),
+	location: z.string().nullish(),
+	workHistory: z.array(PersonWorkHistoryEntrySchema).nullish(),
+});
+
+const EntitySchema = z.discriminatedUnion("type", [
+	z.object({ type: z.literal("company"), properties: CompanyPropertiesSchema }),
+	z.object({ type: z.literal("person"), properties: PersonPropertiesSchema }),
+]);
+
 const ExaResultSchema = z.object({
+	id: z.string().optional(),
 	url: z.string(),
 	title: z.string(),
 	publishedDate: z.string().optional(),
 	score: z.number().optional(),
 	text: z.string().optional(),
 	summary: z.string().optional(),
-	entities: z.array(EntitySchema).optional(),
+	entities: z.array(z.unknown()).optional(),
 });
 
 const ExaResponseSchema = z.object({
@@ -148,7 +170,24 @@ export type CompanyEntity = {
 	fundingTotal: number | null;
 };
 
+/** One employer a person's work history names, as `category: "people"` reports it. `companyId` is the same identifier the `company` category returns for that organization, and is frequently null even for a real employer. `current` is true only when the role carries an explicit null end date. */
+export type PersonWorkHistoryEntry = {
+	title: string | null;
+	from: string | null;
+	current: boolean;
+	companyId: string | null;
+	companyName: string | null;
+};
+
+/** The structured person record Exa returns for `category: "people"`, read from the entity whose type is `"person"`. `educationHistory` and `research` are not modelled; nothing reads them. */
+export type PersonRecord = {
+	fullName: string | null;
+	location: string | null;
+	workHistory: PersonWorkHistoryEntry[];
+};
+
 export type ExaResult = {
+	id: string | null;
 	url: string;
 	title: string;
 	publishedDate?: string;
@@ -156,6 +195,7 @@ export type ExaResult = {
 	text?: string;
 	summary: Json | null;
 	company: CompanyEntity | null;
+	person: PersonRecord | null;
 };
 
 export type ExaSearchResult = {
@@ -172,10 +212,26 @@ function parseSummary(raw: string | undefined): Json | null {
 	}
 }
 
-function toCompanyEntity(
-	entities: z.infer<typeof ExaResultSchema>["entities"],
-): CompanyEntity | null {
-	const found = entities?.find((entity) => entity.type === "company");
+type Entity = z.infer<typeof EntitySchema>;
+type CompanyMember = Extract<Entity, { type: "company" }>;
+type PersonMember = Extract<Entity, { type: "person" }>;
+
+/**
+ * Parses each raw entity independently and drops the ones that fail —
+ * an unmodelled `type` (or any other shape mismatch) loses that one entity,
+ * never the whole result.
+ */
+function parseEntities(raw: unknown[] | undefined): Entity[] {
+	return (raw ?? []).flatMap((candidate) => {
+		const parsed = EntitySchema.safeParse(candidate);
+		return parsed.success ? [parsed.data] : [];
+	});
+}
+
+function toCompanyEntity(entities: readonly Entity[]): CompanyEntity | null {
+	const found = entities.find(
+		(entity): entity is CompanyMember => entity.type === "company",
+	);
 	if (!found) return null;
 	const p = found.properties;
 	return {
@@ -190,9 +246,45 @@ function toCompanyEntity(
 	};
 }
 
-function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
+function personFullName(p: PersonMember["properties"]): string | null {
+	if (p.name) return p.name;
+	const parts = [p.firstName, p.lastName].filter(
+		(part): part is string => part !== null && part !== undefined,
+	);
+	return parts.length > 0 ? parts.join(" ") : null;
+}
+
+function toWorkHistoryEntry(
+	entry: z.infer<typeof PersonWorkHistoryEntrySchema>,
+): PersonWorkHistoryEntry {
 	return {
-		company: toCompanyEntity(raw.entities),
+		title: entry.title ?? null,
+		from: entry.dates?.from ?? null,
+		current: entry.dates?.to === null,
+		companyId: entry.company?.id ?? null,
+		companyName: entry.company?.name ?? null,
+	};
+}
+
+function toPersonRecord(entities: readonly Entity[]): PersonRecord | null {
+	const found = entities.find(
+		(entity): entity is PersonMember => entity.type === "person",
+	);
+	if (!found) return null;
+	const p = found.properties;
+	return {
+		fullName: personFullName(p),
+		location: p.location ?? null,
+		workHistory: (p.workHistory ?? []).map(toWorkHistoryEntry),
+	};
+}
+
+function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
+	const entities = parseEntities(raw.entities);
+	return {
+		id: raw.id ?? null,
+		company: toCompanyEntity(entities),
+		person: toPersonRecord(entities),
 		url: raw.url,
 		title: raw.title,
 		...(raw.publishedDate !== undefined

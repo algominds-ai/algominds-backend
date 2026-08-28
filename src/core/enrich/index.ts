@@ -1,19 +1,30 @@
+import { NonRetryableError } from "cloudflare:workflows";
+import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { config } from "@/config";
+import { CostLedger } from "@/core/cost";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
+	RunLookupConnection,
+	SelectWhereConnection,
 } from "@/core/db/queries";
-import { appendEvidence, cutoffDate, latestEvidence } from "@/core/db/queries";
+import {
+	appendEvidence,
+	cutoffDate,
+	findRun,
+	latestEvidence,
+} from "@/core/db/queries";
+import { companyScopeForRun } from "@/core/db/run-scope";
 import type { Company, Evidence, NewEvidence, Person } from "@/core/db/schema";
 import { company, person } from "@/core/db/schema";
 import type {
 	FindymailInput,
 	FindymailResult,
-} from "@/core/providers/findymail";
+} from "@/core/providers/findymail/index";
 import { EMAIL } from "@/core/providers/index";
 import type { Provider } from "@/core/providers/types";
 import { waterfall } from "@/core/providers/waterfall";
@@ -52,6 +63,11 @@ export type EnrichOutcome = {
 	linkedin?: LinkedinOutcome;
 };
 
+export type EnrichResult = {
+	outcomes: EnrichOutcome[];
+	costDollars: number;
+};
+
 export type LinkedinInput = { name?: string; domain?: string };
 export type LinkedinResult = { url: string };
 
@@ -76,13 +92,25 @@ export interface RunPeopleConnection {
 		from(table: typeof person): {
 			innerJoin(
 				table: typeof company,
-				condition: unknown,
+				condition: SQL | undefined,
 			): {
-				where(condition: unknown): Promise<PersonCompanyRow[]>;
+				where(condition: SQL | undefined): Promise<PersonCompanyRow[]>;
 			};
 		};
 	};
 }
+
+export type RunCompanyExistsConnection = SelectWhereConnection<
+	typeof company,
+	{ id: typeof company.id },
+	{ id: string }
+>;
+
+export type SubjectsDeps = {
+	findRun?: DbFactory<RunLookupConnection>;
+	companyExists?: DbFactory<RunCompanyExistsConnection>;
+	runPeople?: DbFactory<RunPeopleConnection>;
+};
 
 function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
 	return {
@@ -95,18 +123,56 @@ function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
 	};
 }
 
-/** Every person produced by the find-people run `runId`, as enrich subjects. */
-export async function subjectsForRun(
+async function companiesExistFor(
 	env: DbEnv,
-	runId: string,
-	buildDb: DbFactory<RunPeopleConnection> = db,
-): Promise<EnrichSubject[]> {
-	const connection = buildDb(env, "cached");
+	condition: SQL | undefined,
+	buildDb: DbFactory<RunCompanyExistsConnection> = db,
+): Promise<boolean> {
+	const connection = buildDb(env, "direct");
 	const rows = await connection
+		.select({ id: company.id })
+		.from(company)
+		.where(condition);
+	return rows.length > 0;
+}
+
+async function runPeopleFor(
+	env: DbEnv,
+	condition: SQL | undefined,
+	buildDb: DbFactory<RunPeopleConnection> = db,
+): Promise<PersonCompanyRow[]> {
+	const connection = buildDb(env, "direct");
+	return connection
 		.select()
 		.from(person)
 		.innerJoin(company, eq(person.companyId, company.id))
-		.where(eq(company.runId, runId));
+		.where(condition);
+}
+
+/**
+ * Resolves run `runId` into enrich subjects, reading its company set by the
+ * run's own capability: a companies run by its `run_id`, a people run by its
+ * ICP, since a person carries no run id of its own. Throws
+ * `NonRetryableError` when the run is unknown, its capability has no company
+ * scope, or it matches no company at all.
+ */
+export async function subjectsForRun(
+	env: DbEnv,
+	runId: string,
+	deps: SubjectsDeps = {},
+): Promise<EnrichSubject[]> {
+	const run = await findRun(env, runId, deps.findRun);
+	if (!run) throw new NonRetryableError(`subjectsForRun: unknown run ${runId}`);
+	const condition = companyScopeForRun(run);
+	const hasCompanies = await companiesExistFor(
+		env,
+		condition,
+		deps.companyExists,
+	);
+	if (!hasCompanies) {
+		throw new NonRetryableError(`subjectsForRun: no company for run ${runId}`);
+	}
+	const rows = await runPeopleFor(env, condition, deps.runPeople);
 	return rows.map(toEnrichSubject);
 }
 
@@ -147,7 +213,7 @@ function emailEvidenceRow(
 		subjectId: subject.id,
 		kind: "email",
 		value: result.email,
-		source: result.finder,
+		source: result.source ?? result.finder,
 		status: result.status,
 		confidence: result.status === "verified" ? 1 : 0,
 	};
@@ -182,6 +248,7 @@ function findymailInput(subject: EnrichSubject): FindymailInput {
 async function runEmailWaterfall(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<EmailOutcome> {
 	const providers = deps.emailProviders ?? EMAIL;
 	const attempts: FindymailResult[] = [];
@@ -189,12 +256,10 @@ async function runEmailWaterfall(
 		attempts.push(result);
 		return result.status === "verified";
 	};
-	const hit = await waterfall(
-		providers,
-		findymailInput(subject),
-		deps.env,
+	const hit = await waterfall(providers, findymailInput(subject), deps.env, {
 		accept,
-	);
+		ledger,
+	});
 	if (attempts.length > 0) {
 		await appendEvidence(
 			deps.env,
@@ -207,13 +272,14 @@ async function runEmailWaterfall(
 	return {
 		status: toEmailStatus(found.status),
 		value: found.email,
-		source: found.finder,
+		source: found.source ?? found.finder,
 	};
 }
 
 async function resolveEmail(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<EmailOutcome> {
 	const now = deps.now?.() ?? new Date();
 	const cached = await latestEvidence(
@@ -225,7 +291,7 @@ async function resolveEmail(
 	if (cached && withinTtl(cached, EMAIL_TTL_DAYS, now)) {
 		return emailOutcomeFromEvidence(cached);
 	}
-	return runEmailWaterfall(subject, deps);
+	return runEmailWaterfall(subject, deps, ledger);
 }
 
 async function recordLinkedinUrl(
@@ -245,13 +311,14 @@ async function recordLinkedinUrl(
 async function runLinkedinWaterfall(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<LinkedinOutcome> {
 	const providers = deps.linkedinProviders ?? [];
 	const input: LinkedinInput = {
 		...(subject.name !== undefined ? { name: subject.name } : {}),
 		...(subject.domain !== undefined ? { domain: subject.domain } : {}),
 	};
-	const hit = await waterfall(providers, input, deps.env);
+	const hit = await waterfall(providers, input, deps.env, { ledger });
 	if (!hit) return { status: "unknown", value: null, source: null };
 	return recordLinkedinUrl(subject, hit.output.url, hit.source, deps);
 }
@@ -259,6 +326,7 @@ async function runLinkedinWaterfall(
 async function resolveLinkedin(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<LinkedinOutcome> {
 	const now = deps.now?.() ?? new Date();
 	const cached = await latestEvidence(
@@ -273,34 +341,39 @@ async function resolveLinkedin(
 	if (subject.linkedinUrl !== undefined) {
 		return recordLinkedinUrl(subject, subject.linkedinUrl, "subject", deps);
 	}
-	return runLinkedinWaterfall(subject, deps);
+	return runLinkedinWaterfall(subject, deps, ledger);
 }
 
 async function enrichSubject(
 	subject: EnrichSubject,
 	channels: EnrichChannel[],
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<EnrichOutcome> {
 	const outcome: EnrichOutcome = { subjectId: subject.id };
 	if (channels.includes("email")) {
-		outcome.email = await resolveEmail(subject, deps);
+		outcome.email = await resolveEmail(subject, deps, ledger);
 	}
 	if (channels.includes("linkedin")) {
-		outcome.linkedin = await resolveLinkedin(subject, deps);
+		outcome.linkedin = await resolveLinkedin(subject, deps, ledger);
 	}
 	return outcome;
 }
 
 /**
  * Resolves one status per requested channel for each subject, reading the
- * evidence cache first and falling back to that channel's waterfall.
+ * evidence cache first and falling back to that channel's waterfall. Every
+ * vendor call the batch makes, hit or miss, lands on the returned ledger
+ * total, since a waterfall provider still spends on a miss.
  */
 export async function enrich(
 	subjects: EnrichSubject[],
 	channels: EnrichChannel[],
 	deps: EnrichDeps,
-): Promise<EnrichOutcome[]> {
-	return Promise.all(
-		subjects.map((subject) => enrichSubject(subject, channels, deps)),
+): Promise<EnrichResult> {
+	const ledger = new CostLedger();
+	const outcomes = await Promise.all(
+		subjects.map((subject) => enrichSubject(subject, channels, deps, ledger)),
 	);
+	return { outcomes, costDollars: ledger.total() };
 }

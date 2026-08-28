@@ -2,8 +2,8 @@ import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
 import { CostLedger } from "../src/core/cost";
-import type { ExaSearchRequest } from "../src/core/providers/exa";
-import { search } from "../src/core/providers/exa";
+import type { ExaSearchRequest } from "../src/core/providers/exa/search";
+import { search } from "../src/core/providers/exa/search";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 type SuccessBodyOverrides = {
