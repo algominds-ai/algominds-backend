@@ -3,6 +3,7 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
+import type { CompanyDomainMatch } from "@/core/db/company-domains";
 import { companiesForDomains } from "@/core/db/company-domains";
 import { knownPeopleDomains } from "@/core/db/known-people";
 import {
@@ -131,23 +132,26 @@ async function targetByRun(env: Env, runId: string): Promise<TargetCompanies> {
 	return { companies, icpId: runRow.icpId, unknownDomains: [] };
 }
 
-async function targetByDomains(
-	env: Env,
+/**
+ * Narrows domain matches to the companies of one profile. A domain can name a
+ * company under more than one profile, so the first match picks the profile
+ * and every company outside it is reported as unmatched rather than mixed in.
+ */
+export function companiesOfOneProfile(
+	matches: readonly CompanyDomainMatch[],
 	domains: readonly string[],
-): Promise<TargetCompanies> {
-	const matches = await companiesForDomains(env, domains);
-	if (matches.length === 0) {
-		throw new NonRetryableError(
-			`findPeople: no known company for domains ${domains.join(", ")}`,
-		);
-	}
-	const byDomain = new Map(matches.map((row) => [row.domain, row]));
+): TargetCompanies {
 	const icpId = matches[0]?.icpId;
 	if (icpId === undefined) {
 		throw new NonRetryableError(
 			"findPeople: no known company for the given domains",
 		);
 	}
+	const byDomain = new Map(
+		matches
+			.filter((row) => row.icpId === icpId)
+			.map((row) => [row.domain, row]),
+	);
 	return {
 		companies: [...byDomain.values()].map(({ id, domain, name, exaId }) => ({
 			id,
@@ -158,6 +162,24 @@ async function targetByDomains(
 		icpId,
 		unknownDomains: domains.filter((domain) => !byDomain.has(domain)),
 	};
+}
+
+/**
+ * Resolves a domain list to the companies of one profile. A domain can name a
+ * company under more than one profile, so the first match picks the profile
+ * and every company outside it is dropped rather than mixed in.
+ */
+async function targetByDomains(
+	env: Env,
+	domains: readonly string[],
+): Promise<TargetCompanies> {
+	const matches = await companiesForDomains(env, domains);
+	if (matches.length === 0) {
+		throw new NonRetryableError(
+			`findPeople: no known company for domains ${domains.join(", ")}`,
+		);
+	}
+	return companiesOfOneProfile(matches, domains);
 }
 
 /** Resolves the companies a people run searches, from a companies run id or a domain list. */

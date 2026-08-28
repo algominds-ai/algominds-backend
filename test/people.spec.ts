@@ -29,7 +29,10 @@ import {
 import type { ApolloSearchResult } from "../src/core/providers/apollo";
 import type { ExaResult, ExaSearchRequest } from "../src/core/providers/exa";
 import type { IcpDoc } from "../src/core/synthesize";
-import { loadTargetCompanies } from "../src/workflows/find-people";
+import {
+	companiesOfOneProfile,
+	loadTargetCompanies,
+} from "../src/workflows/find-people";
 
 async function rawSource(path: string): Promise<string> {
 	const mod: { default: string } = await import(`${path}?raw`);
@@ -1365,5 +1368,54 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 		} finally {
 			await instance.dispose();
 		}
+	});
+});
+
+describe("a domain list resolves to the companies of one profile", () => {
+	const match = (domain: string, icpId: string, id: string) => ({
+		id,
+		domain,
+		name: domain,
+		icpId,
+		exaId: null,
+	});
+
+	it("drops a company that matches the domain under a different profile", () => {
+		const result = companiesOfOneProfile(
+			[
+				match("shared.com", "icp-a", "company-a"),
+				match("shared.com", "icp-b", "company-b"),
+			],
+			["shared.com"],
+		);
+
+		expect(result.icpId).toBe("icp-a");
+		expect(result.companies.map((row) => row.id)).toEqual(["company-a"]);
+	});
+
+	it("reports a domain found only under another profile as unmatched", () => {
+		const result = companiesOfOneProfile(
+			[
+				match("mine.com", "icp-a", "company-a"),
+				match("theirs.com", "icp-b", "company-b"),
+			],
+			["mine.com", "theirs.com"],
+		);
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["mine.com"]);
+		expect(result.unknownDomains).toEqual(["theirs.com"]);
+	});
+
+	it("keeps every company when they all belong to one profile", () => {
+		const result = companiesOfOneProfile(
+			[
+				match("one.com", "icp-a", "company-1"),
+				match("two.com", "icp-a", "company-2"),
+			],
+			["one.com", "two.com"],
+		);
+
+		expect(result.companies).toHaveLength(2);
+		expect(result.unknownDomains).toEqual([]);
 	});
 });

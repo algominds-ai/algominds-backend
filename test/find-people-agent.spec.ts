@@ -189,8 +189,8 @@ describe("agentPersonSearch: two companies in one batch", () => {
 		expect(startNames).toHaveLength(2);
 		expect(new Set(startNames).size).toBe(2);
 		expect(startNames.sort()).toEqual([
-			"people-batch-0-company-0-agent-start",
-			"people-batch-0-company-1-agent-start",
+			"people-batch-0-acme.example-agent-start",
+			"people-batch-0-widget.example-agent-start",
 		]);
 	});
 
@@ -230,10 +230,10 @@ describe("agentPersonSearch: two companies in one batch", () => {
 
 		await findPeople([companyA, companyB], opts, testDeps(search));
 
-		expect(names).toContain("people-batch-3-company-0-agent-start");
-		expect(names).toContain("people-batch-3-company-0-agent-poll-1");
-		expect(names).toContain("people-batch-3-company-1-agent-start");
-		expect(names).toContain("people-batch-3-company-1-agent-poll-1");
+		expect(names).toContain("people-batch-3-a.example-agent-start");
+		expect(names).toContain("people-batch-3-a.example-agent-poll-1");
+		expect(names).toContain("people-batch-3-b.example-agent-start");
+		expect(names).toContain("people-batch-3-b.example-agent-poll-1");
 	});
 });
 

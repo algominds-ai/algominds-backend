@@ -77,7 +77,7 @@ export function agentPersonSearch(
 				`agentPersonSearch: no company at index ${index} for people-batch-${batchIndex}`,
 			);
 		}
-		const name = `people-batch-${batchIndex}-company-${index}-agent`;
+		const name = `people-batch-${batchIndex}-${company.domain}-agent`;
 		const { id } = await step.do(
 			`${name}-start`,
 			config.stepConfig.paidCall,
