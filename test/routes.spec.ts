@@ -1,11 +1,11 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
 import { eq, inArray } from "drizzle-orm";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { createAuth } from "../src/auth";
+import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
-import { organization } from "../src/core/db/auth-schema";
 import { db } from "../src/core/db/client";
-import { organizationForSlug } from "../src/core/db/organizations";
 import {
 	createIcp,
 	openRun,
@@ -14,15 +14,114 @@ import {
 } from "../src/core/db/queries";
 import { company, icp as icpTable, person, run } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
-import { constantTimeEqual } from "../src/http/auth";
 import app from "../src/index";
 
 const BASE = "https://algo.test";
-const TOKEN = "routes-spec-bearer-token";
-const authedEnv: Env = {
-	...testEnv,
-	API_BEARER_TOKEN: { get: async () => TOKEN },
-};
+const authedEnv: Env = testEnv;
+
+const ICP_A = "11111111-1111-4111-8111-111111111111";
+const FIXTURE_ICP_IDS: readonly string[] = [
+	ICP_A,
+	"55555555-5555-4555-8555-555555555555",
+	"66666666-6666-4666-8666-666666666666",
+	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+];
+const FIXTURE_RUN_IDS: readonly string[] = [
+	"companies_88888888-8888-4888-8888-888888888888_2026-08-27",
+	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
+	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
+];
+
+let TOKEN = "";
+let CALLER_ORGANIZATION_ID = "";
+
+/**
+ * Mints a real key for a real organization by walking the provisioning path
+ * a caller would: sign up a user, create an organization it owns, then mint
+ * a key for that organization.
+ */
+async function issueKey(
+	label: string,
+): Promise<{ key: string; organizationId: string; userId: string }> {
+	const auth = createAuth(testEnv);
+	const signedUp = await auth.api.signUpEmail({
+		body: {
+			name: label,
+			email: `${label}@routes.test`,
+			password: "correct-horse-battery-staple",
+		},
+	});
+	const org = await auth.api.createOrganization({
+		body: { name: label, slug: label, userId: signedUp.user.id },
+	});
+	const created = await auth.api.createApiKey({
+		body: {
+			configId: ORGANIZATION_KEY_CONFIG_ID,
+			organizationId: org.id,
+			userId: signedUp.user.id,
+			name: "test-key",
+		},
+	});
+	return { key: created.key, organizationId: org.id, userId: signedUp.user.id };
+}
+
+/**
+ * Owns a fixed icp id under the caller's organization, so route tests can
+ * reference stable ids while still passing the real ownership check.
+ */
+async function seedIcpFixture(id: string): Promise<void> {
+	await db(testEnv, "cached")
+		.insert(icpTable)
+		.values({
+			id,
+			organizationId: CALLER_ORGANIZATION_ID,
+			domain: `routes-fixture-${id}`,
+			doc: { description: "fixture icp for routes route tests" },
+		})
+		.onConflictDoUpdate({
+			target: icpTable.id,
+			set: { organizationId: CALLER_ORGANIZATION_ID },
+		});
+}
+
+/**
+ * Creates a fresh icp owned by the caller's organization. Used by tests that
+ * read a run back afterward, so a run id built from this icp can never
+ * collide with one a stale run of the same suite left behind on a prior day.
+ */
+async function seedOwnedIcp(label: string): Promise<string> {
+	const icpRow = await createIcp(testEnv, {
+		description: `seed icp for ${label}`,
+		domain: `routes-${label}-${crypto.randomUUID()}.internal`,
+		organizationId: CALLER_ORGANIZATION_ID,
+	});
+	return icpRow.id;
+}
+
+/** Owns a fixed run id under the caller's organization, as a source run. */
+async function seedRunFixture(id: string): Promise<void> {
+	await db(testEnv, "cached")
+		.insert(run)
+		.values({
+			id,
+			organizationId: CALLER_ORGANIZATION_ID,
+			icpId: ICP_A,
+			capability: id.split("_")[0] ?? "companies",
+			status: "complete",
+		})
+		.onConflictDoUpdate({
+			target: run.id,
+			set: { organizationId: CALLER_ORGANIZATION_ID, icpId: ICP_A },
+		});
+}
+
+beforeAll(async () => {
+	const issued = await issueKey(`routes-caller-${crypto.randomUUID()}`);
+	TOKEN = issued.key;
+	CALLER_ORGANIZATION_ID = issued.organizationId;
+	for (const id of FIXTURE_ICP_IDS) await seedIcpFixture(id);
+	for (const id of FIXTURE_RUN_IDS) await seedRunFixture(id);
+});
 
 async function publicCall(path: string, init?: RequestInit): Promise<Response> {
 	return exports.default.fetch(new Request(`${BASE}${path}`, init));
@@ -42,6 +141,22 @@ function postInit(body: unknown, token?: string): RequestInit {
 
 function authedGetInit(): RequestInit {
 	return { headers: { authorization: `Bearer ${TOKEN}` } };
+}
+
+/**
+ * Polls run status until the workflow's own open-run step has committed,
+ * rather than assuming it lands within a single request's worth of time.
+ */
+async function waitForRunVisible(
+	runId: string,
+	attempts = 20,
+): Promise<Response> {
+	for (let attempt = 0; attempt < attempts; attempt++) {
+		const response = await authedCall(`/runs/${runId}`, authedGetInit());
+		if (response.status !== 404) return response;
+		await new Promise((resolve) => setTimeout(resolve, 25));
+	}
+	return authedCall(`/runs/${runId}`, authedGetInit());
 }
 
 const SCOPES: readonly string[] = [
@@ -129,22 +244,6 @@ async function expectEnrichResolvesSubjects(
 	}
 }
 
-const ICP_A = "11111111-1111-4111-8111-111111111111";
-
-describe("constantTimeEqual", () => {
-	it("accepts two identical strings", () => {
-		expect(constantTimeEqual("abc123", "abc123")).toBe(true);
-	});
-
-	it("rejects strings of equal length that differ in one byte", () => {
-		expect(constantTimeEqual("abc123", "abc124")).toBe(false);
-	});
-
-	it("rejects strings of different length without throwing", () => {
-		expect(constantTimeEqual("short", "a-lot-longer")).toBe(false);
-	});
-});
-
 describe("bearer authentication", () => {
 	it("rejects a request with no Authorization header", async () => {
 		const response = await publicCall(
@@ -228,7 +327,7 @@ describe("POST /companies/find", () => {
 	});
 
 	it("creates one instance for two same-day requests with the same icpId and count, reporting the second as existing", async () => {
-		const icpId = "77777777-7777-4777-8777-777777777777";
+		const icpId = await seedOwnedIcp("same-day-repeat");
 
 		const first = await authedCall(
 			"/companies/find",
@@ -244,6 +343,7 @@ describe("POST /companies/find", () => {
 			`/runs/${secondBody.runId}`,
 			authedGetInit(),
 		);
+		await terminateRun(firstBody.runId);
 
 		expect(first.status).toBe(202);
 		expect(firstBody.status).toBe("started");
@@ -384,16 +484,17 @@ describe("GET /runs/:runId", () => {
 	});
 
 	it("reports the real instance status verbatim, with no completed output", async () => {
-		const icpId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+		const icpId = await seedOwnedIcp("instance-status");
 		const started = await authedCall(
 			"/companies/find",
 			postInit({ icpId, count: 2 }, TOKEN),
 		);
 		const { runId }: { runId: string } = await started.json();
 
-		const statusResponse = await authedCall(`/runs/${runId}`, authedGetInit());
+		const statusResponse = await waitForRunVisible(runId);
 		const status: { status: string; output?: unknown } =
 			await statusResponse.json();
+		await terminateRun(runId);
 
 		expect(statusResponse.status).toBe(200);
 		expect(typeof status.status).toBe("string");
@@ -402,30 +503,28 @@ describe("GET /runs/:runId", () => {
 });
 
 type PageSeed = {
-	organizationId: string;
 	icpId: string;
 	runId: string;
 	companyIds: string[];
 };
 
+/**
+ * Seeds a run and its companies under the caller's own organization, so a
+ * read through `TOKEN` matches the ownership check the real route enforces.
+ */
 async function seedRunWithCompanies(
 	label: string,
 	companyCount: number,
 ): Promise<PageSeed> {
-	const org = await organizationForSlug(
-		testEnv,
-		`routes-page-test-${label}-${crypto.randomUUID()}.internal`,
-		`routes-page-test-${label}`,
-	);
 	const icpRow = await createIcp(testEnv, {
 		description: "seed icp for run-page route tests",
-		domain: org.slug,
-		organizationId: org.id,
+		domain: `routes-page-test-${label}.internal`,
+		organizationId: CALLER_ORGANIZATION_ID,
 	});
 	const runId = `companies_${label}`;
 	await openRun(testEnv, {
 		id: runId,
-		organizationId: org.id,
+		organizationId: CALLER_ORGANIZATION_ID,
 		icpId: icpRow.id,
 		capability: "companies",
 		status: "complete",
@@ -440,7 +539,6 @@ async function seedRunWithCompanies(
 		})),
 	);
 	return {
-		organizationId: org.id,
 		icpId: icpRow.id,
 		runId,
 		companyIds: saved.map((row) => row.id),
@@ -455,9 +553,6 @@ async function cleanupPageSeed(seed: PageSeed): Promise<void> {
 	await connection.delete(company).where(eq(company.runId, seed.runId));
 	await connection.delete(run).where(eq(run.id, seed.runId));
 	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
-	await connection
-		.delete(organization)
-		.where(eq(organization.id, seed.organizationId));
 }
 
 type CompanyPageBody = {
@@ -606,42 +701,5 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 			await cleanupPageSeed(seedA);
 			await cleanupPageSeed(seedB);
 		}
-	});
-});
-
-describe("POST /companies/find: the brand a run sells for", () => {
-	it("creates the profile under the seller the request names", async () => {
-		const domain = `probe-${crypto.randomUUID()}.example`;
-		const response = await authedCall(
-			"/companies/find",
-			postInit(
-				{
-					prompt: "seed stage fintech companies",
-					seller: { domain, name: "Probe Brand" },
-					count: 1,
-				},
-				TOKEN,
-			),
-		);
-
-		expect([200, 202]).toContain(response.status);
-		const body: { icpId?: string } = await response.json();
-		expect(body.icpId).toBeDefined();
-	});
-
-	it("rejects a seller with no domain rather than guessing one", async () => {
-		const response = await authedCall(
-			"/companies/find",
-			postInit(
-				{
-					prompt: "seed stage fintech companies",
-					seller: { name: "No Domain" },
-					count: 1,
-				},
-				TOKEN,
-			),
-		);
-
-		expect(response.status).toBe(400);
 	});
 });

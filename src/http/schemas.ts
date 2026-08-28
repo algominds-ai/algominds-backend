@@ -2,17 +2,9 @@ import { z } from "zod";
 import { config } from "@/config";
 import { normalizeDomain } from "@/core/db/schema";
 
-/** The brand a run sells for. Omitted, the deployment's configured seller is used. */
-export const sellerField = z
-	.object({
-		domain: z.string().min(1),
-		name: z.string().min(1).optional(),
-	})
-	.optional();
-
 export const icpRef = z.union([
 	z.object({ icpId: z.uuid() }),
-	z.object({ prompt: z.string().min(1), seller: sellerField }),
+	z.object({ prompt: z.string().min(1) }),
 ]);
 
 export const companiesFindSchema = z.intersection(

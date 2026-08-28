@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { config } from "@/config";
 import { findRun } from "@/core/db/queries";
 import { companiesPage, peoplePage } from "@/core/db/run-pages";
+import type { Run } from "@/core/db/schema";
 import type { ApiEnv } from "@/http/auth";
 import { pageQuerySchema } from "@/http/schemas";
 
@@ -15,6 +16,20 @@ export function workflowForCapability(
 	return undefined;
 }
 
+/**
+ * The run, only when it belongs to the caller's organization. A run owned by
+ * another organization reads as unknown rather than forbidden, so the answer
+ * never confirms that it exists.
+ */
+async function callersRun(
+	c: Context<ApiEnv>,
+	runId: string,
+): Promise<Run | undefined> {
+	const runRow = await findRun(c.env, runId);
+	if (!runRow) return undefined;
+	return runRow.organizationId === c.get("organizationId") ? runRow : undefined;
+}
+
 export async function getRunStatus(
 	c: Context<ApiEnv, "/runs/:runId">,
 ): Promise<Response> {
@@ -22,6 +37,9 @@ export async function getRunStatus(
 	const capability = runId.split("_")[0] ?? "";
 	const workflow = workflowForCapability(c.env, capability);
 	if (!workflow) return c.json({ error: "unknown run" }, 404);
+	if (!(await callersRun(c, runId))) {
+		return c.json({ error: "unknown run" }, 404);
+	}
 	try {
 		const instance = await workflow.get(runId);
 		return c.json(await instance.status(), 200);
@@ -58,7 +76,7 @@ export async function getRunCompanies(
 	const runId = c.req.param("runId");
 	const query = parsePageQuery(c);
 	if (query instanceof Response) return query;
-	const runRow = await findRun(c.env, runId);
+	const runRow = await callersRun(c, runId);
 	if (!runRow) return c.json({ error: "unknown run" }, 404);
 	const page = await companiesPage(c.env, runId, query);
 	return c.json(
@@ -73,7 +91,7 @@ export async function getRunPeople(
 	const runId = c.req.param("runId");
 	const query = parsePageQuery(c);
 	if (query instanceof Response) return query;
-	const runRow = await findRun(c.env, runId);
+	const runRow = await callersRun(c, runId);
 	if (!runRow) return c.json({ error: "unknown run" }, 404);
 	if (runRow.capability !== "companies" && runRow.capability !== "people") {
 		return c.json(
