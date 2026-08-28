@@ -245,7 +245,13 @@ async function getRunPeople(
 	if (query instanceof Response) return query;
 	const runRow = await findRun(c.env, runId);
 	if (!runRow) return c.json({ error: "unknown run" }, 404);
-	const page = await peoplePage(c.env, runId, query);
+	if (runRow.capability !== "companies" && runRow.capability !== "people") {
+		return c.json(
+			{ error: `a ${runRow.capability} run holds no people of its own` },
+			400,
+		);
+	}
+	const page = await peoplePage(c.env, runRow, query);
 	return c.json(
 		{ rows: page.rows, nextCursor: page.nextCursor, limit: query.limit },
 		200,

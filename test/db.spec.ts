@@ -911,6 +911,23 @@ function recordingPersonPageDb(
 	});
 }
 
+function testRun(fields: {
+	id: string;
+	capability: string;
+	icpId?: string;
+}): Run {
+	return {
+		id: fields.id,
+		accountId: "account-1",
+		icpId: fields.icpId ?? "icp-1",
+		capability: fields.capability,
+		status: "complete",
+		costDollars: 0,
+		startedAt: new Date("2026-08-28T00:00:00Z"),
+		finishedAt: null,
+	};
+}
+
 describe("peoplePage", () => {
 	it("joins on the person's company, filters by run id, and orders by id ascending", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
@@ -925,7 +942,7 @@ describe("peoplePage", () => {
 
 		const page = await peoplePage(
 			env,
-			"run-1",
+			testRun({ id: "run-1", capability: "companies" }),
 			{ limit: 5, cursor: undefined },
 			buildDb,
 		);
@@ -943,7 +960,12 @@ describe("peoplePage", () => {
 		const spy: { condition?: unknown } = {};
 		const buildDb = recordingPersonPageDb([], spy);
 
-		await peoplePage(env, "run-1", { limit: 5, cursor: "person-1" }, buildDb);
+		await peoplePage(
+			env,
+			testRun({ id: "run-1", capability: "companies" }),
+			{ limit: 5, cursor: "person-1" },
+			buildDb,
+		);
 
 		expect(spy.condition).toEqual(
 			and(eq(company.runId, "run-1"), gt(person.id, "person-1")),
@@ -957,12 +979,44 @@ describe("peoplePage", () => {
 
 		const page = await peoplePage(
 			env,
-			"run-1",
+			testRun({ id: "run-1", capability: "companies" }),
 			{ limit: 2, cursor: undefined },
 			buildDb,
 		);
 
 		expect(page.rows.map((row) => row.id)).toEqual(["p1", "p2"]);
 		expect(page.nextCursor).toBe("p2");
+	});
+});
+
+describe("peoplePage scopes by what the run covers", () => {
+	it("reads a people run through its profile, not through a company run id it never owned", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		await peoplePage(
+			env,
+			testRun({ id: "people_x", capability: "people", icpId: "icp-7" }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(eq(company.icpId, "icp-7"));
+	});
+
+	it("still reads a companies run through its own run id", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		await peoplePage(
+			env,
+			testRun({ id: "companies_x", capability: "companies" }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(eq(company.runId, "companies_x"));
 	});
 });

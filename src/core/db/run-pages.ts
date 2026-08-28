@@ -3,7 +3,8 @@ import { and, asc, eq, gt } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type { DbFactory, SelectOrderedConnection } from "@/core/db/queries";
-import type { Company, Person } from "@/core/db/schema";
+import { companyScopeForRun } from "@/core/db/run-scope";
+import type { Company, Person, Run } from "@/core/db/schema";
 import { company, person } from "@/core/db/schema";
 
 export type CompanyPageConnection = SelectOrderedConnection<
@@ -57,20 +58,22 @@ export async function companiesPage(
 }
 
 /**
- * One page of the people found for a run's companies, ordered by id
- * ascending. An id is unique and never changes, so `id > cursor` can
+ * One page of the people found for the companies a run covers, ordered by id
+ * ascending. A people run covers its profile's companies, since a person
+ * carries no run id of its own. An id is unique and never changes, so `id > cursor` can
  * neither skip nor repeat a row already seen.
  */
 export async function peoplePage(
 	env: DbEnv,
-	runId: string,
+	run: Run,
 	page: { limit: number; cursor: string | undefined },
 	buildDb: DbFactory<PersonPageConnection> = db,
 ): Promise<{ rows: Person[]; nextCursor: string | null }> {
 	const connection = buildDb(env, "cached");
+	const scope = companyScopeForRun(run);
 	const condition = page.cursor
-		? and(eq(company.runId, runId), gt(person.id, page.cursor))
-		: eq(company.runId, runId);
+		? and(scope, gt(person.id, page.cursor))
+		: scope;
 	const joined = await connection
 		.select({ person })
 		.from(person)

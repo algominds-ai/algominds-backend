@@ -18,6 +18,7 @@ import {
 	findRun,
 	latestEvidence,
 } from "@/core/db/queries";
+import { companyScopeForRun } from "@/core/db/run-scope";
 import type {
 	Company,
 	Evidence,
@@ -128,14 +129,6 @@ function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
 	};
 }
 
-function runCompanyCondition(run: Run): SQL | undefined {
-	if (run.capability === "companies") return eq(company.runId, run.id);
-	if (run.capability === "people") return eq(company.icpId, run.icpId);
-	throw new NonRetryableError(
-		`subjectsForRun: run ${run.id} has no company scope for capability ${run.capability}`,
-	);
-}
-
 async function companiesExistFor(
 	env: DbEnv,
 	condition: SQL | undefined,
@@ -176,7 +169,7 @@ export async function subjectsForRun(
 ): Promise<EnrichSubject[]> {
 	const run = await findRun(env, runId, deps.findRun);
 	if (!run) throw new NonRetryableError(`subjectsForRun: unknown run ${runId}`);
-	const condition = runCompanyCondition(run);
+	const condition = companyScopeForRun(run);
 	const hasCompanies = await companiesExistFor(
 		env,
 		condition,
