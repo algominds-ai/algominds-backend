@@ -121,6 +121,7 @@ function testDeps(search: FindPeopleDeps["search"]): FindPeopleDeps {
 	return {
 		decisionMakerTitles: async () => ({
 			titles: ["VP of Sales"],
+			queryTemplate: "decision makers at {company}",
 			ledger: new CostLedger(),
 		}),
 		search,
@@ -253,7 +254,13 @@ function titlesChatResponse(titles: string[]): Response {
 		choices: [
 			{
 				index: 0,
-				message: { role: "assistant", content: JSON.stringify({ titles }) },
+				message: {
+					role: "assistant",
+					content: JSON.stringify({
+						titles,
+						queryTemplate: "decision makers at {company}",
+					}),
+				},
 				finish_reason: "stop",
 			},
 		],

@@ -64,12 +64,23 @@ export type ApolloOnlyCandidate = {
 	hasEmailPath: boolean;
 };
 
+const COMPANY_PLACEHOLDER = "{company}";
+
+/**
+ * The Exa request for one company's decision makers. The model writes the
+ * query and names the company with `{company}`; only that substitution and
+ * the category are the code's, because the category is what the endpoint
+ * means, not a choice.
+ */
 export function buildPersonSearchRequest(
 	company: PeopleCompany,
-	titles: readonly string[],
+	plan: { titles: readonly string[]; queryTemplate: string },
 ): ExaSearchRequest {
+	const written = plan.queryTemplate.includes(COMPANY_PLACEHOLDER)
+		? plan.queryTemplate
+		: `${plan.queryTemplate} at ${COMPANY_PLACEHOLDER}`;
 	return {
-		query: `${titles.join(" OR ")} at ${company.name}`,
+		query: written.replaceAll(COMPANY_PLACEHOLDER, company.name),
 		numResults: RESULTS_PER_COMPANY,
 		type: "fast",
 		category: "people",

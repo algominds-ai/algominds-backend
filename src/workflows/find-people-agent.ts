@@ -108,13 +108,18 @@ export function agentDecisionMakerTitles(
 				const result = await decisionMakerTitles(icp, env);
 				return {
 					titles: result.titles,
+					queryTemplate: result.queryTemplate,
 					costEntries: result.ledger.toJSON().entries,
 				};
 			},
 		);
 		const ledger = new CostLedger();
 		applyCostEntries(cached.costEntries, ledger);
-		const output: TitlesResult = { titles: cached.titles, ledger };
+		const output: TitlesResult = {
+			titles: cached.titles,
+			queryTemplate: cached.queryTemplate,
+			ledger,
+		};
 		return output;
 	};
 }

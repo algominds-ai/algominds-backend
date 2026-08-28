@@ -147,17 +147,19 @@ describe("company search request stays inside the measured Exa /search schema", 
 
 describe("person search request stays inside the measured Exa /search schema, aside from category", () => {
 	it("emits only fields and enum values the measured schema allows", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), [
-			"Chief Executive Officer",
-		]);
+		const request = buildPersonSearchRequest(samplePeopleCompany(), {
+			titles: ["Chief Executive Officer"],
+			queryTemplate: "decision makers at {company}",
+		});
 
 		expect(SearchFieldsAndTypeSchema.safeParse(request).success).toBe(true);
 	});
 
 	it("sends a category value from the measured enum", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), [
-			"Chief Executive Officer",
-		]);
+		const request = buildPersonSearchRequest(samplePeopleCompany(), {
+			titles: ["Chief Executive Officer"],
+			queryTemplate: "decision makers at {company}",
+		});
 
 		expect(MeasuredSearchRequestSchema.safeParse(request).success).toBe(true);
 	});

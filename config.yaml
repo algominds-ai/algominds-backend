@@ -66,7 +66,7 @@ people:
   # pass. exa-search is one fast, cheap /search call per company. exa-agent
   # trades speed and cost for evidenced rows via Exa's /agent/runs, polled to
   # completion, once per company in the batch.
-  peopleSource: exa-search
+  peopleSource: exa-agent
   # Effort Exa's agent spends per run when peopleSource is exa-agent.
   exaAgentEffort: low
   # Seconds between polls of a running exa-agent run.

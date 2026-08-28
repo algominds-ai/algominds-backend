@@ -49,9 +49,15 @@ const TITLES_INSTRUCTIONS = [
 	"You choose the job titles a sales team should target for outbound at companies matching",
 	"one ideal customer profile. Return three to six decision-maker titles, most senior first,",
 	"for the function that would buy or champion this product.",
+	"Also write the search query that finds those people at one company.",
+	"Write it as you would search for a person, and put {company} where the company name belongs.",
+	"The query is yours to phrase; do not copy the titles verbatim if a better phrasing exists.",
 ].join(" ");
 
-const TitlesModelSchema = z.object({ titles: z.array(z.string()).min(1) });
+const TitlesModelSchema = z.object({
+	titles: z.array(z.string()).min(1),
+	queryTemplate: z.string().min(1),
+});
 
 const DEFAULT_TITLES = [
 	"VP of Sales",
@@ -59,7 +65,13 @@ const DEFAULT_TITLES = [
 	"Director of Marketing",
 ];
 
-export type TitlesResult = { titles: string[]; ledger: CostLedger };
+const DEFAULT_QUERY_TEMPLATE = "decision makers at {company}";
+
+export type TitlesResult = {
+	titles: string[];
+	queryTemplate: string;
+	ledger: CostLedger;
+};
 
 export type CompanyPeopleResult = {
 	domain: string;
@@ -100,7 +112,8 @@ function titlesPrompt(icp: IcpDoc): string {
 
 /**
  * Turns an ICP document into the decision-maker titles a people search
- * targets, falling back to a generic list when the model produces nothing.
+ * targets and the query that finds them, falling back to a generic list and
+ * a generic query when the model produces nothing.
  */
 export async function decisionMakerTitles(
 	icp: IcpDoc,
@@ -119,7 +132,11 @@ export async function decisionMakerTitles(
 		ledger,
 		"decision-maker-titles",
 	);
-	return { titles: output?.titles ?? DEFAULT_TITLES, ledger };
+	return {
+		titles: output?.titles ?? DEFAULT_TITLES,
+		queryTemplate: output?.queryTemplate ?? DEFAULT_QUERY_TEMPLATE,
+		ledger,
+	};
 }
 
 /**
@@ -164,14 +181,20 @@ export function splitKnownCompanies(
 	return { companies: unsearched, skipped };
 }
 
-type PeopleContext = { env: Env; ledger: CostLedger; deps: FindPeopleDeps };
+type PeopleSearchPlan = { titles: readonly string[]; queryTemplate: string };
+
+type PeopleContext = {
+	env: Env;
+	ledger: CostLedger;
+	deps: FindPeopleDeps;
+	plan: PeopleSearchPlan;
+};
 
 async function searchCompanyPeople(
 	company: PeopleCompany,
-	titles: readonly string[],
 	ctx: PeopleContext,
 ): Promise<PersonCandidate[]> {
-	const request = buildPersonSearchRequest(company, titles);
+	const request = buildPersonSearchRequest(company, ctx.plan);
 	const searched = await ctx.deps.search(request, ctx.env, ctx.ledger);
 	return searched.results
 		.map(toPersonClaim)
@@ -238,10 +261,14 @@ export async function findPeople(
 	);
 	const ledger = new CostLedger();
 	const titles = await deps.decisionMakerTitles(opts.icp, opts.env);
-	const ctx: PeopleContext = { env: opts.env, ledger, deps };
+	const plan: PeopleSearchPlan = {
+		titles: titles.titles,
+		queryTemplate: titles.queryTemplate,
+	};
+	const ctx: PeopleContext = { env: opts.env, ledger, deps, plan };
 
 	const rawPerCompany = await Promise.all(
-		scoped.map((company) => searchCompanyPeople(company, titles.titles, ctx)),
+		scoped.map((company) => searchCompanyPeople(company, ctx)),
 	);
 	const deduped = dedupeAcrossCompanies(rawPerCompany);
 

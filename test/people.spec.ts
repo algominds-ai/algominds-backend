@@ -69,7 +69,11 @@ function testOpts(
 function scriptedTitles(
 	titles: string[],
 ): FindPeopleDeps["decisionMakerTitles"] {
-	return async () => ({ titles, ledger: new CostLedger() });
+	return async () => ({
+		titles,
+		queryTemplate: "decision makers at {company}",
+		ledger: new CostLedger(),
+	});
 }
 
 type WorkHistoryFixture = {
