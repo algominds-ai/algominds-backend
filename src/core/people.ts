@@ -52,8 +52,10 @@ const TITLES_INSTRUCTIONS = [
 	"Also write the search query that finds those people at one company.",
 	"Write it as you would search for a person, and put {company} where the company name belongs.",
 	"The query is yours to phrase; do not copy the titles verbatim if a better phrasing exists.",
-	"Set userLocation to the two-letter country these people work in when the profile names one,",
-	"and to null when it names none. Never guess a country the profile does not support.",
+	"userLocation is optional and null is the right answer most of the time.",
+	"Set it to a two-letter country only when searching outside that country would return the",
+	"wrong people. A good decision maker often sits somewhere the profile never mentions, and a",
+	"country filter hides them, so leave it null whenever the search reads fine without it.",
 ].join(" ");
 
 const TitlesModelSchema = z.object({
