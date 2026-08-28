@@ -46,8 +46,8 @@ export const peopleFindSchema = z.union([
 	z.strictObject({ domains: domainsField, maxCompanies: maxCompaniesField }),
 ]);
 
-export const enrichSchema = z.object({
-	runId: z.string(),
+export const enrichSchema = z.strictObject({
+	runId: z.string().min(1),
 	channels: z.array(z.enum(["email", "linkedin"])).min(1),
 });
 

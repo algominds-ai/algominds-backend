@@ -217,7 +217,6 @@ async function expectEnrichResolvesSubjects(
 				{ name: "load-source-run" },
 				{ organizationId: "org-1", icpId: "icp-1" },
 			);
-			await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 			await m.mockStepResult({ name: "open-run" }, { id: runId });
 			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
@@ -670,6 +669,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 
 			await savePeople(testEnv, [
 				{
+					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdA,
 					linkedinUrl: `https://linkedin.com/in/${labelA}`,
 					name: "Person A",
@@ -678,6 +678,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 			]);
 			await savePeople(testEnv, [
 				{
+					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdB,
 					linkedinUrl: `https://linkedin.com/in/${labelB}`,
 					name: "Person B",

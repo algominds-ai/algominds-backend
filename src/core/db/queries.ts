@@ -284,7 +284,9 @@ export async function savePeople(
 	return connection
 		.insert(person)
 		.values(rows)
-		.onConflictDoNothing({ target: [person.linkedinUrl] })
+		.onConflictDoNothing({
+			target: [person.organizationId, person.linkedinUrl],
+		})
 		.returning();
 }
 

@@ -50,7 +50,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
+		await step.do("open-run", config.stepConfig.databaseCall, async () => {
 			const spent = await organizationSpendToday(
 				this.env,
 				source.organizationId,
@@ -60,18 +60,14 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
 				);
 			}
-			return { spent };
-		});
-
-		await step.do("open-run", config.stepConfig.databaseCall, () =>
-			openRun(this.env, {
+			return openRun(this.env, {
 				id: event.instanceId,
 				organizationId: source.organizationId,
 				icpId: source.icpId,
 				capability: "enrich",
 				status: "running",
-			}),
-		);
+			});
+		});
 
 		const outcomes: EnrichOutcome[] = [];
 		let costDollars = 0;

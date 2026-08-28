@@ -538,6 +538,92 @@ describe("the exa agent email provider's own error contract", () => {
 	});
 });
 
+describe("the exa agent email provider's shape checks on what an agent reports", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("drops a linkedin url the agent invented rather than storing it on the contact", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json(
+						completedAgentRun({
+							output: {
+								structured: {
+									email: "found@acme.com",
+									linkedinUrl: "https://acme.com/team/someone",
+								},
+							},
+						}),
+					),
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result?.email).toBe("found@acme.com");
+		expect(result?.contact?.linkedin_url).toBeUndefined();
+	});
+
+	it("keeps a real linkedin profile url the agent reported", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json(
+						completedAgentRun({
+							output: {
+								structured: {
+									email: "found@acme.com",
+									linkedinUrl: "https://www.linkedin.com/in/someone",
+								},
+							},
+						}),
+					),
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result?.contact?.linkedin_url).toBe(
+			"https://www.linkedin.com/in/someone",
+		);
+	});
+
+	it("misses rather than reporting an address that is not an email", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json(
+						completedAgentRun({
+							output: { structured: { email: "contact us at acme" } },
+						}),
+					),
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result).toBeNull();
+	});
+});
+
 describe("isSendable", () => {
 	it("is never true for unknown", () => {
 		expect(isSendable("unknown")).toBe(false);
@@ -623,6 +709,7 @@ function personCompanyRows(
 		{
 			person: {
 				id: "person-1",
+				organizationId: "org-1",
 				companyId: companyRow.id,
 				linkedinUrl: "https://linkedin.com/in/a",
 				name: "Ada",
@@ -634,6 +721,7 @@ function personCompanyRows(
 		{
 			person: {
 				id: "person-2",
+				organizationId: "org-1",
 				companyId: companyRow.id,
 				linkedinUrl: null,
 				name: null,

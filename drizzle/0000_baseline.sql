@@ -32,12 +32,13 @@ CREATE TABLE "icp" (
 --> statement-breakpoint
 CREATE TABLE "person" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"organization_id" text NOT NULL,
 	"company_id" uuid NOT NULL,
 	"linkedin_url" text,
 	"name" text,
 	"title" text,
 	"data" jsonb,
-	CONSTRAINT "person_linkedin_url_unique" UNIQUE("linkedin_url")
+	CONSTRAINT "person_organization_linkedin_unique" UNIQUE("organization_id","linkedin_url")
 );
 --> statement-breakpoint
 CREATE TABLE "run" (
@@ -158,6 +159,7 @@ CREATE TABLE "verification" (
 ALTER TABLE "company" ADD CONSTRAINT "company_icp_id_icp_id_fk" FOREIGN KEY ("icp_id") REFERENCES "public"."icp"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "company" ADD CONSTRAINT "company_run_id_run_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."run"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "icp" ADD CONSTRAINT "icp_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "person" ADD CONSTRAINT "person_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "person" ADD CONSTRAINT "person_company_id_company_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."company"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "run" ADD CONSTRAINT "run_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "run" ADD CONSTRAINT "run_icp_id_icp_id_fk" FOREIGN KEY ("icp_id") REFERENCES "public"."icp"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

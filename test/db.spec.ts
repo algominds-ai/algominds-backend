@@ -351,14 +351,19 @@ describe("saveCompanies", () => {
 });
 
 describe("savePeople", () => {
-	it("targets linkedin_url for dedupe, never name plus company", async () => {
+	it("targets organization plus linkedin_url for dedupe, never name plus company", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
 		const rows: NewPerson[] = [
-			{ companyId: "company-1", linkedinUrl: "https://linkedin.com/in/x" },
+			{
+				organizationId: "org-1",
+				companyId: "company-1",
+				linkedinUrl: "https://linkedin.com/in/x",
+			},
 		];
 		const storedPerson: Person = {
 			id: "person-1",
+			organizationId: "org-1",
 			companyId: "company-1",
 			linkedinUrl: "https://linkedin.com/in/x",
 			name: null,
@@ -378,7 +383,7 @@ describe("savePeople", () => {
 
 		const result = await savePeople(env, rows, buildDb);
 
-		expect(conflictTarget).toEqual([person.linkedinUrl]);
+		expect(conflictTarget).toEqual([person.organizationId, person.linkedinUrl]);
 		expect(result).toEqual([storedPerson]);
 	});
 });
@@ -872,6 +877,7 @@ describe("companiesPage", () => {
 function personRow(id: string): Person {
 	return {
 		id,
+		organizationId: "org-1",
 		companyId: "company-1",
 		linkedinUrl: `https://linkedin.com/in/${id}`,
 		name: id,

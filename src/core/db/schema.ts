@@ -82,15 +82,24 @@ export const person = pgTable(
 	"person",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id),
 		companyId: uuid("company_id")
 			.notNull()
 			.references(() => company.id),
-		linkedinUrl: text("linkedin_url").unique(),
+		linkedinUrl: text("linkedin_url"),
 		name: text("name"),
 		title: text("title"),
 		data: jsonb("data"),
 	},
-	(t) => [index("person_company_idx").on(t.companyId)],
+	(t) => [
+		index("person_company_idx").on(t.companyId),
+		unique("person_organization_linkedin_unique").on(
+			t.organizationId,
+			t.linkedinUrl,
+		),
+	],
 );
 
 export const evidence = pgTable(

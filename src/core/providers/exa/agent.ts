@@ -76,9 +76,20 @@ const ExaAgentStructuredOutputSchema = z.object({
 	companies: z.array(ExaAgentCompanySchema),
 });
 
+const LINKEDIN_PROFILE_URL_PATTERN =
+	/^(https?:\/\/)?([a-z]{2,3}\.)?linkedin\.com\/in\/[^\s/?#]+\/?$/i;
+
+/** A LinkedIn profile URL an agent reported, or null when it is not one. */
+export const agentLinkedinUrl = z
+	.string()
+	.nullish()
+	.transform((value) =>
+		value && LINKEDIN_PROFILE_URL_PATTERN.test(value) ? value : null,
+	);
+
 const ExaAgentPersonSchema = z.object({
 	name: z.string().nullish(),
-	linkedinUrl: z.string().nullish(),
+	linkedinUrl: agentLinkedinUrl,
 	title: z.string().nullish(),
 	location: z.string().nullish(),
 	companyName: z.string().nullish(),
@@ -160,12 +171,23 @@ function throwForStatus(status: number, body: unknown): never {
 	throw new NonRetryableError(detail);
 }
 
+const AGENT_FETCH_TIMEOUT_MS = 60_000;
+
 async function exaAgentFetch(path: string, env: Env, init?: RequestInit) {
 	const apiKey = await env.EXA_API_KEY.get();
-	const response = await fetch(`https://api.exa.ai/agent/runs${path}`, {
-		...init,
-		headers: { ...init?.headers, "x-api-key": apiKey },
-	});
+	let response: Response;
+	try {
+		response = await fetch(`https://api.exa.ai/agent/runs${path}`, {
+			...init,
+			headers: { ...init?.headers, "x-api-key": apiKey },
+			signal: AbortSignal.timeout(AGENT_FETCH_TIMEOUT_MS),
+		});
+	} catch (error) {
+		if (error instanceof DOMException && error.name === "TimeoutError") {
+			throw new RetryableProviderError("Exa agent request timed out");
+		}
+		throw error;
+	}
 	const body = await readJson(response);
 	if (!response.ok) throwForStatus(response.status, body);
 	return body;

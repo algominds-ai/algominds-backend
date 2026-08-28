@@ -95,7 +95,6 @@ describe("FindPeopleWorkflow: runId", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
 					{ name: "people-plan" },
 					{
@@ -115,7 +114,7 @@ describe("FindPeopleWorkflow: runId", () => {
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-1_test" },
+				params: { runId: "companies_icp-1_test", organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 
@@ -152,7 +151,6 @@ describe("FindPeopleWorkflow: an empty run", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
 					{ name: "people-plan" },
 					{
@@ -170,7 +168,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-empty_test" },
+				params: { runId: "companies_icp-empty_test", organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 
@@ -226,7 +224,6 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
 					{ name: "people-plan" },
 					{
@@ -245,7 +242,10 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { domains: ["target.com", "missing.com"] },
+				params: {
+					domains: ["target.com", "missing.com"],
+					organizationId: "org-1",
+				},
 			});
 			await instance.waitForStatus("complete");
 
@@ -273,7 +273,10 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 		try {
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: `companies_never-opened-${instanceId}` },
+				params: {
+					runId: `companies_never-opened-${instanceId}`,
+					organizationId: "org-1",
+				},
 			});
 			await instance.waitForStatus("errored");
 		} finally {
@@ -319,7 +322,6 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
 					{ name: "people-plan" },
 					{
@@ -338,7 +340,7 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-1_test" },
+				params: { runId: "companies_icp-1_test", organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 
@@ -424,7 +426,6 @@ describe("FindPeopleWorkflow: the summary output", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
 					{ name: "people-plan" },
 					{
@@ -443,7 +444,7 @@ describe("FindPeopleWorkflow: the summary output", () => {
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-1_test" },
+				params: { runId: "companies_icp-1_test", organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 
@@ -496,7 +497,6 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult(
 					{ name: "people-plan" },
 					{
@@ -515,7 +515,7 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-1_spend" },
+				params: { runId: "companies_icp-1_spend", organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 

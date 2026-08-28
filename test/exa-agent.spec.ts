@@ -6,7 +6,11 @@ import {
 	toExaSearchResult,
 } from "../src/core/companies/agent-search";
 import { CostLedger } from "../src/core/cost";
-import { getAgentRun, startAgentRun } from "../src/core/providers/exa/agent";
+import {
+	getAgentPeopleRun,
+	getAgentRun,
+	startAgentRun,
+} from "../src/core/providers/exa/agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import runningRun from "./fixtures/exa-agent-run-running.json";
 
@@ -118,6 +122,66 @@ describe("agent run error mapping", () => {
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
+	});
+
+	it("raises RetryableProviderError when the request times out", async () => {
+		globalThis.fetch = async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		};
+
+		await expect(
+			startAgentRun(
+				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				exaEnv(),
+			),
+		).rejects.toThrow(RetryableProviderError);
+	});
+});
+
+describe("agent people run linkedin url shape check", () => {
+	function peopleRunBody(linkedinUrl: string | null) {
+		return {
+			id: "run-people",
+			status: "completed",
+			output: {
+				structured: {
+					people: [{ name: "A Person", linkedinUrl }],
+				},
+			},
+			costDollars: { total: 0.01 },
+		};
+	}
+
+	it("nulls a linkedinUrl that is not a linkedin.com profile url", async () => {
+		stubFetch(jsonResponse(200, peopleRunBody("https://example.com/fake")));
+
+		const run = await getAgentPeopleRun(
+			"run-people",
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(run.status).toBe("completed");
+		if (run.status !== "completed") return;
+		expect(run.people[0]?.linkedinUrl).toBeNull();
+	});
+
+	it("keeps a linkedinUrl that is a real linkedin.com profile url", async () => {
+		stubFetch(
+			jsonResponse(200, peopleRunBody("https://www.linkedin.com/in/a-person")),
+		);
+
+		const run = await getAgentPeopleRun(
+			"run-people",
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(run.status).toBe("completed");
+		if (run.status !== "completed") return;
+		expect(run.people[0]?.linkedinUrl).toBe(
+			"https://www.linkedin.com/in/a-person",
+		);
 	});
 });
 

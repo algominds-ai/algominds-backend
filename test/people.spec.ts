@@ -124,7 +124,12 @@ function scriptedSearch(perCall: ExaResult[][]): {
 	calls: ExaSearchRequest[];
 } {
 	const calls: ExaSearchRequest[] = [];
-	const search: FindPeopleDeps["search"] = async (req, _env, ledger) => {
+	const search: FindPeopleDeps["search"] = async (
+		_company,
+		req,
+		_env,
+		ledger,
+	) => {
 		const results = perCall[calls.length] ?? [];
 		calls.push(req);
 		ledger.reported("exa", "search", 0.01);
@@ -600,7 +605,10 @@ describe("loadTargetCompanies: runId", () => {
 		]);
 
 		try {
-			const target = await loadTargetCompanies(testEnv, { runId: newRunId });
+			const target = await loadTargetCompanies(testEnv, {
+				runId: newRunId,
+				organizationId,
+			});
 
 			expect(target.icpId).toBe(icpId);
 			expect(target.unknownDomains).toEqual([]);
@@ -626,7 +634,10 @@ describe("loadTargetCompanies: runId", () => {
 		await seedRun({ organizationId, icpId }, runId);
 
 		try {
-			const target = await loadTargetCompanies(testEnv, { runId });
+			const target = await loadTargetCompanies(testEnv, {
+				runId,
+				organizationId,
+			});
 
 			expect(target.companies).toEqual([]);
 			expect(target.icpId).toBe(icpId);
@@ -639,6 +650,7 @@ describe("loadTargetCompanies: runId", () => {
 		await expect(
 			loadTargetCompanies(testEnv, {
 				runId: `companies_never-opened-${crypto.randomUUID()}`,
+				organizationId: crypto.randomUUID(),
 			}),
 		).rejects.toThrow();
 	});
@@ -662,6 +674,7 @@ describe("loadTargetCompanies: domains", () => {
 		try {
 			const target = await loadTargetCompanies(testEnv, {
 				domains: [domainA, domainC],
+				organizationId,
 			});
 
 			expect(target.icpId).toBe(icpId);
@@ -688,6 +701,7 @@ describe("loadTargetCompanies: domains", () => {
 		try {
 			const target = await loadTargetCompanies(testEnv, {
 				domains: [known, missing],
+				organizationId,
 			});
 
 			expect(target.companies.map((c) => c.domain)).toEqual([known]);
@@ -701,6 +715,7 @@ describe("loadTargetCompanies: domains", () => {
 		await expect(
 			loadTargetCompanies(testEnv, {
 				domains: [`nobody-knows-${crypto.randomUUID()}.com`],
+				organizationId: crypto.randomUUID(),
 			}),
 		).rejects.toThrow();
 	});

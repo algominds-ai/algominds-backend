@@ -30,17 +30,25 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, peopleFindSchema, {
 			capability: "people",
 			workflow: c.env.FIND_PEOPLE,
-			toJob: async (body) => {
+			toJob: async (body, _env, organizationId) => {
 				if ("runId" in body) {
 					return {
 						scopeId: body.runId,
 						sourceRunId: body.runId,
-						params: { runId: body.runId, maxCompanies: body.maxCompanies },
+						params: {
+							runId: body.runId,
+							maxCompanies: body.maxCompanies,
+							organizationId,
+						},
 					};
 				}
 				return {
-					scopeId: await domainsScopeId(body.domains),
-					params: { domains: body.domains, maxCompanies: body.maxCompanies },
+					scopeId: await domainsScopeId(body.domains, organizationId),
+					params: {
+						domains: body.domains,
+						maxCompanies: body.maxCompanies,
+						organizationId,
+					},
 				};
 			},
 		}),
