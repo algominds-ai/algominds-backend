@@ -28,6 +28,27 @@ limits:
   # the clamp is never silent.
   maxRunPageSize: 200
 
+# Where the auth endpoints are served, and who may call them. Without these
+# the origin is inferred from each request, which is fine locally and is not
+# something to deploy on: a state-changing call is refused outright when it
+# carries no origin, and accepted from any origin when it carries one.
+auth:
+  # Hosts allowed to serve the auth endpoints. The request's own host is used
+  # when it matches one of these, so one deployment can answer on several.
+  allowedHosts:
+    - localhost
+    - 127.0.0.1
+    - api.algominds.ai
+  # Used when the request names no host we allow.
+  fallbackUrl: https://api.algominds.ai
+  # Origins a browser may call the auth endpoints from. A dashboard on another
+  # domain belongs here; anything absent is refused.
+  trustedOrigins:
+    - http://localhost:8787
+    - http://127.0.0.1:8787
+    - https://algominds.ai
+    - https://*.algominds.ai
+
 # The brand this deployment sells for. A request that names its own seller
 # wins over this; the fallback exists so a single-brand deployment need not
 # repeat itself on every call.

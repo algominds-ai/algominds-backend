@@ -6,6 +6,16 @@ export const config = {
 		maxCompaniesPerPeopleRun: 300,
 		maxRunPageSize: 200,
 	},
+	auth: {
+		allowedHosts: ["localhost", "127.0.0.1", "api.algominds.ai"],
+		fallbackUrl: "https://api.algominds.ai",
+		trustedOrigins: [
+			"http://localhost:8787",
+			"http://127.0.0.1:8787",
+			"https://algominds.ai",
+			"https://*.algominds.ai",
+		],
+	},
 	seller: {
 		domain: "algominds.ai",
 		name: "Algominds",

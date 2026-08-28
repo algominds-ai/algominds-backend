@@ -1,5 +1,6 @@
 import { apiKey } from "@better-auth/api-key";
 import { organization } from "better-auth/plugins/organization";
+import { config } from "@/config";
 
 export const ORGANIZATION_KEY_PREFIX = "ak_";
 export const ORGANIZATION_KEY_CONFIG_ID = "org-keys";
@@ -13,6 +14,12 @@ export const ORGANIZATION_KEY_CONFIG_ID = "org-keys";
  */
 export const authOptions = {
 	appName: "algo",
+	baseURL: {
+		allowedHosts: [...config.auth.allowedHosts],
+		fallback: config.auth.fallbackUrl,
+		protocol: "auto" as const,
+	},
+	trustedOrigins: [...config.auth.trustedOrigins],
 	emailAndPassword: { enabled: true },
 	plugins: [
 		organization(),
