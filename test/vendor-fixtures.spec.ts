@@ -44,6 +44,20 @@ describe("the parser against a real /search company response", () => {
 		expect(first?.company?.workforceTotal).toBe(2);
 	});
 
+	it("reads the same organization id off the result that the entity itself carries", async () => {
+		respondWith(searchCompany);
+
+		const result = await search(
+			{ query: "small US software teams", category: "company" },
+			env,
+			new CostLedger(),
+		);
+
+		expect(result.results[0]?.id).toBe(
+			"https://exa.ai/library/organization/16s078mffwh",
+		);
+	});
+
 	it("reads the financial figures the vendor did supply", async () => {
 		respondWith(searchCompany);
 
@@ -105,6 +119,7 @@ describe("the parser against a real /search people response", () => {
 		expect(current).toEqual([
 			{
 				title: "Chief Executive Officer, Technical Founder",
+				from: "2021-02-01",
 				current: true,
 				companyId: "https://exa.ai/library/organization/lrjlz4ht43v",
 				companyName: "Graphlit, by Unstruk Data",
@@ -140,6 +155,75 @@ describe("the parser against a real /search people response", () => {
 		);
 
 		expect(result.results[0]?.company).toBeNull();
+	});
+});
+
+describe("the parser tolerates data the measured shape does not guarantee", () => {
+	it("reads a work history entry whose employer has no Exa organization id", async () => {
+		respondWith(searchPeople);
+
+		const result = await search(
+			{ query: "founder or CEO at Graphlit", category: "people" },
+			env,
+			new CostLedger(),
+		);
+
+		const person = result.results
+			.map((row) => row.person)
+			.find((candidate) => candidate?.fullName === "Abaho Katabarwa");
+		const founderRole = person?.workHistory.find(
+			(role) => role.companyName === "LLMGraph",
+		);
+
+		expect(founderRole?.companyId).toBeNull();
+		expect(founderRole?.current).toBe(true);
+	});
+
+	it("drops one entity of an unmodelled type rather than failing the whole result", async () => {
+		respondWith({
+			requestId: "with-unknown-entity",
+			results: [
+				{
+					id: "https://exa.ai/library/person/2wr56lj8gbj",
+					title: "Kirk Marple",
+					url: "https://www.linkedin.com/in/kirkmarple",
+					entities: [
+						{
+							id: "https://exa.ai/library/person/2wr56lj8gbj",
+							type: "person",
+							properties: {
+								name: "Kirk Marple",
+								workHistory: [
+									{
+										title: "Chief Executive Officer, Technical Founder",
+										dates: { from: "2021-02-01", to: null },
+										company: {
+											id: "https://exa.ai/library/organization/lrjlz4ht43v",
+											name: "Graphlit, by Unstruk Data",
+										},
+									},
+								],
+							},
+						},
+						{
+							id: "https://exa.ai/library/publication/unknown",
+							type: "publication",
+							properties: { headline: "not a company or a person" },
+						},
+					],
+				},
+			],
+			costDollars: { total: 0.007 },
+		});
+
+		const result = await search(
+			{ query: "founder or CEO at Graphlit", category: "people" },
+			env,
+			new CostLedger(),
+		);
+
+		expect(result.results).toHaveLength(1);
+		expect(result.results[0]?.person?.fullName).toBe("Kirk Marple");
 	});
 });
 

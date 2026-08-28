@@ -212,14 +212,28 @@ function parseSummary(raw: string | undefined): Json | null {
 	}
 }
 
-type RawEntities = z.infer<typeof ExaResultSchema>["entities"];
+type Entity = z.infer<typeof EntitySchema>;
+type CompanyMember = Extract<Entity, { type: "company" }>;
+type PersonMember = Extract<Entity, { type: "person" }>;
 
-function toCompanyEntity(entities: RawEntities): CompanyEntity | null {
-	const found = entities?.find((entity) => entity.type === "company");
+/**
+ * Parses each raw entity independently and drops the ones that fail —
+ * an unmodelled `type` (or any other shape mismatch) loses that one entity,
+ * never the whole result.
+ */
+function parseEntities(raw: unknown[] | undefined): Entity[] {
+	return (raw ?? []).flatMap((candidate) => {
+		const parsed = EntitySchema.safeParse(candidate);
+		return parsed.success ? [parsed.data] : [];
+	});
+}
+
+function toCompanyEntity(entities: readonly Entity[]): CompanyEntity | null {
+	const found = entities.find(
+		(entity): entity is CompanyMember => entity.type === "company",
+	);
 	if (!found) return null;
-	const parsed = CompanyPropertiesSchema.safeParse(found.properties);
-	if (!parsed.success) return null;
-	const p = parsed.data;
+	const p = found.properties;
 	return {
 		name: p.name ?? null,
 		description: p.description ?? null,
@@ -232,9 +246,7 @@ function toCompanyEntity(entities: RawEntities): CompanyEntity | null {
 	};
 }
 
-function personFullName(
-	p: z.infer<typeof PersonPropertiesSchema>,
-): string | null {
+function personFullName(p: PersonMember["properties"]): string | null {
 	if (p.name) return p.name;
 	const parts = [p.firstName, p.lastName].filter(
 		(part): part is string => part !== null && part !== undefined,
@@ -247,18 +259,19 @@ function toWorkHistoryEntry(
 ): PersonWorkHistoryEntry {
 	return {
 		title: entry.title ?? null,
-		current: (entry.dates?.to ?? null) === null,
+		from: entry.dates?.from ?? null,
+		current: entry.dates?.to === null,
 		companyId: entry.company?.id ?? null,
 		companyName: entry.company?.name ?? null,
 	};
 }
 
-function toPersonRecord(entities: RawEntities): PersonRecord | null {
-	const found = entities?.find((entity) => entity.type !== "company");
+function toPersonRecord(entities: readonly Entity[]): PersonRecord | null {
+	const found = entities.find(
+		(entity): entity is PersonMember => entity.type === "person",
+	);
 	if (!found) return null;
-	const parsed = PersonPropertiesSchema.safeParse(found.properties);
-	if (!parsed.success) return null;
-	const p = parsed.data;
+	const p = found.properties;
 	return {
 		fullName: personFullName(p),
 		location: p.location ?? null,
@@ -267,10 +280,11 @@ function toPersonRecord(entities: RawEntities): PersonRecord | null {
 }
 
 function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
+	const entities = parseEntities(raw.entities);
 	return {
 		id: raw.id ?? null,
-		company: toCompanyEntity(raw.entities),
-		person: toPersonRecord(raw.entities),
+		company: toCompanyEntity(entities),
+		person: toPersonRecord(entities),
 		url: raw.url,
 		title: raw.title,
 		...(raw.publishedDate !== undefined

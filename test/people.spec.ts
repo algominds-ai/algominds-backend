@@ -91,6 +91,7 @@ function personResult(
 					location: fields.location ?? null,
 					workHistory: (fields.workHistory ?? []).map((entry) => ({
 						title: entry.title ?? null,
+						from: null,
 						current: entry.current ?? true,
 						companyId: entry.companyId ?? null,
 						companyName: entry.companyName ?? null,
@@ -216,7 +217,6 @@ describe("findPeople: employment settled by company id", () => {
 		expect(person?.employment).toEqual([
 			{ company: "Ramp", confidence: 1, source: "exa" },
 		]);
-		expect(person?.employmentConfidence).toBe(1);
 	});
 
 	it("does not match a person at a different company sharing the target's name (the measured Passage collision)", async () => {
@@ -251,7 +251,60 @@ describe("findPeople: employment settled by company id", () => {
 			{ company: "Passage", confidence: 1, source: "exa" },
 			{ company: "Passage", confidence: 0.4, source: "target" },
 		]);
-		expect(person?.employmentConfidence).toBe(0.4);
+	});
+});
+
+describe("findPeople: employment settled by name when the id comparison is impossible", () => {
+	it("matches by name when the target company has no recorded id (a legacy row)", async () => {
+		const company = testCompany({ domain: "acme.com", name: "Acme" });
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				workHistory: [{ title: "VP of Sales", companyName: "Acme" }],
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.employment).toEqual([
+			{ company: "Acme", confidence: 1, source: "exa" },
+		]);
+	});
+
+	it("matches by name when the work history entry carries no company id of its own", async () => {
+		const company = testCompany({
+			domain: "acme.com",
+			name: "Acme",
+			exaId: "https://exa.ai/library/organization/acme",
+		});
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				workHistory: [
+					{ title: "Founder", companyId: null, companyName: "Acme" },
+				],
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.employment).toEqual([
+			{ company: "Acme", confidence: 1, source: "exa" },
+		]);
 	});
 });
 
@@ -288,7 +341,6 @@ describe("findPeople: employment edge cases", () => {
 		expect(person?.employment).toEqual([
 			{ company: "Acme", confidence: 0.4, source: "target" },
 		]);
-		expect(person?.employmentConfidence).toBe(0.4);
 	});
 
 	it("reports a person with no work history instead of dropping them", async () => {
@@ -310,7 +362,6 @@ describe("findPeople: employment edge cases", () => {
 		expect(person?.employment).toEqual([
 			{ company: "Acme", confidence: 0.4, source: "target" },
 		]);
-		expect(person?.employmentConfidence).toBe(0.4);
 	});
 });
 
@@ -897,7 +948,7 @@ describe("FindPeopleWorkflow: runId", () => {
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "people-batch-1" }, batchOne);
-				await m.mockStepResult({ name: "save-people" }, null);
+				await m.mockStepResult({ name: "save-people" }, {});
 			});
 
 			await testEnv.FIND_PEOPLE.create({
@@ -940,7 +991,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "save-people" }, null);
+				await m.mockStepResult({ name: "save-people" }, {});
 			});
 
 			await testEnv.FIND_PEOPLE.create({
@@ -1003,7 +1054,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "save-people" }, null);
+				await m.mockStepResult({ name: "save-people" }, {});
 			});
 
 			await testEnv.FIND_PEOPLE.create({
@@ -1051,7 +1102,6 @@ function testPerson(fullName: string): PersonCandidate {
 		rawTitle: "VP of Sales",
 		location: null,
 		employment: [],
-		employmentConfidence: 1,
 		apolloMatched: false,
 		entity: {
 			fullName,

@@ -50,7 +50,6 @@ export type PersonCandidate = {
 	rawTitle: string | null;
 	location: string | null;
 	employment: EmploymentClaim[];
-	employmentConfidence: number;
 	apolloMatched: boolean;
 	entity: PersonEntity;
 	result: PersonMatch;
@@ -150,20 +149,27 @@ function normalizeCompanyName(name: string): string {
 }
 
 /**
- * A last-resort name comparison for Apollo, whose free people search returns
- * only an organization name, never the Exa organization id an employment
- * match otherwise settles by.
+ * Compares employer names. Apollo's free people search returns no
+ * organization id, so it always needs this. An id-based employment match
+ * falls back to it too, but only for a work history entry whose own
+ * `companyId` is null — a decidable id mismatch is never overridden by a
+ * name that happens to agree.
  */
 function companiesMatch(a: string, b: string): boolean {
 	return normalizeCompanyName(a) === normalizeCompanyName(b);
 }
 
-function matchingCurrentEmployer(
-	current: readonly PersonWorkHistoryEntry[],
-	exaId: string | null,
-): PersonWorkHistoryEntry | null {
-	if (exaId === null) return null;
-	return current.find((entry) => entry.companyId === exaId) ?? null;
+function entryMatchesCompany(
+	entry: PersonWorkHistoryEntry,
+	company: PeopleCompany,
+): boolean {
+	if (company.exaId !== null && entry.companyId !== null) {
+		return entry.companyId === company.exaId;
+	}
+	return (
+		entry.companyName !== null &&
+		companiesMatch(entry.companyName, company.name)
+	);
 }
 
 function employmentClaims(
@@ -171,8 +177,8 @@ function employmentClaims(
 	company: PeopleCompany,
 ): EmploymentClaim[] {
 	const current = workHistory.filter((entry) => entry.current);
-	const first = current[0] ?? null;
-	if (first === null) {
+	const first = current[0];
+	if (first === undefined) {
 		return [
 			{
 				company: company.name,
@@ -181,8 +187,8 @@ function employmentClaims(
 			},
 		];
 	}
-	const matched = matchingCurrentEmployer(current, company.exaId);
-	if (matched !== null) {
+	const matched = current.find((entry) => entryMatchesCompany(entry, company));
+	if (matched) {
 		return [
 			{
 				company: matched.companyName ?? company.name,
@@ -210,16 +216,13 @@ export function toPersonCandidate(
 	company: PeopleCompany,
 ): PersonCandidate | null {
 	if (claim.fullName === null) return null;
-	const claims = employmentClaims(claim.workHistory, company);
-	const target = claims.find((entry) => entry.source === "target");
 	return {
 		fullName: claim.fullName,
 		linkedinUrl: claim.linkedinUrl,
 		title: claim.rawTitle !== null ? normalizeTitle(claim.rawTitle) : null,
 		rawTitle: claim.rawTitle,
 		location: claim.location,
-		employment: claims,
-		employmentConfidence: target ? target.confidence : MATCHED_CONFIDENCE,
+		employment: employmentClaims(claim.workHistory, company),
 		apolloMatched: false,
 		entity: claim.entity,
 		result: claim.result,
