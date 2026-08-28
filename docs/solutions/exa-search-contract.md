@@ -283,3 +283,34 @@ on it. Matching on id removes the doubt instead of scoring it.
 
 The third row is a real gap. `person.linkedin_url` is unique, so a repeat
 insert is discarded, but the paid search that found the person again still ran.
+
+## Second correction: agent cost scales with the work requested
+
+The comparison above used a run that returned two companies for $0.025 and drew
+a general conclusion from it. That was wrong. Asked for ten companies with the
+same prompt, the agent cost **$0.905**.
+
+Head to head, both producing ten companies:
+
+| | `/search` pipeline | `/agent/runs`, effort low |
+|---|---|---|
+| Companies | 10 | 10 |
+| Wall clock | 158 s | 48 s |
+| Cost | $0.1375 | $0.905 |
+
+The `/search` figure is the entire pipeline: the Exa call, the synthesizer, and
+the judge. The agent figure is the agent alone, before any judging.
+
+So the agent is about 6.6 times dearer for the same output, not cheaper. The
+earlier $0.025 measured a run that stopped at two rows with
+`stopReason: "schema_satisfied"` and had barely worked.
+
+Its targeting was good: all ten were US companies with headcounts from 0 to 18,
+inside the profile. Speed and quality are real. Cost is the trade.
+
+`exa-search` stays the default for discovery. The agent earns its price where
+evidence matters more than volume, or where search cannot reach at all — which
+is why it sits last in the enrichment waterfall rather than first.
+
+**The lesson worth keeping:** measure at the size you intend to run. A probe
+that returns two rows says nothing about a request for a hundred.
