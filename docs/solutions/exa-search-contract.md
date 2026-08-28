@@ -398,3 +398,52 @@ first agent capture used a different `outputSchema` than the production builder
 sends, so it exercised a contract we do not use. It was recaptured with
 production's own nine fields. A fixture from a different request is as
 misleading as an invented one.
+
+## Which filters each entity category really accepts
+
+The spec says the `company` and `people` categories both reject
+`excludeDomains`. Probed, that is wrong for `company`:
+
+| Filter | `category: company` | `category: people` |
+|---|---|---|
+| `startPublishedDate`, `endPublishedDate` | 400 | 400 |
+| `includeDomains` | works | works |
+| `excludeDomains` | **works** | 400 |
+
+The restriction is not uniform across the two entity categories, so a single
+shared list of unsupported fields is wrong. The guard keys on the category.
+
+## Domain format, measured
+
+`includeDomains` accepts a bare hostname, a full URL, and a `www.` prefix
+interchangeably — all three returned the same result for the same site. A
+domain that matches nothing returns zero results rather than being ignored, so
+the filter is real.
+
+A wildcard is not supported here. `*.graphlit.com` returns:
+
+> The company category does not support the following filters: includeUrls.
+
+Exa rewrites a wildcard into `includeUrls` internally, and the company category
+rejects that — so the error names a parameter the caller never sent.
+`normalizeDomain` produces bare hostnames, which is the safe form.
+
+## `excludeDomains` excludes urls, not companies
+
+Worth knowing before reaching for it as a deduplication tool. Excluding
+`graphlit.com` from a search that otherwise returns it:
+
+```
+without exclusion:  graphlit.com, graphwise.ai, graph.build, ...
+excluding graphlit: linkedin.com/company/graphlit, graphora.io, ...
+```
+
+The domain is gone and the same company returns through its LinkedIn URL. So
+`excludeDomains` cannot replace the `already-seen` check, which keys on the
+company's own domain after normalisation.
+
+## Date format
+
+Both date filters are rejected outright by the entity categories, so the
+question of their format does not arise on the company or people paths. The
+`SearchPlan` the synthesizer produces carries no date for this reason.

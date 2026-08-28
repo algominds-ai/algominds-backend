@@ -50,25 +50,26 @@ const ExaSearchRequestSchema = z.object({
 export type ExaSearchRequest = z.input<typeof ExaSearchRequestSchema>;
 
 type ValidatedRequest = z.infer<typeof ExaSearchRequestSchema>;
+type ExaCategory = (typeof EXA_CATEGORIES)[number];
 
-const ENTITY_INDEX_CATEGORIES = ["company", "people"];
+type FilterField = keyof ValidatedRequest;
 
-const ENTITY_INDEX_UNSUPPORTED = [
-	"startPublishedDate",
-	"endPublishedDate",
-	"excludeDomains",
-] as const;
+const UNSUPPORTED_BY_CATEGORY: Partial<
+	Record<ExaCategory, readonly FilterField[]>
+> = {
+	company: ["startPublishedDate", "endPublishedDate"],
+	people: ["startPublishedDate", "endPublishedDate", "excludeDomains"],
+};
 
 function rejectEntityIndexFilters(req: ValidatedRequest): void {
 	const category = req.category;
 	if (category === undefined) return;
-	if (!ENTITY_INDEX_CATEGORIES.includes(category)) return;
-	const present = ENTITY_INDEX_UNSUPPORTED.filter(
-		(field) => req[field] !== undefined,
-	);
+	const unsupported = UNSUPPORTED_BY_CATEGORY[category];
+	if (!unsupported) return;
+	const present = unsupported.filter((field) => req[field] !== undefined);
 	if (present.length === 0) return;
 	throw new NonRetryableError(
-		`Exa: category "${category}" does not support ${present.join(" or ")}; the company and people categories use dedicated indices that only support semantic search.`,
+		`Exa: category "${category}" does not support ${present.join(" or ")}.`,
 	);
 }
 
