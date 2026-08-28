@@ -42,6 +42,9 @@ export type PersonData = {
 	provider: string;
 	entity: PersonEntity;
 	result: PersonMatch;
+	employment: EmploymentClaim[];
+	apolloMatched: boolean;
+	confidence: number;
 };
 
 export type PersonCandidate = {
@@ -142,12 +145,32 @@ export function toPersonClaim(result: ExaResult): PersonClaim {
 }
 
 /** Wraps one matched person's entity and match info with the vendor that produced them, for the row's `data` column. */
+/**
+ * The row's stored record of one person: the vendor's own entity and match,
+ * who corroborated the employment, and how sure the engine is that they work
+ * at the company the run searched.
+ */
 export function toPersonData(
-	entity: PersonEntity,
-	result: PersonMatch,
+	person: Pick<
+		PersonCandidate,
+		"entity" | "result" | "employment" | "apolloMatched"
+	>,
 	provider: string,
 ): PersonData {
-	return { provider, entity, result };
+	return {
+		provider,
+		entity: person.entity,
+		result: person.result,
+		employment: person.employment,
+		apolloMatched: person.apolloMatched,
+		confidence: employmentConfidence(person.employment),
+	};
+}
+
+/** How sure the engine is of the employment claim it kept, lowest claim wins. */
+function employmentConfidence(claims: readonly EmploymentClaim[]): number {
+	if (claims.length === 0) return 0;
+	return Math.min(...claims.map((claim) => claim.confidence));
 }
 
 /**

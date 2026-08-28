@@ -21,7 +21,7 @@ export const config = {
 		seenPeopleWindowDays: 90,
 		resultsPerCompany: 3,
 		batchSize: 5,
-		peopleSource: "exa-agent",
+		peopleSource: "exa-search",
 		exaAgentEffort: "low",
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 24,

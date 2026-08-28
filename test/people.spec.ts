@@ -882,25 +882,72 @@ describe("findPeople: capturing the vendor payload", () => {
 });
 
 describe("toPersonData", () => {
+	const capture = (
+		employment: {
+			company: string;
+			confidence: number;
+			source: "exa" | "target";
+		}[],
+		apolloMatched: boolean,
+	) => ({
+		entity: {
+			fullName: "Jane Doe",
+			currentTitle: null,
+			currentCompany: null,
+			location: null,
+		},
+		result: {
+			id: null,
+			url: "https://linkedin.com/in/janedoe",
+			title: "Jane Doe",
+			publishedDate: null,
+			score: null,
+		},
+		employment,
+		apolloMatched,
+	});
+
 	it("names the provider that produced the capture", () => {
 		const data = toPersonData(
-			{
-				fullName: "Jane Doe",
-				currentTitle: null,
-				currentCompany: null,
-				location: null,
-			},
-			{
-				id: null,
-				url: "https://linkedin.com/in/janedoe",
-				title: "Jane Doe",
-				publishedDate: null,
-				score: null,
-			},
+			capture([{ company: "Acme", confidence: 1, source: "exa" }], false),
 			"exa",
 		);
 
 		expect(data.provider).toBe("exa");
+	});
+
+	it("keeps the free corroboration Apollo gave, rather than discarding it", () => {
+		const data = toPersonData(
+			capture([{ company: "Acme", confidence: 1, source: "exa" }], true),
+			"exa",
+		);
+
+		expect(data.apolloMatched).toBe(true);
+	});
+
+	it("records full confidence for a person whose current role names the company", () => {
+		const data = toPersonData(
+			capture([{ company: "Acme", confidence: 1, source: "exa" }], false),
+			"exa",
+		);
+
+		expect(data.confidence).toBe(1);
+	});
+
+	it("records the doubt when the person's employer disagrees with the company searched", () => {
+		const data = toPersonData(
+			capture(
+				[
+					{ company: "Other Co", confidence: 1, source: "exa" },
+					{ company: "Acme", confidence: 0.4, source: "target" },
+				],
+				false,
+			),
+			"exa",
+		);
+
+		expect(data.confidence).toBe(0.4);
+		expect(data.employment).toHaveLength(2);
 	});
 });
 

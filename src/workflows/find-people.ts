@@ -228,7 +228,7 @@ function toNewPerson(person: PersonCandidate, companyId: string): NewPerson {
 		linkedinUrl: person.linkedinUrl,
 		name: person.fullName,
 		title: person.title,
-		data: toPersonData(person.entity, person.result, EVIDENCE_SOURCE_EXA),
+		data: toPersonData(person, EVIDENCE_SOURCE_EXA),
 	};
 }
 
