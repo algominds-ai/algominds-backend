@@ -1,5 +1,6 @@
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
+import { companyExaId } from "@/core/company-candidates";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
@@ -62,7 +63,7 @@ interface UpdateWhereConnection<TTable, TValues> {
 	};
 }
 
-interface SelectOrderedConnection<TTable, TRow> {
+export interface SelectOrderedConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
 			where(condition: unknown): {
@@ -153,15 +154,19 @@ export type AccountSpendConnection = SelectWhereConnection<
 	{ costDollars: typeof run.costDollars },
 	{ costDollars: number }
 >;
-export type RunCompany = Pick<Company, "id" | "domain" | "name">;
+export type CompanyRunRow = Pick<Company, "id" | "domain" | "name" | "data">;
+export type RunCompany = Pick<Company, "id" | "domain" | "name"> & {
+	exaId: string | null;
+};
 export type CompanyRunConnection = SelectWhereConnection<
 	typeof company,
 	{
 		id: typeof company.id;
 		domain: typeof company.domain;
 		name: typeof company.name;
+		data: typeof company.data;
 	},
-	RunCompany
+	CompanyRunRow
 >;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -315,17 +320,28 @@ export async function accountSpendToday(
 	return rows.reduce((total, row) => total + row.costDollars, 0);
 }
 
-/** The id, domain, and name of every company found in run `runId`. */
+/** The id, domain, name, and saved Exa organization id of every company found in run `runId`. */
 export async function companiesForRun(
 	env: DbEnv,
 	runId: string,
 	buildDb: DbFactory<CompanyRunConnection> = db,
 ): Promise<RunCompany[]> {
 	const connection = buildDb(env, "cached");
-	return connection
-		.select({ id: company.id, domain: company.domain, name: company.name })
+	const rows = await connection
+		.select({
+			id: company.id,
+			domain: company.domain,
+			name: company.name,
+			data: company.data,
+		})
 		.from(company)
 		.where(eq(company.runId, runId));
+	return rows.map((row) => ({
+		id: row.id,
+		domain: row.domain,
+		name: row.name,
+		exaId: companyExaId(row.data),
+	}));
 }
 
 /**

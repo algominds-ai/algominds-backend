@@ -1,4 +1,4 @@
-import { and, eq, gte } from "drizzle-orm";
+import { and, asc, eq, gt, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import type { DbEnv, DbMode } from "../src/core/db/client";
@@ -36,7 +36,13 @@ import {
 	startOfUtcDay,
 } from "../src/core/db/queries";
 import type {
+	CompanyPageConnection,
+	PersonPageConnection,
+} from "../src/core/db/run-pages";
+import { companiesPage, peoplePage } from "../src/core/db/run-pages";
+import type {
 	Account,
+	Company,
 	Evidence,
 	Icp,
 	NewCompany,
@@ -580,10 +586,17 @@ describe("accountSpendToday", () => {
 });
 
 describe("companiesForRun", () => {
-	it("filters by run id", async () => {
+	it("filters by run id and reads the saved Exa organization id off data", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		let recordedCondition: unknown;
-		const rows = [{ id: "company-1", domain: "acme.com", name: "Acme" }];
+		const rows = [
+			{
+				id: "company-1",
+				domain: "acme.com",
+				name: "Acme",
+				data: { provider: "exa-search", result: { id: "exa-org-1" } },
+			},
+		];
 		const buildDb: DbFactory<CompanyRunConnection> = () => ({
 			select: () => ({
 				from: () => ({
@@ -597,7 +610,236 @@ describe("companiesForRun", () => {
 
 		const result = await companiesForRun(env, "run-1", buildDb);
 
-		expect(result).toEqual(rows);
+		expect(result).toEqual([
+			{ id: "company-1", domain: "acme.com", name: "Acme", exaId: "exa-org-1" },
+		]);
 		expect(recordedCondition).toEqual(eq(company.runId, "run-1"));
+	});
+
+	it("reports no Exa id for a company saved without one", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [
+			{ id: "company-2", domain: "agentco.com", name: "Agent Co", data: null },
+		];
+		const buildDb: DbFactory<CompanyRunConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: () => Promise.resolve(rows),
+				}),
+			}),
+		});
+
+		const result = await companiesForRun(env, "run-2", buildDb);
+
+		expect(result[0]?.exaId).toBeNull();
+	});
+});
+
+function companyRow(id: string): Company {
+	return {
+		id,
+		icpId: "icp-1",
+		domain: `${id}.com`,
+		name: id,
+		data: null,
+		runId: "run-1",
+		foundAt: new Date("2026-01-01T00:00:00.000Z"),
+	};
+}
+
+function recordingCompanyPageDb(
+	rows: Company[],
+	spy: { condition?: unknown; order?: unknown; limit?: number },
+): DbFactory<CompanyPageConnection> {
+	return () => ({
+		select: () => ({
+			from: () => ({
+				where: (condition: unknown) => {
+					spy.condition = condition;
+					return {
+						orderBy: (order: unknown) => {
+							spy.order = order;
+							return {
+								limit: (count: number) => {
+									spy.limit = count;
+									return Promise.resolve(rows);
+								},
+							};
+						},
+					};
+				},
+			}),
+		}),
+	});
+}
+
+describe("companiesPage", () => {
+	it("filters by run id and orders by id ascending when there is no cursor", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [companyRow("company-1"), companyRow("company-2")];
+		const spy: { condition?: unknown; order?: unknown; limit?: number } = {};
+		const buildDb = recordingCompanyPageDb(rows, spy);
+
+		const page = await companiesPage(
+			env,
+			"run-1",
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(eq(company.runId, "run-1"));
+		expect(spy.order).toEqual(asc(company.id));
+		expect(spy.limit).toBe(6);
+		expect(page.rows).toEqual(rows);
+		expect(page.nextCursor).toBeNull();
+	});
+
+	it("adds an id-greater-than-cursor condition when a cursor is given", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingCompanyPageDb([], spy);
+
+		await companiesPage(
+			env,
+			"run-1",
+			{ limit: 5, cursor: "company-1" },
+			buildDb,
+		);
+
+		expect(spy.condition).toEqual(
+			and(eq(company.runId, "run-1"), gt(company.id, "company-1")),
+		);
+	});
+
+	it("reports the last row's id as the next cursor only when a row is left over", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [companyRow("c1"), companyRow("c2"), companyRow("c3")];
+		const buildDb = recordingCompanyPageDb(rows, {});
+
+		const page = await companiesPage(
+			env,
+			"run-1",
+			{ limit: 2, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page.rows.map((row) => row.id)).toEqual(["c1", "c2"]);
+		expect(page.nextCursor).toBe("c2");
+	});
+
+	it("reports no next cursor when the read exactly fills the limit", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [companyRow("c1"), companyRow("c2")];
+		const buildDb = recordingCompanyPageDb(rows, {});
+
+		const page = await companiesPage(
+			env,
+			"run-1",
+			{ limit: 2, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page.rows).toEqual(rows);
+		expect(page.nextCursor).toBeNull();
+	});
+});
+
+function personRow(id: string): Person {
+	return {
+		id,
+		companyId: "company-1",
+		linkedinUrl: `https://linkedin.com/in/${id}`,
+		name: id,
+		title: null,
+		data: null,
+	};
+}
+
+function recordingPersonPageDb(
+	rows: Person[],
+	spy: { join?: unknown; condition?: unknown; order?: unknown; limit?: number },
+): DbFactory<PersonPageConnection> {
+	return () => ({
+		select: () => ({
+			from: () => ({
+				innerJoin: (_table: typeof company, condition: unknown) => {
+					spy.join = condition;
+					return {
+						where: (condition: unknown) => {
+							spy.condition = condition;
+							return {
+								orderBy: (order: unknown) => {
+									spy.order = order;
+									return {
+										limit: (count: number) => {
+											spy.limit = count;
+											return Promise.resolve(
+												rows.map((row) => ({ person: row })),
+											);
+										},
+									};
+								},
+							};
+						},
+					};
+				},
+			}),
+		}),
+	});
+}
+
+describe("peoplePage", () => {
+	it("joins on the person's company, filters by run id, and orders by id ascending", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [personRow("person-1")];
+		const spy: {
+			join?: unknown;
+			condition?: unknown;
+			order?: unknown;
+			limit?: number;
+		} = {};
+		const buildDb = recordingPersonPageDb(rows, spy);
+
+		const page = await peoplePage(
+			env,
+			"run-1",
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(spy.join).toEqual(eq(person.companyId, company.id));
+		expect(spy.condition).toEqual(eq(company.runId, "run-1"));
+		expect(spy.order).toEqual(asc(person.id));
+		expect(spy.limit).toBe(6);
+		expect(page.rows).toEqual(rows);
+		expect(page.nextCursor).toBeNull();
+	});
+
+	it("adds an id-greater-than-cursor condition when a cursor is given", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		await peoplePage(env, "run-1", { limit: 5, cursor: "person-1" }, buildDb);
+
+		expect(spy.condition).toEqual(
+			and(eq(company.runId, "run-1"), gt(person.id, "person-1")),
+		);
+	});
+
+	it("reports the last row's id as the next cursor only when a row is left over", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [personRow("p1"), personRow("p2"), personRow("p3")];
+		const buildDb = recordingPersonPageDb(rows, {});
+
+		const page = await peoplePage(
+			env,
+			"run-1",
+			{ limit: 2, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page.rows.map((row) => row.id)).toEqual(["p1", "p2"]);
+		expect(page.nextCursor).toBe("p2");
 	});
 });

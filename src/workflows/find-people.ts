@@ -52,6 +52,34 @@ type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
 
 type FindPeopleWorkflowResult = FindPeopleResult & { unknownDomains: string[] };
 
+/**
+ * What the workflow reports back: counts and spend. The per-company row
+ * arrays stay in Postgres, read back a page at a time through
+ * `GET /runs/{runId}/people`.
+ */
+export type FindPeopleSummary = {
+	searched: number;
+	skippedCompanies: number;
+	peopleFound: number;
+	costDollars: number;
+	unknownDomains: string[];
+};
+
+function summarizeFindPeople(
+	result: FindPeopleWorkflowResult,
+): FindPeopleSummary {
+	return {
+		searched: result.searched,
+		skippedCompanies: result.skippedCompanies,
+		peopleFound: result.companies.reduce(
+			(sum, company) => sum + company.people.length,
+			0,
+		),
+		costDollars: result.costDollars,
+		unknownDomains: result.unknownDomains,
+	};
+}
+
 const PRODUCTION_DEPS: FindPeopleDeps = {
 	decisionMakerTitles,
 	search,
@@ -91,10 +119,11 @@ async function targetByDomains(
 		);
 	}
 	return {
-		companies: [...byDomain.values()].map(({ id, domain, name }) => ({
+		companies: [...byDomain.values()].map(({ id, domain, name, exaId }) => ({
 			id,
 			domain,
 			name,
+			exaId,
 		})),
 		icpId,
 		unknownDomains: domains.filter((domain) => !byDomain.has(domain)),
@@ -261,7 +290,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 	override async run(
 		event: Readonly<WorkflowEvent<FindPeoplePayload>>,
 		step: WorkflowStep,
-	): Promise<FindPeopleWorkflowResult> {
+	): Promise<FindPeopleSummary> {
 		const payload = FindPeoplePayloadSchema.parse(event.payload);
 
 		const target = await step.do(
@@ -330,6 +359,6 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			}),
 		);
 
-		return result;
+		return summarizeFindPeople(result);
 	}
 }

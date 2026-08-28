@@ -6,6 +6,7 @@ import { getAgentRun, startAgentRun } from "../src/core/providers/exa-agent";
 import agentRun from "./fixtures/exa-agent-run-completed.json";
 import agentPerson from "./fixtures/exa-agent-run-person.json";
 import searchCompany from "./fixtures/exa-search-company.json";
+import searchPeople from "./fixtures/exa-search-people.json";
 
 const env: Env = {
 	...testEnv,
@@ -82,6 +83,63 @@ describe("the parser against a real /search company response", () => {
 		);
 
 		expect(ledger.total()).toBeGreaterThan(0);
+	});
+});
+
+describe("the parser against a real /search people response", () => {
+	it("reads the person's current employer and its Exa organization id off workHistory", async () => {
+		respondWith(searchPeople);
+
+		const result = await search(
+			{ query: "founder or CEO at Graphlit", category: "people" },
+			env,
+			new CostLedger(),
+		);
+
+		const person = result.results
+			.map((row) => row.person)
+			.find((candidate) => candidate?.fullName === "Kirk Marple");
+		expect(person).toBeDefined();
+
+		const current = person?.workHistory.filter((role) => role.current) ?? [];
+		expect(current).toEqual([
+			{
+				title: "Chief Executive Officer, Technical Founder",
+				current: true,
+				companyId: "https://exa.ai/library/organization/lrjlz4ht43v",
+				companyName: "Graphlit, by Unstruk Data",
+			},
+		]);
+	});
+
+	it("marks a role that has ended as not current", async () => {
+		respondWith(searchPeople);
+
+		const result = await search(
+			{ query: "founder or CEO at Graphlit", category: "people" },
+			env,
+			new CostLedger(),
+		);
+
+		const person = result.results
+			.map((row) => row.person)
+			.find((candidate) => candidate?.fullName === "Kirk Marple");
+		const ended = person?.workHistory.filter((role) => !role.current) ?? [];
+
+		expect(ended.length).toBeGreaterThan(0);
+		expect(ended.every((role) => role.current === false)).toBe(true);
+	});
+
+	it("never populates the company entity from a person-category result", async () => {
+		respondWith(searchPeople);
+
+		const result = await search(
+			{ query: "founder or CEO at Graphlit", category: "people" },
+			env,
+			new CostLedger(),
+		);
+
+		expect(result.results[0]?.company).toBeNull();
 	});
 });
 

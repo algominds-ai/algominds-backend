@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { config } from "@/config";
 import { normalizeDomain } from "@/core/db/schema";
 import type { CompanyRow, SearchResult } from "@/core/gate";
@@ -20,6 +21,7 @@ export type FindCompaniesReject = {
 };
 
 export type CompanyMatch = {
+	id: string | null;
 	url: string;
 	title: string;
 	publishedDate: string | null;
@@ -81,6 +83,7 @@ function toSearchResult(result: ExaResult): SearchResult {
 
 function toCompanyMatch(result: ExaResult): CompanyMatch {
 	return {
+		id: result.id,
 		url: result.url,
 		title: result.title,
 		publishedDate: result.publishedDate ?? null,
@@ -94,6 +97,16 @@ export function toCompanyData(
 	provider: string,
 ): CompanyData {
 	return { provider, entity: capture.entity, result: capture.result };
+}
+
+const CompanyDataIdSchema = z
+	.object({ result: z.object({ id: z.string().nullish() }).nullish() })
+	.nullish();
+
+/** Reads the Exa organization id a saved company's `data` column captured, or null for a row with no id on record — an agent-sourced company, or one saved before this field existed. */
+export function companyExaId(data: unknown): string | null {
+	const parsed = CompanyDataIdSchema.safeParse(data);
+	return parsed.success ? (parsed.data?.result?.id ?? null) : null;
 }
 
 function entityRejectReason(

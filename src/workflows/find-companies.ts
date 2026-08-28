@@ -28,7 +28,7 @@ import type { CompanyRow } from "@/core/gate";
 import { gate } from "@/core/gate";
 import { judge } from "@/core/judge";
 import { search } from "@/core/providers/exa";
-import type { IcpDoc } from "@/core/synthesize";
+import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { IcpDocSchema, synthesize } from "@/core/synthesize";
 import {
 	agentRecentDomains,
@@ -204,6 +204,35 @@ function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
 		}));
 }
 
+/**
+ * What the workflow reports back: counts, status, spend, the search plans,
+ * and rejects. The row arrays and the vendor capture stay in Postgres, read
+ * back a page at a time through `GET /runs/{runId}/companies`.
+ */
+export type FindCompaniesSummary = {
+	requested: number;
+	found: number;
+	rounds: number;
+	status: FindCompaniesStatus;
+	costDollars: number;
+	rejects: FindCompaniesReject[];
+	searches: SearchPlan[];
+};
+
+function summarizeFindCompanies(
+	result: FindCompaniesResult,
+): FindCompaniesSummary {
+	return {
+		requested: result.requested,
+		found: result.found,
+		rounds: result.rounds,
+		status: result.status,
+		costDollars: result.costDollars,
+		rejects: result.rejects,
+		searches: result.searches,
+	};
+}
+
 type PersistCompaniesInput = {
 	icpId: string;
 	runId: string;
@@ -241,7 +270,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 	override async run(
 		event: Readonly<WorkflowEvent<FindCompaniesPayload>>,
 		step: WorkflowStep,
-	): Promise<FindCompaniesResult> {
+	): Promise<FindCompaniesSummary> {
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
 		const { doc: icp, accountId } = await step.do(
 			"load-icp",
@@ -298,6 +327,6 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			}),
 		);
 
-		return result;
+		return summarizeFindCompanies(result);
 	}
 }

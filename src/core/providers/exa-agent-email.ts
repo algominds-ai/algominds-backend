@@ -90,10 +90,9 @@ export const exaAgentEmailProvider: Provider<FindymailInput, FindymailResult> =
 		id: "exa-agent-email",
 		channels: ["email"],
 		cost: 3,
-		async run(input, env) {
+		async run(input, env, ledger = new CostLedger()) {
 			const description = personDescription(input);
 			if (!description) return null;
-			const ledger = new CostLedger();
 			const { id } = await startAgentRun(
 				{
 					query: `Find the work email address for ${description}.`,
@@ -111,7 +110,6 @@ export const exaAgentEmailProvider: Provider<FindymailInput, FindymailResult> =
 				contact: toContact(input, person),
 				finder: "agent",
 				status: "unknown",
-				ledger,
 				...(person.source ? { source: person.source } : {}),
 			};
 		},

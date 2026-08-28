@@ -1,6 +1,23 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
+import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import { config } from "../src/config";
+import { db } from "../src/core/db/client";
+import {
+	createIcp,
+	ensureAccount,
+	openRun,
+	saveCompanies,
+	savePeople,
+} from "../src/core/db/queries";
+import {
+	account,
+	company,
+	icp as icpTable,
+	person,
+	run,
+} from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
 import app from "../src/index";
 import { constantTimeEqual } from "../src/routes";
@@ -93,7 +110,10 @@ async function expectEnrichResolvesSubjects(
 			await m.mockStepResult({ name: "open-run" }, { id: runId });
 			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
-			await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
+			await m.mockStepResult(
+				{ name: "enrich-batch-0" },
+				{ outcomes, costDollars: 0.02 },
+			);
 		});
 
 		const response = await authedCall(
@@ -107,7 +127,7 @@ async function expectEnrichResolvesSubjects(
 
 		await instance.waitForStatus("complete");
 		const output = await instance.getOutput();
-		expect(output).toEqual(outcomes);
+		expect(output).toEqual({ outcomes, costDollars: 0.02 });
 	} finally {
 		await instance.dispose();
 	}
@@ -382,5 +402,211 @@ describe("GET /runs/:runId", () => {
 		expect(statusResponse.status).toBe(200);
 		expect(typeof status.status).toBe("string");
 		expect(status.output == null).toBe(true);
+	});
+});
+
+type PageSeed = {
+	accountId: string;
+	icpId: string;
+	runId: string;
+	companyIds: string[];
+};
+
+async function seedRunWithCompanies(
+	label: string,
+	companyCount: number,
+): Promise<PageSeed> {
+	const acct = await ensureAccount(
+		testEnv,
+		`routes-page-test-${label}`,
+		`routes-page-test-${label}-${crypto.randomUUID()}.internal`,
+	);
+	const icpRow = await createIcp(testEnv, {
+		description: "seed icp for run-page route tests",
+		domain: acct.domain,
+		accountId: acct.id,
+	});
+	const runId = `companies_${label}`;
+	await openRun(testEnv, {
+		id: runId,
+		accountId: acct.id,
+		icpId: icpRow.id,
+		capability: "companies",
+		status: "complete",
+	});
+	const saved = await saveCompanies(
+		testEnv,
+		Array.from({ length: companyCount }, (_, i) => ({
+			icpId: icpRow.id,
+			runId,
+			domain: `${label}-${i}.com`,
+			name: `${label} Co ${i}`,
+		})),
+	);
+	return {
+		accountId: acct.id,
+		icpId: icpRow.id,
+		runId,
+		companyIds: saved.map((row) => row.id),
+	};
+}
+
+async function cleanupPageSeed(seed: PageSeed): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(person)
+		.where(inArray(person.companyId, seed.companyIds));
+	await connection.delete(company).where(eq(company.runId, seed.runId));
+	await connection.delete(run).where(eq(run.id, seed.runId));
+	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	await connection.delete(account).where(eq(account.id, seed.accountId));
+}
+
+type CompanyPageBody = {
+	rows: Array<{ id: string; domain: string }>;
+	nextCursor: string | null;
+	limit: number;
+};
+
+describe("GET /runs/:runId/companies and /runs/:runId/people: auth and 404", () => {
+	it("rejects a companies-page request with no bearer token", async () => {
+		const response = await publicCall(
+			"/runs/companies_no-token-test/companies",
+		);
+		expect(response.status).toBe(401);
+	});
+
+	it("rejects a people-page request with no bearer token", async () => {
+		const response = await publicCall("/runs/companies_no-token-test/people");
+		expect(response.status).toBe(401);
+	});
+
+	it("returns 404, not an empty 200, for the companies page of an unknown run id", async () => {
+		const response = await authedCall(
+			"/runs/companies_never-existed-route-test/companies",
+			authedGetInit(),
+		);
+		expect(response.status).toBe(404);
+	});
+
+	it("returns 404, not an empty 200, for the people page of an unknown run id", async () => {
+		const response = await authedCall(
+			"/runs/companies_never-existed-route-test/people",
+			authedGetInit(),
+		);
+		expect(response.status).toBe(404);
+	});
+});
+
+describe("GET /runs/:runId/companies and /runs/:runId/people: pagination", () => {
+	it("pages through a run's companies with no duplicate and no gap", async () => {
+		const label = `routes-companies-${crypto.randomUUID()}`;
+		const seed = await seedRunWithCompanies(label, 5);
+		try {
+			const first = await authedCall(
+				`/runs/${seed.runId}/companies?limit=2`,
+				authedGetInit(),
+			);
+			const firstBody: CompanyPageBody = await first.json();
+
+			expect(first.status).toBe(200);
+			expect(firstBody.rows).toHaveLength(2);
+			expect(firstBody.limit).toBe(2);
+			expect(firstBody.nextCursor).not.toBeNull();
+
+			const second = await authedCall(
+				`/runs/${seed.runId}/companies?limit=2&cursor=${firstBody.nextCursor}`,
+				authedGetInit(),
+			);
+			const secondBody: CompanyPageBody = await second.json();
+
+			expect(secondBody.rows).toHaveLength(2);
+			expect(secondBody.nextCursor).not.toBeNull();
+
+			const third = await authedCall(
+				`/runs/${seed.runId}/companies?limit=2&cursor=${secondBody.nextCursor}`,
+				authedGetInit(),
+			);
+			const thirdBody: CompanyPageBody = await third.json();
+
+			expect(thirdBody.rows).toHaveLength(1);
+			expect(thirdBody.nextCursor).toBeNull();
+
+			const seenIds = [
+				...firstBody.rows,
+				...secondBody.rows,
+				...thirdBody.rows,
+			].map((row) => row.id);
+			expect(new Set(seenIds)).toEqual(new Set(seed.companyIds));
+			expect(seenIds).toHaveLength(seed.companyIds.length);
+		} finally {
+			await cleanupPageSeed(seed);
+		}
+	});
+});
+
+describe("GET /runs/:runId/companies: the page-size ceiling", () => {
+	it("clamps a limit above the configured maximum and reports the clamped value", async () => {
+		const label = `routes-clamp-${crypto.randomUUID()}`;
+		const seed = await seedRunWithCompanies(label, 1);
+		try {
+			const response = await authedCall(
+				`/runs/${seed.runId}/companies?limit=999999`,
+				authedGetInit(),
+			);
+			const body: CompanyPageBody = await response.json();
+
+			expect(response.status).toBe(200);
+			expect(body.limit).toBe(config.limits.maxRunPageSize);
+			expect(body.limit).toBeLessThan(999999);
+		} finally {
+			await cleanupPageSeed(seed);
+		}
+	});
+
+	it("returns people for the given run's companies only, not another run's", async () => {
+		const labelA = `routes-people-a-${crypto.randomUUID()}`;
+		const labelB = `routes-people-b-${crypto.randomUUID()}`;
+		const seedA = await seedRunWithCompanies(labelA, 1);
+		const seedB = await seedRunWithCompanies(labelB, 1);
+		try {
+			const companyIdA = seedA.companyIds[0];
+			const companyIdB = seedB.companyIds[0];
+			if (!companyIdA || !companyIdB)
+				throw new Error("seed produced no company");
+
+			await savePeople(testEnv, [
+				{
+					companyId: companyIdA,
+					linkedinUrl: `https://linkedin.com/in/${labelA}`,
+					name: "Person A",
+					title: "VP of Sales",
+				},
+			]);
+			await savePeople(testEnv, [
+				{
+					companyId: companyIdB,
+					linkedinUrl: `https://linkedin.com/in/${labelB}`,
+					name: "Person B",
+					title: "VP of Sales",
+				},
+			]);
+
+			const response = await authedCall(
+				`/runs/${seedA.runId}/people`,
+				authedGetInit(),
+			);
+			const body: { rows: Array<{ linkedinUrl: string | null }> } =
+				await response.json();
+
+			expect(response.status).toBe(200);
+			expect(body.rows).toHaveLength(1);
+			expect(body.rows[0]?.linkedinUrl).toBe(
+				`https://linkedin.com/in/${labelA}`,
+			);
+		} finally {
+			await cleanupPageSeed(seedA);
+			await cleanupPageSeed(seedB);
+		}
 	});
 });

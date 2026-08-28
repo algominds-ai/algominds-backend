@@ -1,6 +1,7 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { eq } from "drizzle-orm";
 import { config } from "@/config";
+import { CostLedger } from "@/core/cost";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
@@ -63,6 +64,11 @@ export type EnrichOutcome = {
 	subjectId: string;
 	email?: EmailOutcome;
 	linkedin?: LinkedinOutcome;
+};
+
+export type EnrichResult = {
+	outcomes: EnrichOutcome[];
+	costDollars: number;
 };
 
 export type LinkedinInput = { name?: string; domain?: string };
@@ -255,6 +261,7 @@ function findymailInput(subject: EnrichSubject): FindymailInput {
 async function runEmailWaterfall(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<EmailOutcome> {
 	const providers = deps.emailProviders ?? EMAIL;
 	const attempts: FindymailResult[] = [];
@@ -262,12 +269,10 @@ async function runEmailWaterfall(
 		attempts.push(result);
 		return result.status === "verified";
 	};
-	const hit = await waterfall(
-		providers,
-		findymailInput(subject),
-		deps.env,
+	const hit = await waterfall(providers, findymailInput(subject), deps.env, {
 		accept,
-	);
+		ledger,
+	});
 	if (attempts.length > 0) {
 		await appendEvidence(
 			deps.env,
@@ -287,6 +292,7 @@ async function runEmailWaterfall(
 async function resolveEmail(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<EmailOutcome> {
 	const now = deps.now?.() ?? new Date();
 	const cached = await latestEvidence(
@@ -298,7 +304,7 @@ async function resolveEmail(
 	if (cached && withinTtl(cached, EMAIL_TTL_DAYS, now)) {
 		return emailOutcomeFromEvidence(cached);
 	}
-	return runEmailWaterfall(subject, deps);
+	return runEmailWaterfall(subject, deps, ledger);
 }
 
 async function recordLinkedinUrl(
@@ -318,13 +324,14 @@ async function recordLinkedinUrl(
 async function runLinkedinWaterfall(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<LinkedinOutcome> {
 	const providers = deps.linkedinProviders ?? [];
 	const input: LinkedinInput = {
 		...(subject.name !== undefined ? { name: subject.name } : {}),
 		...(subject.domain !== undefined ? { domain: subject.domain } : {}),
 	};
-	const hit = await waterfall(providers, input, deps.env);
+	const hit = await waterfall(providers, input, deps.env, { ledger });
 	if (!hit) return { status: "unknown", value: null, source: null };
 	return recordLinkedinUrl(subject, hit.output.url, hit.source, deps);
 }
@@ -332,6 +339,7 @@ async function runLinkedinWaterfall(
 async function resolveLinkedin(
 	subject: EnrichSubject,
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<LinkedinOutcome> {
 	const now = deps.now?.() ?? new Date();
 	const cached = await latestEvidence(
@@ -346,34 +354,39 @@ async function resolveLinkedin(
 	if (subject.linkedinUrl !== undefined) {
 		return recordLinkedinUrl(subject, subject.linkedinUrl, "subject", deps);
 	}
-	return runLinkedinWaterfall(subject, deps);
+	return runLinkedinWaterfall(subject, deps, ledger);
 }
 
 async function enrichSubject(
 	subject: EnrichSubject,
 	channels: EnrichChannel[],
 	deps: EnrichDeps,
+	ledger: CostLedger,
 ): Promise<EnrichOutcome> {
 	const outcome: EnrichOutcome = { subjectId: subject.id };
 	if (channels.includes("email")) {
-		outcome.email = await resolveEmail(subject, deps);
+		outcome.email = await resolveEmail(subject, deps, ledger);
 	}
 	if (channels.includes("linkedin")) {
-		outcome.linkedin = await resolveLinkedin(subject, deps);
+		outcome.linkedin = await resolveLinkedin(subject, deps, ledger);
 	}
 	return outcome;
 }
 
 /**
  * Resolves one status per requested channel for each subject, reading the
- * evidence cache first and falling back to that channel's waterfall.
+ * evidence cache first and falling back to that channel's waterfall. Every
+ * vendor call the batch makes, hit or miss, lands on the returned ledger
+ * total, since a waterfall provider still spends on a miss.
  */
 export async function enrich(
 	subjects: EnrichSubject[],
 	channels: EnrichChannel[],
 	deps: EnrichDeps,
-): Promise<EnrichOutcome[]> {
-	return Promise.all(
-		subjects.map((subject) => enrichSubject(subject, channels, deps)),
+): Promise<EnrichResult> {
+	const ledger = new CostLedger();
+	const outcomes = await Promise.all(
+		subjects.map((subject) => enrichSubject(subject, channels, deps, ledger)),
 	);
+	return { outcomes, costDollars: ledger.total() };
 }

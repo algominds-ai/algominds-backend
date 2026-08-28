@@ -21,6 +21,7 @@ import { company } from "../src/core/db/schema";
 import type {
 	EnrichDeps,
 	EnrichOutcome,
+	EnrichResult,
 	EnrichSubject,
 	LinkedinInput,
 	LinkedinResult,
@@ -164,7 +165,7 @@ describe("channel selection", () => {
 		}));
 		const subjects: EnrichSubject[] = [{ id: "subject-1", domain: "acme.com" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({ linkedinProviders: [hits] }),
@@ -185,7 +186,7 @@ describe("channel selection", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/known" },
 		];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({ linkedinProviders: [provider] }),
@@ -223,7 +224,7 @@ describe("the email waterfall", () => {
 			},
 		];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email?.status).toBe("unknown");
 		expect(results[0]?.email?.value).toBe("ghost@acme.com");
@@ -234,7 +235,7 @@ describe("the email waterfall", () => {
 		globalThis.fetch = fakeFindymail({});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email).toEqual({
 			status: "unknown",
@@ -254,7 +255,7 @@ describe("the email waterfall", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/sales-team" },
 		];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email?.status).toBe("unknown");
 	});
@@ -321,7 +322,7 @@ describe("the exa agent email provider in the waterfall", () => {
 			},
 		];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(agentStarted).toBe(false);
 		expect(results[0]?.email?.status).toBe("verified");
@@ -342,7 +343,7 @@ describe("the exa agent email provider in the waterfall", () => {
 			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
 		];
 
-		const results = await enrich(subjects, ["email"], baseDeps());
+		const { outcomes: results } = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email?.value).toBe("kirk@graphlit.com");
 	});
@@ -374,6 +375,79 @@ describe("the exa agent email provider in the waterfall", () => {
 		expect(emailRow?.source).toBe(
 			"https://www.linkedin.com/posts/kirkmarple_hiring",
 		);
+	});
+});
+
+describe("enrichment records real spend", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("reports a findymail hit's metered cost into the ledger the caller can read", async () => {
+		globalThis.fetch = fakeFindymail({
+			"/api/search/linkedin": () =>
+				json({ contact: { email: "max@tryramp.com" } }),
+			"/api/verify": (init) =>
+				json({ email: requestedEmail(init), verified: true }),
+		});
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/max" },
+		];
+
+		const { costDollars } = await enrich(subjects, ["email"], baseDeps());
+
+		expect(costDollars).toBeGreaterThan(0);
+	});
+
+	it("reports an agent-provider hit's cost, rather than building a ledger that is thrown away", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () => new Response(null, { status: 404 }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => json(completedAgentRun()),
+			},
+		);
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
+		];
+
+		const { costDollars } = await enrich(subjects, ["email"], baseDeps());
+
+		expect(costDollars).toBeGreaterThan(0);
+	});
+
+	it("still reports what every provider spent trying, when every one misses", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () =>
+					json({ contact: { email: "ghost@acme.com" } }),
+				"/api/verify": (init) =>
+					json({ email: requestedEmail(init), verified: false }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{ "/agent/runs": () => new Response(null, { status: 404 }) },
+		);
+		const subjects: EnrichSubject[] = [
+			{
+				id: "subject-1",
+				name: "Ghost Person",
+				domain: "acme.com",
+				linkedinUrl: "https://linkedin.com/in/ghost",
+			},
+		];
+
+		const { outcomes, costDollars } = await enrich(
+			subjects,
+			["email"],
+			baseDeps(),
+		);
+
+		expect(outcomes[0]?.email?.status).toBe("unknown");
+		expect(costDollars).toBeGreaterThan(0);
 	});
 });
 
@@ -662,7 +736,7 @@ describe("the email evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["email"],
 			baseDeps({ readEvidence: fakeReadEvidence(cached), now: () => now }),
@@ -689,7 +763,7 @@ describe("the email evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["email"],
 			baseDeps({ readEvidence: fakeReadEvidence(cached), now: () => now }),
@@ -716,7 +790,7 @@ describe("the linkedin evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({
@@ -750,7 +824,7 @@ describe("the linkedin evidence cache", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({
@@ -778,7 +852,7 @@ describe("the linkedin waterfall", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1", name: "Someone" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["linkedin"],
 			baseDeps({ linkedinProviders: [first, second] }),
@@ -806,7 +880,11 @@ describe("enrich() result shape", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/max" },
 		];
 
-		const results = await enrich(subjects, ["email", "linkedin"], baseDeps());
+		const { outcomes: results } = await enrich(
+			subjects,
+			["email", "linkedin"],
+			baseDeps(),
+		);
 
 		expect(results[0]?.email?.status).toBe("verified");
 		expect(results[0]?.linkedin).toEqual({
@@ -834,7 +912,7 @@ describe("enrich() result shape", () => {
 		});
 		const subjects: EnrichSubject[] = [{ id: "subject-1" }];
 
-		const results = await enrich(
+		const { outcomes: results } = await enrich(
 			subjects,
 			["email", "linkedin"],
 			baseDeps({
@@ -851,7 +929,11 @@ describe("enrich() result shape", () => {
 			{ id: "subject-1", linkedinUrl: "https://linkedin.com/in/plain" },
 		];
 
-		const results = await enrich(subjects, ["linkedin"], baseDeps());
+		const { outcomes: results } = await enrich(
+			subjects,
+			["linkedin"],
+			baseDeps(),
+		);
 
 		expect(results).toEqual([
 			{
@@ -893,6 +975,17 @@ describe("EnrichWorkflow", () => {
 	});
 });
 
+function foundLinkedinOutcome(subjectId: string, i: number): EnrichOutcome {
+	return {
+		subjectId,
+		linkedin: {
+			status: "found",
+			value: `https://linkedin.com/in/${i}`,
+			source: "subject",
+		},
+	};
+}
+
 describe("EnrichWorkflow: resolving a run", () => {
 	it("resolves a run into subjects and runs one step per batch", async () => {
 		const instanceId = "enrich_workflow_batches_test";
@@ -904,24 +997,16 @@ describe("EnrichWorkflow: resolving a run", () => {
 			const subjects: EnrichSubject[] = Array.from({ length: 6 }, (_, i) => ({
 				id: `subject-${i}`,
 			}));
-			const batchZero: EnrichOutcome[] = Array.from({ length: 5 }, (_, i) => ({
-				subjectId: `subject-${i}`,
-				linkedin: {
-					status: "found",
-					value: `https://linkedin.com/in/${i}`,
-					source: "subject",
-				},
-			}));
-			const batchOne: EnrichOutcome[] = [
-				{
-					subjectId: "subject-5",
-					linkedin: {
-						status: "found",
-						value: "https://linkedin.com/in/5",
-						source: "subject",
-					},
-				},
-			];
+			const batchZero: EnrichResult = {
+				outcomes: Array.from({ length: 5 }, (_, i) =>
+					foundLinkedinOutcome(`subject-${i}`, i),
+				),
+				costDollars: 0,
+			};
+			const batchOne: EnrichResult = {
+				outcomes: [foundLinkedinOutcome("subject-5", 5)],
+				costDollars: 0,
+			};
 			await instance.modify(async (m) => {
 				await mockRunBookkeeping(m);
 				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
@@ -936,7 +1021,10 @@ describe("EnrichWorkflow: resolving a run", () => {
 			await instance.waitForStatus("complete");
 
 			const output = await instance.getOutput();
-			expect(output).toEqual([...batchZero, ...batchOne]);
+			expect(output).toEqual({
+				outcomes: [...batchZero.outcomes, ...batchOne.outcomes],
+				costDollars: 0,
+			});
 		} finally {
 			await instance.dispose();
 		}
@@ -958,10 +1046,11 @@ describe("EnrichWorkflow: resolving a run", () => {
 				subjectId: subject.id,
 				linkedin: { status: "unknown", value: null, source: null },
 			}));
+			const batchResult: EnrichResult = { outcomes, costDollars: 0 };
 			await instance.modify(async (m) => {
 				await mockRunBookkeeping(m);
 				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
-				await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
+				await m.mockStepResult({ name: "enrich-batch-0" }, batchResult);
 			});
 
 			await testEnv.ENRICH.create({
@@ -971,7 +1060,7 @@ describe("EnrichWorkflow: resolving a run", () => {
 			await instance.waitForStatus("complete");
 
 			const output = await instance.getOutput();
-			expect(output).toEqual(outcomes);
+			expect(output).toEqual(batchResult);
 		} finally {
 			await instance.dispose();
 		}
@@ -996,7 +1085,48 @@ describe("EnrichWorkflow: resolving a run", () => {
 			await instance.waitForStatus("complete");
 
 			const output = await instance.getOutput();
-			expect(output).toEqual([]);
+			expect(output).toEqual({ outcomes: [], costDollars: 0 });
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("EnrichWorkflow: closes the run with the real spend", () => {
+	it("reports a positive figure, not the placeholder zero, for a run that spent", async () => {
+		const instanceId = "enrich_workflow_real_cost_test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.ENRICH,
+			instanceId,
+		);
+		try {
+			const subjects: EnrichSubject[] = [{ id: "subject-1" }];
+			const outcome: EnrichOutcome = {
+				subjectId: "subject-1",
+				email: {
+					status: "verified",
+					value: "max@tryramp.com",
+					source: "linkedin",
+				},
+			};
+			const batchResult: EnrichResult = {
+				outcomes: [outcome],
+				costDollars: 0.02,
+			};
+			await instance.modify(async (m) => {
+				await mockRunBookkeeping(m);
+				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
+				await m.mockStepResult({ name: "enrich-batch-0" }, batchResult);
+			});
+
+			await testEnv.ENRICH.create({
+				id: instanceId,
+				params: { runId: "people_run_real_cost", channels: ["email"] },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual(batchResult);
 		} finally {
 			await instance.dispose();
 		}

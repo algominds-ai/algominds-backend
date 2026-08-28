@@ -77,10 +77,12 @@ function toExaResult(company: ExaAgentCompany): ExaResult | null {
 	const website = company.website;
 	if (!website) return null;
 	return {
+		id: null,
 		url: website,
 		title: company.name ?? website,
 		summary: null,
 		company: toCompanyEntity(company),
+		person: null,
 	};
 }
 

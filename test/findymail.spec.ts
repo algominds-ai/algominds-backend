@@ -278,13 +278,34 @@ describe("findymail cost metering", () => {
 			"/api/verify": (init) =>
 				json({ email: requestedEmail(init), verified: true }),
 		});
+		const ledger = new CostLedger();
 
-		const result = await findymailLinkedinProvider.run(
+		await findymailLinkedinProvider.run(
 			{ linkedinUrl: "linkedin.com/in/maxwellfreeman" },
 			findymailEnv(),
+			ledger,
 		);
 
-		expect(result?.ledger.total()).toBeCloseTo(0.02, 10);
+		expect(ledger.total()).toBeCloseTo(0.02, 10);
+	});
+
+	it("still meters what it spent on a miss, into the caller's ledger", async () => {
+		globalThis.fetch = fakeFindymail({
+			"/api/search/linkedin": () =>
+				json({ contact: { email: "ghost@acme.com" } }),
+			"/api/verify": (init) =>
+				json({ email: requestedEmail(init), verified: false }),
+		});
+		const ledger = new CostLedger();
+
+		const result = await findymailLinkedinProvider.run(
+			{ linkedinUrl: "linkedin.com/in/ghost" },
+			findymailEnv(),
+			ledger,
+		);
+
+		expect(result?.status).toBe("invalid");
+		expect(ledger.total()).toBeGreaterThan(0);
 	});
 });
 

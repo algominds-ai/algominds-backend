@@ -4,6 +4,7 @@ export const config = {
 		maxCompaniesPerRequest: 300,
 		defaultMaxCompaniesPerPeopleRun: 100,
 		maxCompaniesPerPeopleRun: 300,
+		maxRunPageSize: 200,
 	},
 	companies: {
 		maxRounds: 3,

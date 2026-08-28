@@ -1,5 +1,6 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
+import { CostLedger } from "../src/core/cost";
 import { mcpProvider } from "../src/core/providers/mcp";
 import type { Provider } from "../src/core/providers/types";
 import {
@@ -86,12 +87,9 @@ describe("waterfall", () => {
 			return { status: "verified" };
 		});
 
-		const result = await waterfall(
-			[first, second],
-			{},
-			testEnv,
-			(o) => o.status === "verified",
-		);
+		const result = await waterfall([first, second], {}, testEnv, {
+			accept: (o) => o.status === "verified",
+		});
 
 		expect(result).toEqual({
 			output: { status: "verified" },
@@ -112,6 +110,38 @@ describe("waterfall", () => {
 		await waterfall(providers, {}, testEnv);
 
 		expect(calls).toEqual(["a", "b", "c"]);
+	});
+});
+
+describe("waterfall: spend tracking", () => {
+	it("passes the ledger to every provider, so a miss still records what it spent", async () => {
+		const spends: string[] = [];
+		const first: Provider<Out, Out> = {
+			id: "first",
+			channels: ["email"],
+			cost: 0,
+			async run(_input, _env, ledger) {
+				ledger?.reported("first", "attempt", 0.01);
+				return null;
+			},
+		};
+		const second: Provider<Out, Out> = {
+			id: "second",
+			channels: ["email"],
+			cost: 0,
+			async run(_input, _env, ledger) {
+				ledger?.reported("second", "attempt", 0.02);
+				spends.push("second");
+				return { value: "b" };
+			},
+		};
+		const ledger = new CostLedger();
+
+		const result = await waterfall([first, second], {}, testEnv, { ledger });
+
+		expect(result).toEqual({ output: { value: "b" }, source: "second" });
+		expect(spends).toEqual(["second"]);
+		expect(ledger.total()).toBeCloseTo(0.03, 10);
 	});
 });
 

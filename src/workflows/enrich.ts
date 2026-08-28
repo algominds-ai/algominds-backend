@@ -17,6 +17,11 @@ export type EnrichWorkflowParams = {
 	channels: EnrichChannel[];
 };
 
+export type EnrichWorkflowResult = {
+	outcomes: EnrichOutcome[];
+	costDollars: number;
+};
+
 /** Splits `subjects` into ordered groups of `BATCH_SIZE`. */
 export function toBatches(subjects: EnrichSubject[]): EnrichSubject[][] {
 	const batches: EnrichSubject[][] = [];
@@ -33,7 +38,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 	override async run(
 		event: WorkflowEvent<EnrichWorkflowParams>,
 		step: WorkflowStep,
-	): Promise<EnrichOutcome[]> {
+	): Promise<EnrichWorkflowResult> {
 		const { runId, channels } = event.payload;
 		const subjects = await step.do(
 			"resolve-subjects",
@@ -61,21 +66,23 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 		);
 
 		const outcomes: EnrichOutcome[] = [];
+		let costDollars = 0;
 		for (const [index, batch] of toBatches(subjects).entries()) {
-			const batchOutcomes = await step.do(
+			const batchResult = await step.do(
 				`enrich-batch-${index}`,
 				config.stepConfig.paidCall,
 				() => enrich(batch, channels, { env: this.env }),
 			);
-			outcomes.push(...batchOutcomes);
+			outcomes.push(...batchResult.outcomes);
+			costDollars += batchResult.costDollars;
 		}
 		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
 				status: "complete",
-				costDollars: 0,
+				costDollars,
 			}),
 		);
 
-		return outcomes;
+		return { outcomes, costDollars };
 	}
 }

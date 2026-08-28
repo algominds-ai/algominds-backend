@@ -1,8 +1,10 @@
+import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import type {
 	FindCompaniesDeps,
 	FindCompaniesOptions,
+	FindCompaniesResult,
 } from "../src/core/companies";
 import { findCompanies } from "../src/core/companies";
 import { toExaSearchResult } from "../src/core/company-agent-search";
@@ -12,6 +14,7 @@ import type {
 } from "../src/core/company-candidates";
 import { toCompanyData } from "../src/core/company-candidates";
 import { CostLedger } from "../src/core/cost";
+import type { CompanyRow } from "../src/core/gate";
 import { gate } from "../src/core/gate";
 import type { Verdict } from "../src/core/judge";
 import type {
@@ -50,19 +53,23 @@ function goodResult(
 	overrides: Partial<CompanyEntity> = {},
 ): ExaResult {
 	return {
+		id: `https://exa.ai/library/organization/${domain}`,
 		url: `https://${domain}/`,
 		title: `Company ${domain}`,
 		summary: null,
 		company: entity({ name: `Company ${domain}`, ...overrides }),
+		person: null,
 	};
 }
 
 function entitylessResult(id: number): ExaResult {
 	return {
+		id: null,
 		url: `https://example.com/missing-${id}`,
 		title: `NoEntity${id}`,
 		summary: null,
 		company: null,
+		person: null,
 	};
 }
 
@@ -442,6 +449,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 		const match: CompanyMatch | undefined =
 			result.captures["noscore.com"]?.result;
 		expect(match).toEqual({
+			id: "https://exa.ai/library/organization/noscore.com",
 			url: "https://noscore.com/",
 			title: "Company noscore.com",
 			publishedDate: null,
@@ -508,6 +516,7 @@ describe("findCompanies — captures across sources", () => {
 			Object.keys(entity()).sort(),
 		);
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
+			"id",
 			"publishedDate",
 			"score",
 			"title",
@@ -521,6 +530,7 @@ describe("toCompanyData", () => {
 		const capture: CompanyCapture = {
 			entity: entity(),
 			result: {
+				id: "https://exa.ai/library/organization/example",
 				url: "https://example.com/",
 				title: "Example",
 				publishedDate: null,
@@ -534,5 +544,103 @@ describe("toCompanyData", () => {
 			result: capture.result,
 		});
 		expect(toCompanyData(capture, "exa-agent").provider).toBe("exa-agent");
+	});
+});
+
+const WORKFLOW_SCOPES = ["summary-size-test"];
+
+async function terminateWorkflowRuns(): Promise<void> {
+	for (const scope of WORKFLOW_SCOPES) {
+		const instance = await testEnv.FIND_COMPANIES.get(scope).catch(() => null);
+		await instance?.terminate().catch(() => undefined);
+	}
+}
+
+afterEach(terminateWorkflowRuns);
+
+describe("FindCompaniesWorkflow: the summary output", () => {
+	it("returns a bounded summary that does not grow with the number of companies found", async () => {
+		const instanceId = "summary-size-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			const count = 50;
+			const domains = Array.from({ length: count }, (_, i) => `co-${i}.com`);
+			const companies: CompanyRow[] = domains.map((domain, i) => ({
+				name: `Co ${i}`,
+				domain,
+				linkedinUrl: null,
+				evidenceUrl: `https://${domain}`,
+				signal: null,
+				evidenceDate: null,
+			}));
+			const captures: Record<string, CompanyCapture> = Object.fromEntries(
+				domains.map((domain) => [
+					domain,
+					{
+						entity: entity({ name: domain }),
+						result: {
+							id: null,
+							url: `https://${domain}/`,
+							title: domain,
+							publishedDate: null,
+							score: null,
+						},
+					},
+				]),
+			);
+			const plan: SearchPlan = {
+				query: "fintech companies",
+				angle: "angle-1",
+				userLocation: null,
+				countries: [],
+				minWorkforce: null,
+				maxWorkforce: null,
+			};
+			const roundResult: FindCompaniesResult = {
+				companies,
+				requested: count,
+				found: count,
+				rounds: 1,
+				status: "complete",
+				costDollars: 0.05,
+				rejects: [],
+				searches: [plan],
+				captures,
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "round_1" }, roundResult);
+				await m.mockStepResult({ name: "save-companies" }, {});
+				await m.mockStepResult({ name: "close-run" }, {});
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: "icp-summary-test", count },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual({
+				requested: count,
+				found: count,
+				rounds: 1,
+				status: "complete",
+				costDollars: 0.05,
+				rejects: [],
+				searches: [plan],
+			});
+		} finally {
+			await instance.dispose();
+		}
 	});
 });

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { config } from "@/config";
 import { createIcp, ensureAccount, findRun } from "@/core/db/queries";
+import { companiesPage, peoplePage } from "@/core/db/run-pages";
 import { normalizeDomain } from "@/core/db/schema";
 
 type ApiEnv = { Bindings: Env };
@@ -194,6 +195,63 @@ async function getRunStatus(
 	}
 }
 
+const pageQuerySchema = z.object({
+	limit: z.coerce.number().int().positive().optional(),
+	cursor: z.uuid().optional(),
+});
+
+type PageQuery = { limit: number; cursor: string | undefined };
+
+/** The caller's own limit, up to the configured page-size ceiling. */
+function effectiveLimit(requested: number | undefined): number {
+	return Math.min(
+		requested ?? config.limits.maxRunPageSize,
+		config.limits.maxRunPageSize,
+	);
+}
+
+function parsePageQuery(c: Context<ApiEnv>): PageQuery | Response {
+	const parsed = pageQuerySchema.safeParse({
+		limit: c.req.query("limit"),
+		cursor: c.req.query("cursor"),
+	});
+	if (!parsed.success) return c.json({ issues: parsed.error.issues }, 400);
+	return {
+		limit: effectiveLimit(parsed.data.limit),
+		cursor: parsed.data.cursor,
+	};
+}
+
+async function getRunCompanies(
+	c: Context<ApiEnv, "/runs/:runId/companies">,
+): Promise<Response> {
+	const runId = c.req.param("runId");
+	const query = parsePageQuery(c);
+	if (query instanceof Response) return query;
+	const runRow = await findRun(c.env, runId);
+	if (!runRow) return c.json({ error: "unknown run" }, 404);
+	const page = await companiesPage(c.env, runId, query);
+	return c.json(
+		{ rows: page.rows, nextCursor: page.nextCursor, limit: query.limit },
+		200,
+	);
+}
+
+async function getRunPeople(
+	c: Context<ApiEnv, "/runs/:runId/people">,
+): Promise<Response> {
+	const runId = c.req.param("runId");
+	const query = parsePageQuery(c);
+	if (query instanceof Response) return query;
+	const runRow = await findRun(c.env, runId);
+	if (!runRow) return c.json({ error: "unknown run" }, 404);
+	const page = await peoplePage(c.env, runId, query);
+	return c.json(
+		{ rows: page.rows, nextCursor: page.nextCursor, limit: query.limit },
+		200,
+	);
+}
+
 /** The bearer-protected job API: three start routes plus one status route. */
 export function createApiRoutes(): Hono<ApiEnv> {
 	const api = new Hono<ApiEnv>();
@@ -238,6 +296,8 @@ export function createApiRoutes(): Hono<ApiEnv> {
 	);
 
 	api.get("/runs/:runId", getRunStatus);
+	api.get("/runs/:runId/companies", getRunCompanies);
+	api.get("/runs/:runId/people", getRunPeople);
 
 	return api;
 }

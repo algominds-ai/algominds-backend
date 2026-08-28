@@ -109,19 +109,41 @@ const CompanyPropertiesSchema = z.object({
 		.nullish(),
 });
 
-const EntitySchema = z.object({
-	type: z.string(),
-	properties: CompanyPropertiesSchema,
+const PersonWorkHistoryCompanySchema = z.object({
+	id: z.string().nullish(),
+	name: z.string().nullish(),
 });
 
+const PersonWorkHistoryEntrySchema = z.object({
+	title: z.string().nullish(),
+	dates: z
+		.object({ from: z.string().nullish(), to: z.string().nullish() })
+		.nullish(),
+	company: PersonWorkHistoryCompanySchema.nullish(),
+});
+
+const PersonPropertiesSchema = z.object({
+	name: z.string().nullish(),
+	firstName: z.string().nullish(),
+	lastName: z.string().nullish(),
+	location: z.string().nullish(),
+	workHistory: z.array(PersonWorkHistoryEntrySchema).nullish(),
+});
+
+const EntitySchema = z.discriminatedUnion("type", [
+	z.object({ type: z.literal("company"), properties: CompanyPropertiesSchema }),
+	z.object({ type: z.literal("person"), properties: PersonPropertiesSchema }),
+]);
+
 const ExaResultSchema = z.object({
+	id: z.string().optional(),
 	url: z.string(),
 	title: z.string(),
 	publishedDate: z.string().optional(),
 	score: z.number().optional(),
 	text: z.string().optional(),
 	summary: z.string().optional(),
-	entities: z.array(EntitySchema).optional(),
+	entities: z.array(z.unknown()).optional(),
 });
 
 const ExaResponseSchema = z.object({
@@ -148,7 +170,24 @@ export type CompanyEntity = {
 	fundingTotal: number | null;
 };
 
+/** One employer a person's work history names, as `category: "people"` reports it. `companyId` is the same identifier the `company` category returns for that organization, and is frequently null even for a real employer. `current` is true only when the role carries an explicit null end date. */
+export type PersonWorkHistoryEntry = {
+	title: string | null;
+	from: string | null;
+	current: boolean;
+	companyId: string | null;
+	companyName: string | null;
+};
+
+/** The structured person record Exa returns for `category: "people"`, read from the entity whose type is `"person"`. `educationHistory` and `research` are not modelled; nothing reads them. */
+export type PersonRecord = {
+	fullName: string | null;
+	location: string | null;
+	workHistory: PersonWorkHistoryEntry[];
+};
+
 export type ExaResult = {
+	id: string | null;
 	url: string;
 	title: string;
 	publishedDate?: string;
@@ -156,6 +195,7 @@ export type ExaResult = {
 	text?: string;
 	summary: Json | null;
 	company: CompanyEntity | null;
+	person: PersonRecord | null;
 };
 
 export type ExaSearchResult = {
@@ -172,12 +212,14 @@ function parseSummary(raw: string | undefined): Json | null {
 	}
 }
 
-function toCompanyEntity(
-	entities: z.infer<typeof ExaResultSchema>["entities"],
-): CompanyEntity | null {
+type RawEntities = z.infer<typeof ExaResultSchema>["entities"];
+
+function toCompanyEntity(entities: RawEntities): CompanyEntity | null {
 	const found = entities?.find((entity) => entity.type === "company");
 	if (!found) return null;
-	const p = found.properties;
+	const parsed = CompanyPropertiesSchema.safeParse(found.properties);
+	if (!parsed.success) return null;
+	const p = parsed.data;
 	return {
 		name: p.name ?? null,
 		description: p.description ?? null,
@@ -190,9 +232,45 @@ function toCompanyEntity(
 	};
 }
 
+function personFullName(
+	p: z.infer<typeof PersonPropertiesSchema>,
+): string | null {
+	if (p.name) return p.name;
+	const parts = [p.firstName, p.lastName].filter(
+		(part): part is string => part !== null && part !== undefined,
+	);
+	return parts.length > 0 ? parts.join(" ") : null;
+}
+
+function toWorkHistoryEntry(
+	entry: z.infer<typeof PersonWorkHistoryEntrySchema>,
+): PersonWorkHistoryEntry {
+	return {
+		title: entry.title ?? null,
+		current: (entry.dates?.to ?? null) === null,
+		companyId: entry.company?.id ?? null,
+		companyName: entry.company?.name ?? null,
+	};
+}
+
+function toPersonRecord(entities: RawEntities): PersonRecord | null {
+	const found = entities?.find((entity) => entity.type !== "company");
+	if (!found) return null;
+	const parsed = PersonPropertiesSchema.safeParse(found.properties);
+	if (!parsed.success) return null;
+	const p = parsed.data;
+	return {
+		fullName: personFullName(p),
+		location: p.location ?? null,
+		workHistory: (p.workHistory ?? []).map(toWorkHistoryEntry),
+	};
+}
+
 function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
 	return {
+		id: raw.id ?? null,
 		company: toCompanyEntity(raw.entities),
+		person: toPersonRecord(raw.entities),
 		url: raw.url,
 		title: raw.title,
 		...(raw.publishedDate !== undefined

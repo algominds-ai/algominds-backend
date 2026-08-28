@@ -22,6 +22,11 @@ limits:
   # a run this large stops on spend and reports capped. That is money winning
   # over count, which is the intended order.
   maxCompaniesPerPeopleRun: 300
+  # The most rows GET /runs/{runId}/companies and GET /runs/{runId}/people
+  # return in one page. A caller's own limit wins up to this; beyond it the
+  # request is clamped and the response reports the limit actually used, so
+  # the clamp is never silent.
+  maxRunPageSize: 200
 
 companies:
   # Rounds of search per run. Each round is one paid Exa call plus two model calls.
@@ -66,13 +71,8 @@ spend:
   # companies is $0.100.
   perRunDollars: 2.00
   # An account refuses to start a new run once its day already costs this much.
-  # Checked before any paid work, so a refused run spends nothing.
-  #
-  # Known hole: enrichment spend is NOT counted here. Findymail and the agent
-  # provider both report cost into a ledger, but enrich() never collects one,
-  # so an enrich run records zero. Closing that means threading a ledger
-  # through the waterfall, which changes a contract every provider implements.
-  # Until then this ceiling covers company and people runs only.
+  # Checked before any paid work, so a refused run spends nothing. Covers
+  # company, people, and enrich runs alike.
   perAccountDailyDollars: 50.00
 
 judge:

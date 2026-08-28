@@ -17,6 +17,7 @@ import type {
 	FindPeopleOptions,
 	FindPeopleResult,
 	PeopleCompany,
+	PersonCandidate,
 } from "../src/core/people";
 import {
 	findPeople,
@@ -41,12 +42,17 @@ const icp: IcpDoc = {
 
 let companySeq = 0;
 
-function testCompany(fields: { domain: string; name: string }): PeopleCompany {
+function testCompany(fields: {
+	domain: string;
+	name: string;
+	exaId?: string | null;
+}): PeopleCompany {
 	companySeq += 1;
 	return {
 		id: `company-${companySeq}`,
 		domain: fields.domain,
 		name: fields.name,
+		exaId: fields.exaId ?? null,
 	};
 }
 
@@ -62,21 +68,42 @@ function scriptedTitles(
 	return async () => ({ titles, ledger: new CostLedger() });
 }
 
+type WorkHistoryFixture = {
+	title?: string | null;
+	current?: boolean;
+	companyId?: string | null;
+	companyName?: string | null;
+};
+
 function personResult(
 	fields: {
 		fullName?: string | null;
-		currentTitle?: string | null;
-		currentCompany?: string | null;
 		location?: string | null;
+		workHistory?: WorkHistoryFixture[];
 	},
 	url: string,
 ): ExaResult {
-	const summary: Record<string, string> = {};
-	if (fields.fullName) summary.fullName = fields.fullName;
-	if (fields.currentTitle) summary.currentTitle = fields.currentTitle;
-	if (fields.currentCompany) summary.currentCompany = fields.currentCompany;
-	if (fields.location) summary.location = fields.location;
-	return { url, title: fields.fullName ?? "profile", summary, company: null };
+	const person =
+		fields.fullName === undefined
+			? null
+			: {
+					fullName: fields.fullName,
+					location: fields.location ?? null,
+					workHistory: (fields.workHistory ?? []).map((entry) => ({
+						title: entry.title ?? null,
+						current: entry.current ?? true,
+						companyId: entry.companyId ?? null,
+						companyName: entry.companyName ?? null,
+					})),
+				};
+	return {
+		id: null,
+		url,
+		title: fields.fullName ?? "profile",
+		summary: null,
+		company: null,
+		person,
+	};
 }
 
 function scriptedSearch(perCall: ExaResult[][]): {
@@ -156,42 +183,24 @@ describe("findPeople: a company with no results", () => {
 	});
 });
 
-describe("findPeople: employer disagreement", () => {
-	it("keeps both employer claims and lowers confidence when currentCompany differs from the target", async () => {
-		const company = testCompany({ domain: "acme.com", name: "Acme" });
-		const result = personResult(
-			{
-				fullName: "Jane Doe",
-				currentTitle: "VP of Sales",
-				currentCompany: "Globex",
-				location: "New York",
-			},
-			"https://linkedin.com/in/janedoe",
-		);
-		const { search } = scriptedSearch([[result]]);
-
-		const found = await findPeople(
-			[company],
-			testOpts(),
-			testDeps(search, [null]),
-		);
-		const person = found.companies[0]?.people[0];
-
-		expect(person?.employment).toEqual([
-			{ company: "Globex", confidence: 1, source: "exa" },
-			{ company: "Acme", confidence: 0.4, source: "target" },
-		]);
-		expect(person?.employmentConfidence).toBe(0.4);
-	});
-
-	it("records one high-confidence claim when currentCompany matches the target", async () => {
-		const company = testCompany({ domain: "ramp.com", name: "Ramp" });
+describe("findPeople: employment settled by company id", () => {
+	it("matches a person whose current role names the target company's id", async () => {
+		const company = testCompany({
+			domain: "ramp.com",
+			name: "Ramp",
+			exaId: "https://exa.ai/library/organization/ramp",
+		});
 		const result = personResult(
 			{
 				fullName: "Max Freeman",
-				currentTitle: "SVP of Sales",
-				currentCompany: "Ramp",
 				location: "San Francisco",
+				workHistory: [
+					{
+						title: "SVP of Sales",
+						companyId: "https://exa.ai/library/organization/ramp",
+						companyName: "Ramp",
+					},
+				],
 			},
 			"https://linkedin.com/in/maxfreeman",
 		);
@@ -209,6 +218,100 @@ describe("findPeople: employer disagreement", () => {
 		]);
 		expect(person?.employmentConfidence).toBe(1);
 	});
+
+	it("does not match a person at a different company sharing the target's name (the measured Passage collision)", async () => {
+		const company = testCompany({
+			domain: "passage-one.com",
+			name: "Passage",
+			exaId: "https://exa.ai/library/organization/passage-one",
+		});
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				workHistory: [
+					{
+						title: "VP of Sales",
+						companyId: "https://exa.ai/library/organization/passage-two",
+						companyName: "Passage",
+					},
+				],
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.employment).toEqual([
+			{ company: "Passage", confidence: 1, source: "exa" },
+			{ company: "Passage", confidence: 0.4, source: "target" },
+		]);
+		expect(person?.employmentConfidence).toBe(0.4);
+	});
+});
+
+describe("findPeople: employment edge cases", () => {
+	it("does not treat a role that has ended as current", async () => {
+		const company = testCompany({
+			domain: "acme.com",
+			name: "Acme",
+			exaId: "https://exa.ai/library/organization/acme",
+		});
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				workHistory: [
+					{
+						title: "Former VP of Sales",
+						current: false,
+						companyId: "https://exa.ai/library/organization/acme",
+						companyName: "Acme",
+					},
+				],
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.employment).toEqual([
+			{ company: "Acme", confidence: 0.4, source: "target" },
+		]);
+		expect(person?.employmentConfidence).toBe(0.4);
+	});
+
+	it("reports a person with no work history instead of dropping them", async () => {
+		const company = testCompany({ domain: "acme.com", name: "Acme" });
+		const result = personResult(
+			{ fullName: "Jane Doe" },
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.fullName).toBe("Jane Doe");
+		expect(person?.employment).toEqual([
+			{ company: "Acme", confidence: 0.4, source: "target" },
+		]);
+		expect(person?.employmentConfidence).toBe(0.4);
+	});
 });
 
 describe("findPeople: title normalisation", () => {
@@ -216,7 +319,10 @@ describe("findPeople: title normalisation", () => {
 		const raw = "SVP of Sales @ Ramp (I'm hiring - ramp.com/careers)";
 		const company = testCompany({ domain: "ramp.com", name: "Ramp" });
 		const result = personResult(
-			{ fullName: "Max Freeman", currentTitle: raw, currentCompany: "Ramp" },
+			{
+				fullName: "Max Freeman",
+				workHistory: [{ title: raw, companyName: "Ramp" }],
+			},
 			"https://linkedin.com/in/maxfreeman",
 		);
 		const { search } = scriptedSearch([[result]]);
@@ -239,11 +345,17 @@ describe("findPeople: dedupe by LinkedIn URL", () => {
 		const companyB = testCompany({ domain: "b.com", name: "B Co" });
 		const sharedUrl = "https://linkedin.com/in/samlee";
 		const resultA = personResult(
-			{ fullName: "Sam Lee", currentTitle: "CEO", currentCompany: "A Co" },
+			{
+				fullName: "Sam Lee",
+				workHistory: [{ title: "CEO", companyName: "A Co" }],
+			},
 			sharedUrl,
 		);
 		const resultB = personResult(
-			{ fullName: "Sam Lee", currentTitle: "CEO", currentCompany: "A Co" },
+			{
+				fullName: "Sam Lee",
+				workHistory: [{ title: "CEO", companyName: "A Co" }],
+			},
 			sharedUrl,
 		);
 		const { search } = scriptedSearch([[resultA], [resultB]]);
@@ -262,11 +374,17 @@ describe("findPeople: dedupe by LinkedIn URL", () => {
 		const companyA = testCompany({ domain: "a.com", name: "A Co" });
 		const companyB = testCompany({ domain: "b.com", name: "B Co" });
 		const resultA = personResult(
-			{ fullName: "Sam Lee", currentTitle: "CEO", currentCompany: "A Co" },
+			{
+				fullName: "Sam Lee",
+				workHistory: [{ title: "CEO", companyName: "A Co" }],
+			},
 			"https://linkedin.com/in/samlee-a",
 		);
 		const resultB = personResult(
-			{ fullName: "Sam Lee", currentTitle: "CEO", currentCompany: "B Co" },
+			{
+				fullName: "Sam Lee",
+				workHistory: [{ title: "CEO", companyName: "B Co" }],
+			},
 			"https://linkedin.com/in/samlee-b",
 		);
 		const { search } = scriptedSearch([[resultA], [resultB]]);
@@ -526,8 +644,7 @@ describe("findPeople: Apollo coverage", () => {
 		const result = personResult(
 			{
 				fullName: "Max Freeman",
-				currentTitle: "SVP of Sales",
-				currentCompany: "Ramp",
+				workHistory: [{ title: "SVP of Sales", companyName: "Ramp" }],
 			},
 			"https://linkedin.com/in/maxfreeman",
 		);
@@ -580,9 +697,8 @@ describe("findPeople: capturing the vendor payload", () => {
 		const result = personResult(
 			{
 				fullName: "Jane Doe",
-				currentTitle: "VP of Sales",
-				currentCompany: "Acme",
 				location: "New York",
+				workHistory: [{ title: "VP of Sales", companyName: "Acme" }],
 			},
 			"https://linkedin.com/in/janedoe",
 		);
@@ -606,7 +722,7 @@ describe("findPeople: capturing the vendor payload", () => {
 	it("captures a profile missing its location with that field null, not a thrown error", async () => {
 		const company = testCompany({ domain: "acme.com", name: "Acme" });
 		const result = personResult(
-			{ fullName: "Jane Doe", currentTitle: "VP of Sales" },
+			{ fullName: "Jane Doe", workHistory: [{ title: "VP of Sales" }] },
 			"https://linkedin.com/in/janedoe",
 		);
 		const { search } = scriptedSearch([[result]]);
@@ -628,13 +744,22 @@ describe("findPeople: capturing the vendor payload", () => {
 	});
 
 	it("keeps the fields evidence reads unchanged now that the vendor capture rides alongside them", async () => {
-		const company = testCompany({ domain: "acme.com", name: "Acme" });
+		const company = testCompany({
+			domain: "acme.com",
+			name: "Acme",
+			exaId: "https://exa.ai/library/organization/acme",
+		});
 		const result = personResult(
 			{
 				fullName: "Jane Doe",
-				currentTitle: "VP of Sales",
-				currentCompany: "Acme",
 				location: "New York",
+				workHistory: [
+					{
+						title: "VP of Sales",
+						companyId: "https://exa.ai/library/organization/acme",
+						companyName: "Acme",
+					},
+				],
 			},
 			"https://linkedin.com/in/janedoe",
 		);
@@ -708,6 +833,7 @@ const SCOPES = [
 	"no-people-test",
 	"domains-batches-test",
 	"unknown-run-test",
+	"people-found-test",
 ];
 
 async function terminateStartedRuns(): Promise<void> {
@@ -782,9 +908,9 @@ describe("FindPeopleWorkflow: runId", () => {
 
 			const output = await instance.getOutput();
 			expect(output).toEqual({
-				companies: [...batchZero.companies, ...batchOne.companies],
 				searched: 7,
 				skippedCompanies: 0,
+				peopleFound: 0,
 				costDollars: 0.05 + 0.02,
 				unknownDomains: [],
 			});
@@ -825,9 +951,9 @@ describe("FindPeopleWorkflow: an empty run", () => {
 
 			const output = await instance.getOutput();
 			expect(output).toEqual({
-				companies: [],
 				searched: 0,
 				skippedCompanies: 0,
+				peopleFound: 0,
 				costDollars: 0,
 				unknownDomains: [],
 			});
@@ -888,9 +1014,9 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 
 			const output = await instance.getOutput();
 			expect(output).toEqual({
-				companies: batchZero.companies,
 				searched: 1,
 				skippedCompanies: 0,
+				peopleFound: 0,
 				costDollars: 0.01,
 				unknownDomains: ["missing.com"],
 			});
@@ -911,6 +1037,99 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 				params: { runId: `companies_never-opened-${instanceId}` },
 			});
 			await instance.waitForStatus("errored");
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+function testPerson(fullName: string): PersonCandidate {
+	return {
+		fullName,
+		linkedinUrl: `https://linkedin.com/in/${fullName.toLowerCase()}`,
+		title: "VP of Sales",
+		rawTitle: "VP of Sales",
+		location: null,
+		employment: [],
+		employmentConfidence: 1,
+		apolloMatched: false,
+		entity: {
+			fullName,
+			currentTitle: "VP of Sales",
+			currentCompany: null,
+			location: null,
+		},
+		result: {
+			url: `https://linkedin.com/in/${fullName.toLowerCase()}`,
+			title: fullName,
+			publishedDate: null,
+			score: null,
+		},
+	};
+}
+
+describe("FindPeopleWorkflow: the summary output", () => {
+	it("counts every person found across companies, without carrying the row arrays", async () => {
+		const instanceId = "people-found-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_PEOPLE,
+			instanceId,
+		);
+		try {
+			const companies = [
+				testCompany({ domain: "one.com", name: "One Co" }),
+				testCompany({ domain: "two.com", name: "Two Co" }),
+			];
+			const batchZero: FindPeopleResult = {
+				companies: [
+					{
+						domain: "one.com",
+						people: [testPerson("Jane Doe"), testPerson("Jo Roe")],
+						apolloOnly: [],
+						reason: null,
+					},
+					{
+						domain: "two.com",
+						people: [testPerson("Sam Lee")],
+						apolloOnly: [],
+						reason: null,
+					},
+				],
+				searched: 2,
+				skippedCompanies: 0,
+				costDollars: 0.02,
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-companies" },
+					{ companies, icpId: "icp-1", unknownDomains: [] },
+				);
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "close-run" }, { id: "x" });
+				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
+				await m.mockStepResult({ name: "save-people" }, {});
+			});
+
+			await testEnv.FIND_PEOPLE.create({
+				id: instanceId,
+				params: { runId: "companies_icp-1_test" },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual({
+				searched: 2,
+				skippedCompanies: 0,
+				peopleFound: 3,
+				costDollars: 0.02,
+				unknownDomains: [],
+			});
 		} finally {
 			await instance.dispose();
 		}

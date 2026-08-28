@@ -60,7 +60,6 @@ export type FindymailResult = {
 	contact: FindymailContact;
 	finder: FindymailFinder;
 	status: FindymailStatus;
-	ledger: CostLedger;
 	source?: string;
 };
 
@@ -195,9 +194,8 @@ export const findymailLinkedinProvider: Provider<
 	id: "findymail-linkedin",
 	channels: ["email"],
 	cost: 1,
-	async run(input, env) {
+	async run(input, env, ledger = new CostLedger()) {
 		if (!input.linkedinUrl) return null;
-		const ledger = new CostLedger();
 		const contact = await findymailSearchLinkedin(
 			{ linkedinUrl: input.linkedinUrl },
 			env,
@@ -205,13 +203,7 @@ export const findymailLinkedinProvider: Provider<
 		);
 		if (!contact) return null;
 		const status = await resolveStatus(contact, env, ledger);
-		return {
-			email: contact.email,
-			contact,
-			finder: "linkedin",
-			status,
-			ledger,
-		};
+		return { email: contact.email, contact, finder: "linkedin", status };
 	},
 };
 
@@ -220,9 +212,8 @@ export const findymailNameProvider: Provider<FindymailInput, FindymailResult> =
 		id: "findymail-name",
 		channels: ["email"],
 		cost: 1,
-		async run(input, env) {
+		async run(input, env, ledger = new CostLedger()) {
 			if (!input.name || !input.domain) return null;
-			const ledger = new CostLedger();
 			const contact = await findymailSearchByName(
 				{ name: input.name, domain: input.domain },
 				env,
@@ -230,7 +221,7 @@ export const findymailNameProvider: Provider<FindymailInput, FindymailResult> =
 			);
 			if (!contact) return null;
 			const status = await resolveStatus(contact, env, ledger);
-			return { email: contact.email, contact, finder: "name", status, ledger };
+			return { email: contact.email, contact, finder: "name", status };
 		},
 	};
 

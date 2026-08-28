@@ -1,25 +1,21 @@
 import { config } from "@/config";
 import type { Company } from "@/core/db/schema";
 import type { ApolloCandidate } from "@/core/providers/apollo";
-import type { ExaResult, ExaSearchRequest } from "@/core/providers/exa";
+import type {
+	ExaResult,
+	ExaSearchRequest,
+	PersonWorkHistoryEntry,
+} from "@/core/providers/exa";
 
-/** The columns of a saved company this capability actually needs, kept out of Workflow steps' serialization concerns. */
-export type PeopleCompany = Pick<Company, "id" | "domain" | "name">;
+/** The columns of a saved company this capability actually needs, kept out of Workflow steps' serialization concerns. `exaId` is the organization id the company category recorded, when one was captured. */
+export type PeopleCompany = Pick<Company, "id" | "domain" | "name"> & {
+	exaId: string | null;
+};
 
 const RESULTS_PER_COMPANY = config.people.resultsPerCompany;
 const MATCHED_CONFIDENCE = 1;
 const MISMATCHED_CONFIDENCE = 0.4;
 const TITLE_CUT_CHARS = ["@", "(", "|"];
-
-const PERSON_SUMMARY_PROPERTIES: Record<string, { type: "string" }> = {
-	fullName: { type: "string" },
-	currentTitle: { type: "string" },
-	currentCompany: { type: "string" },
-	location: { type: "string" },
-};
-
-const PERSON_SUMMARY_DESCRIPTION =
-	"Extract the person's full name, current job title exactly as written, current employer, and location from this LinkedIn profile.";
 
 export type EmploymentClaim = {
 	company: string;
@@ -68,20 +64,6 @@ export type ApolloOnlyCandidate = {
 	hasEmailPath: boolean;
 };
 
-function personSummarySchema(): {
-	type: "object";
-	description: string;
-	properties: Record<string, { type: "string" }>;
-	required: string[];
-} {
-	return {
-		type: "object",
-		description: PERSON_SUMMARY_DESCRIPTION,
-		properties: PERSON_SUMMARY_PROPERTIES,
-		required: ["fullName"],
-	};
-}
-
 export function buildPersonSearchRequest(
 	company: PeopleCompany,
 	titles: readonly string[],
@@ -91,43 +73,32 @@ export function buildPersonSearchRequest(
 		numResults: RESULTS_PER_COMPANY,
 		type: "fast",
 		category: "people",
-		contents: { summary: { schema: personSummarySchema() } },
 	};
-}
-
-type SummaryValue = NonNullable<ExaResult["summary"]>;
-
-function isSummaryObject(
-	value: ExaResult["summary"],
-): value is { [key: string]: SummaryValue } {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function summaryField(
-	summary: ExaResult["summary"],
-	key: string,
-): string | null {
-	if (!isSummaryObject(summary)) return null;
-	const value = summary[key];
-	return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 type PersonClaim = {
 	fullName: string | null;
 	rawTitle: string | null;
-	currentCompany: string | null;
+	workHistory: PersonWorkHistoryEntry[];
 	location: string | null;
 	linkedinUrl: string;
 	entity: PersonEntity;
 	result: PersonMatch;
 };
 
+function currentEmployer(
+	workHistory: readonly PersonWorkHistoryEntry[],
+): PersonWorkHistoryEntry | null {
+	return workHistory.find((entry) => entry.current) ?? null;
+}
+
 function toPersonEntity(result: ExaResult): PersonEntity {
+	const current = currentEmployer(result.person?.workHistory ?? []);
 	return {
-		fullName: summaryField(result.summary, "fullName"),
-		currentTitle: summaryField(result.summary, "currentTitle"),
-		currentCompany: summaryField(result.summary, "currentCompany"),
-		location: summaryField(result.summary, "location"),
+		fullName: result.person?.fullName ?? null,
+		currentTitle: current?.title ?? null,
+		currentCompany: current?.companyName ?? null,
+		location: result.person?.location ?? null,
 	};
 }
 
@@ -145,7 +116,7 @@ export function toPersonClaim(result: ExaResult): PersonClaim {
 	return {
 		fullName: entity.fullName,
 		rawTitle: entity.currentTitle,
-		currentCompany: entity.currentCompany,
+		workHistory: result.person?.workHistory ?? [],
 		location: entity.location,
 		linkedinUrl: result.url,
 		entity,
@@ -178,36 +149,56 @@ function normalizeCompanyName(name: string): string {
 	return name.trim().toLowerCase();
 }
 
+/**
+ * A last-resort name comparison for Apollo, whose free people search returns
+ * only an organization name, never the Exa organization id an employment
+ * match otherwise settles by.
+ */
 function companiesMatch(a: string, b: string): boolean {
 	return normalizeCompanyName(a) === normalizeCompanyName(b);
 }
 
+function matchingCurrentEmployer(
+	current: readonly PersonWorkHistoryEntry[],
+	exaId: string | null,
+): PersonWorkHistoryEntry | null {
+	if (exaId === null) return null;
+	return current.find((entry) => entry.companyId === exaId) ?? null;
+}
+
 function employmentClaims(
-	currentCompany: string | null,
-	targetName: string,
+	workHistory: readonly PersonWorkHistoryEntry[],
+	company: PeopleCompany,
 ): EmploymentClaim[] {
-	if (currentCompany === null) {
+	const current = workHistory.filter((entry) => entry.current);
+	const first = current[0] ?? null;
+	if (first === null) {
 		return [
 			{
-				company: targetName,
+				company: company.name,
 				confidence: MISMATCHED_CONFIDENCE,
 				source: "target",
 			},
 		];
 	}
-	if (companiesMatch(currentCompany, targetName)) {
+	const matched = matchingCurrentEmployer(current, company.exaId);
+	if (matched !== null) {
 		return [
 			{
-				company: currentCompany,
+				company: matched.companyName ?? company.name,
 				confidence: MATCHED_CONFIDENCE,
 				source: "exa",
 			},
 		];
 	}
 	return [
-		{ company: currentCompany, confidence: MATCHED_CONFIDENCE, source: "exa" },
 		{
-			company: targetName,
+			company: first.companyName ?? "unknown employer",
+			confidence: MATCHED_CONFIDENCE,
+			source: "exa",
+		},
+		{
+			company: company.name,
 			confidence: MISMATCHED_CONFIDENCE,
 			source: "target",
 		},
@@ -219,7 +210,7 @@ export function toPersonCandidate(
 	company: PeopleCompany,
 ): PersonCandidate | null {
 	if (claim.fullName === null) return null;
-	const claims = employmentClaims(claim.currentCompany, company.name);
+	const claims = employmentClaims(claim.workHistory, company);
 	const target = claims.find((entry) => entry.source === "target");
 	return {
 		fullName: claim.fullName,

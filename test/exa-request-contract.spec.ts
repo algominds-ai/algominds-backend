@@ -125,7 +125,7 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 }
 
 function samplePeopleCompany(): PeopleCompany {
-	return { id: "company-1", domain: "acme.example", name: "Acme" };
+	return { id: "company-1", domain: "acme.example", name: "Acme", exaId: null };
 }
 
 describe("company search request stays inside the measured Exa /search schema", () => {
