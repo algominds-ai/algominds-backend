@@ -109,6 +109,7 @@ export function agentDecisionMakerTitles(
 				return {
 					titles: result.titles,
 					queryTemplate: result.queryTemplate,
+					userLocation: result.userLocation,
 					costEntries: result.ledger.toJSON().entries,
 				};
 			},
@@ -118,6 +119,7 @@ export function agentDecisionMakerTitles(
 		const output: TitlesResult = {
 			titles: cached.titles,
 			queryTemplate: cached.queryTemplate,
+			userLocation: cached.userLocation,
 			ledger,
 		};
 		return output;

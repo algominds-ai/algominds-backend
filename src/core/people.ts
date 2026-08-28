@@ -52,11 +52,14 @@ const TITLES_INSTRUCTIONS = [
 	"Also write the search query that finds those people at one company.",
 	"Write it as you would search for a person, and put {company} where the company name belongs.",
 	"The query is yours to phrase; do not copy the titles verbatim if a better phrasing exists.",
+	"Set userLocation to the two-letter country these people work in when the profile names one,",
+	"and to null when it names none. Never guess a country the profile does not support.",
 ].join(" ");
 
 const TitlesModelSchema = z.object({
 	titles: z.array(z.string()).min(1),
 	queryTemplate: z.string().min(1),
+	userLocation: z.string().nullable(),
 });
 
 const DEFAULT_TITLES = [
@@ -67,9 +70,18 @@ const DEFAULT_TITLES = [
 
 const DEFAULT_QUERY_TEMPLATE = "decision makers at {company}";
 
+const ISO_COUNTRY = /^[A-Za-z]{2}$/;
+
+/** The model's country as Exa takes it, or null when it named none it could support. */
+function countryCode(written: string | null | undefined): string | null {
+	if (!written || !ISO_COUNTRY.test(written)) return null;
+	return written.toUpperCase();
+}
+
 export type TitlesResult = {
 	titles: string[];
 	queryTemplate: string;
+	userLocation: string | null;
 	ledger: CostLedger;
 };
 
@@ -135,6 +147,7 @@ export async function decisionMakerTitles(
 	return {
 		titles: output?.titles ?? DEFAULT_TITLES,
 		queryTemplate: output?.queryTemplate ?? DEFAULT_QUERY_TEMPLATE,
+		userLocation: countryCode(output?.userLocation),
 		ledger,
 	};
 }
@@ -181,7 +194,11 @@ export function splitKnownCompanies(
 	return { companies: unsearched, skipped };
 }
 
-type PeopleSearchPlan = { titles: readonly string[]; queryTemplate: string };
+type PeopleSearchPlan = {
+	titles: readonly string[];
+	queryTemplate: string;
+	userLocation: string | null;
+};
 
 type PeopleContext = {
 	env: Env;
@@ -264,6 +281,7 @@ export async function findPeople(
 	const plan: PeopleSearchPlan = {
 		titles: titles.titles,
 		queryTemplate: titles.queryTemplate,
+		userLocation: titles.userLocation,
 	};
 	const ctx: PeopleContext = { env: opts.env, ledger, deps, plan };
 

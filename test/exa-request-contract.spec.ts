@@ -150,6 +150,7 @@ describe("person search request stays inside the measured Exa /search schema, as
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["Chief Executive Officer"],
 			queryTemplate: "decision makers at {company}",
+			userLocation: null,
 		});
 
 		expect(SearchFieldsAndTypeSchema.safeParse(request).success).toBe(true);
@@ -159,6 +160,7 @@ describe("person search request stays inside the measured Exa /search schema, as
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["Chief Executive Officer"],
 			queryTemplate: "decision makers at {company}",
+			userLocation: null,
 		});
 
 		expect(MeasuredSearchRequestSchema.safeParse(request).success).toBe(true);
@@ -305,5 +307,51 @@ describe("what reaches the network matches what the builder produced", () => {
 		expect(
 			MeasuredAgentRunRequestSchema.safeParse(postedBody(stub.init)).success,
 		).toBe(true);
+	});
+});
+
+describe("the people request carries only filters the people category accepts", () => {
+	it("sends the country the model wrote, uppercased", () => {
+		const request = buildPersonSearchRequest(samplePeopleCompany(), {
+			titles: ["VP of Sales"],
+			queryTemplate: "sales leaders at {company}",
+			userLocation: "US",
+		});
+
+		expect(request.userLocation).toBe("US");
+		expect(request.category).toBe("people");
+	});
+
+	it("omits the country entirely when the model named none", () => {
+		const request = buildPersonSearchRequest(samplePeopleCompany(), {
+			titles: ["VP of Sales"],
+			queryTemplate: "sales leaders at {company}",
+			userLocation: null,
+		});
+
+		expect("userLocation" in request).toBe(false);
+	});
+
+	it("never sends a filter the people category rejects", () => {
+		const request = buildPersonSearchRequest(samplePeopleCompany(), {
+			titles: ["VP of Sales"],
+			queryTemplate: "sales leaders at {company}",
+			userLocation: "US",
+		});
+
+		expect("excludeDomains" in request).toBe(false);
+		expect("startPublishedDate" in request).toBe(false);
+		expect("endPublishedDate" in request).toBe(false);
+	});
+
+	it("names the company where the model put its placeholder", () => {
+		const request = buildPersonSearchRequest(samplePeopleCompany(), {
+			titles: ["VP of Sales"],
+			queryTemplate: "who leads revenue at {company} today",
+			userLocation: null,
+		});
+
+		expect(request.query).toContain("who leads revenue at");
+		expect(request.query).not.toContain("{company}");
 	});
 });

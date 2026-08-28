@@ -72,6 +72,7 @@ function scriptedTitles(
 	return async () => ({
 		titles,
 		queryTemplate: "decision makers at {company}",
+		userLocation: null,
 		ledger: new CostLedger(),
 	});
 }

@@ -74,7 +74,11 @@ const COMPANY_PLACEHOLDER = "{company}";
  */
 export function buildPersonSearchRequest(
 	company: PeopleCompany,
-	plan: { titles: readonly string[]; queryTemplate: string },
+	plan: {
+		titles: readonly string[];
+		queryTemplate: string;
+		userLocation: string | null;
+	},
 ): ExaSearchRequest {
 	const written = plan.queryTemplate.includes(COMPANY_PLACEHOLDER)
 		? plan.queryTemplate
@@ -84,6 +88,7 @@ export function buildPersonSearchRequest(
 		numResults: RESULTS_PER_COMPANY,
 		type: "fast",
 		category: "people",
+		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
 	};
 }
 
