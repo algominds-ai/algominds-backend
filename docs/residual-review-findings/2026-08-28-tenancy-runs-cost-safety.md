@@ -10,6 +10,27 @@ and is in the branch history.
 
 There is no remote and no tracker, so this file is the record.
 
+## Fixed after this record was first written
+
+Dogfooding against the live vendors found six defects that six reviewers and
+three hundred passing tests did not. Each is fixed and in the branch history.
+
+- The agent company source could never have worked. A run still working
+  returns `output.structured` as null, and the parser demanded an object.
+- Apollo's every response was discarded. `has_direct_phone` is the string
+  "Yes", the schema demanded a boolean, and the parse failure read as a miss.
+  Six companies held seventy six people in Apollo and the engine recorded none.
+- A people run's own read route returned nothing, because it matched a company
+  row's run id against the people run that never owned it.
+- `apolloMatched` and the employment claims were computed and dropped before
+  the row was written, so a corroborated person looked like a guess.
+- `linkedin.com` was accepted as a company's own domain.
+- A shape mismatch said only that the shape was wrong, naming no field.
+
+Two of those, the agent contract and Apollo, are the same mistake: a schema
+written from documentation and never measured. Both now have a captured
+response as a fixture.
+
 ## Money
 
 ### A run that dies mid-batch still loses the spend of the batch in flight
@@ -150,9 +171,28 @@ without breaking callers.
 Results sit under `output`. The two page routes wrap their own shape; this
 one does not.
 
-## Not verified
+## Latency
 
-Exa's agent API contract is not pinned against a captured response the way
-`/search` is. The effort enum, the data-source names, and the field names in
-the run request are written from the vendor's documentation, not measured. A
-mismatch fails every agent parse.
+A run's wall time is dominated by structured model calls, and their cost in
+seconds is not ours to set. The route spreads across providers whose
+structured latency ranges from about one second to a hundred and twenty five.
+Three consecutive identical calls measured 1.4s, 116.6s and 8.2s.
+
+Asking for the fastest provider removed the worst of it, and the same three
+calls then measured 2.2s, 1.7s and 3.1s. It did not remove the variance. Two
+measured companies runs of the same size, on the same code, took 56s and 96s.
+A people run over six companies took 41s once and 162s another time.
+
+Until that variance is bounded, a wall-time target cannot be met reliably. The
+lever that remains is asking for fewer structured calls per round, or setting
+a deadline per call and accepting the fallback.
+
+## Still not verified
+
+The effort enum and the data-source names in the agent run request are read
+from the vendor's documentation, not measured. The run request shape, the
+running and completed response shapes, and the cost breakdown now are
+measured, and are fixtures.
+
+Exa's documentation lists `max` effort as needing a beta request header this
+client does not send. Nothing stops a config change from selecting it.
