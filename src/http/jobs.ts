@@ -1,6 +1,8 @@
 import type { Context } from "hono";
 import type { z } from "zod";
+import { config } from "@/config";
 import { createIcp, ensureAccount, findRun } from "@/core/db/queries";
+import { normalizeDomain } from "@/core/db/schema";
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
@@ -19,17 +21,20 @@ export function buildRunId(
 	return `${capability}_${scopeId}_${todayUtc(now)}`;
 }
 
-const SELLER_DOMAIN = "algominds.ai";
-
 type IcpRef = z.infer<typeof icpRef>;
 
-/** Uses the given ICP, or stores the free-text prompt as a new one. */
+/**
+ * Uses the given ICP, or stores the free-text prompt as a new one under the
+ * seller the request names, falling back to the deployment's configured one.
+ */
 export async function resolveIcpId(env: Env, body: IcpRef): Promise<string> {
 	if ("icpId" in body) return body.icpId;
-	const sellerAccount = await ensureAccount(env, SELLER_DOMAIN, SELLER_DOMAIN);
+	const domain = normalizeDomain(body.seller?.domain ?? config.seller.domain);
+	const name = body.seller?.name ?? body.seller?.domain ?? config.seller.name;
+	const sellerAccount = await ensureAccount(env, name, domain);
 	const row = await createIcp(env, {
 		description: body.prompt,
-		domain: SELLER_DOMAIN,
+		domain,
 		accountId: sellerAccount.id,
 	});
 	return row.id;

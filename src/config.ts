@@ -6,6 +6,10 @@ export const config = {
 		maxCompaniesPerPeopleRun: 300,
 		maxRunPageSize: 200,
 	},
+	seller: {
+		domain: "algominds.ai",
+		name: "Algominds",
+	},
 	companies: {
 		maxRounds: 3,
 		resultsPerRound: 100,

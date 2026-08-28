@@ -28,6 +28,13 @@ limits:
   # the clamp is never silent.
   maxRunPageSize: 200
 
+# The brand this deployment sells for. A request that names its own seller
+# wins over this; the fallback exists so a single-brand deployment need not
+# repeat itself on every call.
+seller:
+  domain: algominds.ai
+  name: Algominds
+
 companies:
   # Rounds of search per run. Each round is one paid Exa call plus two model calls.
   maxRounds: 3

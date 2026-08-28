@@ -611,3 +611,40 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 		}
 	});
 });
+
+describe("POST /companies/find: the brand a run sells for", () => {
+	it("creates the profile under the seller the request names", async () => {
+		const domain = `probe-${crypto.randomUUID()}.example`;
+		const response = await authedCall(
+			"/companies/find",
+			postInit(
+				{
+					prompt: "seed stage fintech companies",
+					seller: { domain, name: "Probe Brand" },
+					count: 1,
+				},
+				TOKEN,
+			),
+		);
+
+		expect([200, 202]).toContain(response.status);
+		const body: { icpId?: string } = await response.json();
+		expect(body.icpId).toBeDefined();
+	});
+
+	it("rejects a seller with no domain rather than guessing one", async () => {
+		const response = await authedCall(
+			"/companies/find",
+			postInit(
+				{
+					prompt: "seed stage fintech companies",
+					seller: { name: "No Domain" },
+					count: 1,
+				},
+				TOKEN,
+			),
+		);
+
+		expect(response.status).toBe(400);
+	});
+});
