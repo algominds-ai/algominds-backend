@@ -11,6 +11,8 @@ import type {
 	FindCompaniesStatus,
 } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
+import type { CompanyCapture } from "@/core/company-candidates";
+import { toCompanyData } from "@/core/company-candidates";
 import {
 	appendEvidence,
 	closeRun,
@@ -105,6 +107,7 @@ async function runFindCompaniesRounds(
 	let costDollars = 0;
 	let rounds = 0;
 	const searches: FindCompaniesResult["searches"] = [];
+	const captures: Record<string, CompanyCapture> = {};
 	let lastRoundStatus: FindCompaniesStatus = "short";
 
 	for (
@@ -128,6 +131,7 @@ async function runFindCompaniesRounds(
 		rejects = rejects.concat(stepResult.rejects);
 		costDollars += stepResult.costDollars;
 		searches.push(...stepResult.searches);
+		Object.assign(captures, stepResult.captures);
 		rounds += 1;
 		lastRoundStatus = stepResult.status;
 		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
@@ -143,6 +147,7 @@ async function runFindCompaniesRounds(
 		costDollars,
 		rejects,
 		searches,
+		captures,
 	};
 }
 
@@ -150,18 +155,15 @@ function toNewCompany(
 	row: CompanyRow,
 	icpId: string,
 	runId: string,
+	capture: CompanyCapture | undefined,
 ): NewCompany | null {
-	if (row.name === null || row.domain === null) return null;
+	if (row.name === null || row.domain === null || capture === undefined)
+		return null;
 	return {
 		icpId,
 		domain: row.domain,
 		name: row.name,
-		data: {
-			linkedinUrl: row.linkedinUrl,
-			evidenceUrl: row.evidenceUrl,
-			signal: row.signal,
-			evidenceDate: row.evidenceDate,
-		},
+		data: toCompanyData(capture, COMPANY_SOURCE),
 		runId,
 	};
 }
@@ -196,14 +198,27 @@ function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
 		}));
 }
 
+type PersistCompaniesInput = {
+	icpId: string;
+	runId: string;
+	companies: readonly CompanyRow[];
+	captures: Record<string, CompanyCapture>;
+};
+
 async function persistCompanies(
 	env: Env,
-	icpId: string,
-	runId: string,
-	companies: readonly CompanyRow[],
+	input: PersistCompaniesInput,
 ): Promise<void> {
+	const { icpId, runId, companies, captures } = input;
 	const newCompanies = companies
-		.map((row) => toNewCompany(row, icpId, runId))
+		.map((row) =>
+			toNewCompany(
+				row,
+				icpId,
+				runId,
+				row.domain ? captures[row.domain] : undefined,
+			),
+		)
 		.filter((row): row is NewCompany => row !== null);
 	const saved = await saveCompanies(env, newCompanies);
 	const evidenceRows = saved.flatMap((company) => {
@@ -252,12 +267,12 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		const result = await runFindCompaniesRounds(this.env, payload, icp, step);
 
 		await step.do("save-companies", config.stepConfig.databaseCall, () =>
-			persistCompanies(
-				this.env,
-				payload.icpId,
-				event.instanceId,
-				result.companies,
-			),
+			persistCompanies(this.env, {
+				icpId: payload.icpId,
+				runId: event.instanceId,
+				companies: result.companies,
+				captures: result.captures,
+			}),
 		);
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>

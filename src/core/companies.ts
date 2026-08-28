@@ -1,5 +1,8 @@
 import { config } from "@/config";
-import type { FindCompaniesReject } from "@/core/company-candidates";
+import type {
+	CompanyCapture,
+	FindCompaniesReject,
+} from "@/core/company-candidates";
 import {
 	buildSearchRequest,
 	collectDomains,
@@ -71,6 +74,7 @@ export type FindCompaniesResult = {
 	costDollars: number;
 	rejects: FindCompaniesReject[];
 	searches: SearchPlan[];
+	captures: Record<string, CompanyCapture>;
 };
 
 function toGateRejects(
@@ -125,6 +129,7 @@ type RoundOutcome = {
 	verdicts: Verdict[];
 	unseenCount: number;
 	ledger: CostLedger;
+	captures: Record<string, CompanyCapture>;
 };
 
 async function runRound(
@@ -162,6 +167,7 @@ async function runRound(
 		verdicts: judged.verdicts,
 		unseenCount,
 		ledger: CostLedger.merge(synthesized.ledger, searchLedger, judged.ledger),
+		captures: filtered.captures,
 	};
 }
 
@@ -174,6 +180,7 @@ type RoundsAccumulator = {
 	rounds: number;
 	status: FindCompaniesStatus;
 	searches: SearchPlan[];
+	captures: Record<string, CompanyCapture>;
 };
 
 async function runRounds(
@@ -185,6 +192,7 @@ async function runRounds(
 	const rejects: FindCompaniesReject[] = [];
 	const ledgers: CostLedger[] = [];
 	const searches: SearchPlan[] = [];
+	const captures: Record<string, CompanyCapture> = {};
 	const pastAngles: string[] = [];
 	const maxRounds = opts.maxRounds ?? MAX_ROUNDS;
 	let feedback: string[] = [];
@@ -207,6 +215,7 @@ async function runRounds(
 		ledgers.push(outcome.ledger);
 		searches.push(outcome.plan);
 		pastAngles.push(outcome.plan.angle);
+		Object.assign(captures, outcome.captures);
 		for (const domain of collectDomains(outcome.rows))
 			input.seenDomains.add(domain);
 
@@ -233,7 +242,7 @@ async function runRounds(
 			break;
 		}
 	}
-	return { companies, rejects, ledgers, rounds, status, searches };
+	return { companies, rejects, ledgers, rounds, status, searches, captures };
 }
 
 /**
@@ -265,5 +274,6 @@ export async function findCompanies(
 		costDollars: CostLedger.merge(...outcome.ledgers).total(),
 		rejects: outcome.rejects,
 		searches: outcome.searches,
+		captures: outcome.captures,
 	};
 }

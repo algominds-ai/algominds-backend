@@ -28,6 +28,7 @@ import {
 	DEFAULT_MAX_COMPANIES,
 	decisionMakerTitles,
 	findPeople,
+	toPersonData,
 	truncateCompanies,
 } from "@/core/people";
 import { apolloPeopleSearch } from "@/core/providers/apollo";
@@ -113,11 +114,7 @@ function toNewPerson(person: PersonCandidate, companyId: string): NewPerson {
 		linkedinUrl: person.linkedinUrl,
 		name: person.fullName,
 		title: person.title,
-		data: {
-			rawTitle: person.rawTitle,
-			location: person.location,
-			apolloMatched: person.apolloMatched,
-		},
+		data: toPersonData(person.entity, person.result, EVIDENCE_SOURCE_EXA),
 	};
 }
 

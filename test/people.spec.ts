@@ -8,7 +8,7 @@ import type {
 	FindPeopleResult,
 	PeopleCompany,
 } from "../src/core/people";
-import { findPeople, normalizeTitle } from "../src/core/people";
+import { findPeople, normalizeTitle, toPersonData } from "../src/core/people";
 import type { ApolloSearchResult } from "../src/core/providers/apollo";
 import type { ExaResult, ExaSearchRequest } from "../src/core/providers/exa";
 import type { IcpDoc } from "../src/core/synthesize";
@@ -375,6 +375,113 @@ describe("findPeople: direct call", () => {
 		);
 
 		expect(result.searched).toBe(1);
+	});
+});
+
+describe("findPeople: capturing the vendor payload", () => {
+	it("captures the full entity, including the raw current company evidence never reads on its own", async () => {
+		const company = testCompany({ domain: "acme.com", name: "Acme" });
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				currentTitle: "VP of Sales",
+				currentCompany: "Acme",
+				location: "New York",
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.entity).toEqual({
+			fullName: "Jane Doe",
+			currentTitle: "VP of Sales",
+			currentCompany: "Acme",
+			location: "New York",
+		});
+	});
+
+	it("captures a profile missing its location with that field null, not a thrown error", async () => {
+		const company = testCompany({ domain: "acme.com", name: "Acme" });
+		const result = personResult(
+			{ fullName: "Jane Doe", currentTitle: "VP of Sales" },
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person?.entity.location).toBeNull();
+		expect(person?.result).toEqual({
+			url: "https://linkedin.com/in/janedoe",
+			title: "Jane Doe",
+			publishedDate: null,
+			score: null,
+		});
+	});
+
+	it("keeps the fields evidence reads unchanged now that the vendor capture rides alongside them", async () => {
+		const company = testCompany({ domain: "acme.com", name: "Acme" });
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				currentTitle: "VP of Sales",
+				currentCompany: "Acme",
+				location: "New York",
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+		const person = found.companies[0]?.people[0];
+
+		expect(person).toMatchObject({
+			fullName: "Jane Doe",
+			rawTitle: "VP of Sales",
+			title: "VP of Sales",
+			location: "New York",
+		});
+		expect(person?.employment).toEqual([
+			{ company: "Acme", confidence: 1, source: "exa" },
+		]);
+	});
+});
+
+describe("toPersonData", () => {
+	it("names the provider that produced the capture", () => {
+		const data = toPersonData(
+			{
+				fullName: "Jane Doe",
+				currentTitle: null,
+				currentCompany: null,
+				location: null,
+			},
+			{
+				url: "https://linkedin.com/in/janedoe",
+				title: "Jane Doe",
+				publishedDate: null,
+				score: null,
+			},
+			"exa",
+		);
+
+		expect(data.provider).toBe("exa");
 	});
 });
 

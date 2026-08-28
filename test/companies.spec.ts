@@ -5,6 +5,12 @@ import type {
 	FindCompaniesOptions,
 } from "../src/core/companies";
 import { findCompanies } from "../src/core/companies";
+import { toExaSearchResult } from "../src/core/company-agent-search";
+import type {
+	CompanyCapture,
+	CompanyMatch,
+} from "../src/core/company-candidates";
+import { toCompanyData } from "../src/core/company-candidates";
 import { CostLedger } from "../src/core/cost";
 import { gate } from "../src/core/gate";
 import type { Verdict } from "../src/core/judge";
@@ -13,6 +19,7 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 } from "../src/core/providers/exa";
+import type { ExaAgentCompany } from "../src/core/providers/exa-agent";
 import type {
 	IcpDoc,
 	SearchPlan,
@@ -391,5 +398,141 @@ describe("findCompanies — dependency wiring", () => {
 
 		expect(result.status).toBe("complete");
 		expect(result.companies).toHaveLength(1);
+	});
+});
+
+describe("findCompanies — capturing the vendor payload", () => {
+	it("captures the full entity, including fields the row itself never reads", async () => {
+		const richFields: Partial<CompanyEntity> = {
+			workforceTotal: 42,
+			foundedYear: 2018,
+			revenueAnnual: 5_000_000,
+			fundingTotal: 1_200_000,
+		};
+		const { search } = scriptedSearch([[goodResult("rich.com", richFields)]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.captures["rich.com"]?.entity).toEqual(
+			entity({ name: "Company rich.com", ...richFields }),
+		);
+	});
+
+	it("captures a result missing its score and published date with those fields null, not a thrown error", async () => {
+		const { search } = scriptedSearch([[goodResult("noscore.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const match: CompanyMatch | undefined =
+			result.captures["noscore.com"]?.result;
+		expect(match).toEqual({
+			url: "https://noscore.com/",
+			title: "Company noscore.com",
+			publishedDate: null,
+			score: null,
+		});
+	});
+
+	it("keeps the saved row to exactly the fields evidence reads, holding the vendor capture on the side", async () => {
+		const { search } = scriptedSearch([[goodResult("shape.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(Object.keys(result.companies[0] ?? {}).sort()).toEqual([
+			"domain",
+			"evidenceDate",
+			"evidenceUrl",
+			"linkedinUrl",
+			"name",
+			"signal",
+		]);
+	});
+});
+
+describe("findCompanies — captures across sources", () => {
+	it("captures an agent-sourced company under the same shape as a search-sourced one", async () => {
+		const agentCompany: ExaAgentCompany = {
+			name: "Agent Co",
+			website: "https://agentco.com",
+			description: "found by the agent",
+			foundedYear: 2020,
+			workforceTotal: 12,
+			city: "Austin",
+			country: "United States",
+			revenueAnnual: null,
+			fundingTotal: null,
+		};
+		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
+		const { search } = scriptedSearch([agentSearchResult.results]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const capture: CompanyCapture | undefined = result.captures["agentco.com"];
+		expect(capture ? Object.keys(capture).sort() : []).toEqual([
+			"entity",
+			"result",
+		]);
+		expect(capture ? Object.keys(capture.entity).sort() : []).toEqual(
+			Object.keys(entity()).sort(),
+		);
+		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
+			"publishedDate",
+			"score",
+			"title",
+			"url",
+		]);
+	});
+});
+
+describe("toCompanyData", () => {
+	it("names the provider that produced the capture", () => {
+		const capture: CompanyCapture = {
+			entity: entity(),
+			result: {
+				url: "https://example.com/",
+				title: "Example",
+				publishedDate: null,
+				score: null,
+			},
+		};
+
+		expect(toCompanyData(capture, "exa-search")).toEqual({
+			provider: "exa-search",
+			entity: capture.entity,
+			result: capture.result,
+		});
+		expect(toCompanyData(capture, "exa-agent").provider).toBe("exa-agent");
 	});
 });

@@ -27,6 +27,26 @@ export type EmploymentClaim = {
 	source: "exa" | "target";
 };
 
+export type PersonEntity = {
+	fullName: string | null;
+	currentTitle: string | null;
+	currentCompany: string | null;
+	location: string | null;
+};
+
+export type PersonMatch = {
+	url: string;
+	title: string;
+	publishedDate: string | null;
+	score: number | null;
+};
+
+export type PersonData = {
+	provider: string;
+	entity: PersonEntity;
+	result: PersonMatch;
+};
+
 export type PersonCandidate = {
 	fullName: string;
 	linkedinUrl: string;
@@ -36,6 +56,8 @@ export type PersonCandidate = {
 	employment: EmploymentClaim[];
 	employmentConfidence: number;
 	apolloMatched: boolean;
+	entity: PersonEntity;
+	result: PersonMatch;
 };
 
 export type ApolloOnlyCandidate = {
@@ -96,16 +118,48 @@ type PersonClaim = {
 	currentCompany: string | null;
 	location: string | null;
 	linkedinUrl: string;
+	entity: PersonEntity;
+	result: PersonMatch;
 };
 
-export function toPersonClaim(result: ExaResult): PersonClaim {
+function toPersonEntity(result: ExaResult): PersonEntity {
 	return {
 		fullName: summaryField(result.summary, "fullName"),
-		rawTitle: summaryField(result.summary, "currentTitle"),
+		currentTitle: summaryField(result.summary, "currentTitle"),
 		currentCompany: summaryField(result.summary, "currentCompany"),
 		location: summaryField(result.summary, "location"),
-		linkedinUrl: result.url,
 	};
+}
+
+function toPersonMatch(result: ExaResult): PersonMatch {
+	return {
+		url: result.url,
+		title: result.title,
+		publishedDate: result.publishedDate ?? null,
+		score: result.score ?? null,
+	};
+}
+
+export function toPersonClaim(result: ExaResult): PersonClaim {
+	const entity = toPersonEntity(result);
+	return {
+		fullName: entity.fullName,
+		rawTitle: entity.currentTitle,
+		currentCompany: entity.currentCompany,
+		location: entity.location,
+		linkedinUrl: result.url,
+		entity,
+		result: toPersonMatch(result),
+	};
+}
+
+/** Wraps one matched person's entity and match info with the vendor that produced them, for the row's `data` column. */
+export function toPersonData(
+	entity: PersonEntity,
+	result: PersonMatch,
+	provider: string,
+): PersonData {
+	return { provider, entity, result };
 }
 
 /**
@@ -176,6 +230,8 @@ export function toPersonCandidate(
 		employment: claims,
 		employmentConfidence: target ? target.confidence : MATCHED_CONFIDENCE,
 		apolloMatched: false,
+		entity: claim.entity,
+		result: claim.result,
 	};
 }
 

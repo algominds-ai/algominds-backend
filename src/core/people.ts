@@ -6,6 +6,9 @@ import type {
 	EmploymentClaim,
 	PeopleCompany,
 	PersonCandidate,
+	PersonData,
+	PersonEntity,
+	PersonMatch,
 } from "@/core/person-candidates";
 import {
 	apolloMatchesPerson,
@@ -15,6 +18,7 @@ import {
 	toApolloOnlyCandidate,
 	toPersonCandidate,
 	toPersonClaim,
+	toPersonData,
 } from "@/core/person-candidates";
 import type {
 	ApolloCandidate,
@@ -29,8 +33,11 @@ export type {
 	EmploymentClaim,
 	PeopleCompany,
 	PersonCandidate,
+	PersonData,
+	PersonEntity,
+	PersonMatch,
 };
-export { normalizeTitle };
+export { normalizeTitle, toPersonData };
 
 export const DEFAULT_MAX_COMPANIES = 100;
 

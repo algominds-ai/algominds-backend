@@ -19,6 +19,25 @@ export type FindCompaniesReject = {
 	stage: "filter" | "gate" | "judge";
 };
 
+export type CompanyMatch = {
+	url: string;
+	title: string;
+	publishedDate: string | null;
+	score: number | null;
+};
+
+/** The vendor's own entity object next to the fields that describe the match, kept apart until a provider is known. */
+export type CompanyCapture = {
+	entity: CompanyEntity;
+	result: CompanyMatch;
+};
+
+export type CompanyData = {
+	provider: string;
+	entity: CompanyEntity;
+	result: CompanyMatch;
+};
+
 export function buildSearchRequest(plan: SearchPlan): ExaSearchRequest {
 	return {
 		query: plan.query,
@@ -60,6 +79,23 @@ function toSearchResult(result: ExaResult): SearchResult {
 	};
 }
 
+function toCompanyMatch(result: ExaResult): CompanyMatch {
+	return {
+		url: result.url,
+		title: result.title,
+		publishedDate: result.publishedDate ?? null,
+		score: result.score ?? null,
+	};
+}
+
+/** Wraps one capture with the vendor that produced it, for the row's `data` column. */
+export function toCompanyData(
+	capture: CompanyCapture,
+	provider: string,
+): CompanyData {
+	return { provider, entity: capture.entity, result: capture.result };
+}
+
 function entityRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
@@ -84,6 +120,7 @@ export type FilterOutcome = {
 	rows: CompanyRow[];
 	results: SearchResult[];
 	rejects: FindCompaniesReject[];
+	captures: Record<string, CompanyCapture>;
 };
 
 /** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
@@ -91,7 +128,12 @@ export function filterEntities(
 	results: readonly ExaResult[],
 	plan: SearchPlan,
 ): FilterOutcome {
-	const outcome: FilterOutcome = { rows: [], results: [], rejects: [] };
+	const outcome: FilterOutcome = {
+		rows: [],
+		results: [],
+		rejects: [],
+		captures: {},
+	};
 	for (const result of results) {
 		const entity = result.company;
 		if (!entity) {
@@ -111,8 +153,15 @@ export function filterEntities(
 			});
 			continue;
 		}
-		outcome.rows.push(toCompanyRow(result, entity));
+		const row = toCompanyRow(result, entity);
+		outcome.rows.push(row);
 		outcome.results.push(toSearchResult(result));
+		if (row.domain) {
+			outcome.captures[row.domain] = {
+				entity,
+				result: toCompanyMatch(result),
+			};
+		}
 	}
 	return outcome;
 }
