@@ -5,7 +5,7 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 	ExaSearchResult,
-} from "@/core/providers/exa";
+} from "@/core/providers/exa/search";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();

@@ -1,14 +1,14 @@
 import type {
 	ApolloSearchFilters,
 	ApolloSearchResult,
-} from "@/core/providers/apollo";
-import { apolloPeopleSearch } from "@/core/providers/apollo";
-import { exaAgentEmailProvider } from "@/core/providers/exa-agent-email";
+} from "@/core/providers/apollo/index";
+import { apolloPeopleSearch } from "@/core/providers/apollo/index";
+import { exaAgentEmailProvider } from "@/core/providers/exa/agent-email";
 import type {
 	FindymailInput,
 	FindymailResult,
-} from "@/core/providers/findymail";
-import { FINDYMAIL_EMAIL_PROVIDERS } from "@/core/providers/findymail";
+} from "@/core/providers/findymail/index";
+import { FINDYMAIL_EMAIL_PROVIDERS } from "@/core/providers/findymail/index";
 import type { Provider } from "@/core/providers/types";
 
 export const PEOPLE: Provider<ApolloSearchFilters, ApolloSearchResult>[] = [

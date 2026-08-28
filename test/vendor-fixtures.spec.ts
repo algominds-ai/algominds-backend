@@ -1,8 +1,8 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { CostLedger } from "../src/core/cost";
-import { search } from "../src/core/providers/exa";
-import { getAgentRun, startAgentRun } from "../src/core/providers/exa-agent";
+import { getAgentRun, startAgentRun } from "../src/core/providers/exa/agent";
+import { search } from "../src/core/providers/exa/search";
 import agentRun from "./fixtures/exa-agent-run-completed.json";
 import agentPerson from "./fixtures/exa-agent-run-person.json";
 import searchCompany from "./fixtures/exa-search-company.json";

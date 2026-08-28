@@ -9,8 +9,8 @@ import {
 import type { CostEntry } from "@/core/cost";
 import { CostLedger } from "@/core/cost";
 import { recentDomains } from "@/core/db/queries";
-import type { ExaAgentCompany } from "@/core/providers/exa-agent";
-import { getAgentRun, startAgentRun } from "@/core/providers/exa-agent";
+import type { ExaAgentCompany } from "@/core/providers/exa/agent";
+import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
 import { synthesize } from "@/core/synthesize";
 
 const EFFORT = config.companies.exaAgentEffort;

@@ -1,11 +1,11 @@
 import { config } from "@/config";
 import type { Company } from "@/core/db/schema";
-import type { ApolloCandidate } from "@/core/providers/apollo";
+import type { ApolloCandidate } from "@/core/providers/apollo/index";
 import type {
 	ExaResult,
 	ExaSearchRequest,
 	PersonWorkHistoryEntry,
-} from "@/core/providers/exa";
+} from "@/core/providers/exa/search";
 
 /** The columns of a saved company this capability actually needs, kept out of Workflow steps' serialization concerns. `exaId` is the organization id the company category recorded, when one was captured. */
 export type PeopleCompany = Pick<Company, "id" | "domain" | "name"> & {

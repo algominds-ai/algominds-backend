@@ -6,8 +6,8 @@ import { buildSearchRequest } from "../src/core/company-candidates";
 import { CostLedger } from "../src/core/cost";
 import type { PeopleCompany } from "../src/core/person-candidates";
 import { buildPersonSearchRequest } from "../src/core/person-candidates";
-import { search } from "../src/core/providers/exa";
-import { startAgentRun } from "../src/core/providers/exa-agent";
+import { startAgentRun } from "../src/core/providers/exa/agent";
+import { search } from "../src/core/providers/exa/search";
 import type { SearchPlan } from "../src/core/synthesize";
 
 const SEARCH_TYPES = [

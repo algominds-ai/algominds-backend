@@ -1,13 +1,13 @@
 import type {
+	ExaAgentCompany,
+	ExaAgentRunRequest,
+} from "@/core/providers/exa/agent";
+import type {
 	CompanyEntity,
 	ExaResult,
 	ExaSearchRequest,
 	ExaSearchResult,
-} from "@/core/providers/exa";
-import type {
-	ExaAgentCompany,
-	ExaAgentRunRequest,
-} from "@/core/providers/exa-agent";
+} from "@/core/providers/exa/search";
 
 const NOT_A_DIRECTORY_HOST =
 	"^(?!(https?://)?(www\\.)?(linkedin|twitter|x|facebook|instagram|youtube|tiktok|medium|substack|github|crunchbase|pitchbook|tracxn|bloomberg|wellfound|angel|ycombinator|producthunt|glassdoor|indeed)\\.)";

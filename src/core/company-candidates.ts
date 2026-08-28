@@ -6,7 +6,7 @@ import type {
 	CompanyEntity,
 	ExaResult,
 	ExaSearchRequest,
-} from "@/core/providers/exa";
+} from "@/core/providers/exa/search";
 import type { SearchPlan } from "@/core/synthesize";
 
 const {

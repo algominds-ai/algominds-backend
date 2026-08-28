@@ -6,7 +6,7 @@ import {
 	toExaSearchResult,
 } from "../src/core/company-agent-search";
 import { CostLedger } from "../src/core/cost";
-import { getAgentRun, startAgentRun } from "../src/core/providers/exa-agent";
+import { getAgentRun, startAgentRun } from "../src/core/providers/exa/agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import runningRun from "./fixtures/exa-agent-run-running.json";
 

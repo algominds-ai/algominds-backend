@@ -25,8 +25,11 @@ import {
 	splitKnownCompanies,
 	toPersonData,
 } from "../src/core/people";
-import type { ApolloSearchResult } from "../src/core/providers/apollo";
-import type { ExaResult, ExaSearchRequest } from "../src/core/providers/exa";
+import type { ApolloSearchResult } from "../src/core/providers/apollo/index";
+import type {
+	ExaResult,
+	ExaSearchRequest,
+} from "../src/core/providers/exa/search";
 import type { IcpDoc } from "../src/core/synthesize";
 import {
 	companiesOfOneProfile,

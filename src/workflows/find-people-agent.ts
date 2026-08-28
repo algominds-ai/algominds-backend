@@ -5,13 +5,13 @@ import type { CostEntry } from "@/core/cost";
 import { CostLedger } from "@/core/cost";
 import type { FindPeopleDeps } from "@/core/people";
 import type { PeopleCompany } from "@/core/person-candidates";
-import type { ExaAgentPerson } from "@/core/providers/exa-agent";
+import type { ExaAgentPerson } from "@/core/providers/exa/agent";
 import {
 	buildPersonAgentRunRequest,
 	getAgentPeopleRun,
 	startAgentRun,
 	toExaSearchResult,
-} from "@/core/providers/exa-agent";
+} from "@/core/providers/exa/agent";
 
 const EFFORT = config.people.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.people.exaAgentPollIntervalSeconds;

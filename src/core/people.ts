@@ -26,8 +26,11 @@ import type {
 	ApolloCandidate,
 	ApolloSearchFilters,
 	ApolloSearchResult,
-} from "@/core/providers/apollo";
-import type { ExaSearchRequest, ExaSearchResult } from "@/core/providers/exa";
+} from "@/core/providers/apollo/index";
+import type {
+	ExaSearchRequest,
+	ExaSearchResult,
+} from "@/core/providers/exa/search";
 import type { IcpDoc } from "@/core/synthesize";
 
 export type {

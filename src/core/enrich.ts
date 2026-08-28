@@ -24,7 +24,7 @@ import { company, person } from "@/core/db/schema";
 import type {
 	FindymailInput,
 	FindymailResult,
-} from "@/core/providers/findymail";
+} from "@/core/providers/findymail/index";
 import { EMAIL } from "@/core/providers/index";
 import type { Provider } from "@/core/providers/types";
 import { waterfall } from "@/core/providers/waterfall";

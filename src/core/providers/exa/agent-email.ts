@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
-import { getAgentRunOutput, startAgentRun } from "@/core/providers/exa-agent";
+import { getAgentRunOutput, startAgentRun } from "@/core/providers/exa/agent";
 import type {
 	FindymailContact,
 	FindymailInput,
 	FindymailResult,
-} from "@/core/providers/findymail";
+} from "@/core/providers/findymail/index";
 import type { Provider } from "@/core/providers/types";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 

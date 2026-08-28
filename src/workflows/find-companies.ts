@@ -28,7 +28,7 @@ import { normalizeDomain } from "@/core/db/schema";
 import type { CompanyRow } from "@/core/gate";
 import { gate } from "@/core/gate";
 import { judge } from "@/core/judge";
-import { search } from "@/core/providers/exa";
+import { search } from "@/core/providers/exa/search";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { IcpDocSchema, synthesize } from "@/core/synthesize";
 import {

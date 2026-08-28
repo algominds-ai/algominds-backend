@@ -30,7 +30,7 @@ import type {
 	SubjectsDeps,
 } from "../src/core/enrich";
 import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
-import { exaAgentEmailProvider } from "../src/core/providers/exa-agent-email";
+import { exaAgentEmailProvider } from "../src/core/providers/exa/agent-email";
 import type { Provider } from "../src/core/providers/types";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import { toBatches } from "../src/workflows/enrich";

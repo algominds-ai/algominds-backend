@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	ApolloFilterSchema,
 	apolloPeopleSearch,
-} from "../src/core/providers/apollo";
+} from "../src/core/providers/apollo/index";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import apolloCapture from "./fixtures/apollo-people-search.json";
 

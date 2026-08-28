@@ -32,8 +32,8 @@ import {
 	toPersonData,
 	truncateCompanies,
 } from "@/core/people";
-import { apolloPeopleSearch } from "@/core/providers/apollo";
-import { search } from "@/core/providers/exa";
+import { apolloPeopleSearch } from "@/core/providers/apollo/index";
+import { search } from "@/core/providers/exa/search";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 import { agentPersonSearch } from "@/workflows/find-people-agent";

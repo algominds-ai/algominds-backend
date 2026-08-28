@@ -18,12 +18,12 @@ import { CostLedger } from "../src/core/cost";
 import type { CompanyRow } from "../src/core/gate";
 import { gate } from "../src/core/gate";
 import type { Verdict } from "../src/core/judge";
+import type { ExaAgentCompany } from "../src/core/providers/exa/agent";
 import type {
 	CompanyEntity,
 	ExaResult,
 	ExaSearchRequest,
-} from "../src/core/providers/exa";
-import type { ExaAgentCompany } from "../src/core/providers/exa-agent";
+} from "../src/core/providers/exa/search";
 import type {
 	IcpDoc,
 	SearchPlan,

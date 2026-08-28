@@ -8,7 +8,7 @@ import {
 	findymailSearchLinkedin,
 	findymailStatus,
 	findymailVerify,
-} from "../src/core/providers/findymail";
+} from "../src/core/providers/findymail/index";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 type Handler = (init: RequestInit | undefined) => Response;

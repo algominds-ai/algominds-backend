@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { ExaAgentPerson } from "../src/core/providers/exa-agent";
+import type { ExaAgentPerson } from "../src/core/providers/exa/agent";
 import {
 	buildPersonAgentRunRequest,
 	toExaSearchResult,
-} from "../src/core/providers/exa-agent";
+} from "../src/core/providers/exa/agent";
 
 function agentPerson(fields: Partial<ExaAgentPerson> = {}): ExaAgentPerson {
 	return {

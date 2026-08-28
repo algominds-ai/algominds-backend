@@ -19,7 +19,10 @@ import type {
 	SearchResult,
 } from "@/core/gate";
 import type { JudgeResult, Verdict } from "@/core/judge";
-import type { ExaSearchRequest, ExaSearchResult } from "@/core/providers/exa";
+import type {
+	ExaSearchRequest,
+	ExaSearchResult,
+} from "@/core/providers/exa/search";
 import type {
 	IcpDoc,
 	SearchPlan,
