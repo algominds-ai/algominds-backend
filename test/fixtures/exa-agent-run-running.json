@@ -1,0 +1,43 @@
+{
+	"id": "agent_run_a9bb7d5c85fe4ba48d1acd474e626281",
+	"object": "agent_run",
+	"status": "running",
+	"stopReason": null,
+	"createdAt": "2026-08-28T04:42:56.019Z",
+	"completedAt": null,
+	"request": {
+		"query": "Find 2 seed-stage US fintech companies.",
+		"outputSchema": {
+			"type": "object",
+			"required": ["companies"],
+			"properties": {
+				"companies": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["name", "website"],
+						"properties": {
+							"name": { "type": "string" },
+							"website": { "type": "string" }
+						}
+					}
+				}
+			}
+		},
+		"effort": "low"
+	},
+	"output": { "text": "", "structured": null, "grounding": [] },
+	"usage": {
+		"agentComputeUnits": 0.1,
+		"searches": 3,
+		"emails": 0,
+		"phoneNumbers": 0
+	},
+	"costDollars": {
+		"total": 0.025,
+		"agentCompute": 0.01,
+		"search": 0.015,
+		"emails": 0,
+		"phoneNumbers": 0
+	}
+}

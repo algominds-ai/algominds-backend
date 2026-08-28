@@ -9,7 +9,7 @@ import type {
 	RunOpenConnection,
 	RunUpdateConnection,
 } from "@/core/db/queries";
-import type { Account, NewAccount, NewRun, Run } from "@/core/db/schema";
+import type { Account, NewRun, Run } from "@/core/db/schema";
 import { account, run } from "@/core/db/schema";
 
 /** Finds the account for `domain`, creating it with `name` if it does not exist. */

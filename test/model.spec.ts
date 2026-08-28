@@ -34,7 +34,9 @@ const StructuredRequestBodySchema = z.object({
 			})
 			.optional(),
 	}),
-	provider: z.object({ require_parameters: z.boolean() }).optional(),
+	provider: z
+		.object({ require_parameters: z.boolean(), sort: z.string().optional() })
+		.optional(),
 });
 
 function capturedBody(
@@ -169,6 +171,15 @@ describe("model: the request body the SDK sends", () => {
 		expect(capturedBody(gateway.calls[0]).provider?.require_parameters).toBe(
 			true,
 		);
+	});
+
+	it("asks for the fastest provider, so one slow provider cannot stall a round", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await callWorkerModel(new CostLedger());
+
+		expect(capturedBody(gateway.calls[0]).provider?.sort).toBe("latency");
 	});
 
 	it("targets the worker route for the lighter model", async () => {

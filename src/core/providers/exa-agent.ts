@@ -91,19 +91,17 @@ const ExaAgentPeopleOutputSchema = z.object({
 	people: z.array(ExaAgentPersonSchema),
 });
 
-function runResponseSchema<T>(structuredSchema: z.ZodType<T>) {
-	return z.object({
-		id: z.string(),
-		status: z.string(),
-		output: z
-			.object({
-				text: z.string().optional(),
-				structured: structuredSchema,
-			})
-			.optional(),
-		costDollars: ExaAgentCostSchema.optional(),
-	});
-}
+const AgentRunEnvelopeSchema = z.object({
+	id: z.string(),
+	status: z.string(),
+	output: z
+		.object({
+			text: z.string().optional(),
+			structured: z.unknown().nullish(),
+		})
+		.nullish(),
+	costDollars: ExaAgentCostSchema.nullish(),
+});
 
 const ExaAgentErrorSchema = z.object({
 	requestId: z.string().optional(),
@@ -111,7 +109,12 @@ const ExaAgentErrorSchema = z.object({
 	message: z.string().optional(),
 });
 
-const TERMINAL_FAILURE_STATUSES: string[] = ["failed", "errored", "canceled"];
+const TERMINAL_FAILURE_STATUSES: string[] = [
+	"failed",
+	"errored",
+	"canceled",
+	"cancelled",
+];
 
 const EXA_AGENT_COST_KEYS = [
 	"agentCompute",
@@ -195,11 +198,24 @@ export type ExaAgentRunOutput<T> =
 	| { status: "running" }
 	| { status: "completed"; output: T };
 
+/** Names the fields that did not match, so a vendor change is legible without a re-run. */
+function shapeMismatchDetail(body: unknown, error: z.ZodError): string {
+	const issues = error.issues
+		.slice(0, 5)
+		.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+		.join("; ");
+	const requestId = extractRequestId(body);
+	const where = requestId ? ` (requestId ${requestId})` : "";
+	return `Exa agent: response did not match the expected shape${where} — ${issues}`;
+}
+
 /**
  * Fetches one agent run's current state, parsing `output.structured`
- * against `structuredSchema`. Reports its cost into `ledger` the moment it
- * completes. Throws when the run failed, errored, or was canceled, and when
- * a completed run's body does not match the expected shape.
+ * against `structuredSchema`. A run still working reports partial text with
+ * no structured payload, which reads as running rather than as a bad shape.
+ * Reports its cost into `ledger` the moment it completes. Throws when the run
+ * failed, errored, or was canceled, and when a body does not match the
+ * expected shape.
  */
 export async function getAgentRunOutput<T>(
 	id: string,
@@ -208,13 +224,9 @@ export async function getAgentRunOutput<T>(
 	structuredSchema: z.ZodType<T>,
 ): Promise<ExaAgentRunOutput<T>> {
 	const body = await exaAgentFetch(`/${id}`, env);
-	const parsed = runResponseSchema(structuredSchema).safeParse(body);
+	const parsed = AgentRunEnvelopeSchema.safeParse(body);
 	if (!parsed.success) {
-		const requestId = extractRequestId(body);
-		const detail = requestId
-			? `Exa agent: response did not match the expected shape (requestId ${requestId})`
-			: "Exa agent: response did not match the expected shape";
-		throw new NonRetryableError(detail);
+		throw new NonRetryableError(shapeMismatchDetail(body, parsed.error));
 	}
 	const run = parsed.data;
 	if (TERMINAL_FAILURE_STATUSES.includes(run.status)) {
@@ -222,12 +234,22 @@ export async function getAgentRunOutput<T>(
 			`Exa agent run ${id} ended with status "${run.status}"`,
 		);
 	}
-	if (run.status !== "completed" || !run.output || !run.costDollars) {
+	const structured = run.output?.structured;
+	if (
+		run.status !== "completed" ||
+		structured === null ||
+		structured === undefined ||
+		!run.costDollars
+	) {
 		return { status: "running" };
+	}
+	const payload = structuredSchema.safeParse(structured);
+	if (!payload.success) {
+		throw new NonRetryableError(shapeMismatchDetail(body, payload.error));
 	}
 	const { total, ...rest } = run.costDollars;
 	ledger.reported("exa", "agent", total, agentCostDetail(rest));
-	return { status: "completed", output: run.output.structured };
+	return { status: "completed", output: payload.data };
 }
 
 export type ExaAgentRun =

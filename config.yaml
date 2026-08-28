@@ -44,7 +44,8 @@ companies:
   # cost for evidenced rows via Exa's /agent/runs, polled to completion.
   companySource: exa-search
   # Effort Exa's agent spends per run when companySource is exa-agent. Measured:
-  # "low" returns in about 5 seconds for $0.025.
+  # "low" returns in about 5 seconds for $0.025. Do not set "max": the vendor
+  # requires a beta request header for it that this client does not send.
   exaAgentEffort: low
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5

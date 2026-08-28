@@ -114,3 +114,32 @@ describe("gate — safety", () => {
 		expect(rows).toEqual(snapshot);
 	});
 });
+
+describe("gate — a profile page is not the company's own site", () => {
+	it("rejects a row whose domain is a social or directory host", () => {
+		const rows = [companyRow({ domain: "linkedin.com" })];
+
+		const result = gate(rows, [{}], { seenDomains: new Set() });
+
+		expect(result.kept).toEqual([]);
+		expect(result.rejects).toEqual([
+			{ index: 0, reason: "not-a-company-domain" },
+		]);
+	});
+
+	it("rejects it however the vendor cased or prefixed it", () => {
+		const rows = [companyRow({ domain: "WWW.Crunchbase.com" })];
+
+		const result = gate(rows, [{}], { seenDomains: new Set() });
+
+		expect(result.rejects[0]?.reason).toBe("not-a-company-domain");
+	});
+
+	it("keeps a real company domain that merely contains a host name", () => {
+		const rows = [companyRow({ domain: "github-metrics.io" })];
+
+		const result = gate(rows, [{}], { seenDomains: new Set() });
+
+		expect(result.kept).toEqual(rows);
+	});
+});

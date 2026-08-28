@@ -9,11 +9,17 @@ import type {
 	ExaAgentRunRequest,
 } from "@/core/providers/exa-agent";
 
+const NOT_A_DIRECTORY_HOST =
+	"^(?!(https?://)?(www\\.)?(linkedin|twitter|x|facebook|instagram|youtube|tiktok|medium|substack|github|crunchbase|pitchbook|tracxn|bloomberg|wellfound|angel|ycombinator|producthunt|glassdoor|indeed)\\.)";
+
 const EXA_AGENT_COMPANY_SCHEMA = {
 	type: "object",
 	properties: {
 		name: { type: "string" },
-		website: { type: "string" },
+		website: {
+			type: "string",
+			pattern: NOT_A_DIRECTORY_HOST,
+		},
 		description: { type: "string" },
 		foundedYear: { type: "number" },
 		workforceTotal: { type: "number" },
@@ -43,7 +49,7 @@ export function buildAgentRunRequest(
 	return {
 		query: agentQuery(req.query, count),
 		systemPrompt:
-			"Give a working website domain for every company. Never repeat a company.",
+			"Give the company's own website domain, never a profile or directory page such as LinkedIn, Crunchbase, or GitHub. Never repeat a company.",
 		effort,
 		dataSources: [{ provider: "fiber" }],
 		outputSchema: {

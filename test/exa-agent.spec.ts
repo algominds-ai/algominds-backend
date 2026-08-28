@@ -8,6 +8,7 @@ import {
 import { CostLedger } from "../src/core/cost";
 import { getAgentRun, startAgentRun } from "../src/core/providers/exa-agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
+import runningRun from "./fixtures/exa-agent-run-running.json";
 
 type FetchStub = { calls: number; init: RequestInit | undefined };
 
@@ -221,5 +222,37 @@ describe("agent run to CompanyEntity mapping", () => {
 		const result = toExaSearchResult("run-completed", run.companies);
 
 		expect(result.results).toHaveLength(0);
+	});
+});
+
+describe("a run that is still working", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("reads a null structured payload as running, not as a bad shape", async () => {
+		globalThis.fetch = async () =>
+			new Response(JSON.stringify(runningRun), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+
+		const run = await getAgentRun(runningRun.id, exaEnv(), new CostLedger());
+
+		expect(run.status).toBe("running");
+	});
+
+	it("spends nothing from the ledger while it is still working", async () => {
+		globalThis.fetch = async () =>
+			new Response(JSON.stringify(runningRun), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+		const ledger = new CostLedger();
+
+		await getAgentRun(runningRun.id, exaEnv(), ledger);
+
+		expect(ledger.total()).toBe(0);
 	});
 });
