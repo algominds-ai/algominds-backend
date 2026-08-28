@@ -1,5 +1,7 @@
+import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
+import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
 import app from "../src/index";
 import { constantTimeEqual } from "../src/routes";
 
@@ -73,6 +75,37 @@ async function terminateStartedRuns(): Promise<void> {
 }
 
 afterEach(terminateStartedRuns);
+
+async function expectEnrichResolvesSubjects(
+	sourceRun: string,
+	subjects: EnrichSubject[],
+	outcomes: EnrichOutcome[],
+): Promise<void> {
+	const today = new Date().toISOString().slice(0, 10);
+	const runId = `enrich_${sourceRun}_${today}`;
+	const instance = await introspectWorkflowInstance(testEnv.ENRICH, runId);
+	try {
+		await instance.modify(async (m) => {
+			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
+			await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
+		});
+
+		const response = await authedCall(
+			"/enrich",
+			postInit({ runId: sourceRun, channels: ["linkedin"] }, TOKEN),
+		);
+		const body: { runId?: string } = await response.json();
+
+		expect(response.status).toBe(202);
+		expect(body.runId).toBe(runId);
+
+		await instance.waitForStatus("complete");
+		const output = await instance.getOutput();
+		expect(output).toEqual(outcomes);
+	} finally {
+		await instance.dispose();
+	}
+}
 
 const ICP_A = "11111111-1111-4111-8111-111111111111";
 
@@ -221,34 +254,82 @@ describe("POST /companies/find", () => {
 });
 
 describe("POST /people/find and /enrich", () => {
-	it("starts a people/find run scoped by icpId", async () => {
-		const icpId = "88888888-8888-4888-8888-888888888888";
+	it("starts a people/find run scoped by a companies runId", async () => {
+		const companiesRunId =
+			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
 
 		const response = await authedCall(
 			"/people/find",
-			postInit({ icpId }, TOKEN),
+			postInit({ runId: companiesRunId }, TOKEN),
 		);
-		const body: { runId?: string } = await response.json();
+		const body: { runId?: string; icpId?: string } = await response.json();
 		await terminateRun(body.runId);
 		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`people_${icpId}_${today}`);
+		expect(body.runId).toBe(`people_${companiesRunId}_${today}`);
+		expect(body.icpId).toBeUndefined();
 	});
 
-	it("starts an enrich run scoped by the people-find run it enriches", async () => {
-		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
+	it("rejects a people/find body with neither runId nor domains", async () => {
+		const response = await authedCall("/people/find", postInit({}, TOKEN));
+		expect(response.status).toBe(400);
+	});
 
+	it("rejects a people/find body carrying both runId and domains", async () => {
 		const response = await authedCall(
-			"/enrich",
-			postInit({ runId: sourceRun, channels: ["email"] }, TOKEN),
+			"/people/find",
+			postInit(
+				{
+					runId: "companies_dd000000-0000-4000-8000-000000000000_2026-08-27",
+					domains: ["acme.com"],
+				},
+				TOKEN,
+			),
 		);
-		const body: { runId?: string } = await response.json();
-		await terminateRun(body.runId);
-		const today = new Date().toISOString().slice(0, 10);
+		expect(response.status).toBe(400);
+	});
 
-		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`enrich_${sourceRun}_${today}`);
+	it("scopes a domains request to a digest of the normalised list, deduping case and www", async () => {
+		const first = await authedCall(
+			"/people/find",
+			postInit({ domains: ["Acme.com", "https://www.beta.com"] }, TOKEN),
+		);
+		const second = await authedCall(
+			"/people/find",
+			postInit({ domains: ["www.BETA.com", "acme.com"] }, TOKEN),
+		);
+		const firstBody: { runId: string; status?: string } = await first.json();
+		const secondBody: { runId: string; status?: string } = await second.json();
+		await terminateRun(firstBody.runId);
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(firstBody.runId);
+	});
+
+	it("starts an enrich run scoped by the people-find run it enriches, and resolves its actual subjects rather than just accepting the request", async () => {
+		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
+		const subjects: EnrichSubject[] = [
+			{
+				id: "person-route-test",
+				linkedinUrl: "https://linkedin.com/in/route-test",
+			},
+		];
+		const outcomes: EnrichOutcome[] = [
+			{
+				subjectId: "person-route-test",
+				linkedin: {
+					status: "found",
+					value: "https://linkedin.com/in/route-test",
+					source: "subject",
+				},
+			},
+		];
+
+		await expectEnrichResolvesSubjects(sourceRun, subjects, outcomes);
 	});
 
 	it("rejects an enrich body with an unknown channel", async () => {

@@ -9,21 +9,13 @@
 		"query": "Find the work email address for the founder or CEO of Graphlit (graphlit.com), a Seattle software company.",
 		"outputSchema": {
 			"type": "object",
-			"required": [
-				"people"
-			],
+			"required": ["people"],
 			"properties": {
 				"people": {
 					"type": "array",
 					"items": {
 						"type": "object",
-						"required": [
-							"fullName",
-							"title",
-							"email",
-							"linkedinUrl",
-							"source"
-						],
+						"required": ["fullName", "title", "email", "linkedinUrl", "source"],
 						"properties": {
 							"email": {
 								"type": "string"

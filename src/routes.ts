@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { config } from "@/config";
 import { createIcp, ensureAccount, findRun } from "@/core/db/queries";
+import { normalizeDomain } from "@/core/db/schema";
 
 type ApiEnv = { Bindings: Env };
 
@@ -67,17 +68,43 @@ const companiesFindSchema = z.intersection(
 	}),
 );
 
-const peopleFindSchema = z.intersection(
-	icpRef,
-	z.object({
-		maxCompanies: z
-			.number()
-			.int()
-			.positive()
-			.max(config.limits.maxCompaniesPerPeopleRun)
-			.optional(),
-	}),
-);
+function normalizedDomainList(
+	values: string[],
+	ctx: z.RefinementCtx,
+): string[] {
+	const normalized = values.map((value) => {
+		try {
+			return normalizeDomain(value);
+		} catch {
+			ctx.addIssue({ code: "custom", message: `not a valid domain: ${value}` });
+			return value;
+		}
+	});
+	return [...new Set(normalized)].sort();
+}
+
+const domainsField = z
+	.array(z.string().min(1))
+	.min(1)
+	.max(config.limits.maxCompaniesPerPeopleRun)
+	.transform(normalizedDomainList);
+
+const maxCompaniesField = z.number().int().positive().optional();
+
+const peopleFindSchema = z.union([
+	z.strictObject({ runId: z.string().min(1), maxCompanies: maxCompaniesField }),
+	z.strictObject({ domains: domainsField, maxCompanies: maxCompaniesField }),
+]);
+
+/** A short, stable id for the same set of normalised domains on the same day. */
+async function domainsScopeId(domains: readonly string[]): Promise<string> {
+	const bytes = new TextEncoder().encode(domains.join(","));
+	const digest = await crypto.subtle.digest("SHA-256", bytes);
+	const hex = [...new Uint8Array(digest)]
+		.map((byte) => byte.toString(16).padStart(2, "0"))
+		.join("");
+	return `dom-${hex.slice(0, 12)}`;
+}
 
 const enrichSchema = z.object({
 	runId: z.string(),
@@ -187,12 +214,16 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, peopleFindSchema, {
 			capability: "people",
 			workflow: c.env.FIND_PEOPLE,
-			toJob: async (body, env) => {
-				const icpId = await resolveIcpId(env, body);
+			toJob: async (body) => {
+				if ("runId" in body) {
+					return {
+						scopeId: body.runId,
+						params: { runId: body.runId, maxCompanies: body.maxCompanies },
+					};
+				}
 				return {
-					scopeId: icpId,
-					icpId,
-					params: { icpId, maxCompanies: body.maxCompanies },
+					scopeId: await domainsScopeId(body.domains),
+					params: { domains: body.domains, maxCompanies: body.maxCompanies },
 				};
 			},
 		}),

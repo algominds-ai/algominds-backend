@@ -1,25 +1,32 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
+import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import type { DbMode } from "../src/core/db/client";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
+	RunLookupConnection,
 } from "../src/core/db/queries";
 import type {
 	Company,
 	Evidence,
 	NewEvidence,
 	Person,
+	Run,
 } from "../src/core/db/schema";
+import { company } from "../src/core/db/schema";
 import type {
 	EnrichDeps,
 	EnrichOutcome,
 	EnrichSubject,
 	LinkedinInput,
 	LinkedinResult,
+	RunCompanyExistsConnection,
 	RunPeopleConnection,
+	SubjectsDeps,
 } from "../src/core/enrich";
 import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
 import { exaAgentEmailProvider } from "../src/core/providers/exa-agent-email";
@@ -443,81 +450,202 @@ describe("isSendable", () => {
 	});
 });
 
-function fakeRunPeople(
-	rows: { person: Person; company: Company }[],
-): DbFactory<RunPeopleConnection> {
+type Recorded = { condition?: unknown; mode?: DbMode };
+
+function fakeFindRun(row: Run | undefined): DbFactory<RunLookupConnection> {
 	return () => ({
 		select: () => ({
 			from: () => ({
-				innerJoin: () => ({
-					where: () => Promise.resolve(rows),
+				where: () => ({
+					limit: () => Promise.resolve(row ? [row] : []),
 				}),
 			}),
 		}),
 	});
 }
 
+function fakeCompanyExists(
+	rows: { id: string }[],
+	recorded: Recorded = {},
+): DbFactory<RunCompanyExistsConnection> {
+	return (_env, mode) => {
+		recorded.mode = mode;
+		return {
+			select: () => ({
+				from: () => ({
+					where: (condition) => {
+						recorded.condition = condition;
+						return Promise.resolve(rows);
+					},
+				}),
+			}),
+		};
+	};
+}
+
+function fakeRunPeople(
+	rows: { person: Person; company: Company }[],
+	recorded: Recorded = {},
+): DbFactory<RunPeopleConnection> {
+	return (_env, mode) => {
+		recorded.mode = mode;
+		return {
+			select: () => ({
+				from: () => ({
+					innerJoin: () => ({
+						where: (condition) => {
+							recorded.condition = condition;
+							return Promise.resolve(rows);
+						},
+					}),
+				}),
+			}),
+		};
+	};
+}
+
+function runRow(overrides: Partial<Run> = {}): Run {
+	return {
+		id: "companies_icp-1_2026-08-27",
+		accountId: "account-1",
+		icpId: "icp-1",
+		capability: "companies",
+		status: "running",
+		costDollars: 0,
+		startedAt: new Date("2026-08-27T00:00:00.000Z"),
+		finishedAt: null,
+		...overrides,
+	};
+}
+
+function personCompanyRows(
+	companyRow: Company,
+): { person: Person; company: Company }[] {
+	return [
+		{
+			person: {
+				id: "person-1",
+				companyId: companyRow.id,
+				linkedinUrl: "https://linkedin.com/in/a",
+				name: "Ada",
+				title: "VP",
+				data: null,
+			},
+			company: companyRow,
+		},
+		{
+			person: {
+				id: "person-2",
+				companyId: companyRow.id,
+				linkedinUrl: null,
+				name: null,
+				title: null,
+				data: null,
+			},
+			company: companyRow,
+		},
+	];
+}
+
+const EXPECTED_SUBJECTS = [
+	{
+		id: "person-1",
+		domain: "acme.com",
+		name: "Ada",
+		linkedinUrl: "https://linkedin.com/in/a",
+	},
+	{ id: "person-2", domain: "acme.com" },
+];
+
 describe("subjectsForRun", () => {
-	it("maps every person joined to their company's domain, for one run", async () => {
+	it("resolves the people of a companies run's companies, reading through the direct binding", async () => {
+		const run = runRow({
+			id: "companies_icp-1_2026-08-27",
+			capability: "companies",
+		});
 		const companyRow: Company = {
 			id: "company-1",
 			icpId: "icp-1",
 			domain: "acme.com",
 			name: "Acme",
 			data: null,
-			runId: "people_run_1",
+			runId: run.id,
 			foundAt: new Date(),
 		};
-		const rows = [
-			{
-				person: {
-					id: "person-1",
-					companyId: "company-1",
-					linkedinUrl: "https://linkedin.com/in/a",
-					name: "Ada",
-					title: "VP",
-					data: null,
-				},
-				company: companyRow,
-			},
-			{
-				person: {
-					id: "person-2",
-					companyId: "company-1",
-					linkedinUrl: null,
-					name: null,
-					title: null,
-					data: null,
-				},
-				company: companyRow,
-			},
-		];
+		const existsRecorded: Recorded = {};
+		const peopleRecorded: Recorded = {};
+		const deps: SubjectsDeps = {
+			findRun: fakeFindRun(run),
+			companyExists: fakeCompanyExists([{ id: companyRow.id }], existsRecorded),
+			runPeople: fakeRunPeople(personCompanyRows(companyRow), peopleRecorded),
+		};
 
-		const subjects = await subjectsForRun(
-			testEnv,
-			"people_run_1",
-			fakeRunPeople(rows),
-		);
+		const subjects = await subjectsForRun(testEnv, run.id, deps);
 
-		expect(subjects).toEqual([
-			{
-				id: "person-1",
-				domain: "acme.com",
-				name: "Ada",
-				linkedinUrl: "https://linkedin.com/in/a",
-			},
-			{ id: "person-2", domain: "acme.com" },
-		]);
+		expect(subjects).toEqual(EXPECTED_SUBJECTS);
+		expect(existsRecorded.condition).toEqual(eq(company.runId, run.id));
+		expect(peopleRecorded.condition).toEqual(eq(company.runId, run.id));
+		expect(existsRecorded.mode).toBe("direct");
+		expect(peopleRecorded.mode).toBe("direct");
 	});
 
-	it("returns an empty list when a run has no people", async () => {
-		const subjects = await subjectsForRun(
-			testEnv,
-			"people_run_empty",
-			fakeRunPeople([]),
-		);
+	it("resolves the same people for a people run id, rather than an empty set", async () => {
+		const run = runRow({ id: "people_icp-1_2026-08-27", capability: "people" });
+		const companyRow: Company = {
+			id: "company-1",
+			icpId: run.icpId,
+			domain: "acme.com",
+			name: "Acme",
+			data: null,
+			runId: "companies_icp-1_2026-08-26",
+			foundAt: new Date(),
+		};
+		const existsRecorded: Recorded = {};
+		const peopleRecorded: Recorded = {};
+		const deps: SubjectsDeps = {
+			findRun: fakeFindRun(run),
+			companyExists: fakeCompanyExists([{ id: companyRow.id }], existsRecorded),
+			runPeople: fakeRunPeople(personCompanyRows(companyRow), peopleRecorded),
+		};
 
-		expect(subjects).toEqual([]);
+		const subjects = await subjectsForRun(testEnv, run.id, deps);
+
+		expect(subjects).toEqual(EXPECTED_SUBJECTS);
+		expect(existsRecorded.condition).toEqual(eq(company.icpId, run.icpId));
+		expect(peopleRecorded.condition).toEqual(eq(company.icpId, run.icpId));
+	});
+
+	it("throws rather than returning an empty list when the run matches no company", async () => {
+		const run = runRow({
+			id: "companies_icp-2_2026-08-27",
+			capability: "companies",
+		});
+		const deps: SubjectsDeps = {
+			findRun: fakeFindRun(run),
+			companyExists: fakeCompanyExists([]),
+			runPeople: fakeRunPeople([]),
+		};
+
+		await expect(subjectsForRun(testEnv, run.id, deps)).rejects.toThrow(
+			NonRetryableError,
+		);
+	});
+
+	it("throws when the run id matches no run at all", async () => {
+		const deps: SubjectsDeps = { findRun: fakeFindRun(undefined) };
+
+		await expect(subjectsForRun(testEnv, "unknown_run", deps)).rejects.toThrow(
+			NonRetryableError,
+		);
+	});
+
+	it("throws for a capability that carries no company scope", async () => {
+		const run = runRow({ id: "enrich_icp-1_2026-08-27", capability: "enrich" });
+		const deps: SubjectsDeps = { findRun: fakeFindRun(run) };
+
+		await expect(subjectsForRun(testEnv, run.id, deps)).rejects.toThrow(
+			NonRetryableError,
+		);
 	});
 });
 

@@ -1,21 +1,19 @@
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { config } from "@/config";
-import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
-import type { DbFactory } from "@/core/db/queries";
+import { companiesForDomains } from "@/core/db/company-domains";
 import {
 	appendEvidence,
 	closeRun,
+	companiesForRun,
+	findRun,
 	loadIcp,
 	openRun,
 	savePeople,
 } from "@/core/db/queries";
 import type { NewEvidence, NewPerson } from "@/core/db/schema";
-import { company } from "@/core/db/schema";
 import type {
 	CompanyPeopleResult,
 	FindPeopleDeps,
@@ -25,9 +23,9 @@ import type {
 	PersonCandidate,
 } from "@/core/people";
 import {
-	DEFAULT_MAX_COMPANIES,
 	decisionMakerTitles,
 	findPeople,
+	resolveMaxCompanies,
 	toPersonData,
 	truncateCompanies,
 } from "@/core/people";
@@ -39,12 +37,19 @@ const BATCH_SIZE = config.people.batchSize;
 const EVIDENCE_SOURCE_EXA = "exa";
 const EVIDENCE_SOURCE_TARGET = "target";
 
-const FindPeoplePayloadSchema = z.object({
-	icpId: z.string(),
-	maxCompanies: z.number().int().positive().optional(),
-});
+const maxCompaniesField = z.number().int().positive().optional();
+
+const FindPeoplePayloadSchema = z.union([
+	z.object({ runId: z.string().min(1), maxCompanies: maxCompaniesField }),
+	z.object({
+		domains: z.array(z.string().min(1)).min(1),
+		maxCompanies: maxCompaniesField,
+	}),
+]);
 
 type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
+
+type FindPeopleWorkflowResult = FindPeopleResult & { unknownDomains: string[] };
 
 const PRODUCTION_DEPS: FindPeopleDeps = {
 	decisionMakerTitles,
@@ -52,31 +57,57 @@ const PRODUCTION_DEPS: FindPeopleDeps = {
 	apolloSearch: apolloPeopleSearch.run,
 };
 
-type CompanyColumns = {
-	id: typeof company.id;
-	domain: typeof company.domain;
-	name: typeof company.name;
+export type TargetCompanies = {
+	companies: PeopleCompany[];
+	icpId: string;
+	unknownDomains: string[];
 };
 
-interface CompanyIcpConnection {
-	select(columns: CompanyColumns): {
-		from(table: typeof company): {
-			where(condition: unknown): Promise<PeopleCompany[]>;
-		};
+async function targetByRun(env: Env, runId: string): Promise<TargetCompanies> {
+	const runRow = await findRun(env, runId);
+	if (!runRow) {
+		throw new NonRetryableError(`findPeople: unknown run ${runId}`);
+	}
+	const companies = await companiesForRun(env, runId);
+	return { companies, icpId: runRow.icpId, unknownDomains: [] };
+}
+
+async function targetByDomains(
+	env: Env,
+	domains: readonly string[],
+): Promise<TargetCompanies> {
+	const matches = await companiesForDomains(env, domains);
+	if (matches.length === 0) {
+		throw new NonRetryableError(
+			`findPeople: no known company for domains ${domains.join(", ")}`,
+		);
+	}
+	const byDomain = new Map(matches.map((row) => [row.domain, row]));
+	const icpId = matches[0]?.icpId;
+	if (icpId === undefined) {
+		throw new NonRetryableError(
+			"findPeople: no known company for the given domains",
+		);
+	}
+	return {
+		companies: [...byDomain.values()].map(({ id, domain, name }) => ({
+			id,
+			domain,
+			name,
+		})),
+		icpId,
+		unknownDomains: domains.filter((domain) => !byDomain.has(domain)),
 	};
 }
 
-/** The columns a Workflow step can safely return: no jsonb `data`, no `Date`. */
-async function companiesForIcp(
-	env: DbEnv,
-	icpId: string,
-	buildDb: DbFactory<CompanyIcpConnection> = db,
-): Promise<PeopleCompany[]> {
-	const connection = buildDb(env, "cached");
-	return connection
-		.select({ id: company.id, domain: company.domain, name: company.name })
-		.from(company)
-		.where(eq(company.icpId, icpId));
+/** Resolves the companies a people run searches, from a companies run id or a domain list. */
+export function loadTargetCompanies(
+	env: Env,
+	payload: FindPeoplePayload,
+): Promise<TargetCompanies> {
+	return "runId" in payload
+		? targetByRun(env, payload.runId)
+		: targetByDomains(env, payload.domains);
 }
 
 /** Splits `companies` into ordered groups of `BATCH_SIZE`, for one durable step each. */
@@ -229,16 +260,23 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 	override async run(
 		event: Readonly<WorkflowEvent<FindPeoplePayload>>,
 		step: WorkflowStep,
-	): Promise<FindPeopleResult> {
+	): Promise<FindPeopleWorkflowResult> {
 		const payload = FindPeoplePayloadSchema.parse(event.payload);
+
+		const target = await step.do(
+			"load-companies",
+			config.stepConfig.databaseCall,
+			() => loadTargetCompanies(this.env, payload),
+		);
+
 		const { doc: icp, accountId } = await step.do(
 			"load-icp",
 			config.stepConfig.databaseCall,
 			async () => {
-				const icpRow = await loadIcp(this.env, payload.icpId);
+				const icpRow = await loadIcp(this.env, target.icpId);
 				if (!icpRow) {
 					throw new NonRetryableError(
-						`findPeople: unknown icp ${payload.icpId}`,
+						`findPeople: unknown icp ${target.icpId}`,
 					);
 				}
 				return {
@@ -252,24 +290,23 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			openRun(this.env, {
 				id: event.instanceId,
 				accountId,
-				icpId: payload.icpId,
+				icpId: target.icpId,
 				capability: "people",
 				status: "running",
 			}),
 		);
 
-		const allCompanies = await step.do(
-			"load-companies",
-			config.stepConfig.databaseCall,
-			() => companiesForIcp(this.env, payload.icpId),
-		);
+		const effectiveMax = resolveMaxCompanies(payload.maxCompanies);
 		const { companies: scoped, skipped } = truncateCompanies(
-			allCompanies,
-			payload.maxCompanies ?? DEFAULT_MAX_COMPANIES,
+			target.companies,
+			effectiveMax,
 		);
 		const opts: FindPeopleOptions = { icp, env: this.env };
 		const batches = await runBatches(toBatches(scoped), opts, step);
-		const result = mergeResults(batches, skipped);
+		const result: FindPeopleWorkflowResult = {
+			...mergeResults(batches, skipped),
+			unknownDomains: target.unknownDomains,
+		};
 
 		await step.do("save-people", config.stepConfig.databaseCall, () =>
 			persistPeople(this.env, scoped, result.companies),

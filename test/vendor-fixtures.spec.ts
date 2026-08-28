@@ -107,6 +107,7 @@ describe("the parser against a real /agent/runs response", () => {
 		const run = await getAgentRun(agentRun.id, env, new CostLedger());
 
 		expect(run.status).toBe("completed");
+		if (run.status !== "completed") throw new Error("expected a completed run");
 		expect(run.companies.length).toBeGreaterThan(0);
 	});
 

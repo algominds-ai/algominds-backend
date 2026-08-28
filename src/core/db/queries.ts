@@ -28,7 +28,7 @@ import {
 
 export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
 
-interface SelectWhereConnection<TTable, TColumns, TRow> {
+export interface SelectWhereConnection<TTable, TColumns, TRow> {
 	select(columns: TColumns): {
 		from(table: TTable): {
 			where(condition: unknown): Promise<TRow[]>;
@@ -232,7 +232,6 @@ export async function ensureAccount(
 	return row;
 }
 
-/** Inserts a run row keyed by the caller-supplied run id. */
 /** Opens a run, or returns the one already opened under this id. A retried step must not fail on the primary key it just wrote. */
 export async function openRun(
 	env: DbEnv,

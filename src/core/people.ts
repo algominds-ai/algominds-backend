@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import { generateStructured, workerModel } from "@/core/model";
 import type {
@@ -118,6 +119,18 @@ export async function decisionMakerTitles(
 		"decision-maker-titles",
 	);
 	return { titles: output?.titles ?? DEFAULT_TITLES, ledger };
+}
+
+/**
+ * The number of companies one people run searches: the caller's own request
+ * when they give one, else the configured fallback, clamped to the configured
+ * ceiling either way.
+ */
+export function resolveMaxCompanies(requested: number | undefined): number {
+	return Math.min(
+		requested ?? config.limits.defaultMaxCompaniesPerPeopleRun,
+		config.limits.maxCompaniesPerPeopleRun,
+	);
 }
 
 /** Splits `companies` into the first `max` and how many were left behind. */

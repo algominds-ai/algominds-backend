@@ -1,3 +1,4 @@
+import { NonRetryableError } from "cloudflare:workflows";
 import { eq } from "drizzle-orm";
 import { config } from "@/config";
 import type { DbEnv } from "@/core/db/client";
@@ -6,9 +7,21 @@ import type {
 	DbFactory,
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
+	RunLookupConnection,
 } from "@/core/db/queries";
-import { appendEvidence, cutoffDate, latestEvidence } from "@/core/db/queries";
-import type { Company, Evidence, NewEvidence, Person } from "@/core/db/schema";
+import {
+	appendEvidence,
+	cutoffDate,
+	findRun,
+	latestEvidence,
+} from "@/core/db/queries";
+import type {
+	Company,
+	Evidence,
+	NewEvidence,
+	Person,
+	Run,
+} from "@/core/db/schema";
 import { company, person } from "@/core/db/schema";
 import type {
 	FindymailInput,
@@ -84,6 +97,20 @@ export interface RunPeopleConnection {
 	};
 }
 
+export interface RunCompanyExistsConnection {
+	select(columns: { id: typeof company.id }): {
+		from(table: typeof company): {
+			where(condition: unknown): Promise<{ id: string }[]>;
+		};
+	};
+}
+
+export type SubjectsDeps = {
+	findRun?: DbFactory<RunLookupConnection>;
+	companyExists?: DbFactory<RunCompanyExistsConnection>;
+	runPeople?: DbFactory<RunPeopleConnection>;
+};
+
 function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
 	return {
 		id: row.person.id,
@@ -95,18 +122,64 @@ function toEnrichSubject(row: PersonCompanyRow): EnrichSubject {
 	};
 }
 
-/** Every person produced by the find-people run `runId`, as enrich subjects. */
-export async function subjectsForRun(
+function runCompanyCondition(run: Run): unknown {
+	if (run.capability === "companies") return eq(company.runId, run.id);
+	if (run.capability === "people") return eq(company.icpId, run.icpId);
+	throw new NonRetryableError(
+		`subjectsForRun: run ${run.id} has no company scope for capability ${run.capability}`,
+	);
+}
+
+async function companiesExistFor(
 	env: DbEnv,
-	runId: string,
-	buildDb: DbFactory<RunPeopleConnection> = db,
-): Promise<EnrichSubject[]> {
-	const connection = buildDb(env, "cached");
+	condition: unknown,
+	buildDb: DbFactory<RunCompanyExistsConnection> = db,
+): Promise<boolean> {
+	const connection = buildDb(env, "direct");
 	const rows = await connection
+		.select({ id: company.id })
+		.from(company)
+		.where(condition);
+	return rows.length > 0;
+}
+
+async function runPeopleFor(
+	env: DbEnv,
+	condition: unknown,
+	buildDb: DbFactory<RunPeopleConnection> = db,
+): Promise<PersonCompanyRow[]> {
+	const connection = buildDb(env, "direct");
+	return connection
 		.select()
 		.from(person)
 		.innerJoin(company, eq(person.companyId, company.id))
-		.where(eq(company.runId, runId));
+		.where(condition);
+}
+
+/**
+ * Resolves run `runId` into enrich subjects, reading its company set by the
+ * run's own capability: a companies run by its `run_id`, a people run by its
+ * ICP, since a person carries no run id of its own. Throws
+ * `NonRetryableError` when the run is unknown, its capability has no company
+ * scope, or it matches no company at all.
+ */
+export async function subjectsForRun(
+	env: DbEnv,
+	runId: string,
+	deps: SubjectsDeps = {},
+): Promise<EnrichSubject[]> {
+	const run = await findRun(env, runId, deps.findRun);
+	if (!run) throw new NonRetryableError(`subjectsForRun: unknown run ${runId}`);
+	const condition = runCompanyCondition(run);
+	const hasCompanies = await companiesExistFor(
+		env,
+		condition,
+		deps.companyExists,
+	);
+	if (!hasCompanies) {
+		throw new NonRetryableError(`subjectsForRun: no company for run ${runId}`);
+	}
+	const rows = await runPeopleFor(env, condition, deps.runPeople);
 	return rows.map(toEnrichSubject);
 }
 

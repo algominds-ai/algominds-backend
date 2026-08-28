@@ -8,9 +8,20 @@ limits:
   # Three rounds return at most 300 candidates, so asking for more than this
   # can never be satisfied anyway. The cap makes that explicit at the boundary.
   maxCompaniesPerRequest: 300
+  # How many companies a people run searches when the caller gives no
+  # maxCompanies. The caller's own number always wins over this.
+  defaultMaxCompaniesPerPeopleRun: 100
   # Each company in a people run is its own paid search, so this one bounds
-  # real spend rather than just effort.
-  maxCompaniesPerPeopleRun: 100
+  # real spend rather than just effort. Matches maxCompaniesPerRequest: one
+  # companies run can never hold more companies than that, so no people run
+  # needs to search wider than one full run.
+  # Structural bound only: a companies run can hold at most maxCompaniesPerRequest
+  # companies, so a people run over it cannot exceed that either. The spend
+  # ceiling is the tighter limit in practice. Measured at about $0.010 per
+  # company, 300 companies is roughly $3.00 against a $2.00 per-run ceiling, so
+  # a run this large stops on spend and reports capped. That is money winning
+  # over count, which is the intended order.
+  maxCompaniesPerPeopleRun: 300
 
 companies:
   # Rounds of search per run. Each round is one paid Exa call plus two model calls.

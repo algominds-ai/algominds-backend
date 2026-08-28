@@ -10,18 +10,13 @@
 		"systemPrompt": "Give a working website domain for every company. Never repeat a company.",
 		"outputSchema": {
 			"type": "object",
-			"required": [
-				"companies"
-			],
+			"required": ["companies"],
 			"properties": {
 				"companies": {
 					"type": "array",
 					"items": {
 						"type": "object",
-						"required": [
-							"name",
-							"website"
-						],
+						"required": ["name", "website"],
 						"properties": {
 							"city": {
 								"type": "string"
