@@ -7,16 +7,15 @@ const JsonValueSchema = z.json();
 
 type Json = z.infer<typeof JsonValueSchema>;
 
+const ISO_COUNTRY_CODE = /^[A-Z]{2}$/;
+
 const EXA_CATEGORIES = [
 	"company",
-	"research paper",
+	"publication",
 	"news",
-	"pdf",
-	"github",
 	"personal site",
-	"people",
 	"financial report",
-	"linkedin profile",
+	"people",
 ] as const;
 
 const EXA_SEARCH_TYPES = [
@@ -33,7 +32,7 @@ const ExaSearchRequestSchema = z.object({
 	numResults: z.number().int().min(1).max(100).optional(),
 	type: z.enum(EXA_SEARCH_TYPES).optional(),
 	category: z.enum(EXA_CATEGORIES).optional(),
-	userLocation: z.string().length(2).optional(),
+	userLocation: z.string().regex(ISO_COUNTRY_CODE).optional(),
 	startPublishedDate: z.string().optional(),
 	endPublishedDate: z.string().optional(),
 	includeDomains: z.array(z.string()).max(1200).optional(),

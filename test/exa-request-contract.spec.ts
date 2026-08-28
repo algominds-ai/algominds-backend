@@ -154,7 +154,7 @@ describe("person search request stays inside the measured Exa /search schema, as
 		expect(SearchFieldsAndTypeSchema.safeParse(request).success).toBe(true);
 	});
 
-	it.fails("sends a category value from the measured enum", () => {
+	it("sends a category value from the measured enum", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), [
 			"Chief Executive Officer",
 		]);

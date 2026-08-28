@@ -90,7 +90,7 @@ export function buildPersonSearchRequest(
 		query: `${titles.join(" OR ")} at ${company.name}`,
 		numResults: RESULTS_PER_COMPANY,
 		type: "fast",
-		category: "linkedin profile",
+		category: "people",
 		contents: { summary: { schema: personSummarySchema() } },
 	};
 }

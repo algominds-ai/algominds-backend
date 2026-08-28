@@ -314,3 +314,48 @@ is why it sits last in the enrichment waterfall rather than first.
 
 **The lesson worth keeping:** measure at the size you intend to run. A probe
 that returns two rows says nothing about a request for a hundred.
+
+## The request schemas are checked against the spec, not written from memory
+
+The category enum had been written from memory. It invented four values Exa
+does not have — `research paper`, `pdf`, `github`, `linkedin profile` — and
+omitted one it does, `publication`. Because `linkedin profile` was in our enum,
+the people path could send it and nothing objected.
+
+An enum copied from memory is a comment, not a constraint.
+
+Compared mechanically against `api.exa.ai/openapi.json`, the `/search` request
+schema now matches exactly:
+
+| | Spec | Ours |
+|---|---|---|
+| Fields we send that the spec does not define | — | none |
+| `numResults` | 1 to 100 | 1 to 100 |
+| `includeDomains`, `excludeDomains` | 1200 | 1200 |
+| `type` | instant, fast, auto, deep-lite, deep, deep-reasoning | identical |
+| `category` | company, publication, news, personal site, financial report, people | identical |
+| agent `effort` | minimal, low, medium, high, xhigh, auto, max | identical |
+| agent `dataSources` | 7 providers, at most 5 | identical |
+
+Modelling fewer fields than the spec is safe. Sending more is not.
+
+## Where model output reaches a vendor, and what stops it
+
+Only two values the model produces travel to a vendor: the search `query`,
+which is free text by design, and `userLocation`.
+
+`userLocation` passes two checks. The synthesizer nulls anything that is not
+two characters and uppercases the rest; the request schema then rejects
+anything failing `/^[A-Z]{2}$/`. It was `.length(2)`, which accepted `zz` and
+`Z9` — shape without membership.
+
+Everything else the model emits — the country list, the headcount bounds, the
+decision-maker titles — either filters records we already hold or is a field
+the vendor genuinely accepts as free text.
+
+Apollo sends only two of its nine declared fields, both correctly typed, and
+its schema is `.strict()` so an unknown field cannot leave.
+`person_seniorities` and `organization_num_employees_ranges` have fixed
+vocabularies at Apollo's end and are declared as plain strings here. They are
+unused today; typing them properly is owed before anything fills them from a
+model.
