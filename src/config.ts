@@ -10,6 +10,10 @@ export const config = {
 		judgeCandidateMultiple: 3,
 		descriptionChars: 600,
 		seenDomainsWindowDays: 90,
+		companySource: "exa-search",
+		exaAgentEffort: "low",
+		exaAgentPollIntervalSeconds: 5,
+		exaAgentMaxPollAttempts: 24,
 	},
 	people: {
 		resultsPerCompany: 3,
@@ -24,14 +28,14 @@ export const config = {
 		cacheTtlSeconds: 86400,
 	},
 	stepConfig: {
-		vendorWork: {
+		paidCall: {
 			retries: {
 				limit: 2,
 				delay: "10 seconds",
 			},
 			timeout: "5 minutes",
 		},
-		databaseWork: {
+		databaseCall: {
 			retries: {
 				limit: 5,
 				delay: "1 second",

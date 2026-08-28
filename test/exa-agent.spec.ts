@@ -1,0 +1,225 @@
+import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+	buildAgentRunRequest,
+	toExaSearchResult,
+} from "../src/core/company-agent-search";
+import { CostLedger } from "../src/core/cost";
+import { getAgentRun, startAgentRun } from "../src/core/providers/exa-agent";
+import { RetryableProviderError } from "../src/core/providers/waterfall";
+
+type FetchStub = { calls: number; init: RequestInit | undefined };
+
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
+
+function exaEnv(): Env {
+	return { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } };
+}
+
+function jsonResponse(status: number, body: unknown): Response {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { "content-type": "application/json" },
+	});
+}
+
+function stubFetch(response: Response): FetchStub {
+	const stub: FetchStub = { calls: 0, init: undefined };
+	globalThis.fetch = async (_input, init) => {
+		stub.calls += 1;
+		stub.init = init;
+		return response;
+	};
+	return stub;
+}
+
+type AgentCompanyFixture = { name?: string; website?: string };
+
+type CompletedRunOverrides = {
+	output?: { structured: { companies: AgentCompanyFixture[] } };
+};
+
+function completedRunBody(overrides: CompletedRunOverrides = {}) {
+	return {
+		id: "run-completed",
+		status: "completed",
+		output: {
+			structured: {
+				companies: [{ name: "Acme", website: "acme.com" }],
+			},
+		},
+		costDollars: { total: 0.025, agentCompute: 0.018, search: 0.007 },
+		...overrides,
+	};
+}
+
+describe("agent run start request shape", () => {
+	it("posts the query, the effort, the fiber data source, and an outputSchema asking for the requested count", async () => {
+		const stub = stubFetch(
+			jsonResponse(200, { id: "run-1", status: "running" }),
+		);
+		const req = buildAgentRunRequest(
+			{ query: "seed stage fintech" },
+			10,
+			"low",
+		);
+
+		await startAgentRun(req, exaEnv());
+
+		const headers = new Headers(stub.init?.headers);
+		expect(headers.get("x-api-key")).toBe("test-exa-key");
+		const body = JSON.parse(String(stub.init?.body));
+		expect(body.query).toContain("10");
+		expect(body.effort).toBe("low");
+		expect(body.dataSources).toEqual([{ provider: "fiber" }]);
+		expect(body.outputSchema.properties.companies.minItems).toBe(10);
+	});
+
+	it("returns the started run's id", async () => {
+		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
+
+		const result = await startAgentRun(
+			buildAgentRunRequest({ query: "seed stage fintech" }, 5, "low"),
+			exaEnv(),
+		);
+
+		expect(result.id).toBe("run-42");
+	});
+});
+
+describe("agent run error mapping", () => {
+	it("raises RetryableProviderError on a 429", async () => {
+		stubFetch(
+			jsonResponse(429, { requestId: "req-429", message: "slow down" }),
+		);
+
+		await expect(
+			startAgentRun(
+				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				exaEnv(),
+			),
+		).rejects.toThrow(RetryableProviderError);
+	});
+
+	it("raises NonRetryableError on a 400", async () => {
+		stubFetch(
+			jsonResponse(400, { requestId: "req-400", message: "bad request" }),
+		);
+
+		await expect(
+			startAgentRun(
+				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				exaEnv(),
+			),
+		).rejects.toThrow(NonRetryableError);
+	});
+});
+
+describe("agent run response shape", () => {
+	it("raises NonRetryableError, not a half-parsed object, on a malformed completed body", async () => {
+		stubFetch(
+			jsonResponse(200, {
+				status: "completed",
+				output: { structured: { companies: "not-an-array" } },
+				costDollars: { total: 0.01 },
+			}),
+		);
+
+		let caught: unknown;
+		try {
+			await getAgentRun("run-bad", exaEnv(), new CostLedger());
+		} catch (error) {
+			caught = error;
+		}
+
+		expect(caught).toBeInstanceOf(NonRetryableError);
+		expect(caught).not.toBeInstanceOf(RetryableProviderError);
+	});
+
+	it("treats a run still running as running, not completed", async () => {
+		stubFetch(jsonResponse(200, { id: "run-running", status: "running" }));
+
+		const run = await getAgentRun("run-running", exaEnv(), new CostLedger());
+
+		expect(run.status).toBe("running");
+	});
+
+	it("surfaces a failed run as an error rather than empty success", async () => {
+		stubFetch(jsonResponse(200, { id: "run-failed", status: "failed" }));
+
+		await expect(
+			getAgentRun("run-failed", exaEnv(), new CostLedger()),
+		).rejects.toThrow(NonRetryableError);
+	});
+
+	it("surfaces a canceled run as an error naming the status", async () => {
+		stubFetch(jsonResponse(200, { id: "run-canceled", status: "canceled" }));
+
+		await expect(
+			getAgentRun("run-canceled", exaEnv(), new CostLedger()),
+		).rejects.toThrow(/canceled/);
+	});
+});
+
+describe("agent run cost reporting", () => {
+	it("reports costDollars into the ledger once the run completes", async () => {
+		stubFetch(jsonResponse(200, completedRunBody()));
+		const ledger = new CostLedger();
+
+		await getAgentRun("run-completed", exaEnv(), ledger);
+
+		const byProvider = ledger.byProvider();
+		expect(byProvider.agentCompute).toBe(0.018);
+		expect(byProvider.search).toBe(0.007);
+		expect(ledger.total()).toBeCloseTo(0.025, 5);
+	});
+});
+
+describe("agent run to CompanyEntity mapping", () => {
+	it("maps a completed run's companies onto the same shape `search` returns, nulling fields the agent gave nothing for", async () => {
+		stubFetch(jsonResponse(200, completedRunBody()));
+
+		const run = await getAgentRun("run-completed", exaEnv(), new CostLedger());
+		expect(run.status).toBe("completed");
+		if (run.status !== "completed") return;
+
+		const result = toExaSearchResult("run-completed", run.companies);
+
+		expect(result.requestId).toBe("run-completed");
+		expect(result.results).toHaveLength(1);
+		expect(result.results[0]?.url).toBe("acme.com");
+		expect(result.results[0]?.company).toEqual({
+			name: "Acme",
+			description: null,
+			foundedYear: null,
+			workforceTotal: null,
+			city: null,
+			country: null,
+			revenueAnnual: null,
+			fundingTotal: null,
+		});
+	});
+
+	it("drops a company the agent gave no website for", async () => {
+		stubFetch(
+			jsonResponse(
+				200,
+				completedRunBody({
+					output: { structured: { companies: [{ name: "No Website Co" }] } },
+				}),
+			),
+		);
+
+		const run = await getAgentRun("run-completed", exaEnv(), new CostLedger());
+		if (run.status !== "completed") throw new Error("expected a completed run");
+
+		const result = toExaSearchResult("run-completed", run.companies);
+
+		expect(result.results).toHaveLength(0);
+	});
+});

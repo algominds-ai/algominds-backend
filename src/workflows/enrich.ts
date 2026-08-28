@@ -35,14 +35,14 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 		const { runId, channels } = event.payload;
 		const subjects = await step.do(
 			"resolve-subjects",
-			config.stepConfig.databaseWork,
+			config.stepConfig.databaseCall,
 			() => subjectsForRun(this.env, runId),
 		);
 		const outcomes: EnrichOutcome[] = [];
 		for (const [index, batch] of toBatches(subjects).entries()) {
 			const batchOutcomes = await step.do(
 				`enrich-batch-${index}`,
-				config.stepConfig.vendorWork,
+				config.stepConfig.paidCall,
 				() => enrich(batch, channels, { env: this.env }),
 			);
 			outcomes.push(...batchOutcomes);

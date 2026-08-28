@@ -27,9 +27,16 @@ import { judge } from "@/core/judge";
 import { search } from "@/core/providers/exa";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema, synthesize } from "@/core/synthesize";
+import {
+	agentRecentDomains,
+	agentSearch,
+	agentSynthesize,
+} from "@/workflows/find-companies-agent";
 
 const MAX_ROUNDS = config.companies.maxRounds;
 const EVIDENCE_SOURCE = "exa";
+const COMPANY_SOURCE: "exa-search" | "exa-agent" =
+	config.companies.companySource;
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -38,14 +45,23 @@ const FindCompaniesPayloadSchema = z.object({
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
 
-function roundDeps(accumulatedDomains: ReadonlySet<string>): FindCompaniesDeps {
+function roundDeps(
+	accumulatedDomains: ReadonlySet<string>,
+	step: WorkflowStep,
+	round: number,
+	remaining: number,
+): FindCompaniesDeps {
+	const isAgent = COMPANY_SOURCE === "exa-agent";
+	const lookupRecentDomains = isAgent
+		? agentRecentDomains(step, round)
+		: recentDomains;
 	return {
 		recentDomains: async (env, icpId, days) => {
-			const known = await recentDomains(env, icpId, days);
+			const known = await lookupRecentDomains(env, icpId, days);
 			return [...known, ...accumulatedDomains];
 		},
-		synthesize,
-		search,
+		synthesize: isAgent ? agentSynthesize(step, round) : synthesize,
+		search: isAgent ? agentSearch(step, round, remaining) : search,
 		gate,
 		judge,
 	};
@@ -102,10 +118,10 @@ async function runFindCompaniesRounds(
 			env,
 			maxRounds: 1,
 		};
-		const deps = roundDeps(accumulatedDomains);
+		const deps = roundDeps(accumulatedDomains, step, round, remaining);
 		const stepResult = await step.do(
 			`round_${round}`,
-			config.stepConfig.vendorWork,
+			config.stepConfig.paidCall,
 			() => findCompanies(icp, remaining, opts, deps),
 		);
 		companies = companies.concat(stepResult.companies);
@@ -208,7 +224,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
 		const { doc: icp, accountId } = await step.do(
 			"load-icp",
-			config.stepConfig.databaseWork,
+			config.stepConfig.databaseCall,
 			async () => {
 				const icpRow = await loadIcp(this.env, payload.icpId);
 				if (!icpRow) {
@@ -223,7 +239,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("open-run", config.stepConfig.databaseWork, () =>
+		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {
 				id: event.instanceId,
 				accountId,
@@ -235,7 +251,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 
 		const result = await runFindCompaniesRounds(this.env, payload, icp, step);
 
-		await step.do("save-companies", config.stepConfig.databaseWork, () =>
+		await step.do("save-companies", config.stepConfig.databaseCall, () =>
 			persistCompanies(
 				this.env,
 				payload.icpId,
@@ -244,7 +260,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			),
 		);
 
-		await step.do("close-run", config.stepConfig.databaseWork, () =>
+		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
 				status: result.status,
 				costDollars: result.costDollars,

@@ -23,6 +23,18 @@ companies:
   descriptionChars: 600
   # Window for treating a domain as already seen.
   seenDomainsWindowDays: 90
+  # Which vendor supplies raw company candidates before filter, gate, and judge run.
+  # exa-search is one fast, cheap /search call per round. exa-agent trades speed and
+  # cost for evidenced rows via Exa's /agent/runs, polled to completion.
+  companySource: exa-search
+  # Effort Exa's agent spends per run when companySource is exa-agent. Measured:
+  # "low" returns in about 5 seconds for $0.025.
+  exaAgentEffort: low
+  # Seconds between polls of a running exa-agent run.
+  exaAgentPollIntervalSeconds: 5
+  # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls at
+  # 5 seconds is 2 minutes, well past the measured 5-second completion time.
+  exaAgentMaxPollAttempts: 24
 
 people:
   resultsPerCompany: 3
@@ -39,17 +51,17 @@ judge:
 # Retry and timeout budgets for Cloudflare Workflow steps.
 # Cloudflare's own default is 5 retries and a 10 minute timeout on every step.
 stepConfig:
-  # Steps that pay a vendor. A retry re-runs the whole paid call, so keep the
-  # limit low. The timeout must clear the slowest real run: a companies round
-  # has been measured at about 100 seconds.
-  vendorWork:
+  # Steps that bill a vendor on every attempt. A retry re-runs the whole paid
+  # call, so the limit stays low. The timeout must clear the slowest real run:
+  # a companies round has been measured at about 100 seconds.
+  paidCall:
     retries:
       limit: 2
       delay: 10 seconds
     timeout: 5 minutes
-  # Steps that only touch the database. A transient blip is worth retrying and
-  # costs nothing, so this keeps Cloudflare's default limit.
-  databaseWork:
+  # Steps that only touch the database, where a retry is free. A transient blip
+  # is worth retrying and costs nothing, so this keeps Cloudflare's default.
+  databaseCall:
     retries:
       limit: 5
       delay: 1 second

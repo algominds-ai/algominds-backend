@@ -217,7 +217,7 @@ async function runBatches(
 	for (const [index, batch] of batches.entries()) {
 		const batchResult = await step.do(
 			`people-batch-${index}`,
-			config.stepConfig.vendorWork,
+			config.stepConfig.paidCall,
 			() => findPeople(batch, opts, PRODUCTION_DEPS),
 		);
 		results.push(batchResult);
@@ -236,7 +236,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const payload = FindPeoplePayloadSchema.parse(event.payload);
 		const { doc: icp, accountId } = await step.do(
 			"load-icp",
-			config.stepConfig.databaseWork,
+			config.stepConfig.databaseCall,
 			async () => {
 				const icpRow = await loadIcp(this.env, payload.icpId);
 				if (!icpRow) {
@@ -251,7 +251,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("open-run", config.stepConfig.databaseWork, () =>
+		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {
 				id: event.instanceId,
 				accountId,
@@ -263,7 +263,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 
 		const allCompanies = await step.do(
 			"load-companies",
-			config.stepConfig.databaseWork,
+			config.stepConfig.databaseCall,
 			() => companiesForIcp(this.env, payload.icpId),
 		);
 		const { companies: scoped, skipped } = truncateCompanies(
@@ -274,11 +274,11 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const batches = await runBatches(toBatches(scoped), opts, step);
 		const result = mergeResults(batches, skipped);
 
-		await step.do("save-people", config.stepConfig.databaseWork, () =>
+		await step.do("save-people", config.stepConfig.databaseCall, () =>
 			persistPeople(this.env, scoped, result.companies),
 		);
 
-		await step.do("close-run", config.stepConfig.databaseWork, () =>
+		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
 				status: "complete",
 				costDollars: result.costDollars,
