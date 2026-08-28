@@ -2,7 +2,12 @@ import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
-import { closeRun, findRun, openRun } from "@/core/db/queries";
+import {
+	accountSpendToday,
+	closeRun,
+	findRun,
+	openRun,
+} from "@/core/db/queries";
 import type {
 	EnrichChannel,
 	EnrichOutcome,
@@ -55,6 +60,16 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
+		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
+			const spent = await accountSpendToday(this.env, source.accountId);
+			if (spent >= config.spend.perAccountDailyDollars) {
+				throw new NonRetryableError(
+					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
+				);
+			}
+			return { spent };
+		});
+
 		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {
 				id: event.instanceId,
@@ -75,6 +90,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			);
 			outcomes.push(...batchResult.outcomes);
 			costDollars += batchResult.costDollars;
+			if (costDollars >= config.spend.perRunDollars) break;
 		}
 		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {

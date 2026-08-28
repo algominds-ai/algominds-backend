@@ -984,6 +984,7 @@ async function mockRunBookkeeping(m: StepMocker): Promise<void> {
 		{ name: "load-source-run" },
 		{ accountId: "account-1", icpId: "icp-1" },
 	);
+	await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 	await m.mockStepResult({ name: "open-run" }, { id: "x" });
 	await m.mockStepResult({ name: "close-run" }, { id: "x" });
 }

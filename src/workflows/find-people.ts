@@ -61,6 +61,7 @@ type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
 type FindPeopleWorkflowResult = FindPeopleResult & {
 	unknownDomains: string[];
 	knownDomains: string[];
+	capped: boolean;
 };
 
 /**
@@ -75,6 +76,7 @@ export type FindPeopleSummary = {
 	costDollars: number;
 	unknownDomains: string[];
 	knownDomains: string[];
+	capped: boolean;
 };
 
 function summarizeFindPeople(
@@ -90,6 +92,7 @@ function summarizeFindPeople(
 		costDollars: result.costDollars,
 		unknownDomains: result.unknownDomains,
 		knownDomains: result.knownDomains,
+		capped: result.capped,
 	};
 }
 
@@ -297,8 +300,9 @@ async function runBatches(
 	batches: readonly PeopleCompany[][],
 	opts: FindPeopleOptions,
 	step: WorkflowStep,
-): Promise<FindPeopleResult[]> {
+): Promise<{ batches: FindPeopleResult[]; capped: boolean }> {
 	const results: FindPeopleResult[] = [];
+	let costDollars = 0;
 	for (const [index, batch] of batches.entries()) {
 		const batchResult = await step.do(
 			`people-batch-${index}`,
@@ -306,8 +310,12 @@ async function runBatches(
 			() => findPeople(batch, opts, batchDeps(step, index, batch)),
 		);
 		results.push(batchResult);
+		costDollars += batchResult.costDollars;
+		if (costDollars >= config.spend.perRunDollars) {
+			return { batches: results, capped: index < batches.length - 1 };
+		}
 	}
-	return results;
+	return { batches: results, capped: false };
 }
 
 export class FindPeopleWorkflow extends WorkflowEntrypoint<
@@ -382,11 +390,12 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			effectiveMax,
 		);
 		const opts: FindPeopleOptions = { icp, env: this.env };
-		const batches = await runBatches(toBatches(scoped), opts, step);
+		const run = await runBatches(toBatches(scoped), opts, step);
 		const result: FindPeopleWorkflowResult = {
-			...mergeResults(batches, skipped),
+			...mergeResults(run.batches, skipped),
 			unknownDomains: target.unknownDomains,
 			knownDomains: filtered.skipped,
+			capped: run.capped,
 		};
 
 		await step.do("save-people", config.stepConfig.databaseCall, () =>

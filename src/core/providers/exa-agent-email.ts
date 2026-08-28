@@ -65,11 +65,8 @@ async function pollOnce(
 }
 
 /**
- * Polls one agent run to completion, sleeping between attempts, bounded by
- * `MAX_POLL_ATTEMPTS`. Returns null on a timeout, the same as a miss, since
- * this waterfall provider has no next provider to fall back to. A retryable
- * vendor error ends that one poll rather than the caller's step, because the
- * run is already paid for and a step retry would start and bill a second one.
+ * Polls one agent run until it completes. Returns the contact, or null on a
+ * timeout or a retryable vendor error. See `docs/solutions/agent-run-polling.md`.
  */
 async function pollPersonEmail(
 	id: string,

@@ -107,6 +107,7 @@ async function expectEnrichResolvesSubjects(
 				{ name: "load-source-run" },
 				{ accountId: "account-1", icpId: "icp-1" },
 			);
+			await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 			await m.mockStepResult({ name: "open-run" }, { id: runId });
 			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);

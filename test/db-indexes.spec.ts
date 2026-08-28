@@ -30,6 +30,15 @@ describe("the indexes the read paths depend on exist in the real schema", () => 
 		expect(plan).toContain("run_account_started_idx");
 	});
 
+	it("reads an ICP's recent domains through an index rather than scanning", async () => {
+		const plan = await queryPlan(
+			sql`select domain from company where icp_id = '00000000-0000-0000-0000-000000000000' and found_at >= now() - interval '90 days'`,
+		);
+
+		expect(plan).toContain("Index");
+		expect(plan).not.toContain("Seq Scan");
+	});
+
 	it("reads a run's companies through company_run_idx", async () => {
 		const plan = await queryPlan(
 			sql`select id from company where run_id = 'no-such-run'`,

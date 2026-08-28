@@ -1006,6 +1006,7 @@ describe("FindPeopleWorkflow: runId", () => {
 				costDollars: 0.05 + 0.02,
 				unknownDomains: [],
 				knownDomains: [],
+				capped: false,
 			});
 		} finally {
 			await instance.dispose();
@@ -1051,6 +1052,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 				costDollars: 0,
 				unknownDomains: [],
 				knownDomains: [],
+				capped: false,
 			});
 		} finally {
 			await instance.dispose();
@@ -1116,6 +1118,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 				costDollars: 0.01,
 				unknownDomains: ["missing.com"],
 				knownDomains: [],
+				capped: false,
 			});
 		} finally {
 			await instance.dispose();
@@ -1199,6 +1202,7 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 				costDollars: 0.05,
 				unknownDomains: [],
 				knownDomains: ["known-co.com"],
+				capped: false,
 			});
 		} finally {
 			await instance.dispose();
@@ -1294,6 +1298,69 @@ describe("FindPeopleWorkflow: the summary output", () => {
 				costDollars: 0.02,
 				unknownDomains: [],
 				knownDomains: [],
+				capped: false,
+			});
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
+	it("stops after the batch that crossed the ceiling and reports the run as capped", async () => {
+		const instanceId = "people-spend-ceiling-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_PEOPLE,
+			instanceId,
+		);
+		try {
+			const companies = Array.from({ length: 10 }, (_, i) =>
+				testCompany({ domain: `co-${i}.com`, name: `Co ${i}` }),
+			);
+			const overTheCeiling = config.spend.perRunDollars + 0.01;
+			const batchZero: FindPeopleResult = {
+				companies: companies.slice(0, 5).map((company) => ({
+					domain: company.domain,
+					people: [],
+					apolloOnly: [],
+					reason: null,
+				})),
+				searched: 5,
+				skippedCompanies: 0,
+				costDollars: overTheCeiling,
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-companies" },
+					{ companies, icpId: "icp-1", unknownDomains: [] },
+				);
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, accountId: "account-1" },
+				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult({ name: "known-people" }, []);
+				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "close-run" }, { id: "x" });
+				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
+				await m.mockStepResult({ name: "save-people" }, {});
+			});
+
+			await testEnv.FIND_PEOPLE.create({
+				id: instanceId,
+				params: { runId: "companies_icp-1_spend" },
+			});
+			await instance.waitForStatus("complete");
+
+			expect(await instance.getOutput()).toEqual({
+				searched: 5,
+				skippedCompanies: 0,
+				peopleFound: 0,
+				costDollars: overTheCeiling,
+				unknownDomains: [],
+				knownDomains: [],
+				capped: true,
 			});
 		} finally {
 			await instance.dispose();

@@ -59,10 +59,8 @@ async function pollUntilComplete(
 
 /**
  * Builds the `search` dependency for one people batch when the configured
- * people source is Exa's agent API. `findPeople` calls this once per
- * company in `companies`, concurrently, but always starting the synchronous
- * part of each call in array order, so a counter closed over here assigns
- * each call its own company deterministically across a replay.
+ * people source is Exa's agent API. Each company gets its own nested step
+ * names. See `docs/solutions/agent-run-polling.md`.
  */
 export function agentPersonSearch(
 	step: WorkflowStep,
@@ -95,10 +93,8 @@ export function agentPersonSearch(
 }
 
 /**
- * Wraps `decisionMakerTitles` in its own durable step so a replay triggered
- * by a later `step.sleep` in the same batch (`agentPersonSearch`'s poll
- * loop) returns the cached titles instead of paying for a second, possibly
- * different, model call.
+ * Wraps `decisionMakerTitles` in its own durable step, so a replay returns
+ * the cached titles instead of paying for a second model call.
  */
 export function agentDecisionMakerTitles(
 	step: WorkflowStep,
