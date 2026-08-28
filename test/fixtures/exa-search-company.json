@@ -1,0 +1,185 @@
+{
+	"requestId": "b70d7a0183ffb43e361476055c7e75d3",
+	"resolvedSearchType": "",
+	"results": [
+		{
+			"id": "https://exa.ai/library/organization/16s078mffwh",
+			"title": "Veles",
+			"url": "https://getveles.com/",
+			"publishedDate": "2026-06-25T00:00:00.000Z",
+			"author": "Exa",
+			"image": "https://media.licdn.com/dms/image/v2/D560BAQG67zxr1wDmng/company-logo_200_200/company-logo_200_200/0/1707252161385/velesinc_logo?e=2147483647&v=beta&t=H-lBurFFydiPoSte4_ki9kEVH_-eDSKX32z0lBBcMfo",
+			"entities": [
+				{
+					"id": "https://exa.ai/library/organization/16s078mffwh",
+					"type": "company",
+					"version": 1,
+					"properties": {
+						"name": "Veles",
+						"foundedYear": 2023,
+						"description": "Every sales team knows they need CPQ. Most dread it.\n\nReps build quotes in spreadsheets because their CPQ takes 20 clicks to do what should take 2. They fake inputs to get past approval gates. They pay colleagues to do their quoting for them.\n\nWe built Veles so the agent builds the quote and the rep just reviews it.\n\nVeles is the Agentic CPQ. Conversation to contract. The agent pulls context from call transcripts, CRM data, and deal history to assemble quotes automatically. No duplicating quotes to model pricing options. No approval gates that reject work the rep already did. No six-month rollout before seeing value.\n\nLoad your product catalog and start quoting in hours. No implementation consultants. No CRM schema to configure. No training required.\n\nWorks with HubSpot, Salesforce, or no CRM at all. Native integrations with Slack, Gong, Stripe, Calendly, and Loom. Anything a rep can do in Veles, they can do through Claude or any MCP-compatible environment.\n\nBacked by Y Combinator. Built for startups scaling from founder-led to team-led sales.",
+						"workforce": {
+							"total": 2
+						},
+						"headquarters": {
+							"address": "Santa Barbara , California, US",
+							"city": "Santa Barbara",
+							"postalCode": null,
+							"country": "United States"
+						},
+						"financials": {
+							"revenueAnnual": 6700000,
+							"fundingTotal": 500000,
+							"fundingLatestRound": null
+						},
+						"webTraffic": {
+							"visitsMonthly": 8422,
+							"countryRank": 593939,
+							"avgDurationSeconds": 200,
+							"history": [
+								{
+									"value": 2303,
+									"dateFrom": "2026-02",
+									"dateTo": "2026-02"
+								},
+								{
+									"value": 2326,
+									"dateFrom": "2026-03",
+									"dateTo": "2026-03"
+								},
+								{
+									"value": 3517,
+									"dateFrom": "2026-04",
+									"dateTo": "2026-04"
+								},
+								{
+									"value": 2491,
+									"dateFrom": "2026-04",
+									"dateTo": "2026-04"
+								},
+								{
+									"value": 12002,
+									"dateFrom": "2026-05",
+									"dateTo": "2026-05"
+								},
+								{
+									"value": 8422,
+									"dateFrom": "2026-06",
+									"dateTo": "2026-06"
+								}
+							]
+						},
+						"research": null
+					}
+				}
+			]
+		},
+		{
+			"id": "https://exa.ai/library/organization/02jzxtr87kt",
+			"title": "Rocinante",
+			"url": "https://rocinantegtm.com/",
+			"publishedDate": "2026-06-23T00:00:00.000Z",
+			"author": "Exa",
+			"image": "https://media.licdn.com/dms/image/v2/D4E0BAQGRxnSUx3G4lg/company-logo_200_200/B4EZ2yYencH0AI-/0/1776814255058/rocinantegtm_logo?e=2147483647&v=beta&t=D8httzb_FOJeDBTPeupS7zlkZ9x12xkK5F4CJ3YCc6U",
+			"entities": [
+				{
+					"id": "https://exa.ai/library/organization/02jzxtr87kt",
+					"type": "company",
+					"version": 1,
+					"properties": {
+						"name": "Rocinante",
+						"foundedYear": 2022,
+						"description": "Rocinante builds GTM foundations for founders of B2B operational and technical software, both AI-native companies and SaaS, from early traction through repeatable sales motion.\n\nThe founders we work with are technical, product, or operator-led. They built something that works. They're trying to figure out how to sell it consistently, scale it past their own relationships, and arrive at Series A or B diligence with numbers that hold up to scrutiny.\n\nThe thesis behind how we work: a founder who hasn't personally carried a quota can't hire, manage, or evaluate a sales team. You can't delegate what you don't understand. The most common failure mode we see isn't bad salespeople. It's founders who hired before they had something worth handing off.\n\nRocinante makes the founder dangerous first. That means a validated ICP, a playbook the founder has run themselves, a RevOps stack that answers real questions, and an outbound motion tested on real buyers. Only then do we build the machine and the team around it.\n\nWhat we build, scoped to stage:\n\u2014 ICP validation and micro-segment buyer personas\n\u2014 Founder sales coaching and quota-carrying alongside us\n\u2014 Sales playbook, call frameworks, objection library\n\u2014 RevOps: CRM, email infrastructure, data model, reporting\n\u2014 AI SDR and outbound agent deployment\n\u2014 Hiring support for first AEs and early sales leadership\n\u2014 Investor-grade GTM instrumentation for fundraising\n\nWe work primarily in three verticals: AI infrastructure and ML tooling, supply chain and logistics software, and B2B commerce infrastructure. We serve companies from $300K to $50M ARR.\n\nWe don't take healthcare clients.\n\nIf you're a technical or operator founder between $300K and $10M ARR who is carrying the sales motion yourself and want it to become repeatable, that's the right starting point.",
+						"workforce": {
+							"total": 4
+						},
+						"headquarters": {
+							"address": "Remote, Boston, MA, US",
+							"city": "Boston",
+							"postalCode": null,
+							"country": "United States"
+						},
+						"financials": null,
+						"webTraffic": null,
+						"research": null
+					}
+				}
+			]
+		},
+		{
+			"id": "https://exa.ai/library/organization/xxlyn9w07fx",
+			"title": "Aspiro",
+			"url": "https://letsaspiro.com/",
+			"publishedDate": "2026-05-26T00:00:00.000Z",
+			"author": "Exa",
+			"image": "https://media.licdn.com/dms/image/v2/D560BAQGshwkfHs-l-A/company-logo_200_200/company-logo_200_200/0/1723031716065/aspiro_founder_led_sales_logo?e=2147483647&v=beta&t=Rc7LK1EB94_fvFTfyS-6pO0tOI01TCn5WmQXehcaxVo",
+			"entities": [
+				{
+					"id": "https://exa.ai/library/organization/xxlyn9w07fx",
+					"type": "company",
+					"version": 1,
+					"properties": {
+						"name": "Aspiro",
+						"foundedYear": 2020,
+						"description": "Most B2B SaaS founders struggle at early outbound sales. Not a surprise, since many are tech builders & selling doesn't come naturally to them. GenAI and SaaS bloat has only made it tougher.\n\nHere are some stats from B2B SaaS:\n- Only ~15% of seed companies achieve PMF\n- Another ~15% somehow raise a Series A, yet never achieve PMF\n- Of all B2B startups, ~10% get funded but <5% get PMF\n\nWith Aspiro, early stage B2B SaaS founders can:\n- Run experiments to identify & sharpen their ICP (Ideal Customer Profile) so they can focus their sales efforts\n- $ validate napkin-stage ideas to acquire their first paid customers\n- Then, scale to multimillion $ founder-led B2B SaaS sales with repeatable outbound tactics\n- Replace technical jargons with impactful, buyer-centric sales messaging\n- Share outbound GTM progress & insights with teammates & investors to keep them in-sync\n\nFind this relatable as an early stage B2B SaaS founder or investor? Let's chat!\n\nCheck out www.letsaspiro.com and follow our page for proven tactics, tips & cheatsheets re: founder-led outbound sales.",
+						"workforce": {
+							"total": 5
+						},
+						"headquarters": {
+							"address": "San Francisco Bay Area, US",
+							"city": null,
+							"postalCode": null,
+							"country": "United States"
+						},
+						"financials": null,
+						"webTraffic": {
+							"visitsMonthly": 345,
+							"countryRank": null,
+							"avgDurationSeconds": 66,
+							"history": [
+								{
+									"value": 207,
+									"dateFrom": "2026-01",
+									"dateTo": "2026-01"
+								},
+								{
+									"value": 924,
+									"dateFrom": "2026-01",
+									"dateTo": "2026-01"
+								},
+								{
+									"value": 924,
+									"dateFrom": "2026-02",
+									"dateTo": "2026-02"
+								},
+								{
+									"value": 1411,
+									"dateFrom": "2026-03",
+									"dateTo": "2026-03"
+								},
+								{
+									"value": 306,
+									"dateFrom": "2026-04",
+									"dateTo": "2026-04"
+								},
+								{
+									"value": 345,
+									"dateFrom": "2026-04",
+									"dateTo": "2026-04"
+								}
+							]
+						},
+						"research": null
+					}
+				}
+			]
+		}
+	],
+	"searchTime": 1605.6,
+	"costDollars": {
+		"total": 0.089,
+		"search": {
+			"neural": 0.089
+		}
+	}
+}

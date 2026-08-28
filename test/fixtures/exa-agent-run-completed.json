@@ -1,0 +1,146 @@
+{
+	"id": "agent_run_bc010e9c25214c968a5b3216289cf0be",
+	"object": "agent_run",
+	"status": "completed",
+	"stopReason": "schema_satisfied",
+	"createdAt": "2026-08-28T01:11:16.746Z",
+	"completedAt": "2026-08-28T01:11:32.533Z",
+	"request": {
+		"query": "Founder-led B2B software company selling directly without a sales team. Return exactly 2 distinct companies.",
+		"systemPrompt": "Give a working website domain for every company. Never repeat a company.",
+		"outputSchema": {
+			"type": "object",
+			"required": [
+				"companies"
+			],
+			"properties": {
+				"companies": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": [
+							"name",
+							"website"
+						],
+						"properties": {
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"country": {
+								"type": "string"
+							},
+							"website": {
+								"type": "string"
+							},
+							"description": {
+								"type": "string"
+							},
+							"foundedYear": {
+								"type": "number"
+							},
+							"fundingTotal": {
+								"type": "number"
+							},
+							"revenueAnnual": {
+								"type": "number"
+							},
+							"workforceTotal": {
+								"type": "number"
+							}
+						}
+					},
+					"minItems": 2
+				}
+			}
+		},
+		"effort": "low",
+		"dataSources": [
+			{
+				"provider": "fiber"
+			}
+		]
+	},
+	"output": {
+		"text": "Two distinct founder-led B2B software companies matching the direct, no-dedicated-sales-team criterion are provided, with working domains and available company metrics. Revenue and workforce figures are sourced disclosures or estimates and may vary by reporting date.",
+		"structured": {
+			"companies": [
+				{
+					"city": "San Francisco",
+					"name": "Chatbase",
+					"country": "United States",
+					"website": "chatbase.co",
+					"description": "Founder-led B2B software company providing a self-serve platform for businesses to build and deploy customer-facing AI agents. It is bootstrapped and explicitly operated without a dedicated sales team, using product-led growth alongside self-serve purchasing.",
+					"foundedYear": 2023,
+					"fundingTotal": 0,
+					"revenueAnnual": 10000000,
+					"workforceTotal": 26
+				},
+				{
+					"city": "Lier",
+					"name": "Oh Dear",
+					"country": "Belgium",
+					"website": "ohdear.app",
+					"description": "Founder-led B2B website-monitoring software company covering uptime, SSL, broken links, DNS, SEO, accessibility, and server health. The two founders sell through a self-serve free-trial model, building in public and relying on word of mouth rather than a sales team.",
+					"foundedYear": 2018,
+					"fundingTotal": 0,
+					"revenueAnnual": 1000000,
+					"workforceTotal": 2
+				}
+			]
+		},
+		"grounding": [
+			{
+				"field": "structured.companies[0]",
+				"citations": [
+					{
+						"url": "https://stripe.com/customers/chatbase",
+						"title": "Bootstrapped Startup Chatbase Reaches $10 Million in ARR"
+					},
+					{
+						"url": "https://linkedin.com/company/chatbase-co",
+						"title": "Chatbase"
+					},
+					{
+						"url": "https://remarkablemag.com/yasser-elsaid-chatbase-ten-million-arr/",
+						"title": "The Tweet to $10M: Yasser Elsaid Built Chatbase With No VC and No Sales Team"
+					}
+				],
+				"confidence": "high"
+			},
+			{
+				"field": "structured.companies[1]",
+				"citations": [
+					{
+						"url": "https://saasrat.com/blog/oh-dear-founder-interviews/",
+						"title": "Oh Dear Founder Interview: $1M ARR, No Free Tier, No VC Money"
+					},
+					{
+						"url": "https://ohdear.app/about",
+						"title": "Oh Dear About"
+					},
+					{
+						"url": "https://linkedin.com/company/oh-dear",
+						"title": "Oh Dear"
+					}
+				],
+				"confidence": "high"
+			}
+		]
+	},
+	"usage": {
+		"agentComputeUnits": 0.1,
+		"searches": 3,
+		"emails": 0,
+		"phoneNumbers": 0
+	},
+	"costDollars": {
+		"total": 0.025,
+		"agentCompute": 0.01,
+		"search": 0.015,
+		"emails": 0,
+		"phoneNumbers": 0
+	}
+}

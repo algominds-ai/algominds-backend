@@ -359,3 +359,42 @@ its schema is `.strict()` so an unknown field cannot leave.
 vocabularies at Apollo's end and are declared as plain strings here. They are
 unused today; typing them properly is owed before anything fills them from a
 model.
+
+## Fixtures are captured, not written
+
+A mock that returns an invented shape proves only that our code handles our own
+imagination. That is precisely how several defects shipped this week: the
+fixtures were written from documentation, the documentation was wrong, the
+tests passed, and the feature was dead.
+
+`test/exa.spec.ts` fed the parser a result shaped like this:
+
+```
+{ url, title, publishedDate }
+```
+
+A real result carries:
+
+```
+{ id, url, title, publishedDate, author, image,
+  entities: [{ id, type, version, properties: { ... } }] }
+```
+
+`entities` was missing entirely — the one field the whole company pipeline
+reads. Entity parsing could have broken without a single test noticing.
+
+`test/fixtures/` now holds verbatim captures:
+
+| File | What it is |
+|---|---|
+| `exa-search-company.json` | a real `/search` response, `category: "company"`, three results |
+| `exa-agent-run-completed.json` | a real completed agent run |
+| `exa-agent-run-person.json` | a real agent run returning a contact with a cited source |
+
+`test/vendor-fixtures.spec.ts` runs the real parser over them.
+
+**A fixture has to be captured with the request the code actually sends.** The
+first agent capture used a different `outputSchema` than the production builder
+sends, so it exercised a contract we do not use. It was recaptured with
+production's own nine fields. A fixture from a different request is as
+misleading as an invented one.
