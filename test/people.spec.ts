@@ -2,14 +2,11 @@ import { env as testEnv } from "cloudflare:workers";
 import { eq, inArray } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { config } from "../src/config";
+import { organization } from "../src/core/db/auth-schema";
 import { db } from "../src/core/db/client";
-import {
-	createIcp,
-	ensureAccount,
-	openRun,
-	saveCompanies,
-} from "../src/core/db/queries";
-import { account, company, icp as icpTable, run } from "../src/core/db/schema";
+import { organizationForSlug } from "../src/core/db/organizations";
+import { createIcp, openRun, saveCompanies } from "../src/core/db/queries";
+import { company, icp as icpTable, run } from "../src/core/db/schema";
 import type {
 	FindPeopleDeps,
 	FindPeopleOptions,
@@ -543,34 +540,34 @@ describe("resolveMaxCompanies", () => {
 });
 
 type SeededScope = {
-	accountId: string;
+	organizationId: string;
 	icpId: string;
 	runIds: string[];
 };
 
 async function seedIcp(
 	label: string,
-): Promise<{ accountId: string; icpId: string }> {
-	const acct = await ensureAccount(
+): Promise<{ organizationId: string; icpId: string }> {
+	const org = await organizationForSlug(
 		testEnv,
-		`run-scope-test-${label}`,
 		`run-scope-test-${label}-${crypto.randomUUID()}.internal`,
+		`run-scope-test-${label}`,
 	);
 	const icpRow = await createIcp(testEnv, {
 		description: "seed icp for run-scoping tests",
-		domain: acct.domain,
-		accountId: acct.id,
+		domain: org.slug,
+		organizationId: org.id,
 	});
-	return { accountId: acct.id, icpId: icpRow.id };
+	return { organizationId: org.id, icpId: icpRow.id };
 }
 
 async function seedRun(
-	scope: { accountId: string; icpId: string },
+	scope: { organizationId: string; icpId: string },
 	runId: string,
 ): Promise<void> {
 	await openRun(testEnv, {
 		id: runId,
-		accountId: scope.accountId,
+		organizationId: scope.organizationId,
 		icpId: scope.icpId,
 		capability: "companies",
 		status: "complete",
@@ -582,17 +579,19 @@ async function cleanupSeed(seed: SeededScope): Promise<void> {
 	await connection.delete(company).where(inArray(company.runId, seed.runIds));
 	await connection.delete(run).where(inArray(run.id, seed.runIds));
 	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
-	await connection.delete(account).where(eq(account.id, seed.accountId));
+	await connection
+		.delete(organization)
+		.where(eq(organization.id, seed.organizationId));
 }
 
 describe("loadTargetCompanies: runId", () => {
 	it("loads only the named run's companies, not every company ever found for the profile", async () => {
 		const label = `run-scope-${crypto.randomUUID()}`;
-		const { accountId, icpId } = await seedIcp(label);
+		const { organizationId, icpId } = await seedIcp(label);
 		const oldRunId = `companies_${label}-old`;
 		const newRunId = `companies_${label}-new`;
-		await seedRun({ accountId, icpId }, oldRunId);
-		await seedRun({ accountId, icpId }, newRunId);
+		await seedRun({ organizationId, icpId }, oldRunId);
+		await seedRun({ organizationId, icpId }, newRunId);
 		await saveCompanies(testEnv, [
 			{ icpId, runId: oldRunId, domain: `old-${label}.com`, name: "Old Co" },
 		]);
@@ -612,15 +611,19 @@ describe("loadTargetCompanies: runId", () => {
 				target.companies.some((c) => c.domain === `old-${label}.com`),
 			).toBe(false);
 		} finally {
-			await cleanupSeed({ accountId, icpId, runIds: [oldRunId, newRunId] });
+			await cleanupSeed({
+				organizationId,
+				icpId,
+				runIds: [oldRunId, newRunId],
+			});
 		}
 	});
 
 	it("completes with an empty company list for a run that exists but found none", async () => {
 		const label = `run-empty-${crypto.randomUUID()}`;
-		const { accountId, icpId } = await seedIcp(label);
+		const { organizationId, icpId } = await seedIcp(label);
 		const runId = `companies_${label}`;
-		await seedRun({ accountId, icpId }, runId);
+		await seedRun({ organizationId, icpId }, runId);
 
 		try {
 			const target = await loadTargetCompanies(testEnv, { runId });
@@ -628,7 +631,7 @@ describe("loadTargetCompanies: runId", () => {
 			expect(target.companies).toEqual([]);
 			expect(target.icpId).toBe(icpId);
 		} finally {
-			await cleanupSeed({ accountId, icpId, runIds: [runId] });
+			await cleanupSeed({ organizationId, icpId, runIds: [runId] });
 		}
 	});
 
@@ -644,9 +647,9 @@ describe("loadTargetCompanies: runId", () => {
 describe("loadTargetCompanies: domains", () => {
 	it("loads exactly the companies matching the given domains", async () => {
 		const label = `domains-${crypto.randomUUID()}`;
-		const { accountId, icpId } = await seedIcp(label);
+		const { organizationId, icpId } = await seedIcp(label);
 		const runId = `companies_${label}`;
-		await seedRun({ accountId, icpId }, runId);
+		await seedRun({ organizationId, icpId }, runId);
 		const domainA = `a-${label}.com`;
 		const domainB = `b-${label}.com`;
 		const domainC = `c-${label}.com`;
@@ -667,15 +670,15 @@ describe("loadTargetCompanies: domains", () => {
 				new Set([domainA, domainC]),
 			);
 		} finally {
-			await cleanupSeed({ accountId, icpId, runIds: [runId] });
+			await cleanupSeed({ organizationId, icpId, runIds: [runId] });
 		}
 	});
 
 	it("reports a domain naming no known company instead of silently dropping it", async () => {
 		const label = `domains-partial-${crypto.randomUUID()}`;
-		const { accountId, icpId } = await seedIcp(label);
+		const { organizationId, icpId } = await seedIcp(label);
 		const runId = `companies_${label}`;
-		await seedRun({ accountId, icpId }, runId);
+		await seedRun({ organizationId, icpId }, runId);
 		const known = `known-${label}.com`;
 		const missing = `missing-${label}.com`;
 		await saveCompanies(testEnv, [
@@ -690,7 +693,7 @@ describe("loadTargetCompanies: domains", () => {
 			expect(target.companies.map((c) => c.domain)).toEqual([known]);
 			expect(target.unknownDomains).toEqual([missing]);
 		} finally {
-			await cleanupSeed({ accountId, icpId, runIds: [runId] });
+			await cleanupSeed({ organizationId, icpId, runIds: [runId] });
 		}
 	});
 

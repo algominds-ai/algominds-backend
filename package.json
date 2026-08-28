@@ -22,7 +22,10 @@
 	"dependencies": {
 		"@ai-sdk/mcp": "2.0.39",
 		"@ai-sdk/openai-compatible": "3.0.39",
+		"@better-auth/api-key": "1.7.2",
+		"@better-auth/drizzle-adapter": "1.7.2",
 		"ai": "7.0.83",
+		"better-auth": "1.7.2",
 		"drizzle-orm": "0.45.2",
 		"hono": "4.13.5",
 		"postgres": "3.4.9",

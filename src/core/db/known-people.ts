@@ -35,13 +35,13 @@ export interface KnownPeopleConnection {
 export type KnownPeopleWindow = { days: number; now?: Date };
 
 /**
- * Domains, within `accountId`, whose people were found in the trailing
+ * Domains, within `organizationId`, whose people were found in the trailing
  * `window.days` days. Reads through the cache-disabled binding, because a
  * person written earlier in this same run must be visible.
  */
 export async function knownPeopleDomains(
 	env: DbEnv,
-	accountId: string,
+	organizationId: string,
 	window: KnownPeopleWindow,
 	buildDb: DbFactory<KnownPeopleConnection> = db,
 ): Promise<string[]> {
@@ -54,7 +54,7 @@ export async function knownPeopleDomains(
 		.innerJoin(evidence, eq(evidence.subjectId, person.id))
 		.where(
 			and(
-				eq(run.accountId, accountId),
+				eq(run.organizationId, organizationId),
 				eq(evidence.subjectType, "person"),
 				eq(evidence.kind, PERSON_FOUND_EVIDENCE_KIND),
 				gte(evidence.seenAt, cutoffDate(window.days, window.now)),

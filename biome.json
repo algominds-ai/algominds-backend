@@ -90,7 +90,11 @@
 	},
 	"overrides": [
 		{
-			"includes": ["worker-configuration.d.ts", "drizzle/**"],
+			"includes": [
+				"worker-configuration.d.ts",
+				"drizzle/**",
+				"src/core/db/auth-schema.ts"
+			],
 			"formatter": {
 				"enabled": false
 			},

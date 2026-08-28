@@ -3,21 +3,16 @@ import { exports, env as testEnv } from "cloudflare:workers";
 import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "../src/config";
+import { organization } from "../src/core/db/auth-schema";
 import { db } from "../src/core/db/client";
+import { organizationForSlug } from "../src/core/db/organizations";
 import {
 	createIcp,
-	ensureAccount,
 	openRun,
 	saveCompanies,
 	savePeople,
 } from "../src/core/db/queries";
-import {
-	account,
-	company,
-	icp as icpTable,
-	person,
-	run,
-} from "../src/core/db/schema";
+import { company, icp as icpTable, person, run } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
 import { constantTimeEqual } from "../src/http/auth";
 import app from "../src/index";
@@ -105,7 +100,7 @@ async function expectEnrichResolvesSubjects(
 		await instance.modify(async (m) => {
 			await m.mockStepResult(
 				{ name: "load-source-run" },
-				{ accountId: "account-1", icpId: "icp-1" },
+				{ organizationId: "org-1", icpId: "icp-1" },
 			);
 			await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 			await m.mockStepResult({ name: "open-run" }, { id: runId });
@@ -407,7 +402,7 @@ describe("GET /runs/:runId", () => {
 });
 
 type PageSeed = {
-	accountId: string;
+	organizationId: string;
 	icpId: string;
 	runId: string;
 	companyIds: string[];
@@ -417,20 +412,20 @@ async function seedRunWithCompanies(
 	label: string,
 	companyCount: number,
 ): Promise<PageSeed> {
-	const acct = await ensureAccount(
+	const org = await organizationForSlug(
 		testEnv,
-		`routes-page-test-${label}`,
 		`routes-page-test-${label}-${crypto.randomUUID()}.internal`,
+		`routes-page-test-${label}`,
 	);
 	const icpRow = await createIcp(testEnv, {
 		description: "seed icp for run-page route tests",
-		domain: acct.domain,
-		accountId: acct.id,
+		domain: org.slug,
+		organizationId: org.id,
 	});
 	const runId = `companies_${label}`;
 	await openRun(testEnv, {
 		id: runId,
-		accountId: acct.id,
+		organizationId: org.id,
 		icpId: icpRow.id,
 		capability: "companies",
 		status: "complete",
@@ -445,7 +440,7 @@ async function seedRunWithCompanies(
 		})),
 	);
 	return {
-		accountId: acct.id,
+		organizationId: org.id,
 		icpId: icpRow.id,
 		runId,
 		companyIds: saved.map((row) => row.id),
@@ -460,7 +455,9 @@ async function cleanupPageSeed(seed: PageSeed): Promise<void> {
 	await connection.delete(company).where(eq(company.runId, seed.runId));
 	await connection.delete(run).where(eq(run.id, seed.runId));
 	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
-	await connection.delete(account).where(eq(account.id, seed.accountId));
+	await connection
+		.delete(organization)
+		.where(eq(organization.id, seed.organizationId));
 }
 
 type CompanyPageBody = {

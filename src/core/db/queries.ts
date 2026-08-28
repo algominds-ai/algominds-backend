@@ -2,14 +2,13 @@ import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
 import { companyExaId } from "@/core/companies/candidates";
+import type { organization } from "@/core/db/auth-schema";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
-	Account,
 	Company,
 	Evidence,
 	Icp,
-	NewAccount,
 	NewCompany,
 	NewEvidence,
 	NewIcp,
@@ -19,7 +18,6 @@ import type {
 	Run,
 } from "@/core/db/schema";
 import {
-	type account,
 	company,
 	evidence,
 	icp,
@@ -27,6 +25,9 @@ import {
 	person,
 	type run,
 } from "@/core/db/schema";
+
+export type Organization = typeof organization.$inferSelect;
+export type NewOrganization = typeof organization.$inferInsert;
 
 export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
 
@@ -44,14 +45,6 @@ interface SelectLimitConnection<TTable, TRow> {
 			where(condition: SQL | undefined): {
 				limit(count: number): Promise<TRow[]>;
 			};
-		};
-	};
-}
-
-interface SelectAllWhereConnection<TTable, TRow> {
-	select(): {
-		from(table: TTable): {
-			where(condition: SQL | undefined): Promise<TRow[]>;
 		};
 	};
 }
@@ -136,12 +129,12 @@ export type EvidenceAppendConnection = AppendConnection<
 	NewEvidence,
 	Evidence
 >;
-export type AccountConnection = InsertConnection<
-	typeof account,
-	NewAccount,
-	Account
+export type OrganizationConnection = InsertConnection<
+	typeof organization,
+	NewOrganization,
+	Organization
 > &
-	SelectAllWhereConnection<typeof account, Account>;
+	SelectLimitConnection<typeof organization, Organization>;
 export type RunInsertConnection = AppendConnection<typeof run, NewRun, Run>;
 export type RunOpenConnection = InsertConnection<typeof run, NewRun, Run> &
 	SelectLimitConnection<typeof run, Run>;
@@ -150,7 +143,7 @@ export type RunUpdateConnection = UpdateWhereConnection<
 	Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
 >;
 export type RunLookupConnection = SelectLimitConnection<typeof run, Run>;
-export type AccountSpendConnection = SelectWhereConnection<
+export type OrganizationSpendConnection = SelectWhereConnection<
 	typeof run,
 	{ costDollars: typeof run.costDollars },
 	{ costDollars: number }
@@ -191,7 +184,7 @@ export async function loadIcp(
 	return rows[0];
 }
 
-export type NewIcpInput = Pick<NewIcp, "domain" | "accountId"> & {
+export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 	description: string;
 };
 
@@ -206,7 +199,7 @@ export async function createIcp(
 		.insert(icp)
 		.values({
 			domain: input.domain,
-			accountId: input.accountId,
+			organizationId: input.organizationId,
 			doc: { description: input.description },
 		})
 		.returning();
@@ -344,11 +337,10 @@ export async function deletePerson(
 }
 
 export {
-	accountSpendToday,
 	closeRun,
-	ensureAccount,
 	findRun,
 	openRun,
+	organizationSpendToday,
 	recordRunSpend,
 	startOfUtcDay,
 } from "@/core/db/runs";

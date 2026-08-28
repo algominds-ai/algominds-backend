@@ -1,7 +1,8 @@
 import type { Context } from "hono";
 import type { z } from "zod";
 import { config } from "@/config";
-import { createIcp, ensureAccount, findRun } from "@/core/db/queries";
+import { organizationForSlug } from "@/core/db/organizations";
+import { createIcp, findRun } from "@/core/db/queries";
 import { normalizeDomain } from "@/core/db/schema";
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
@@ -31,11 +32,11 @@ export async function resolveIcpId(env: Env, body: IcpRef): Promise<string> {
 	if ("icpId" in body) return body.icpId;
 	const domain = normalizeDomain(body.seller?.domain ?? config.seller.domain);
 	const name = body.seller?.name ?? body.seller?.domain ?? config.seller.name;
-	const sellerAccount = await ensureAccount(env, name, domain);
+	const sellerOrganization = await organizationForSlug(env, domain, name);
 	const row = await createIcp(env, {
 		description: body.prompt,
 		domain,
-		accountId: sellerAccount.id,
+		organizationId: sellerOrganization.id,
 	});
 	return row.id;
 }

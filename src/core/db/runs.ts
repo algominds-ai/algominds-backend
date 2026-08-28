@@ -2,38 +2,14 @@ import { and, eq, gte } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
-	AccountConnection,
-	AccountSpendConnection,
 	DbFactory,
+	OrganizationSpendConnection,
 	RunLookupConnection,
 	RunOpenConnection,
 	RunUpdateConnection,
 } from "@/core/db/queries";
-import type { Account, NewRun, Run } from "@/core/db/schema";
-import { account, run } from "@/core/db/schema";
-
-/** Finds the account for `domain`, creating it with `name` if it does not exist. */
-export async function ensureAccount(
-	env: DbEnv,
-	name: string,
-	domain: string,
-	buildDb: DbFactory<AccountConnection> = db,
-): Promise<Account> {
-	const connection = buildDb(env, "cached");
-	const inserted = await connection
-		.insert(account)
-		.values({ name, domain })
-		.onConflictDoNothing({ target: [account.domain] })
-		.returning();
-	if (inserted[0]) return inserted[0];
-	const rows = await connection
-		.select()
-		.from(account)
-		.where(eq(account.domain, domain));
-	const row = rows[0];
-	if (!row) throw new Error(`ensureAccount: no account for domain ${domain}`);
-	return row;
-}
+import type { NewRun, Run } from "@/core/db/schema";
+import { run } from "@/core/db/schema";
 
 /** Opens a run, or returns the one already opened under this id. A retried step must not fail on the primary key it just wrote. */
 export async function openRun(
@@ -113,21 +89,25 @@ export function startOfUtcDay(now: Date = new Date()): Date {
 }
 
 /**
- * Sums an account's run spend since the start of the current UTC day, read
- * through the cache-disabled binding so a same-run write is never missed.
+ * Sums an organization's run spend since the start of the current UTC day,
+ * read through the cache-disabled binding so a same-run write is never
+ * missed.
  */
-export async function accountSpendToday(
+export async function organizationSpendToday(
 	env: DbEnv,
-	accountId: string,
+	organizationId: string,
 	now: Date = new Date(),
-	buildDb: DbFactory<AccountSpendConnection> = db,
+	buildDb: DbFactory<OrganizationSpendConnection> = db,
 ): Promise<number> {
 	const connection = buildDb(env, "direct");
 	const rows = await connection
 		.select({ costDollars: run.costDollars })
 		.from(run)
 		.where(
-			and(eq(run.accountId, accountId), gte(run.startedAt, startOfUtcDay(now))),
+			and(
+				eq(run.organizationId, organizationId),
+				gte(run.startedAt, startOfUtcDay(now)),
+			),
 		);
 	return rows.reduce((total, row) => total + row.costDollars, 0);
 }

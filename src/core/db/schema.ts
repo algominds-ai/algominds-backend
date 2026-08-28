@@ -8,23 +8,15 @@ import {
 	unique,
 	uuid,
 } from "drizzle-orm/pg-core";
-
-export const account = pgTable("account", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	name: text("name").notNull(),
-	domain: text("domain").notNull().unique(),
-	createdAt: timestamp("created_at", { withTimezone: true })
-		.notNull()
-		.defaultNow(),
-});
+import { organization } from "@/core/db/auth-schema";
 
 export const icp = pgTable(
 	"icp",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
-		accountId: uuid("account_id")
+		organizationId: text("organization_id")
 			.notNull()
-			.references(() => account.id),
+			.references(() => organization.id),
 		domain: text("domain").notNull(),
 		product: text("product"),
 		doc: jsonb("doc"),
@@ -32,7 +24,7 @@ export const icp = pgTable(
 			.notNull()
 			.defaultNow(),
 	},
-	(t) => [index("icp_account_idx").on(t.accountId)],
+	(t) => [index("icp_organization_idx").on(t.organizationId)],
 );
 
 /** One row per capability run. The id is the run id the route builds, so it carries no generated default. */
@@ -40,9 +32,9 @@ export const run = pgTable(
 	"run",
 	{
 		id: text("id").primaryKey(),
-		accountId: uuid("account_id")
+		organizationId: text("organization_id")
 			.notNull()
-			.references(() => account.id),
+			.references(() => organization.id),
 		icpId: uuid("icp_id")
 			.notNull()
 			.references(() => icp.id),
@@ -54,7 +46,12 @@ export const run = pgTable(
 			.defaultNow(),
 		finishedAt: timestamp("finished_at", { withTimezone: true }),
 	},
-	(t) => [index("run_account_started_idx").on(t.accountId, t.startedAt.desc())],
+	(t) => [
+		index("run_organization_started_idx").on(
+			t.organizationId,
+			t.startedAt.desc(),
+		),
+	],
 );
 
 export const company = pgTable(
@@ -119,8 +116,6 @@ export const evidence = pgTable(
 	],
 );
 
-export type Account = typeof account.$inferSelect;
-export type NewAccount = typeof account.$inferInsert;
 export type Run = typeof run.$inferSelect;
 export type NewRun = typeof run.$inferInsert;
 export type Icp = typeof icp.$inferSelect;
