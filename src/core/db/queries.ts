@@ -19,13 +19,13 @@ import type {
 	Run,
 } from "@/core/db/schema";
 import {
-	account,
+	type account,
 	company,
 	evidence,
 	icp,
 	normalizeDomain,
 	person,
-	run,
+	type run,
 } from "@/core/db/schema";
 
 export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
@@ -147,7 +147,7 @@ export type RunOpenConnection = InsertConnection<typeof run, NewRun, Run> &
 	SelectLimitConnection<typeof run, Run>;
 export type RunUpdateConnection = UpdateWhereConnection<
 	typeof run,
-	Pick<NewRun, "status" | "costDollars" | "finishedAt">
+	Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
 >;
 export type RunLookupConnection = SelectLimitConnection<typeof run, Run>;
 export type AccountSpendConnection = SelectWhereConnection<
@@ -213,112 +213,6 @@ export async function createIcp(
 	const row = rows[0];
 	if (!row) throw new Error("createIcp: insert returned no row");
 	return row;
-}
-
-/** Finds the account for `domain`, creating it with `name` if it does not exist. */
-export async function ensureAccount(
-	env: DbEnv,
-	name: string,
-	domain: string,
-	buildDb: DbFactory<AccountConnection> = db,
-): Promise<Account> {
-	const connection = buildDb(env, "cached");
-	const inserted = await connection
-		.insert(account)
-		.values({ name, domain })
-		.onConflictDoNothing({ target: [account.domain] })
-		.returning();
-	if (inserted[0]) return inserted[0];
-	const rows = await connection
-		.select()
-		.from(account)
-		.where(eq(account.domain, domain));
-	const row = rows[0];
-	if (!row) throw new Error(`ensureAccount: no account for domain ${domain}`);
-	return row;
-}
-
-/** Opens a run, or returns the one already opened under this id. A retried step must not fail on the primary key it just wrote. */
-export async function openRun(
-	env: DbEnv,
-	newRun: NewRun,
-	buildDb: DbFactory<RunOpenConnection> = db,
-): Promise<Run> {
-	const connection = buildDb(env, "cached");
-	const inserted = await connection
-		.insert(run)
-		.values(newRun)
-		.onConflictDoNothing({ target: [run.id] })
-		.returning();
-	const created = inserted[0];
-	if (created) return created;
-	const existing = await buildDb(env, "direct")
-		.select()
-		.from(run)
-		.where(eq(run.id, newRun.id))
-		.limit(1);
-	const row = existing[0];
-	if (!row) throw new Error(`openRun: no run for id ${newRun.id}`);
-	return row;
-}
-
-/**
- * The run row for `runId`, if one exists, read through the cache-disabled
- * binding so a start from earlier in this same request is never missed.
- */
-export async function findRun(
-	env: DbEnv,
-	runId: string,
-	buildDb: DbFactory<RunLookupConnection> = db,
-): Promise<Run | undefined> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select()
-		.from(run)
-		.where(eq(run.id, runId))
-		.limit(1);
-	return rows[0];
-}
-
-/** Records a run's terminal status and spend, and stamps `finished_at`. */
-export async function closeRun(
-	env: DbEnv,
-	runId: string,
-	outcome: Pick<NewRun, "status" | "costDollars">,
-	buildDb: DbFactory<RunUpdateConnection> = db,
-): Promise<void> {
-	const connection = buildDb(env, "cached");
-	await connection
-		.update(run)
-		.set({ ...outcome, finishedAt: new Date() })
-		.where(eq(run.id, runId));
-}
-
-/** Midnight UTC on the day of `now` (defaults to the current time). */
-export function startOfUtcDay(now: Date = new Date()): Date {
-	return new Date(
-		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-	);
-}
-
-/**
- * Sums an account's run spend since the start of the current UTC day, read
- * through the cache-disabled binding so a same-run write is never missed.
- */
-export async function accountSpendToday(
-	env: DbEnv,
-	accountId: string,
-	now: Date = new Date(),
-	buildDb: DbFactory<AccountSpendConnection> = db,
-): Promise<number> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select({ costDollars: run.costDollars })
-		.from(run)
-		.where(
-			and(eq(run.accountId, accountId), gte(run.startedAt, startOfUtcDay(now))),
-		);
-	return rows.reduce((total, row) => total + row.costDollars, 0);
 }
 
 /** The id, domain, name, and saved Exa organization id of every company found in run `runId`. */
@@ -448,3 +342,13 @@ export async function deletePerson(
 		await tx.delete(person).where(eq(person.id, personId));
 	});
 }
+
+export {
+	accountSpendToday,
+	closeRun,
+	ensureAccount,
+	findRun,
+	openRun,
+	recordRunSpend,
+	startOfUtcDay,
+} from "@/core/db/runs";

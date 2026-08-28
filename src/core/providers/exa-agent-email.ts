@@ -104,6 +104,32 @@ function toContact(
  * label, because the citation is the reason to prefer this over a plain
  * lookup.
  */
+/**
+ * Starts one agent email run. Returns null when the vendor is rate limited or
+ * unavailable, so the caller's enrich batch is not retried and billed again
+ * for every other provider it already ran.
+ */
+async function startEmailRun(
+	description: string,
+	env: Env,
+): Promise<{ id: string } | null> {
+	try {
+		return await startAgentRun(
+			{
+				query: `Find the work email address for ${description}.`,
+				systemPrompt:
+					"Only report an email you found direct evidence for, and name the exact page it came from.",
+				effort: EFFORT,
+				outputSchema: PERSON_EMAIL_OUTPUT_SCHEMA,
+			},
+			env,
+		);
+	} catch (error) {
+		if (error instanceof RetryableProviderError) return null;
+		throw error;
+	}
+}
+
 export const exaAgentEmailProvider: Provider<FindymailInput, FindymailResult> =
 	{
 		id: "exa-agent-email",
@@ -112,17 +138,9 @@ export const exaAgentEmailProvider: Provider<FindymailInput, FindymailResult> =
 		async run(input, env, ledger = new CostLedger()) {
 			const description = personDescription(input);
 			if (!description) return null;
-			const { id } = await startAgentRun(
-				{
-					query: `Find the work email address for ${description}.`,
-					systemPrompt:
-						"Only report an email you found direct evidence for, and name the exact page it came from.",
-					effort: EFFORT,
-					outputSchema: PERSON_EMAIL_OUTPUT_SCHEMA,
-				},
-				env,
-			);
-			const person = await pollPersonEmail(id, env, ledger);
+			const started = await startEmailRun(description, env);
+			if (!started) return null;
+			const person = await pollPersonEmail(started.id, env, ledger);
 			if (!person?.email) return null;
 			return {
 				email: person.email,

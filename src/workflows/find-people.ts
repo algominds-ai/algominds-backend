@@ -14,6 +14,7 @@ import {
 	findRun,
 	loadIcp,
 	openRun,
+	recordRunSpend,
 	savePeople,
 } from "@/core/db/queries";
 import type { NewEvidence, NewPerson } from "@/core/db/schema";
@@ -322,6 +323,7 @@ async function runBatches(
 	batches: readonly PeopleCompany[][],
 	opts: FindPeopleOptions,
 	step: WorkflowStep,
+	runId: string,
 ): Promise<{ batches: FindPeopleResult[]; capped: boolean }> {
 	const results: FindPeopleResult[] = [];
 	let costDollars = 0;
@@ -333,6 +335,11 @@ async function runBatches(
 		);
 		results.push(batchResult);
 		costDollars += batchResult.costDollars;
+		await step.do(
+			`people-batch-${index}-spend`,
+			config.stepConfig.databaseCall,
+			() => recordRunSpend(opts.env, runId, costDollars),
+		);
 		if (costDollars >= config.spend.perRunDollars) {
 			return { batches: results, capped: index < batches.length - 1 };
 		}
@@ -412,7 +419,12 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			effectiveMax,
 		);
 		const opts: FindPeopleOptions = { icp, env: this.env };
-		const run = await runBatches(toBatches(scoped), opts, step);
+		const run = await runBatches(
+			toBatches(scoped),
+			opts,
+			step,
+			event.instanceId,
+		);
 		const result: FindPeopleWorkflowResult = {
 			...mergeResults(run.batches, skipped),
 			unknownDomains: target.unknownDomains,

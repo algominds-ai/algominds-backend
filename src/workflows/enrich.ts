@@ -7,6 +7,7 @@ import {
 	closeRun,
 	findRun,
 	openRun,
+	recordRunSpend,
 } from "@/core/db/queries";
 import type {
 	EnrichChannel,
@@ -90,6 +91,11 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			);
 			outcomes.push(...batchResult.outcomes);
 			costDollars += batchResult.costDollars;
+			await step.do(
+				`enrich-batch-${index}-spend`,
+				config.stepConfig.databaseCall,
+				() => recordRunSpend(this.env, event.instanceId, costDollars),
+			);
 			if (costDollars >= config.spend.perRunDollars) break;
 		}
 		await step.do("close-run", config.stepConfig.databaseCall, () =>

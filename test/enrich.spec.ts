@@ -475,18 +475,18 @@ describe("the exa agent email provider's own error contract", () => {
 		expect(result).toBeNull();
 	});
 
-	it("raises a retryable error on a 429 from the agent", async () => {
+	it("misses rather than throwing when the agent is rate limited, so the caller's batch is not billed twice", async () => {
 		globalThis.fetch = fakeVendors(
 			{},
 			{ "/agent/runs": () => new Response(null, { status: 429 }) },
 		);
 
-		await expect(
-			exaAgentEmailProvider.run(
-				{ name: "Someone", domain: "acme.com" },
-				findymailEnv(),
-			),
-		).rejects.toThrow(RetryableProviderError);
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result).toBeNull();
 	});
 
 	it("keeps polling a run it already paid for when one poll is rate limited, rather than failing the caller", async () => {

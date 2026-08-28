@@ -20,6 +20,7 @@ import {
 	loadIcp,
 	openRun,
 	recentDomains,
+	recordRunSpend,
 	saveCompanies,
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
@@ -98,11 +99,15 @@ function finalStatus(
  * merges their plain results into one `FindCompaniesResult`.
  */
 async function runFindCompaniesRounds(
-	env: Env,
-	payload: FindCompaniesPayload,
-	icp: IcpDoc,
+	target: {
+		env: Env;
+		payload: FindCompaniesPayload;
+		icp: IcpDoc;
+		runId: string;
+	},
 	step: WorkflowStep,
 ): Promise<FindCompaniesResult> {
+	const { env, payload, icp, runId } = target;
 	const accumulatedDomains = new Set<string>();
 	let companies: CompanyRow[] = [];
 	let rejects: FindCompaniesReject[] = [];
@@ -136,6 +141,9 @@ async function runFindCompaniesRounds(
 		Object.assign(captures, stepResult.captures);
 		rounds += 1;
 		lastRoundStatus = stepResult.status;
+		await step.do(`round_${round}-spend`, config.stepConfig.databaseCall, () =>
+			recordRunSpend(env, runId, costDollars),
+		);
 		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
 		if (stepResult.status === "exhausted") break;
 		if (costDollars >= config.spend.perRunDollars) {
@@ -309,7 +317,10 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			}),
 		);
 
-		const result = await runFindCompaniesRounds(this.env, payload, icp, step);
+		const result = await runFindCompaniesRounds(
+			{ env: this.env, payload, icp, runId: event.instanceId },
+			step,
+		);
 
 		await step.do("save-companies", config.stepConfig.databaseCall, () =>
 			persistCompanies(this.env, {

@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { PeopleCompany } from "../src/core/person-candidates";
 import type { ExaAgentPerson } from "../src/core/providers/exa-agent";
 import {
 	buildPersonAgentRunRequest,
 	toExaSearchResult,
 } from "../src/core/providers/exa-agent";
-
-function targetCompany(name: string): PeopleCompany {
-	return { id: "company-1", domain: "acme.example", name, exaId: null };
-}
 
 function agentPerson(fields: Partial<ExaAgentPerson> = {}): ExaAgentPerson {
 	return {

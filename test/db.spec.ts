@@ -34,6 +34,7 @@ import {
 	loadIcp,
 	openRun,
 	recentDomains,
+	recordRunSpend,
 	saveCompanies,
 	savePeople,
 	startOfUtcDay,
@@ -607,7 +608,7 @@ describe("closeRun", () => {
 	it("records the terminal status and the spend", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		let setValues:
-			| Pick<NewRun, "status" | "costDollars" | "finishedAt">
+			| Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
 			| undefined;
 		const buildDb: DbFactory<RunUpdateConnection> = () => ({
 			update: () => ({
@@ -628,6 +629,29 @@ describe("closeRun", () => {
 		expect(setValues?.status).toBe("complete");
 		expect(setValues?.costDollars).toBe(4.5);
 		expect(setValues?.finishedAt).toBeInstanceOf(Date);
+	});
+});
+
+describe("recordRunSpend", () => {
+	it("writes the spend so far without ending the run", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let setValues:
+			| Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
+			| undefined;
+		const buildDb: DbFactory<RunUpdateConnection> = () => ({
+			update: () => ({
+				set: (values) => {
+					setValues = values;
+					return { where: () => Promise.resolve([]) };
+				},
+			}),
+		});
+
+		await recordRunSpend(env, "run-1", 1.25, buildDb);
+
+		expect(setValues?.costDollars).toBe(1.25);
+		expect(setValues?.finishedAt).toBeUndefined();
+		expect(setValues?.status).toBeUndefined();
 	});
 });
 
