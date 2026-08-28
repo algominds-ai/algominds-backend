@@ -3,6 +3,7 @@ import type {
 	ApolloSearchResult,
 } from "@/core/providers/apollo";
 import { apolloPeopleSearch } from "@/core/providers/apollo";
+import { exaAgentEmailProvider } from "@/core/providers/exa-agent-email";
 import type {
 	FindymailInput,
 	FindymailResult,
@@ -16,6 +17,7 @@ export const PEOPLE: Provider<ApolloSearchFilters, ApolloSearchResult>[] = [
 
 export const EMAIL: Provider<FindymailInput, FindymailResult>[] = [
 	...FINDYMAIL_EMAIL_PROVIDERS,
+	exaAgentEmailProvider,
 ];
 
 export const COMPANY: Provider<never, never>[] = [];

@@ -71,17 +71,19 @@ const ExaAgentStructuredOutputSchema = z.object({
 	companies: z.array(ExaAgentCompanySchema),
 });
 
-const ExaAgentRunResponseSchema = z.object({
-	id: z.string(),
-	status: z.string(),
-	output: z
-		.object({
-			text: z.string().optional(),
-			structured: ExaAgentStructuredOutputSchema,
-		})
-		.optional(),
-	costDollars: ExaAgentCostSchema.optional(),
-});
+function runResponseSchema<T>(structuredSchema: z.ZodType<T>) {
+	return z.object({
+		id: z.string(),
+		status: z.string(),
+		output: z
+			.object({
+				text: z.string().optional(),
+				structured: structuredSchema,
+			})
+			.optional(),
+		costDollars: ExaAgentCostSchema.optional(),
+	});
+}
 
 const ExaAgentErrorSchema = z.object({
 	requestId: z.string().optional(),
@@ -169,23 +171,24 @@ export async function startAgentRun(
 	return { id: parsed.data.id };
 }
 
-export type ExaAgentRun =
+export type ExaAgentRunOutput<T> =
 	| { status: "running" }
-	| { status: "completed"; companies: ExaAgentCompany[] };
+	| { status: "completed"; output: T };
 
 /**
- * Fetches one agent run's current state. Reports its cost into `ledger` the
- * moment it completes. Throws when the run failed, errored, or was
- * canceled, and when a completed run's body does not match the expected
- * shape.
+ * Fetches one agent run's current state, parsing `output.structured`
+ * against `structuredSchema`. Reports its cost into `ledger` the moment it
+ * completes. Throws when the run failed, errored, or was canceled, and when
+ * a completed run's body does not match the expected shape.
  */
-export async function getAgentRun(
+export async function getAgentRunOutput<T>(
 	id: string,
 	env: Env,
 	ledger: CostLedger,
-): Promise<ExaAgentRun> {
+	structuredSchema: z.ZodType<T>,
+): Promise<ExaAgentRunOutput<T>> {
 	const body = await exaAgentFetch(`/${id}`, env);
-	const parsed = ExaAgentRunResponseSchema.safeParse(body);
+	const parsed = runResponseSchema(structuredSchema).safeParse(body);
 	if (!parsed.success) {
 		const requestId = extractRequestId(body);
 		const detail = requestId
@@ -204,5 +207,29 @@ export async function getAgentRun(
 	}
 	const { total, ...rest } = run.costDollars;
 	ledger.reported("exa", "agent", total, agentCostDetail(rest));
-	return { status: "completed", companies: run.output.structured.companies };
+	return { status: "completed", output: run.output.structured };
+}
+
+export type ExaAgentRun =
+	| { status: "running" }
+	| { status: "completed"; companies: ExaAgentCompany[] };
+
+/**
+ * Fetches one agent run's current state for the companies schema. A thin
+ * wrapper over `getAgentRunOutput`, which carries the shared polling and
+ * error-mapping contract.
+ */
+export async function getAgentRun(
+	id: string,
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaAgentRun> {
+	const run = await getAgentRunOutput(
+		id,
+		env,
+		ledger,
+		ExaAgentStructuredOutputSchema,
+	);
+	if (run.status !== "completed") return run;
+	return { status: "completed", companies: run.output.companies };
 }

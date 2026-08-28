@@ -147,7 +147,7 @@ function emailEvidenceRow(
 		subjectId: subject.id,
 		kind: "email",
 		value: result.email,
-		source: result.finder,
+		source: result.source ?? result.finder,
 		status: result.status,
 		confidence: result.status === "verified" ? 1 : 0,
 	};
@@ -207,7 +207,7 @@ async function runEmailWaterfall(
 	return {
 		status: toEmailStatus(found.status),
 		value: found.email,
-		source: found.finder,
+		source: found.source ?? found.finder,
 	};
 }
 

@@ -46,7 +46,7 @@ const FindymailCreditsResponseSchema = z.object({
 export type FindymailContact = z.infer<typeof FindymailContactSchema>;
 type FoundContact = FindymailContact & { email: string };
 
-export type FindymailFinder = "linkedin" | "name";
+export type FindymailFinder = "linkedin" | "name" | "agent";
 export type FindymailStatus = "verified" | "invalid" | "unknown";
 
 export type FindymailInput = {
@@ -61,6 +61,7 @@ export type FindymailResult = {
 	finder: FindymailFinder;
 	status: FindymailStatus;
 	ledger: CostLedger;
+	source?: string;
 };
 
 export type FindymailBalance = { credits: number; verifierCredits: number };

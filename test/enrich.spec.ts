@@ -1,5 +1,6 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
 import type {
 	DbFactory,
@@ -21,13 +22,19 @@ import type {
 	RunPeopleConnection,
 } from "../src/core/enrich";
 import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
+import { exaAgentEmailProvider } from "../src/core/providers/exa-agent-email";
 import type { Provider } from "../src/core/providers/types";
+import { RetryableProviderError } from "../src/core/providers/waterfall";
 import { toBatches } from "../src/workflows/enrich";
 
 type Handler = (init: RequestInit | undefined) => Response;
 
 function findymailEnv(): Env {
-	return { ...testEnv, FINDYMAIL_API_KEY: { get: async () => "test-key" } };
+	return {
+		...testEnv,
+		FINDYMAIL_API_KEY: { get: async () => "test-key" },
+		EXA_API_KEY: { get: async () => "test-exa-key" },
+	};
 }
 
 function fakeFindymail(handlers: Record<string, Handler>): typeof fetch {
@@ -243,6 +250,186 @@ describe("the email waterfall", () => {
 		const results = await enrich(subjects, ["email"], baseDeps());
 
 		expect(results[0]?.email?.status).toBe("unknown");
+	});
+});
+
+function fakeVendors(
+	findymail: Record<string, Handler>,
+	exa: Record<string, Handler>,
+): typeof fetch {
+	return async (input, init) => {
+		const url = new URL(String(input));
+		const table = url.hostname === "api.exa.ai" ? exa : findymail;
+		const handler = table[url.pathname];
+		return handler ? handler(init) : new Response(null, { status: 404 });
+	};
+}
+
+function completedAgentRun(overrides: { output?: unknown } = {}) {
+	return {
+		id: "agent-run-1",
+		status: "completed",
+		output: {
+			structured: {
+				fullName: "Kirk Marple",
+				title: "Founder and Chief Executive Officer",
+				email: "kirk@graphlit.com",
+				linkedinUrl: "https://www.linkedin.com/in/kirkmarple",
+				source: "https://www.linkedin.com/posts/kirkmarple_hiring",
+			},
+		},
+		costDollars: { total: 0.025, agentCompute: 0.02, search: 0.005 },
+		...overrides,
+	};
+}
+
+describe("the exa agent email provider in the waterfall", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("never reaches the agent once an earlier provider verifies an email", async () => {
+		let agentStarted = false;
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () =>
+					json({ contact: { email: "max@tryramp.com" } }),
+				"/api/verify": (init) =>
+					json({ email: requestedEmail(init), verified: true }),
+			},
+			{
+				"/agent/runs": () => {
+					agentStarted = true;
+					return json({ id: "agent-run-1", status: "running" });
+				},
+			},
+		);
+		const subjects: EnrichSubject[] = [
+			{
+				id: "subject-1",
+				name: "Max Freeman",
+				domain: "tryramp.com",
+				linkedinUrl: "https://linkedin.com/in/max",
+			},
+		];
+
+		const results = await enrich(subjects, ["email"], baseDeps());
+
+		expect(agentStarted).toBe(false);
+		expect(results[0]?.email?.status).toBe("verified");
+	});
+
+	it("falls through to the agent when every findymail provider misses", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () => new Response(null, { status: 404 }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => json(completedAgentRun()),
+			},
+		);
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
+		];
+
+		const results = await enrich(subjects, ["email"], baseDeps());
+
+		expect(results[0]?.email?.value).toBe("kirk@graphlit.com");
+	});
+
+	it("records the agent's cited source url as evidence, not just a finder label", async () => {
+		globalThis.fetch = fakeVendors(
+			{
+				"/api/search/linkedin": () => new Response(null, { status: 404 }),
+				"/api/search/name": () => new Response(null, { status: 404 }),
+			},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => json(completedAgentRun()),
+			},
+		);
+		const evidenceSink: NewEvidence[] = [];
+		const subjects: EnrichSubject[] = [
+			{ id: "subject-1", name: "Kirk Marple", domain: "graphlit.com" },
+		];
+
+		await enrich(
+			subjects,
+			["email"],
+			baseDeps({ writeEvidence: fakeWriteEvidence(evidenceSink) }),
+		);
+
+		const emailRow = evidenceSink.find((row) => row.kind === "email");
+		expect(emailRow?.value).toBe("kirk@graphlit.com");
+		expect(emailRow?.source).toBe(
+			"https://www.linkedin.com/posts/kirkmarple_hiring",
+		);
+	});
+});
+
+describe("the exa agent email provider's own error contract", () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("returns null without throwing when the agent completes with no email", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json(completedAgentRun({ output: { structured: { email: null } } })),
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Nobody Found", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(result).toBeNull();
+	});
+
+	it("raises a retryable error on a 429 from the agent", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{ "/agent/runs": () => new Response(null, { status: 429 }) },
+		);
+
+		await expect(
+			exaAgentEmailProvider.run(
+				{ name: "Someone", domain: "acme.com" },
+				findymailEnv(),
+			),
+		).rejects.toThrow(RetryableProviderError);
+	});
+
+	it("raises a non-retryable error, not a retryable one, when the run terminates as failed", async () => {
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () =>
+					json({ id: "agent-run-1", status: "failed" }),
+			},
+		);
+
+		let caught: unknown;
+		try {
+			await exaAgentEmailProvider.run(
+				{ name: "Someone", domain: "acme.com" },
+				findymailEnv(),
+			);
+		} catch (error) {
+			caught = error;
+		}
+
+		expect(caught).toBeInstanceOf(NonRetryableError);
+		expect(caught).not.toBeInstanceOf(RetryableProviderError);
 	});
 });
 
