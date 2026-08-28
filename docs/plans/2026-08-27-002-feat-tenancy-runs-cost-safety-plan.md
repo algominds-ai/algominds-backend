@@ -685,7 +685,11 @@ that run's companies, gate green.
 
 **Requirements.** R11.
 
-**Dependencies.** U6, U10.
+**Dependencies.** U6, U9, U10.
+
+**Carried from U9.** The vendor capture rides on `FindCompaniesResult` as
+`captures`. Drop it from the trimmed summary alongside the row arrays, or the
+size problem this unit exists to solve comes back through a different field.
 
 **Files.** `src/routes.ts`, `src/core/db/queries.ts`,
 `src/workflows/find-companies.ts`, `src/workflows/find-people.ts`,
