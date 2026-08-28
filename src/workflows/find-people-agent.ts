@@ -3,8 +3,7 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import type { CostEntry } from "@/core/cost";
 import { CostLedger } from "@/core/cost";
-import type { FindPeopleDeps, TitlesResult } from "@/core/people";
-import { decisionMakerTitles } from "@/core/people";
+import type { FindPeopleDeps } from "@/core/people";
 import type { PeopleCompany } from "@/core/person-candidates";
 import type { ExaAgentPerson } from "@/core/providers/exa-agent";
 import {
@@ -13,7 +12,6 @@ import {
 	startAgentRun,
 	toExaSearchResult,
 } from "@/core/providers/exa-agent";
-import type { IcpDoc } from "@/core/synthesize";
 
 const EFFORT = config.people.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.people.exaAgentPollIntervalSeconds;
@@ -89,39 +87,5 @@ export function agentPersonSearch(
 		);
 		const people = await pollUntilComplete(id, { env, step, name }, ledger);
 		return toExaSearchResult(id, people, company.name);
-	};
-}
-
-/**
- * Wraps `decisionMakerTitles` in its own durable step, so a replay returns
- * the cached titles instead of paying for a second model call.
- */
-export function agentDecisionMakerTitles(
-	step: WorkflowStep,
-	batchIndex: number,
-): FindPeopleDeps["decisionMakerTitles"] {
-	return async (icp: IcpDoc, env: Env) => {
-		const cached = await step.do(
-			`people-batch-${batchIndex}-titles`,
-			config.stepConfig.paidCall,
-			async () => {
-				const result = await decisionMakerTitles(icp, env);
-				return {
-					titles: result.titles,
-					queryTemplate: result.queryTemplate,
-					userLocation: result.userLocation,
-					costEntries: result.ledger.toJSON().entries,
-				};
-			},
-		);
-		const ledger = new CostLedger();
-		applyCostEntries(cached.costEntries, ledger);
-		const output: TitlesResult = {
-			titles: cached.titles,
-			queryTemplate: cached.queryTemplate,
-			userLocation: cached.userLocation,
-			ledger,
-		};
-		return output;
 	};
 }

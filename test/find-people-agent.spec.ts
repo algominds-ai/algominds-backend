@@ -1,15 +1,10 @@
 import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
-import { CostLedger } from "../src/core/cost";
 import type { FindPeopleDeps, FindPeopleOptions } from "../src/core/people";
 import { findPeople } from "../src/core/people";
 import type { PeopleCompany } from "../src/core/person-candidates";
-import type { IcpDoc } from "../src/core/synthesize";
-import {
-	agentDecisionMakerTitles,
-	agentPersonSearch,
-} from "../src/workflows/find-people-agent";
+import { agentPersonSearch } from "../src/workflows/find-people-agent";
 
 const originalFetch = globalThis.fetch;
 
@@ -119,32 +114,27 @@ function fakeWorkflowStep(): { step: WorkflowStep; names: string[] } {
 
 function testDeps(search: FindPeopleDeps["search"]): FindPeopleDeps {
 	return {
-		decisionMakerTitles: async () => ({
-			titles: ["VP of Sales"],
-			queryTemplate: "decision makers at {company}",
-			userLocation: null,
-			ledger: new CostLedger(),
-		}),
 		search,
 		apolloSearch: async () => null,
 	};
 }
 
+const companyA: PeopleCompany = {
+	id: "company-a",
+	domain: "acme.example",
+	name: "Acme Corp",
+	exaId: null,
+};
+
+const companyB: PeopleCompany = {
+	id: "company-b",
+	domain: "widget.example",
+	name: "Widget Co",
+	exaId: null,
+};
+
 describe("agentPersonSearch: two companies in one batch", () => {
 	it("gives each company its own distinct people, never the other's", async () => {
-		const companyA: PeopleCompany = {
-			id: "company-a",
-			domain: "acme.example",
-			name: "Acme Corp",
-			exaId: null,
-		};
-		const companyB: PeopleCompany = {
-			id: "company-b",
-			domain: "widget.example",
-			name: "Widget Co",
-			exaId: null,
-		};
-
 		const fetchState = stubAgentPeopleFetch([
 			{
 				match: "at Acme Corp",
@@ -173,6 +163,11 @@ describe("agentPersonSearch: two companies in one batch", () => {
 		const opts: FindPeopleOptions = {
 			icp: { description: "seed stage fintech companies" },
 			env: exaEnv(),
+			plan: {
+				titles: ["VP of Sales"],
+				queryTemplate: "decision makers at {company}",
+				userLocation: null,
+			},
 		};
 
 		const result = await findPeople(
@@ -228,6 +223,11 @@ describe("agentPersonSearch: two companies in one batch", () => {
 		const opts: FindPeopleOptions = {
 			icp: { description: "seed stage fintech companies" },
 			env: exaEnv(),
+			plan: {
+				titles: ["VP of Sales"],
+				queryTemplate: "decision makers at {company}",
+				userLocation: null,
+			},
 		};
 
 		await findPeople([companyA, companyB], opts, testDeps(search));
@@ -239,7 +239,7 @@ describe("agentPersonSearch: two companies in one batch", () => {
 	});
 });
 
-function titlesGatewayEnv(): Env {
+function _titlesGatewayEnv(): Env {
 	return {
 		...testEnv,
 		AI_GATEWAY_BASE_URL: "https://gateway.test.example/compat",
@@ -248,7 +248,7 @@ function titlesGatewayEnv(): Env {
 	};
 }
 
-function titlesChatResponse(titles: string[]): Response {
+function _titlesChatResponse(titles: string[]): Response {
 	const payload = {
 		id: "chatcmpl-test",
 		model: "deepseek/deepseek-v4-flash-0731",
@@ -270,26 +270,3 @@ function titlesChatResponse(titles: string[]): Response {
 	};
 	return jsonResponse(200, payload);
 }
-
-describe("agentDecisionMakerTitles", () => {
-	it("names its step for the batch and does not re-run the model call on replay", async () => {
-		let gatewayCalls = 0;
-		globalThis.fetch = async () => {
-			gatewayCalls += 1;
-			return titlesChatResponse(["VP of Sales", "Head of Growth"]);
-		};
-
-		const { step, names } = fakeWorkflowStep();
-		const titlesDep = agentDecisionMakerTitles(step, 2);
-		const icp: IcpDoc = { description: "seed stage fintech companies" };
-
-		const first = await titlesDep(icp, titlesGatewayEnv());
-		const second = await titlesDep(icp, titlesGatewayEnv());
-
-		expect(names).toContain("people-batch-2-titles");
-		expect(first.titles).toEqual(["VP of Sales", "Head of Growth"]);
-		expect(second.titles).toEqual(first.titles);
-		expect(gatewayCalls).toBe(1);
-		expect(second.ledger.total()).toBeCloseTo(first.ledger.total(), 10);
-	});
-});

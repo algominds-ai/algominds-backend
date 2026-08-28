@@ -19,13 +19,7 @@ import {
 	latestEvidence,
 } from "@/core/db/queries";
 import { companyScopeForRun } from "@/core/db/run-scope";
-import type {
-	Company,
-	Evidence,
-	NewEvidence,
-	Person,
-	Run,
-} from "@/core/db/schema";
+import type { Company, Evidence, NewEvidence, Person } from "@/core/db/schema";
 import { company, person } from "@/core/db/schema";
 import type {
 	FindymailInput,

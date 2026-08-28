@@ -97,11 +97,11 @@ export type CompanyPeopleResult = {
 export type FindPeopleOptions = {
 	icp: IcpDoc;
 	env: Env;
+	plan: PeopleSearchPlan;
 	maxCompanies?: number;
 };
 
 export type FindPeopleDeps = {
-	decisionMakerTitles: (icp: IcpDoc, env: Env) => Promise<TitlesResult>;
 	search: (
 		req: ExaSearchRequest,
 		env: Env,
@@ -196,7 +196,7 @@ export function splitKnownCompanies(
 	return { companies: unsearched, skipped };
 }
 
-type PeopleSearchPlan = {
+export type PeopleSearchPlan = {
 	titles: readonly string[];
 	queryTemplate: string;
 	userLocation: string | null;
@@ -267,7 +267,8 @@ async function buildCompanyResult(
 /**
  * Runs one Exa people search per company plus a free Apollo coverage pass,
  * with no agent loop and no second employment lookup. `currentCompany` from
- * the same search call is the employment check.
+ * the same search call is the employment check. The search plan is resolved
+ * once for the run and handed in, because it depends only on the profile.
  */
 export async function findPeople(
 	companies: readonly PeopleCompany[],
@@ -279,13 +280,7 @@ export async function findPeople(
 		opts.maxCompanies ?? DEFAULT_MAX_COMPANIES,
 	);
 	const ledger = new CostLedger();
-	const titles = await deps.decisionMakerTitles(opts.icp, opts.env);
-	const plan: PeopleSearchPlan = {
-		titles: titles.titles,
-		queryTemplate: titles.queryTemplate,
-		userLocation: titles.userLocation,
-	};
-	const ctx: PeopleContext = { env: opts.env, ledger, deps, plan };
+	const ctx: PeopleContext = { env: opts.env, ledger, deps, plan: opts.plan };
 
 	const rawPerCompany = await Promise.all(
 		scoped.map((company) => searchCompanyPeople(company, ctx)),
@@ -294,7 +289,7 @@ export async function findPeople(
 
 	const results = await Promise.all(
 		scoped.map((company, index) =>
-			buildCompanyResult(company, titles.titles, deduped[index] ?? [], ctx),
+			buildCompanyResult(company, opts.plan.titles, deduped[index] ?? [], ctx),
 		),
 	);
 
@@ -302,6 +297,6 @@ export async function findPeople(
 		companies: results,
 		searched: scoped.length,
 		skippedCompanies: skipped,
-		costDollars: CostLedger.merge(titles.ledger, ledger).total(),
+		costDollars: ledger.total(),
 	};
 }

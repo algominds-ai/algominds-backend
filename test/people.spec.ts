@@ -3,7 +3,6 @@ import { env as testEnv } from "cloudflare:workers";
 import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "../src/config";
-import { CostLedger } from "../src/core/cost";
 import { db } from "../src/core/db/client";
 import {
 	createIcp,
@@ -32,7 +31,7 @@ import type { IcpDoc } from "../src/core/synthesize";
 import {
 	companiesOfOneProfile,
 	loadTargetCompanies,
-} from "../src/workflows/find-people";
+} from "../src/workflows/find-people-target";
 
 async function rawSource(path: string): Promise<string> {
 	const mod: { default: string } = await import(`${path}?raw`);
@@ -63,18 +62,24 @@ function testCompany(fields: {
 function testOpts(
 	overrides: Partial<FindPeopleOptions> = {},
 ): FindPeopleOptions {
-	return { icp, env: testEnv, ...overrides };
+	return {
+		icp,
+		env: testEnv,
+		plan: {
+			titles: ["VP of Sales"],
+			queryTemplate: "decision makers at {company}",
+			userLocation: null,
+		},
+		...overrides,
+	};
 }
 
-function scriptedTitles(
-	titles: string[],
-): FindPeopleDeps["decisionMakerTitles"] {
-	return async () => ({
+function scriptedPlan(titles: string[] = ["VP of Sales"]) {
+	return {
 		titles,
 		queryTemplate: "decision makers at {company}",
 		userLocation: null,
-		ledger: new CostLedger(),
-	});
+	};
 }
 
 type WorkHistoryFixture = {
@@ -144,10 +149,9 @@ function scriptedApollo(
 function testDeps(
 	search: FindPeopleDeps["search"],
 	apolloResults: (ApolloSearchResult | null)[],
-	titles: string[] = ["VP of Sales"],
+	_titles: string[] = ["VP of Sales"],
 ): FindPeopleDeps {
 	return {
-		decisionMakerTitles: scriptedTitles(titles),
 		search,
 		apolloSearch: scriptedApollo(apolloResults),
 	};
@@ -779,7 +783,7 @@ describe("findPeople: direct call", () => {
 
 		const result: FindPeopleResult = await findPeople(
 			[company],
-			{ icp, env: testEnv, maxCompanies: 5 },
+			{ icp, env: testEnv, plan: scriptedPlan(), maxCompanies: 5 },
 			testDeps(search, [null]),
 		);
 
@@ -1039,6 +1043,15 @@ describe("FindPeopleWorkflow: runId", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: 0,
+					},
+				);
 				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
@@ -1087,6 +1100,15 @@ describe("FindPeopleWorkflow: an empty run", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: 0,
+					},
+				);
 				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
@@ -1152,6 +1174,15 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: 0,
+					},
+				);
 				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
@@ -1236,6 +1267,15 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: 0,
+					},
+				);
 				await m.mockStepResult({ name: "known-people" }, [known.domain]);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
@@ -1332,6 +1372,15 @@ describe("FindPeopleWorkflow: the summary output", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: 0,
+					},
+				);
 				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
@@ -1395,6 +1444,15 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 					{ doc: icp, accountId: "account-1" },
 				);
 				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: 0,
+					},
+				);
 				await m.mockStepResult({ name: "known-people" }, []);
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });

@@ -3,15 +3,11 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
-import type { CompanyDomainMatch } from "@/core/db/company-domains";
-import { companiesForDomains } from "@/core/db/company-domains";
 import { knownPeopleDomains } from "@/core/db/known-people";
 import {
 	accountSpendToday,
 	appendEvidence,
 	closeRun,
-	companiesForRun,
-	findRun,
 	loadIcp,
 	openRun,
 	recordRunSpend,
@@ -25,6 +21,7 @@ import type {
 	FindPeopleOptions,
 	FindPeopleResult,
 	PeopleCompany,
+	PeopleSearchPlan,
 	PersonCandidate,
 } from "@/core/people";
 import {
@@ -37,11 +34,10 @@ import {
 } from "@/core/people";
 import { apolloPeopleSearch } from "@/core/providers/apollo";
 import { search } from "@/core/providers/exa";
+import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
-import {
-	agentDecisionMakerTitles,
-	agentPersonSearch,
-} from "@/workflows/find-people-agent";
+import { agentPersonSearch } from "@/workflows/find-people-agent";
+import { loadTargetCompanies } from "@/workflows/find-people-target";
 
 const BATCH_SIZE = config.people.batchSize;
 const EVIDENCE_SOURCE_EXA = "exa";
@@ -58,7 +54,7 @@ const FindPeoplePayloadSchema = z.union([
 	}),
 ]);
 
-type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
+export type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
 
 type FindPeopleWorkflowResult = FindPeopleResult & {
 	unknownDomains: string[];
@@ -110,87 +106,9 @@ function batchDeps(
 ): FindPeopleDeps {
 	const isAgent = PEOPLE_SOURCE === "exa-agent";
 	return {
-		decisionMakerTitles: isAgent
-			? agentDecisionMakerTitles(step, batchIndex)
-			: decisionMakerTitles,
 		search: isAgent ? agentPersonSearch(step, batchIndex, batch) : search,
 		apolloSearch: apolloPeopleSearch.run,
 	};
-}
-
-export type TargetCompanies = {
-	companies: PeopleCompany[];
-	icpId: string;
-	unknownDomains: string[];
-};
-
-async function targetByRun(env: Env, runId: string): Promise<TargetCompanies> {
-	const runRow = await findRun(env, runId);
-	if (!runRow) {
-		throw new NonRetryableError(`findPeople: unknown run ${runId}`);
-	}
-	const companies = await companiesForRun(env, runId);
-	return { companies, icpId: runRow.icpId, unknownDomains: [] };
-}
-
-/**
- * Narrows domain matches to the companies of one profile. A domain can name a
- * company under more than one profile, so the first match picks the profile
- * and every company outside it is reported as unmatched rather than mixed in.
- */
-export function companiesOfOneProfile(
-	matches: readonly CompanyDomainMatch[],
-	domains: readonly string[],
-): TargetCompanies {
-	const icpId = matches[0]?.icpId;
-	if (icpId === undefined) {
-		throw new NonRetryableError(
-			"findPeople: no known company for the given domains",
-		);
-	}
-	const byDomain = new Map(
-		matches
-			.filter((row) => row.icpId === icpId)
-			.map((row) => [row.domain, row]),
-	);
-	return {
-		companies: [...byDomain.values()].map(({ id, domain, name, exaId }) => ({
-			id,
-			domain,
-			name,
-			exaId,
-		})),
-		icpId,
-		unknownDomains: domains.filter((domain) => !byDomain.has(domain)),
-	};
-}
-
-/**
- * Resolves a domain list to the companies of one profile. A domain can name a
- * company under more than one profile, so the first match picks the profile
- * and every company outside it is dropped rather than mixed in.
- */
-async function targetByDomains(
-	env: Env,
-	domains: readonly string[],
-): Promise<TargetCompanies> {
-	const matches = await companiesForDomains(env, domains);
-	if (matches.length === 0) {
-		throw new NonRetryableError(
-			`findPeople: no known company for domains ${domains.join(", ")}`,
-		);
-	}
-	return companiesOfOneProfile(matches, domains);
-}
-
-/** Resolves the companies a people run searches, from a companies run id or a domain list. */
-export function loadTargetCompanies(
-	env: Env,
-	payload: FindPeoplePayload,
-): Promise<TargetCompanies> {
-	return "runId" in payload
-		? targetByRun(env, payload.runId)
-		: targetByDomains(env, payload.domains);
 }
 
 /** Splits `companies` into ordered groups of `BATCH_SIZE`, for one durable step each. */
@@ -347,6 +265,27 @@ async function runBatches(
 	return { batches: results, capped: false };
 }
 
+/**
+ * The titles and query one run searches with, resolved once. They depend only
+ * on the profile, so a call per batch would pay a model for the same answer
+ * as many times as the run has batches.
+ */
+async function resolvePlan(
+	icp: IcpDoc,
+	env: Env,
+	step: WorkflowStep,
+): Promise<PeopleSearchPlan & { costDollars: number }> {
+	return step.do("people-plan", config.stepConfig.paidCall, async () => {
+		const result = await decisionMakerTitles(icp, env);
+		return {
+			titles: result.titles,
+			queryTemplate: result.queryTemplate,
+			userLocation: result.userLocation,
+			costDollars: result.ledger.total(),
+		};
+	});
+}
+
 export class FindPeopleWorkflow extends WorkflowEntrypoint<
 	Env,
 	FindPeoplePayload
@@ -418,15 +357,18 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			filtered.companies,
 			effectiveMax,
 		);
-		const opts: FindPeopleOptions = { icp, env: this.env };
+		const resolved = await resolvePlan(icp, this.env, step);
+		const opts: FindPeopleOptions = { icp, env: this.env, plan: resolved };
 		const run = await runBatches(
 			toBatches(scoped),
 			opts,
 			step,
 			event.instanceId,
 		);
+		const merged = mergeResults(run.batches, skipped);
 		const result: FindPeopleWorkflowResult = {
-			...mergeResults(run.batches, skipped),
+			...merged,
+			costDollars: merged.costDollars + resolved.costDollars,
 			unknownDomains: target.unknownDomains,
 			knownDomains: filtered.skipped,
 			capped: run.capped,
