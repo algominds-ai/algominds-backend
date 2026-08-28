@@ -766,6 +766,7 @@ describe("FindPeopleWorkflow: runId", () => {
 					{ name: "load-icp" },
 					{ doc: icp, accountId: "account-1" },
 				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
@@ -791,7 +792,9 @@ describe("FindPeopleWorkflow: runId", () => {
 			await instance.dispose();
 		}
 	});
+});
 
+describe("FindPeopleWorkflow: an empty run", () => {
 	it("resolves a run with no companies and completes without a person-batch step", async () => {
 		const instanceId = "no-people-test";
 		const instance = await introspectWorkflowInstance(
@@ -808,6 +811,7 @@ describe("FindPeopleWorkflow: runId", () => {
 					{ name: "load-icp" },
 					{ doc: icp, accountId: "account-1" },
 				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "save-people" }, null);
@@ -869,6 +873,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 					{ name: "load-icp" },
 					{ doc: icp, accountId: "account-1" },
 				);
+				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: "x" });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);

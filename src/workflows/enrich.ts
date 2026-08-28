@@ -1,6 +1,8 @@
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
+import { closeRun, findRun, openRun } from "@/core/db/queries";
 import type {
 	EnrichChannel,
 	EnrichOutcome,
@@ -38,6 +40,26 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			config.stepConfig.databaseCall,
 			() => subjectsForRun(this.env, runId),
 		);
+		const source = await step.do(
+			"load-source-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				const row = await findRun(this.env, runId);
+				if (!row) throw new NonRetryableError(`enrich: unknown run ${runId}`);
+				return { accountId: row.accountId, icpId: row.icpId };
+			},
+		);
+
+		await step.do("open-run", config.stepConfig.databaseCall, () =>
+			openRun(this.env, {
+				id: event.instanceId,
+				accountId: source.accountId,
+				icpId: source.icpId,
+				capability: "enrich",
+				status: "running",
+			}),
+		);
+
 		const outcomes: EnrichOutcome[] = [];
 		for (const [index, batch] of toBatches(subjects).entries()) {
 			const batchOutcomes = await step.do(
@@ -47,6 +69,13 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			);
 			outcomes.push(...batchOutcomes);
 		}
+		await step.do("close-run", config.stepConfig.databaseCall, () =>
+			closeRun(this.env, event.instanceId, {
+				status: "complete",
+				costDollars: 0,
+			}),
+		);
+
 		return outcomes;
 	}
 }

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { config } from "@/config";
 import { companiesForDomains } from "@/core/db/company-domains";
 import {
+	accountSpendToday,
 	appendEvidence,
 	closeRun,
 	companiesForRun,
@@ -285,6 +286,16 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 				};
 			},
 		);
+
+		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
+			const spent = await accountSpendToday(this.env, accountId);
+			if (spent >= config.spend.perAccountDailyDollars) {
+				throw new NonRetryableError(
+					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
+				);
+			}
+			return { spent };
+		});
 
 		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {

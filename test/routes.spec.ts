@@ -86,6 +86,12 @@ async function expectEnrichResolvesSubjects(
 	const instance = await introspectWorkflowInstance(testEnv.ENRICH, runId);
 	try {
 		await instance.modify(async (m) => {
+			await m.mockStepResult(
+				{ name: "load-source-run" },
+				{ accountId: "account-1", icpId: "icp-1" },
+			);
+			await m.mockStepResult({ name: "open-run" }, { id: runId });
+			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
 			await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
 		});

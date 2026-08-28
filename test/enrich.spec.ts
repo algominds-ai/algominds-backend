@@ -866,6 +866,19 @@ describe("enrich() result shape", () => {
 	});
 });
 
+type StepMocker = {
+	mockStepResult: (s: { name: string }, v: unknown) => Promise<void>;
+};
+
+async function mockRunBookkeeping(m: StepMocker): Promise<void> {
+	await m.mockStepResult(
+		{ name: "load-source-run" },
+		{ accountId: "account-1", icpId: "icp-1" },
+	);
+	await m.mockStepResult({ name: "open-run" }, { id: "x" });
+	await m.mockStepResult({ name: "close-run" }, { id: "x" });
+}
+
 describe("EnrichWorkflow", () => {
 	it("splits subjects into ordered groups of five", () => {
 		const subjects: EnrichSubject[] = Array.from({ length: 12 }, (_, i) => ({
@@ -878,7 +891,9 @@ describe("EnrichWorkflow", () => {
 		expect(batches[0]?.[0]?.id).toBe("subject-0");
 		expect(batches[2]?.[1]?.id).toBe("subject-11");
 	});
+});
 
+describe("EnrichWorkflow: resolving a run", () => {
 	it("resolves a run into subjects and runs one step per batch", async () => {
 		const instanceId = "enrich_workflow_batches_test";
 		const instance = await introspectWorkflowInstance(
@@ -908,6 +923,7 @@ describe("EnrichWorkflow", () => {
 				},
 			];
 			await instance.modify(async (m) => {
+				await mockRunBookkeeping(m);
 				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
 				await m.mockStepResult({ name: "enrich-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "enrich-batch-1" }, batchOne);
@@ -943,6 +959,7 @@ describe("EnrichWorkflow", () => {
 				linkedin: { status: "unknown", value: null, source: null },
 			}));
 			await instance.modify(async (m) => {
+				await mockRunBookkeeping(m);
 				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
 				await m.mockStepResult({ name: "enrich-batch-0" }, outcomes);
 			});
@@ -968,6 +985,7 @@ describe("EnrichWorkflow", () => {
 		);
 		try {
 			await instance.modify(async (m) => {
+				await mockRunBookkeeping(m);
 				await m.mockStepResult({ name: "resolve-subjects" }, []);
 			});
 

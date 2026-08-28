@@ -56,6 +56,25 @@ enrich:
   emailTtlDays: 90
   linkedinTtlDays: 30
 
+# Spend ceilings. These stop work; they do not merely report it.
+spend:
+  # A single run stops starting new paid work once it has already spent this
+  # much. Cost is only knowable after a call returns, so this stops the NEXT
+  # round or batch, never the one in flight. Overshoot is bounded by one whole
+  # interval: about $0.045 for a companies round, more for a people batch of
+  # five. Measured runs: a companies run is $0.137, a people run over ten
+  # companies is $0.100.
+  perRunDollars: 2.00
+  # An account refuses to start a new run once its day already costs this much.
+  # Checked before any paid work, so a refused run spends nothing.
+  #
+  # Known hole: enrichment spend is NOT counted here. Findymail and the agent
+  # provider both report cost into a ledger, but enrich() never collects one,
+  # so an enrich run records zero. Closing that means threading a ledger
+  # through the waterfall, which changes a contract every provider implements.
+  # Until then this ceiling covers company and people runs only.
+  perAccountDailyDollars: 50.00
+
 judge:
   cacheTtlSeconds: 86400
 

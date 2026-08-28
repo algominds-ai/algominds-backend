@@ -25,6 +25,10 @@ export const config = {
 		emailTtlDays: 90,
 		linkedinTtlDays: 30,
 	},
+	spend: {
+		perRunDollars: 2,
+		perAccountDailyDollars: 50,
+	},
 	judge: {
 		cacheTtlSeconds: 86400,
 	},

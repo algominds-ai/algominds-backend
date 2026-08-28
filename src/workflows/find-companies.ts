@@ -14,6 +14,7 @@ import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/company-candidates";
 import { toCompanyData } from "@/core/company-candidates";
 import {
+	accountSpendToday,
 	appendEvidence,
 	closeRun,
 	loadIcp,
@@ -88,6 +89,7 @@ function finalStatus(
 	lastRoundStatus: FindCompaniesStatus,
 ): FindCompaniesStatus {
 	if (found >= requested) return "complete";
+	if (lastRoundStatus === "capped") return "capped";
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
 }
 
@@ -136,6 +138,10 @@ async function runFindCompaniesRounds(
 		lastRoundStatus = stepResult.status;
 		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
 		if (stepResult.status === "exhausted") break;
+		if (costDollars >= config.spend.perRunDollars) {
+			lastRoundStatus = "capped";
+			break;
+		}
 	}
 
 	return {
@@ -253,6 +259,16 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				};
 			},
 		);
+
+		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
+			const spent = await accountSpendToday(this.env, accountId);
+			if (spent >= config.spend.perAccountDailyDollars) {
+				throw new NonRetryableError(
+					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
+				);
+			}
+			return { spent };
+		});
 
 		await step.do("open-run", config.stepConfig.databaseCall, () =>
 			openRun(this.env, {

@@ -29,6 +29,8 @@ import type {
 
 export type { FindCompaniesReject };
 
+const SPEND_PER_RUN = config.spend.perRunDollars;
+
 const {
 	maxRounds: MAX_ROUNDS,
 	judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE,
@@ -63,7 +65,7 @@ export type FindCompaniesDeps = {
 	) => Promise<JudgeResult>;
 };
 
-export type FindCompaniesStatus = "complete" | "short" | "exhausted";
+export type FindCompaniesStatus = "complete" | "short" | "exhausted" | "capped";
 
 export type FindCompaniesResult = {
 	companies: CompanyRow[];
@@ -106,6 +108,11 @@ function applyVerdicts(
 			});
 	}
 	return { accepted, judgeRejects };
+}
+
+/** Dollars already banked by earlier rounds. Cost is only known after a call returns, so this can stop the next round but never the one in flight. */
+function spentSoFar(ledgers: readonly CostLedger[]): number {
+	return CostLedger.merge(...ledgers).total();
 }
 
 function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
@@ -200,6 +207,10 @@ async function runRounds(
 	let rounds = 0;
 
 	for (let round = 0; round < maxRounds; round++) {
+		if (spentSoFar(ledgers) >= SPEND_PER_RUN) {
+			status = "capped";
+			break;
+		}
 		rounds += 1;
 		const outcome = await runRound(
 			{
