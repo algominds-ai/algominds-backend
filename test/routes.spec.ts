@@ -19,8 +19,8 @@ import {
 	run,
 } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
+import { constantTimeEqual } from "../src/http/auth";
 import app from "../src/index";
-import { constantTimeEqual } from "../src/routes";
 
 const BASE = "https://algo.test";
 const TOKEN = "routes-spec-bearer-token";

@@ -1,59 +1,20 @@
 import type { WorkflowStep } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
-import type { CostEntry } from "@/core/cost";
-import { CostLedger } from "@/core/cost";
 import type { FindPeopleDeps } from "@/core/people";
 import type { PeopleCompany } from "@/core/person-candidates";
-import type { ExaAgentPerson } from "@/core/providers/exa/agent";
 import {
 	buildPersonAgentRunRequest,
 	getAgentPeopleRun,
 	startAgentRun,
 	toExaSearchResult,
 } from "@/core/providers/exa/agent";
+import { pollAgentRun } from "@/workflows/agent-poll";
 
 const EFFORT = config.people.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.people.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.people.exaAgentMaxPollAttempts;
 const RESULTS_PER_COMPANY = config.people.resultsPerCompany;
-
-function applyCostEntries(
-	entries: readonly CostEntry[],
-	ledger: CostLedger,
-): void {
-	for (const entry of entries)
-		ledger.reported(entry.provider, entry.op, entry.dollars);
-}
-
-type PollContext = { env: Env; step: WorkflowStep; name: string };
-
-async function pollUntilComplete(
-	id: string,
-	ctx: PollContext,
-	ledger: CostLedger,
-): Promise<ExaAgentPerson[]> {
-	for (let attempt = 1; attempt <= MAX_POLL_ATTEMPTS; attempt++) {
-		const polled = await ctx.step.do(
-			`${ctx.name}-poll-${attempt}`,
-			config.stepConfig.paidCall,
-			async () => {
-				const pollLedger = new CostLedger();
-				const run = await getAgentPeopleRun(id, ctx.env, pollLedger);
-				return { run, costEntries: pollLedger.toJSON().entries };
-			},
-		);
-		applyCostEntries(polled.costEntries, ledger);
-		if (polled.run.status === "completed") return polled.run.people;
-		await ctx.step.sleep(
-			`${ctx.name}-wait-${attempt}`,
-			`${POLL_INTERVAL_SECONDS} seconds`,
-		);
-	}
-	throw new NonRetryableError(
-		`Exa agent run ${id} did not complete after ${MAX_POLL_ATTEMPTS} polls`,
-	);
-}
 
 /**
  * Builds the `search` dependency for one people batch when the configured
@@ -85,7 +46,23 @@ export function agentPersonSearch(
 					env,
 				),
 		);
-		const people = await pollUntilComplete(id, { env, step, name }, ledger);
+		const people = await pollAgentRun(
+			{
+				env,
+				step,
+				name,
+				id,
+				intervalSeconds: POLL_INTERVAL_SECONDS,
+				maxAttempts: MAX_POLL_ATTEMPTS,
+			},
+			ledger,
+			async (pollLedger) => {
+				const run = await getAgentPeopleRun(id, env, pollLedger);
+				return run.status === "completed"
+					? { status: "completed", output: run.people }
+					: run;
+			},
+		);
 		return toExaSearchResult(id, people, company.name);
 	};
 }
