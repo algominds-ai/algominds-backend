@@ -8,12 +8,13 @@ import type {
 	FindymailResult,
 } from "@/core/providers/findymail";
 import type { Provider } from "@/core/providers/types";
+import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const EFFORT = config.companies.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
 
-const ExaAgentPersonSchema = z.object({
+const ExaAgentEmailContactSchema = z.object({
 	fullName: z.string().nullish(),
 	title: z.string().nullish(),
 	email: z.string().nullish(),
@@ -21,7 +22,7 @@ const ExaAgentPersonSchema = z.object({
 	source: z.string().nullish(),
 });
 
-type ExaAgentPerson = z.infer<typeof ExaAgentPersonSchema>;
+type ExaAgentEmailContact = z.infer<typeof ExaAgentEmailContactSchema>;
 
 const PERSON_EMAIL_OUTPUT_SCHEMA = {
 	type: "object",
@@ -44,19 +45,40 @@ function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function pollOnce(
+	id: string,
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaAgentEmailContact | null> {
+	try {
+		const run = await getAgentRunOutput(
+			id,
+			env,
+			ledger,
+			ExaAgentEmailContactSchema,
+		);
+		return run.status === "completed" ? run.output : null;
+	} catch (error) {
+		if (error instanceof RetryableProviderError) return null;
+		throw error;
+	}
+}
+
 /**
  * Polls one agent run to completion, sleeping between attempts, bounded by
  * `MAX_POLL_ATTEMPTS`. Returns null on a timeout, the same as a miss, since
- * this waterfall provider has no next provider to fall back to.
+ * this waterfall provider has no next provider to fall back to. A retryable
+ * vendor error ends that one poll rather than the caller's step, because the
+ * run is already paid for and a step retry would start and bill a second one.
  */
 async function pollPersonEmail(
 	id: string,
 	env: Env,
 	ledger: CostLedger,
-): Promise<ExaAgentPerson | null> {
+): Promise<ExaAgentEmailContact | null> {
 	for (let attempt = 1; attempt <= MAX_POLL_ATTEMPTS; attempt++) {
-		const run = await getAgentRunOutput(id, env, ledger, ExaAgentPersonSchema);
-		if (run.status === "completed") return run.output;
+		const output = await pollOnce(id, env, ledger);
+		if (output) return output;
 		if (attempt < MAX_POLL_ATTEMPTS) {
 			await sleep(POLL_INTERVAL_SECONDS * 1000);
 		}
@@ -66,7 +88,7 @@ async function pollPersonEmail(
 
 function toContact(
 	input: FindymailInput,
-	person: ExaAgentPerson,
+	person: ExaAgentEmailContact,
 ): FindymailContact {
 	return {
 		...(person.email ? { email: person.email } : {}),

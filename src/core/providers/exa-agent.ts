@@ -1,6 +1,11 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
+import type {
+	ExaResult,
+	ExaSearchRequest,
+	ExaSearchResult,
+} from "@/core/providers/exa";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
@@ -69,6 +74,21 @@ export type ExaAgentCompany = z.infer<typeof ExaAgentCompanySchema>;
 
 const ExaAgentStructuredOutputSchema = z.object({
 	companies: z.array(ExaAgentCompanySchema),
+});
+
+const ExaAgentPersonSchema = z.object({
+	name: z.string().nullish(),
+	linkedinUrl: z.string().nullish(),
+	title: z.string().nullish(),
+	location: z.string().nullish(),
+	companyName: z.string().nullish(),
+});
+
+/** One person as Exa's agent reports them, matching the `outputSchema` a caller sent to `startAgentRun`. */
+export type ExaAgentPerson = z.infer<typeof ExaAgentPersonSchema>;
+
+const ExaAgentPeopleOutputSchema = z.object({
+	people: z.array(ExaAgentPersonSchema),
 });
 
 function runResponseSchema<T>(structuredSchema: z.ZodType<T>) {
@@ -232,4 +252,120 @@ export async function getAgentRun(
 	);
 	if (run.status !== "completed") return run;
 	return { status: "completed", companies: run.output.companies };
+}
+
+export type ExaAgentPeopleRun =
+	| { status: "running" }
+	| { status: "completed"; people: ExaAgentPerson[] };
+
+/**
+ * Fetches one agent run's current state for the people schema. A thin
+ * wrapper over `getAgentRunOutput`, which carries the shared polling and
+ * error-mapping contract.
+ */
+export async function getAgentPeopleRun(
+	id: string,
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaAgentPeopleRun> {
+	const run = await getAgentRunOutput(
+		id,
+		env,
+		ledger,
+		ExaAgentPeopleOutputSchema,
+	);
+	if (run.status !== "completed") return run;
+	return { status: "completed", people: run.output.people };
+}
+
+const EXA_AGENT_PERSON_SCHEMA = {
+	type: "object",
+	properties: {
+		name: { type: "string" },
+		linkedinUrl: { type: "string" },
+		title: { type: "string" },
+		location: { type: "string" },
+		companyName: { type: "string" },
+	},
+	required: ["name", "linkedinUrl"],
+};
+
+function agentQuery(query: string, count: number): string {
+	return `${query} Return up to ${count} distinct people, each currently employed at the target company.`;
+}
+
+/**
+ * Turns one Exa search request and the number of people wanted into an Exa
+ * agent run request. The count reaches the agent as an upper bound in the
+ * query text only. The schema sets no `minItems`, because a company may
+ * genuinely employ fewer decision makers than asked for, and a pinned
+ * minimum invites the agent to invent LinkedIn URLs to satisfy it.
+ */
+export function buildPersonAgentRunRequest(
+	req: ExaSearchRequest,
+	count: number,
+	effort: ExaAgentRunRequest["effort"],
+): ExaAgentRunRequest {
+	return {
+		query: agentQuery(req.query, count),
+		systemPrompt:
+			"Give a real, working LinkedIn profile URL for every person. Never repeat a person.",
+		effort,
+		dataSources: [{ provider: "fiber" }],
+		outputSchema: {
+			type: "object",
+			properties: {
+				people: {
+					type: "array",
+					items: EXA_AGENT_PERSON_SCHEMA,
+				},
+			},
+			required: ["people"],
+		},
+	};
+}
+
+function toExaResult(
+	person: ExaAgentPerson,
+	companyName: string,
+): ExaResult | null {
+	const linkedinUrl = person.linkedinUrl;
+	if (!linkedinUrl) return null;
+	return {
+		id: null,
+		url: linkedinUrl,
+		title: person.name ?? linkedinUrl,
+		summary: null,
+		company: null,
+		person: {
+			fullName: person.name ?? null,
+			location: person.location ?? null,
+			workHistory: [
+				{
+					title: person.title ?? null,
+					from: null,
+					current: true,
+					companyId: null,
+					companyName,
+				},
+			],
+		},
+	};
+}
+
+/**
+ * Maps a completed agent run onto the same shape `search` returns, dropping
+ * any person the agent gave no LinkedIn URL for. `companyName` is the
+ * target company the run searched, carried by the caller since the agent's
+ * response names no organization id for it.
+ */
+export function toExaSearchResult(
+	requestId: string,
+	people: readonly ExaAgentPerson[],
+	companyName: string,
+): ExaSearchResult {
+	const results = people
+		.map((person) => toExaResult(person, companyName))
+		.filter((result): result is ExaResult => result !== null);
+	return { requestId, results };
 }

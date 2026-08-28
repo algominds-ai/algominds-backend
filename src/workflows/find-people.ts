@@ -36,10 +36,15 @@ import {
 import { apolloPeopleSearch } from "@/core/providers/apollo";
 import { search } from "@/core/providers/exa";
 import { IcpDocSchema } from "@/core/synthesize";
+import {
+	agentDecisionMakerTitles,
+	agentPersonSearch,
+} from "@/workflows/find-people-agent";
 
 const BATCH_SIZE = config.people.batchSize;
 const EVIDENCE_SOURCE_EXA = "exa";
 const EVIDENCE_SOURCE_TARGET = "target";
+const PEOPLE_SOURCE: "exa-search" | "exa-agent" = config.people.peopleSource;
 
 const maxCompaniesField = z.number().int().positive().optional();
 
@@ -88,11 +93,25 @@ function summarizeFindPeople(
 	};
 }
 
-const PRODUCTION_DEPS: FindPeopleDeps = {
-	decisionMakerTitles,
-	search,
-	apolloSearch: apolloPeopleSearch.run,
-};
+/**
+ * Builds the dependencies one people batch runs with. The search dependency
+ * branches on the configured people source; every other dependency stays
+ * the same regardless of source.
+ */
+function batchDeps(
+	step: WorkflowStep,
+	batchIndex: number,
+	batch: readonly PeopleCompany[],
+): FindPeopleDeps {
+	const isAgent = PEOPLE_SOURCE === "exa-agent";
+	return {
+		decisionMakerTitles: isAgent
+			? agentDecisionMakerTitles(step, batchIndex)
+			: decisionMakerTitles,
+		search: isAgent ? agentPersonSearch(step, batchIndex, batch) : search,
+		apolloSearch: apolloPeopleSearch.run,
+	};
+}
 
 export type TargetCompanies = {
 	companies: PeopleCompany[];
@@ -284,7 +303,7 @@ async function runBatches(
 		const batchResult = await step.do(
 			`people-batch-${index}`,
 			config.stepConfig.paidCall,
-			() => findPeople(batch, opts, PRODUCTION_DEPS),
+			() => findPeople(batch, opts, batchDeps(step, index, batch)),
 		);
 		results.push(batchResult);
 	}

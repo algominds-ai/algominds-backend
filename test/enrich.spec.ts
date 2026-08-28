@@ -489,6 +489,33 @@ describe("the exa agent email provider's own error contract", () => {
 		).rejects.toThrow(RetryableProviderError);
 	});
 
+	it("keeps polling a run it already paid for when one poll is rate limited, rather than failing the caller", async () => {
+		let polls = 0;
+		globalThis.fetch = fakeVendors(
+			{},
+			{
+				"/agent/runs": () => json({ id: "agent-run-1", status: "running" }),
+				"/agent/runs/agent-run-1": () => {
+					polls += 1;
+					if (polls === 1) return new Response(null, { status: 429 });
+					return json(
+						completedAgentRun({
+							output: { structured: { email: "found@acme.com" } },
+						}),
+					);
+				},
+			},
+		);
+
+		const result = await exaAgentEmailProvider.run(
+			{ name: "Someone", domain: "acme.com" },
+			findymailEnv(),
+		);
+
+		expect(polls).toBeGreaterThan(1);
+		expect(result?.contact?.email).toBe("found@acme.com");
+	}, 20000);
+
 	it("raises a non-retryable error, not a retryable one, when the run terminates as failed", async () => {
 		globalThis.fetch = fakeVendors(
 			{},

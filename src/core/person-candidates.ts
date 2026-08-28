@@ -31,6 +31,7 @@ export type PersonEntity = {
 };
 
 export type PersonMatch = {
+	id: string | null;
 	url: string;
 	title: string;
 	publishedDate: string | null;
@@ -103,6 +104,7 @@ function toPersonEntity(result: ExaResult): PersonEntity {
 
 function toPersonMatch(result: ExaResult): PersonMatch {
 	return {
+		id: result.id ?? null,
 		url: result.url,
 		title: result.title,
 		publishedDate: result.publishedDate ?? null,

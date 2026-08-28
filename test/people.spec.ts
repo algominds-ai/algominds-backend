@@ -824,6 +824,7 @@ describe("findPeople: capturing the vendor payload", () => {
 
 		expect(person?.entity.location).toBeNull();
 		expect(person?.result).toEqual({
+			id: null,
 			url: "https://linkedin.com/in/janedoe",
 			title: "Jane Doe",
 			publishedDate: null,
@@ -882,6 +883,7 @@ describe("toPersonData", () => {
 				location: null,
 			},
 			{
+				id: null,
 				url: "https://linkedin.com/in/janedoe",
 				title: "Jane Doe",
 				publishedDate: null,
@@ -1220,6 +1222,7 @@ function testPerson(fullName: string): PersonCandidate {
 			location: null,
 		},
 		result: {
+			id: null,
 			url: `https://linkedin.com/in/${fullName.toLowerCase()}`,
 			title: fullName,
 			publishedDate: null,

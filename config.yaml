@@ -61,6 +61,18 @@ people:
   seenPeopleWindowDays: 90
   resultsPerCompany: 3
   batchSize: 5
+  # Which vendor supplies raw people candidates before the Apollo coverage
+  # pass. exa-search is one fast, cheap /search call per company. exa-agent
+  # trades speed and cost for evidenced rows via Exa's /agent/runs, polled to
+  # completion, once per company in the batch.
+  peopleSource: exa-search
+  # Effort Exa's agent spends per run when peopleSource is exa-agent.
+  exaAgentEffort: low
+  # Seconds between polls of a running exa-agent run.
+  exaAgentPollIntervalSeconds: 5
+  # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls
+  # at 5 seconds is 2 minutes, well past the measured 5-second completion time.
+  exaAgentMaxPollAttempts: 24
 
 enrich:
   batchSize: 5

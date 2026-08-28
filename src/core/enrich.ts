@@ -10,6 +10,7 @@ import type {
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
 	RunLookupConnection,
+	SelectWhereConnection,
 } from "@/core/db/queries";
 import {
 	appendEvidence,
@@ -104,13 +105,11 @@ export interface RunPeopleConnection {
 	};
 }
 
-export interface RunCompanyExistsConnection {
-	select(columns: { id: typeof company.id }): {
-		from(table: typeof company): {
-			where(condition: SQL | undefined): Promise<{ id: string }[]>;
-		};
-	};
-}
+export type RunCompanyExistsConnection = SelectWhereConnection<
+	typeof company,
+	{ id: typeof company.id },
+	{ id: string }
+>;
 
 export type SubjectsDeps = {
 	findRun?: DbFactory<RunLookupConnection>;
