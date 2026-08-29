@@ -56,7 +56,14 @@ const runStatusResponse = z
 	.object({
 		runId: z.string(),
 		capability: z.string(),
-		status: z.string(),
+		status: z.string().openapi({
+			description:
+				"Whether the run is still going: running, complete or errored. Poll this.",
+		}),
+		outcome: z.string().nullable().openapi({
+			description:
+				"How it went, once it has finished: complete, short, empty, exhausted or capped. Null while it is still running.",
+		}),
 		costDollars: z.number(),
 		startedAt: z.string(),
 		finishedAt: z.string().nullable(),

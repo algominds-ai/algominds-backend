@@ -49,9 +49,11 @@ const InstanceStatusSchema = z.object({
 });
 
 /**
- * What a caller is told about a run: the row this engine keeps, plus the
- * counts the capability reported. The engine's own instance object is not
- * passed through: it carries every step's cached result, which for one ten
+ * What a caller is told about a run. `status` answers whether it is still
+ * going, and comes from the engine running it. `outcome` answers how it went
+ * and is the capability's own word, which is not the same question: a run
+ * that ends `short` has finished. The engine's instance object is not passed
+ * through, because it carries every step's cached result, which for one ten
  * company run was sixty nine kilobytes of the run's working state.
  */
 function runReport(row: Run, instance: unknown) {
@@ -60,7 +62,8 @@ function runReport(row: Run, instance: unknown) {
 	return {
 		runId: row.id,
 		capability: row.capability,
-		status: row.status,
+		status: parsed.success ? parsed.data.status : "unknown",
+		outcome: row.finishedAt === null ? null : row.status,
 		costDollars: row.costDollars,
 		startedAt: row.startedAt,
 		finishedAt: row.finishedAt,

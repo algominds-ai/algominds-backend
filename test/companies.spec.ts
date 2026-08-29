@@ -1101,6 +1101,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 					{
 						round: 1,
 						angle: plan.angle,
+						query: plan.query,
 						found: count,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},
@@ -1174,6 +1175,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					{
 						round: 1,
 						angle: plan.angle,
+						query: plan.query,
 						found: companies.length,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},

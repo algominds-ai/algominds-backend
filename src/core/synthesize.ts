@@ -69,6 +69,14 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"A paraphrase of an earlier query returns the same companies, so when earlier angles are",
 	"given, choose a genuinely different angle and write a query for it. Keep every constraint",
 	"of the profile true of that new angle.",
+	"The reasons an earlier round's companies were refused say what that round's query got",
+	"wrong, and each one is a correction to make. Companies refused for being too small mean",
+	"the query described a smaller organisation than the profile wants, so describe the scale",
+	"the profile asks for in words: what such a company operates, who it serves, what it is",
+	"accountable for. Companies refused for their country mean the query read as belonging",
+	"somewhere else. Companies refused as not being a company at all mean the query read like",
+	"a topic rather than an organisation. Write the next query so the same reason cannot",
+	"apply again.",
 ].join(" ");
 
 function synthesizePrompt(
