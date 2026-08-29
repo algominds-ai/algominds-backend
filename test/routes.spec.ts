@@ -735,3 +735,27 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 		}
 	});
 });
+
+describe("OpenAPI document and Swagger UI", () => {
+	it("answers the OpenAPI document with no API key, naming all six paths", async () => {
+		const response = await publicCall("/openapi.json");
+		const body: { paths?: { [path: string]: unknown } } = await response.json();
+
+		expect(response.status).toBe(200);
+		expect(Object.keys(body.paths ?? {}).sort()).toEqual(
+			[
+				"/companies/find",
+				"/enrich",
+				"/people/find",
+				"/runs/{runId}",
+				"/runs/{runId}/companies",
+				"/runs/{runId}/people",
+			].sort(),
+		);
+	});
+
+	it("answers the Swagger UI page with no API key", async () => {
+		const response = await publicCall("/docs");
+		expect(response.status).toBe(200);
+	});
+});
