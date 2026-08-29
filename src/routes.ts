@@ -21,8 +21,11 @@ export function createApiRoutes(): Hono<ApiEnv> {
 			toJob: async (body, env) => {
 				const icpId = await resolveIcpId(env, body, c.get("organizationId"));
 				if (icpId === null) return null;
+				const scopeId = body.excludeDomains
+					? await domainsScopeId(body.excludeDomains, icpId)
+					: icpId;
 				return {
-					scopeId: icpId,
+					scopeId,
 					icpId,
 					params: {
 						icpId,

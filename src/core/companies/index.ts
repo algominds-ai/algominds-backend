@@ -91,6 +91,8 @@ export type FindCompaniesResult = {
 	rejects: FindCompaniesReject[];
 	searches: SearchPlan[];
 	captures: Record<string, CompanyCapture>;
+	seenDomains: string[];
+	feedback: string[];
 };
 
 function toGateRejects(
@@ -129,9 +131,7 @@ function spentSoFar(ledgers: readonly CostLedger[]): number {
 	return CostLedger.merge(...ledgers).total();
 }
 
-export function buildFeedback(
-	rejects: readonly FindCompaniesReject[],
-): string[] {
+function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
 	return groupRejectReasons(rejects);
 }
 
@@ -210,6 +210,7 @@ type RoundsAccumulator = {
 	status: FindCompaniesStatus;
 	searches: SearchPlan[];
 	captures: Record<string, CompanyCapture>;
+	feedback: string[];
 };
 
 const EMPTY_ROUND_FEEDBACK =
@@ -240,17 +241,20 @@ function absorbRound(
 type RoundDecision = "complete" | "retry" | "exhausted" | "continue";
 
 /**
- * What a finished round means for the loop. `retry` says the vendor matched
- * nothing at all, which is a query too narrow rather than a market already
- * covered, so the next round is worth its cost.
+ * What a finished round means for the loop. `retry` says the round is worth
+ * repeating: either the vendor matched nothing at all, or it matched rows
+ * that the filter refused outright, so no company ever reached the seen-domain
+ * check. `exhausted` means the opposite: rows survived the filter, but every
+ * one of them was a domain this run had already seen.
  */
 export function decideRound(
 	found: number,
 	wanted: number,
-	outcome: { resultCount: number; unseenCount: number },
+	outcome: { resultCount: number; filteredCount: number; unseenCount: number },
 ): RoundDecision {
 	if (found >= wanted) return "complete";
 	if (outcome.resultCount === 0) return "retry";
+	if (outcome.filteredCount === 0) return "retry";
 	if (outcome.unseenCount === 0) return "exhausted";
 	return "continue";
 }
@@ -264,6 +268,21 @@ export function terminalStatus(
 ): FindCompaniesStatus {
 	if (found > 0 || rounds === 0) return status;
 	return emptyRounds === rounds ? "empty" : status;
+}
+
+type RetryFeedback = { feedback: string[]; emptyRounds: number };
+
+/** A retry over a vendor answer of zero rows earns the generic too-narrow line and counts toward `empty`; a retry over a filter or gate refusal keeps the reject reasons already in `feedback`. */
+function retryFeedback(
+	feedback: readonly string[],
+	resultCount: number,
+	emptyRounds: number,
+): RetryFeedback {
+	if (resultCount !== 0) return { feedback: [...feedback], emptyRounds };
+	return {
+		feedback: [...feedback, EMPTY_ROUND_FEEDBACK],
+		emptyRounds: emptyRounds + 1,
+	};
 }
 
 async function runRounds(
@@ -309,10 +328,15 @@ async function runRounds(
 		companies.push(...absorbed.accepted);
 		feedback = buildFeedback(absorbed.rejects);
 
-		const decision = decideRound(companies.length, input.count, outcome);
+		const decision = decideRound(companies.length, input.count, {
+			resultCount: outcome.resultCount,
+			filteredCount: outcome.rows.length,
+			unseenCount: outcome.unseenCount,
+		});
 		if (decision === "retry") {
-			emptyRounds += 1;
-			feedback = [...feedback, EMPTY_ROUND_FEEDBACK];
+			const retried = retryFeedback(feedback, outcome.resultCount, emptyRounds);
+			feedback = retried.feedback;
+			emptyRounds = retried.emptyRounds;
 			continue;
 		}
 		if (decision !== "continue") {
@@ -328,6 +352,7 @@ async function runRounds(
 		status: terminalStatus(status, companies.length, emptyRounds, rounds),
 		searches,
 		captures,
+		feedback,
 	};
 }
 
@@ -361,5 +386,7 @@ export async function findCompanies(
 		rejects: outcome.rejects,
 		searches: outcome.searches,
 		captures: outcome.captures,
+		seenDomains: [...seenDomains],
+		feedback: outcome.feedback,
 	};
 }

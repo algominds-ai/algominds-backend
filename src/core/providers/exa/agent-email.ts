@@ -14,9 +14,9 @@ import type {
 import type { Provider } from "@/core/providers/types";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
-const EFFORT = config.companies.exaAgentEffort;
-const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
-const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
+const EFFORT = config.enrich.exaAgentEffort;
+const POLL_INTERVAL_SECONDS = config.enrich.exaAgentPollIntervalSeconds;
+const MAX_POLL_ATTEMPTS = config.enrich.exaAgentMaxPollAttempts;
 
 const ExaAgentEmailContactSchema = z.object({
 	fullName: z.string().nullish(),

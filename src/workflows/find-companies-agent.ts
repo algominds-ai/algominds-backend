@@ -15,6 +15,7 @@ const EFFORT = config.companies.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
 const JUDGE_CANDIDATE_MULTIPLE = config.companies.judgeCandidateMultiple;
+const RESULTS_PER_ROUND = config.companies.resultsPerRound;
 
 /**
  * Builds the `search` dependency for one round when the configured company
@@ -29,18 +30,14 @@ export function agentSearch(
 ): FindCompaniesDeps["search"] {
 	return async (plan, _req, env, ledger) => {
 		const name = `round_${round}-agent`;
+		const wanted = Math.min(
+			remaining * JUDGE_CANDIDATE_MULTIPLE,
+			RESULTS_PER_ROUND,
+		);
 		const { id } = await step.do(
 			`${name}-start`,
 			config.stepConfig.paidCall,
-			() =>
-				startAgentRun(
-					buildAgentRunRequest(
-						plan,
-						remaining * JUDGE_CANDIDATE_MULTIPLE,
-						EFFORT,
-					),
-					env,
-				),
+			() => startAgentRun(buildAgentRunRequest(plan, wanted, EFFORT), env),
 		);
 		const companies = await pollAgentRun(
 			{

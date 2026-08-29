@@ -43,14 +43,17 @@ export async function resolveIcpId(
 	return row.id;
 }
 
-/** A short, stable id for the same organization's set of normalised domains on the same day. */
+/**
+ * A short, stable id for the same set of normalised domains within `owner` on
+ * the same day. `owner` is whatever the run belongs to and is never shared
+ * across organizations: the caller's organization, or a profile that already
+ * proved its owner.
+ */
 export async function domainsScopeId(
 	domains: readonly string[],
-	organizationId: string,
+	owner: string,
 ): Promise<string> {
-	const bytes = new TextEncoder().encode(
-		`${organizationId}:${domains.join(",")}`,
-	);
+	const bytes = new TextEncoder().encode(`${owner}:${domains.join(",")}`);
 	const digest = await crypto.subtle.digest("SHA-256", bytes);
 	const hex = [...new Uint8Array(digest)]
 		.map((byte) => byte.toString(16).padStart(2, "0"))

@@ -44,6 +44,9 @@ export const config = {
 		batchSize: 5,
 		emailTtlDays: 90,
 		linkedinTtlDays: 30,
+		exaAgentEffort: "low",
+		exaAgentPollIntervalSeconds: 5,
+		exaAgentMaxPollAttempts: 24,
 	},
 	spend: {
 		perRunDollars: 2,

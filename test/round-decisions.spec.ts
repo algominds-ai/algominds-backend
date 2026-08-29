@@ -3,32 +3,70 @@ import { decideRound, terminalStatus } from "../src/core/companies";
 
 describe("what a finished round means for the loop", () => {
 	it("stops as complete once the round reaches the count the caller asked for", () => {
-		expect(decideRound(2, 2, { resultCount: 100, unseenCount: 40 })).toBe(
-			"complete",
-		);
+		expect(
+			decideRound(2, 2, {
+				resultCount: 100,
+				filteredCount: 100,
+				unseenCount: 40,
+			}),
+		).toBe("complete");
 	});
 
 	it("retries a round the vendor answered with nothing, because the query was too narrow", () => {
-		expect(decideRound(0, 1, { resultCount: 0, unseenCount: 0 })).toBe("retry");
+		expect(
+			decideRound(0, 1, { resultCount: 0, filteredCount: 0, unseenCount: 0 }),
+		).toBe("retry");
 	});
 
 	it("stops as exhausted when the vendor answered but every company was already seen", () => {
-		expect(decideRound(0, 1, { resultCount: 100, unseenCount: 0 })).toBe(
-			"exhausted",
-		);
+		expect(
+			decideRound(0, 1, {
+				resultCount: 100,
+				filteredCount: 100,
+				unseenCount: 0,
+			}),
+		).toBe("exhausted");
 	});
 
 	it("keeps going when the round found companies but not yet enough", () => {
-		expect(decideRound(1, 3, { resultCount: 100, unseenCount: 20 })).toBe(
-			"continue",
-		);
+		expect(
+			decideRound(1, 3, {
+				resultCount: 100,
+				filteredCount: 100,
+				unseenCount: 20,
+			}),
+		).toBe("continue");
 	});
 
 	it("tells an empty vendor answer apart from a market already covered", () => {
-		const empty = decideRound(0, 1, { resultCount: 0, unseenCount: 0 });
-		const covered = decideRound(0, 1, { resultCount: 100, unseenCount: 0 });
+		const empty = decideRound(0, 1, {
+			resultCount: 0,
+			filteredCount: 0,
+			unseenCount: 0,
+		});
+		const covered = decideRound(0, 1, {
+			resultCount: 100,
+			filteredCount: 100,
+			unseenCount: 0,
+		});
 
 		expect(empty).not.toBe(covered);
+	});
+
+	it("retries a round whose rows the filter refused outright, instead of reporting it exhausted", () => {
+		const filteredAway = decideRound(0, 1, {
+			resultCount: 100,
+			filteredCount: 0,
+			unseenCount: 0,
+		});
+		const alreadySeen = decideRound(0, 1, {
+			resultCount: 100,
+			filteredCount: 100,
+			unseenCount: 0,
+		});
+
+		expect(filteredAway).toBe("retry");
+		expect(alreadySeen).toBe("exhausted");
 	});
 });
 

@@ -131,6 +131,27 @@ describe("the company agent run asks for more candidates than the caller wants",
 		);
 	});
 
+	it("never asks the agent for more companies than fit in one round, at the largest request the API accepts", async () => {
+		const { started } = stubAgentCompanyFetch();
+		const remaining = config.limits.maxCompaniesPerRequest;
+
+		const search = agentSearch(fakeWorkflowStep(), 1, remaining);
+		await search(
+			planFor("every mid-market SaaS company"),
+			{ query: "every mid-market SaaS company" },
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(started[0]?.minItems).toBe(config.companies.resultsPerRound);
+		expect(started[0]?.minItems).toBeLessThan(
+			remaining * config.companies.judgeCandidateMultiple,
+		);
+		expect(started[0]?.query).toContain(
+			`${config.companies.resultsPerRound} distinct companies`,
+		);
+	});
+
 	it("tells the agent the headcount band the filter would otherwise reject on", async () => {
 		const { started } = stubAgentCompanyFetch();
 

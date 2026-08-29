@@ -33,6 +33,7 @@ import type {
 	SearchPlan,
 	SynthesizeInput,
 } from "../src/core/synthesize";
+import { finalStatus } from "../src/workflows/find-companies";
 
 const icp: IcpDoc = {
 	description:
@@ -82,6 +83,24 @@ function testOptions(
 	overrides: Partial<FindCompaniesOptions> = {},
 ): FindCompaniesOptions {
 	return { icpId: "icp-1", env: testEnv, ...overrides };
+}
+
+function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
+	return {
+		query: "fintech companies",
+		angle: "angle-1",
+		userLocation: null,
+		countries: [],
+		minWorkforce: null,
+		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
+		...overrides,
+	};
 }
 
 function scriptedSearch(rounds: ExaResult[][]) {
@@ -944,6 +963,68 @@ describe("a round the vendor answers with nothing", () => {
 	});
 });
 
+describe("a round the filter refuses outright", () => {
+	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
+		const { search } = scriptedSearch([
+			[
+				goodResult("big1.com", { workforceTotal: 400 }),
+				goodResult("big2.com", { workforceTotal: 500 }),
+			],
+			[goodResult("small.com", { workforceTotal: 10 })],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize({ maxWorkforce: 20 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rounds).toBe(2);
+		expect(result.status).toBe("complete");
+		expect(result.companies.map((row) => row.domain)).toEqual(["small.com"]);
+		expect(inputs[1]?.feedback.join(" ")).toContain(
+			"headcount above the limit of 20",
+		);
+		expect(inputs[1]?.feedback.join(" ")).not.toContain(
+			"matched no companies at all",
+		);
+	});
+});
+
+describe("what one round hands the next when the judge never saw every candidate", () => {
+	it("excludes a domain that passed the filter but fell outside the judge's slice", async () => {
+		const round1 = Array.from({ length: 5 }, (_, i) =>
+			goodResult(`cand${i}.com`),
+		);
+		const { search, calls } = scriptedSearch([
+			round1,
+			[goodResult("final.com")],
+		]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([[0, 1, 2], []]),
+		});
+
+		expect(result.rounds).toBe(2);
+		expect(result.status).toBe("complete");
+		expect(calls[1]?.excludeDomains).toContain("cand3.com");
+		expect(calls[1]?.excludeDomains).toContain("cand4.com");
+		expect(result.seenDomains).toEqual(
+			expect.arrayContaining(["cand3.com", "cand4.com"]),
+		);
+	});
+});
+
 describe("FindCompaniesWorkflow: the summary output", () => {
 	it("returns a bounded summary that does not grow with the number of companies found", async () => {
 		const instanceId = "summary-size-test";
@@ -977,20 +1058,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 					},
 				]),
 			);
-			const plan: SearchPlan = {
-				query: "fintech companies",
-				angle: "angle-1",
-				userLocation: null,
-				countries: [],
-				minWorkforce: null,
-				maxWorkforce: null,
-				minFoundedYear: null,
-				maxFoundedYear: null,
-				minRevenueAnnual: null,
-				maxRevenueAnnual: null,
-				minFundingTotal: null,
-				maxFundingTotal: null,
-			};
+			const plan = testPlan();
 			const roundResult: FindCompaniesResult = {
 				companies,
 				requested: count,
@@ -1001,6 +1069,8 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				rejects: [],
 				searches: [plan],
 				captures,
+				seenDomains: domains,
+				feedback: [],
 			};
 
 			await instance.modify(async (m) => {
@@ -1064,20 +1134,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					evidenceDate: null,
 				}),
 			);
-			const plan: SearchPlan = {
-				query: "fintech companies",
-				angle: "angle-1",
-				userLocation: null,
-				countries: [],
-				minWorkforce: null,
-				maxWorkforce: null,
-				minFoundedYear: null,
-				maxFoundedYear: null,
-				minRevenueAnnual: null,
-				maxRevenueAnnual: null,
-				minFundingTotal: null,
-				maxFundingTotal: null,
-			};
+			const plan = testPlan();
 			const overTheCeiling = config.spend.perRunDollars + 0.01;
 			const roundOne: FindCompaniesResult = {
 				companies,
@@ -1089,6 +1146,8 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				rejects: [],
 				searches: [plan],
 				captures: {},
+				seenDomains: companies.map((company) => company.domain ?? ""),
+				feedback: [],
 			};
 
 			await instance.modify(async (m) => {
@@ -1129,5 +1188,19 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 		} finally {
 			await instance.dispose();
 		}
+	});
+});
+
+describe("the status the workflow reports for the whole run", () => {
+	it("never reports empty for a run that saved a company in an earlier round", () => {
+		expect(finalStatus(2, 5, "empty")).toBe("short");
+	});
+
+	it("still reports empty when the run never saved a company at all", () => {
+		expect(finalStatus(0, 5, "empty")).toBe("empty");
+	});
+
+	it("reports complete once the run saved as many companies as requested", () => {
+		expect(finalStatus(5, 5, "empty")).toBe("complete");
 	});
 });

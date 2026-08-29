@@ -121,6 +121,8 @@ describe("the account's daily spend ceiling", () => {
 						rejects: [],
 						searches: [],
 						captures: {},
+						seenDomains: [],
+						feedback: [],
 					},
 				);
 				await m.mockStepResult({ name: "save-companies" }, {});

@@ -10,7 +10,7 @@ import type {
 	FindCompaniesResult,
 	FindCompaniesStatus,
 } from "@/core/companies";
-import { buildFeedback, findCompanies } from "@/core/companies";
+import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
@@ -74,27 +74,15 @@ function roundDeps(
 	};
 }
 
-function trackDomains(
-	domains: Set<string>,
-	companies: readonly CompanyRow[],
-	rejects: readonly FindCompaniesReject[],
-): void {
-	for (const company of companies) {
-		if (company.domain) domains.add(normalizeDomain(company.domain));
-	}
-	for (const reject of rejects) {
-		if (reject.domain) domains.add(normalizeDomain(reject.domain));
-	}
-}
-
-function finalStatus(
+/** A run that saved a company was never empty, whatever its last round reported. */
+export function finalStatus(
 	found: number,
 	requested: number,
 	lastRoundStatus: FindCompaniesStatus,
 ): FindCompaniesStatus {
 	if (found >= requested) return "complete";
 	if (lastRoundStatus === "capped") return "capped";
-	if (lastRoundStatus === "empty") return "empty";
+	if (lastRoundStatus === "empty") return found > 0 ? "short" : "empty";
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
 }
 
@@ -157,11 +145,11 @@ async function runFindCompaniesRounds(
 		await step.do(`round_${round}-spend`, config.stepConfig.databaseCall, () =>
 			recordRunSpend(env, runId, costDollars),
 		);
-		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
+		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
 		pastAngles = pastAngles.concat(
 			stepResult.searches.map((plan) => plan.angle),
 		);
-		feedback = buildFeedback(stepResult.rejects);
+		feedback = stepResult.feedback;
 		if (stepResult.status === "exhausted") break;
 		if (costDollars >= config.spend.perRunDollars) {
 			lastRoundStatus = "capped";
@@ -179,6 +167,8 @@ async function runFindCompaniesRounds(
 		rejects,
 		searches,
 		captures,
+		seenDomains: [...accumulatedDomains],
+		feedback,
 		roundReports,
 	};
 }
