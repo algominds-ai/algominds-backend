@@ -12,9 +12,21 @@ import {
 	startAgentRun,
 } from "../src/core/providers/exa/agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
+import type { SearchPlan } from "../src/core/synthesize";
 import runningRun from "./fixtures/exa-agent-run-running.json";
 
 type FetchStub = { calls: number; init: RequestInit | undefined };
+
+function planFor(query: string): SearchPlan {
+	return {
+		query,
+		angle: "angle-1",
+		userLocation: null,
+		countries: [],
+		minWorkforce: null,
+		maxWorkforce: null,
+	};
+}
 
 const originalFetch = globalThis.fetch;
 
@@ -68,11 +80,7 @@ describe("agent run start request shape", () => {
 		const stub = stubFetch(
 			jsonResponse(200, { id: "run-1", status: "running" }),
 		);
-		const req = buildAgentRunRequest(
-			{ query: "seed stage fintech" },
-			10,
-			"low",
-		);
+		const req = buildAgentRunRequest(planFor("seed stage fintech"), 10, "low");
 
 		await startAgentRun(req, exaEnv());
 
@@ -89,7 +97,7 @@ describe("agent run start request shape", () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
 		const result = await startAgentRun(
-			buildAgentRunRequest({ query: "seed stage fintech" }, 5, "low"),
+			buildAgentRunRequest(planFor("seed stage fintech"), 5, "low"),
 			exaEnv(),
 		);
 
@@ -105,7 +113,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -118,7 +126,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
@@ -131,7 +139,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);

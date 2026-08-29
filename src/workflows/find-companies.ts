@@ -65,7 +65,9 @@ function roundDeps(
 			return [...known, ...accumulatedDomains];
 		},
 		synthesize: isAgent ? agentSynthesize(step, round) : synthesize,
-		search: isAgent ? agentSearch(step, round, remaining) : search,
+		search: isAgent
+			? agentSearch(step, round, remaining)
+			: (_plan, req, env, ledger) => search(req, env, ledger),
 		gate,
 		judge,
 	};

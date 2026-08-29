@@ -10,6 +10,17 @@ import { startAgentRun } from "../src/core/providers/exa/agent";
 import { search } from "../src/core/providers/exa/search";
 import type { SearchPlan } from "../src/core/synthesize";
 
+function planFor(query: string): SearchPlan {
+	return {
+		query,
+		angle: "angle-1",
+		userLocation: null,
+		countries: [],
+		minWorkforce: null,
+		maxWorkforce: null,
+	};
+}
+
 const SEARCH_TYPES = [
 	"instant",
 	"fast",
@@ -170,7 +181,7 @@ describe("person search request stays inside the measured Exa /search schema, as
 describe("agent run request stays inside the measured Exa /agent/runs schema", () => {
 	it("emits only fields and enum values the measured schema allows", () => {
 		const request = buildAgentRunRequest(
-			{ query: "small US software teams" },
+			planFor("small US software teams"),
 			10,
 			"low",
 		);
@@ -300,7 +311,7 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		await startAgentRun(
-			buildAgentRunRequest({ query: "ten fintech companies" }, 10, "low"),
+			buildAgentRunRequest(planFor("ten fintech companies"), 10, "low"),
 			exaEnv(),
 		);
 

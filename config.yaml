@@ -77,9 +77,13 @@ companies:
   exaAgentEffort: low
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
-  # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls at
-  # 5 seconds is 2 minutes, well past the measured 5-second completion time.
-  exaAgentMaxPollAttempts: 24
+  # Polls allowed before a stuck exa-agent run is treated as failed. A run that
+  # only has to name companies returns in about 5 seconds. A run that must also
+  # satisfy the plan's headcount band and countries takes far longer: measured
+  # runs asking for three constrained companies passed 120 seconds and were
+  # killed mid-flight, losing everything already paid for. 60 polls at 5
+  # seconds is 5 minutes, which covers the constrained case.
+  exaAgentMaxPollAttempts: 60
 
 people:
   # A company whose people were already found inside this window is not

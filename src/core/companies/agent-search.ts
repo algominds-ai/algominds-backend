@@ -5,9 +5,9 @@ import type {
 import type {
 	CompanyEntity,
 	ExaResult,
-	ExaSearchRequest,
 	ExaSearchResult,
 } from "@/core/providers/exa/search";
+import type { SearchPlan } from "@/core/synthesize";
 
 const NOT_A_DIRECTORY_HOST =
 	"^(?!(https?://)?(www\\.)?(linkedin|twitter|x|facebook|instagram|youtube|tiktok|medium|substack|github|crunchbase|pitchbook|tracxn|bloomberg|wellfound|angel|ycombinator|producthunt|glassdoor|indeed)\\.)";
@@ -31,23 +31,48 @@ const EXA_AGENT_COMPANY_SCHEMA = {
 	required: ["name", "website"],
 };
 
-function agentQuery(query: string, count: number): string {
-	return `${query} Return exactly ${count} distinct companies.`;
+function planConstraints(plan: SearchPlan): string {
+	const rules: string[] = [];
+	if (plan.minWorkforce !== null && plan.maxWorkforce !== null) {
+		rules.push(
+			`Every company must have between ${plan.minWorkforce} and ${plan.maxWorkforce} employees.`,
+		);
+	} else if (plan.maxWorkforce !== null) {
+		rules.push(
+			`Every company must have at most ${plan.maxWorkforce} employees.`,
+		);
+	} else if (plan.minWorkforce !== null) {
+		rules.push(
+			`Every company must have at least ${plan.minWorkforce} employees.`,
+		);
+	}
+	if (plan.countries.length > 0) {
+		rules.push(
+			`Every company must be based in ${plan.countries.join(" or ")}.`,
+		);
+	}
+	return rules.join(" ");
+}
+
+function agentQuery(plan: SearchPlan, count: number): string {
+	const constraints = planConstraints(plan);
+	return `${plan.query} Return exactly ${count} distinct companies.${constraints ? ` ${constraints}` : ""}`;
 }
 
 /**
- * Turns one Exa search request and the number of companies wanted into an
- * Exa agent run request. The count reaches the agent twice: in the query
- * text and as `minItems` on the schema, so the run does not stop early with
- * too few rows.
+ * Turns one search plan and the number of companies wanted into an Exa agent
+ * run request. The count reaches the agent twice, in the query text and as
+ * `minItems`, so the run does not stop early with too few rows. The plan's
+ * headcount band and countries reach it as words, because the filter that
+ * follows rejects on them and a candidate refused there was still paid for.
  */
 export function buildAgentRunRequest(
-	req: ExaSearchRequest,
+	plan: SearchPlan,
 	count: number,
 	effort: ExaAgentRunRequest["effort"],
 ): ExaAgentRunRequest {
 	return {
-		query: agentQuery(req.query, count),
+		query: agentQuery(plan, count),
 		systemPrompt:
 			"Give the company's own website domain, never a profile or directory page such as LinkedIn, Crunchbase, or GitHub. Never repeat a company.",
 		effort,

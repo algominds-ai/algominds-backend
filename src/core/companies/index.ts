@@ -52,6 +52,7 @@ export type FindCompaniesDeps = {
 	recentDomains: (env: Env, icpId: string, days: number) => Promise<string[]>;
 	synthesize: (input: SynthesizeInput, env: Env) => Promise<SynthesizeResult>;
 	search: (
+		plan: SearchPlan,
 		req: ExaSearchRequest,
 		env: Env,
 		ledger: CostLedger,
@@ -154,6 +155,7 @@ async function runRound(
 	const plan = synthesized.plan;
 	const searchLedger = new CostLedger();
 	const searched = await deps.search(
+		plan,
 		buildSearchRequest(plan),
 		opts.env,
 		searchLedger,

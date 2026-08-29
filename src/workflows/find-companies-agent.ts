@@ -14,10 +14,12 @@ import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
 const EFFORT = config.companies.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
+const JUDGE_CANDIDATE_MULTIPLE = config.companies.judgeCandidateMultiple;
 
 /**
  * Builds the `search` dependency for one round when the configured company
- * source is Exa's agent API: starts a run asking for `remaining` companies,
+ * source is Exa's agent API: starts a run asking for enough candidates to
+ * survive the filter, the gate and the judge that follow,
  * then polls it to completion with durable sleeps the workflow owns.
  */
 export function agentSearch(
@@ -25,12 +27,20 @@ export function agentSearch(
 	round: number,
 	remaining: number,
 ): FindCompaniesDeps["search"] {
-	return async (req, env, ledger) => {
+	return async (plan, _req, env, ledger) => {
 		const name = `round_${round}-agent`;
 		const { id } = await step.do(
 			`${name}-start`,
 			config.stepConfig.paidCall,
-			() => startAgentRun(buildAgentRunRequest(req, remaining, EFFORT), env),
+			() =>
+				startAgentRun(
+					buildAgentRunRequest(
+						plan,
+						remaining * JUDGE_CANDIDATE_MULTIPLE,
+						EFFORT,
+					),
+					env,
+				),
 		);
 		const companies = await pollAgentRun(
 			{

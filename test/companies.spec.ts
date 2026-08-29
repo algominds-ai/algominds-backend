@@ -82,7 +82,12 @@ function testOptions(
 
 function scriptedSearch(rounds: ExaResult[][]) {
 	const calls: ExaSearchRequest[] = [];
-	const search: FindCompaniesDeps["search"] = async (req, _env, ledger) => {
+	const search: FindCompaniesDeps["search"] = async (
+		_plan,
+		req,
+		_env,
+		ledger,
+	) => {
 		const results = rounds[calls.length] ?? [];
 		calls.push(req);
 		ledger.reported("exa", "search", 0.01);
