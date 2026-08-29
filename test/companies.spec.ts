@@ -1097,13 +1097,10 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				rounds: 1,
 				status: "complete",
 				costDollars: 0.05,
-				rejects: [],
-				searches: [plan],
 				roundReports: [
 					{
 						round: 1,
 						angle: plan.angle,
-						query: plan.query,
 						found: count,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},
@@ -1173,13 +1170,10 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				rounds: 1,
 				status: "capped",
 				costDollars: overTheCeiling,
-				rejects: [],
-				searches: [plan],
 				roundReports: [
 					{
 						round: 1,
 						angle: plan.angle,
-						query: plan.query,
 						found: companies.length,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},

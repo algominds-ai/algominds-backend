@@ -54,9 +54,16 @@ const unauthorizedResponse = z
 
 const runStatusResponse = z
 	.object({
+		runId: z.string(),
+		capability: z.string(),
 		status: z.string(),
-		output: z.unknown().optional(),
-		error: z.string().optional(),
+		costDollars: z.number(),
+		startedAt: z.string(),
+		finishedAt: z.string().nullable(),
+		summary: z.unknown().optional().openapi({
+			description:
+				"The counts the capability reported: how many were asked for, how many were found, and one line per round.",
+		}),
 	})
 	.openapi("RunStatus");
 
@@ -229,7 +236,7 @@ const runStatusRoute = createRoute({
 	responses: {
 		200: jsonResponse(
 			runStatusResponse,
-			"The Workflow instance status, verbatim.",
+			"The run, and the counts its capability reported.",
 		),
 		404: jsonResponse(errorResponse, UNKNOWN_RUN),
 		401: unauthorizedEntry,

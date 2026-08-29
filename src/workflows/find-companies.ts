@@ -29,7 +29,7 @@ import {
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 import { search } from "@/core/providers/exa/search";
-import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema, synthesize } from "@/core/synthesize";
 import {
 	agentRecentDomains,
@@ -230,12 +230,11 @@ type ReportedRounds = FindCompaniesResult & { roundReports: RoundReport[] };
 export type RoundReport = {
 	round: number;
 	angle: string;
-	query: string;
 	found: number;
 	rejected: { filter: number; gate: number; judge: number };
 };
 
-/** One line per round: the angle it tried, what it kept, and where the rest fell. */
+/** One line per round: the angle it tried, what it kept, and how many fell at each stage. The reasons themselves stay inside the run, since one round refused seventy eight companies and named every one. */
 export function reportRound(
 	round: number,
 	result: FindCompaniesResult,
@@ -246,7 +245,6 @@ export function reportRound(
 	return {
 		round,
 		angle: plan?.angle ?? "",
-		query: plan?.query ?? "",
 		found: result.companies.length,
 		rejected: {
 			filter: count("filter"),
@@ -262,8 +260,6 @@ export type FindCompaniesSummary = {
 	rounds: number;
 	status: FindCompaniesStatus;
 	costDollars: number;
-	rejects: FindCompaniesReject[];
-	searches: SearchPlan[];
 	roundReports: RoundReport[];
 };
 
@@ -274,8 +270,6 @@ function summarizeFindCompanies(result: ReportedRounds): FindCompaniesSummary {
 		rounds: result.rounds,
 		status: result.status,
 		costDollars: result.costDollars,
-		rejects: result.rejects,
-		searches: result.searches,
 		roundReports: result.roundReports,
 	};
 }
