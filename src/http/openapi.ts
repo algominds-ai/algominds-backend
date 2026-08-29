@@ -14,6 +14,7 @@ export const SWAGGER_UI_PATH = "/docs";
 const API_KEY_SCHEME = "ApiKeyAuth";
 const BEARER_SCHEME = "BearerAuth";
 const SECURITY = [{ [API_KEY_SCHEME]: [] }, { [BEARER_SCHEME]: [] }];
+const UNKNOWN_RUN = "The run is unknown, or belongs to another organization.";
 
 const runIdParams = z.object({
 	runId: z
@@ -89,7 +90,6 @@ function pageResponse<Row extends z.ZodTypeAny>(row: Row) {
 const companiesPageResponse = pageResponse(companyRow).openapi("CompaniesPage");
 const peoplePageResponse = pageResponse(personRow).openapi("PeoplePage");
 
-/** One JSON response entry for a `createRoute` responses map. */
 function jsonResponse<Schema extends z.ZodTypeAny>(
 	schema: Schema,
 	description: string,
@@ -97,20 +97,26 @@ function jsonResponse<Schema extends z.ZodTypeAny>(
 	return { description, content: { "application/json": { schema } } };
 }
 
+/**
+ * A request body with worked examples. A schema built from a union renders as
+ * one shape in a documentation viewer, which hides that the route accepts more
+ * than one, so each way of calling it is named and shown.
+ */
+function jsonBodyWithExamples<Schema extends z.ZodTypeAny>(
+	schema: Schema,
+	examples: Record<string, { summary: string; value: unknown }>,
+) {
+	return { content: { "application/json": { schema, examples } } };
+}
+
 const unauthorizedEntry = jsonResponse(
 	unauthorizedResponse,
 	"No valid API key was presented.",
 );
 
-const findCompaniesRoute = createRoute({
-	method: "post",
-	path: "/companies/find",
-	tags: ["companies"],
-	security: SECURITY,
-	request: {
-		body: { content: { "application/json": { schema: companiesFindSchema } } },
-	},
-	responses: {
+/** The shared envelope for the three start routes: new, existing, bad body, unknown reference, unauthorized. */
+function startRouteResponses(unknownReferenceDescription: string) {
+	return {
 		202: jsonResponse(startedResponse, "A new run started."),
 		200: jsonResponse(
 			existingResponse,
@@ -120,9 +126,61 @@ const findCompaniesRoute = createRoute({
 			issuesResponse,
 			"The request body failed schema validation.",
 		),
-		404: jsonResponse(errorResponse, "The referenced ICP is unknown."),
+		404: jsonResponse(errorResponse, unknownReferenceDescription),
 		401: unauthorizedEntry,
+	};
+}
+
+/** The shared envelope for the two run-page routes: a page, a bad query, an unknown run, unauthorized. */
+function pageRouteResponses<Page extends z.ZodTypeAny>(
+	page: Page,
+	pageDescription: string,
+	badQueryDescription: string,
+) {
+	return {
+		200: jsonResponse(page, pageDescription),
+		400: jsonResponse(issuesResponse, badQueryDescription),
+		404: jsonResponse(errorResponse, UNKNOWN_RUN),
+		401: unauthorizedEntry,
+	};
+}
+
+const findCompaniesRoute = createRoute({
+	method: "post",
+	path: "/companies/find",
+	tags: ["companies"],
+	security: SECURITY,
+	request: {
+		body: jsonBodyWithExamples(companiesFindSchema, {
+			"describe the companies in words": {
+				summary:
+					"Send a profile as free text. The engine stores it and reuses it.",
+				value: {
+					prompt:
+						"B2B software companies in the United States with 20 to 200 employees that run their own outbound sales team.",
+					count: 10,
+				},
+			},
+			"reuse a profile you already have": {
+				summary:
+					"Send the id of a stored profile. Companies it already found are not paid for again.",
+				value: {
+					icpId: "8f1c2b4e-3a5d-4c6f-9b0a-1d2e3f4a5b6c",
+					count: 10,
+				},
+			},
+			"exclude companies you already know": {
+				summary:
+					"Name domains the search must not return, alongside either form.",
+				value: {
+					prompt: "Specialty coffee roasters that sell wholesale to cafes.",
+					count: 5,
+					excludeDomains: ["known-competitor.com"],
+				},
+			},
+		}),
 	},
+	responses: startRouteResponses("The referenced ICP is unknown."),
 });
 
 const findPeopleRoute = createRoute({
@@ -131,21 +189,19 @@ const findPeopleRoute = createRoute({
 	tags: ["people"],
 	security: SECURITY,
 	request: {
-		body: { content: { "application/json": { schema: peopleFindSchema } } },
+		body: jsonBodyWithExamples(peopleFindSchema, {
+			"every company a run found": {
+				summary: "Search the companies of a finished companies run.",
+				value: { runId: "companies_8f1c2b4e_2026-08-29", maxCompanies: 25 },
+			},
+			"a list of domains you name": {
+				summary:
+					"Search companies you already hold, which must belong to one profile.",
+				value: { domains: ["acme.com", "widget.io"] },
+			},
+		}),
 	},
-	responses: {
-		202: jsonResponse(startedResponse, "A new run started."),
-		200: jsonResponse(
-			existingResponse,
-			"A run for this scope already exists today.",
-		),
-		400: jsonResponse(
-			issuesResponse,
-			"The request body failed schema validation.",
-		),
-		404: jsonResponse(errorResponse, "The referenced source run is unknown."),
-		401: unauthorizedEntry,
-	},
+	responses: startRouteResponses("The referenced source run is unknown."),
 });
 
 const enrichRoute = createRoute({
@@ -154,21 +210,14 @@ const enrichRoute = createRoute({
 	tags: ["enrich"],
 	security: SECURITY,
 	request: {
-		body: { content: { "application/json": { schema: enrichSchema } } },
+		body: jsonBodyWithExamples(enrichSchema, {
+			"find work emails": {
+				summary: "Enrich the people a run holds, one channel at a time.",
+				value: { runId: "people_8f1c2b4e_2026-08-29", channels: ["email"] },
+			},
+		}),
 	},
-	responses: {
-		202: jsonResponse(startedResponse, "A new run started."),
-		200: jsonResponse(
-			existingResponse,
-			"A run for this scope already exists today.",
-		),
-		400: jsonResponse(
-			issuesResponse,
-			"The request body failed schema validation.",
-		),
-		404: jsonResponse(errorResponse, "The referenced source run is unknown."),
-		401: unauthorizedEntry,
-	},
+	responses: startRouteResponses("The referenced source run is unknown."),
 });
 
 const runStatusRoute = createRoute({
@@ -182,10 +231,7 @@ const runStatusRoute = createRoute({
 			runStatusResponse,
 			"The Workflow instance status, verbatim.",
 		),
-		404: jsonResponse(
-			errorResponse,
-			"The run is unknown, or belongs to another organization.",
-		),
+		404: jsonResponse(errorResponse, UNKNOWN_RUN),
 		401: unauthorizedEntry,
 	},
 });
@@ -196,21 +242,11 @@ const runCompaniesRoute = createRoute({
 	tags: ["runs"],
 	security: SECURITY,
 	request: { params: runIdParams, query: pageQuerySchema },
-	responses: {
-		200: jsonResponse(
-			companiesPageResponse,
-			"One page of the companies a run found.",
-		),
-		400: jsonResponse(
-			issuesResponse,
-			"The page query failed schema validation.",
-		),
-		404: jsonResponse(
-			errorResponse,
-			"The run is unknown, or belongs to another organization.",
-		),
-		401: unauthorizedEntry,
-	},
+	responses: pageRouteResponses(
+		companiesPageResponse,
+		"One page of the companies a run found.",
+		"The page query failed schema validation.",
+	),
 });
 
 const runPeopleRoute = createRoute({
@@ -219,21 +255,11 @@ const runPeopleRoute = createRoute({
 	tags: ["runs"],
 	security: SECURITY,
 	request: { params: runIdParams, query: pageQuerySchema },
-	responses: {
-		200: jsonResponse(
-			peoplePageResponse,
-			"One page of the people a run's companies hold.",
-		),
-		400: jsonResponse(
-			issuesResponse,
-			"The page query failed schema validation, or the run holds no people of its own.",
-		),
-		404: jsonResponse(
-			errorResponse,
-			"The run is unknown, or belongs to another organization.",
-		),
-		401: unauthorizedEntry,
-	},
+	responses: pageRouteResponses(
+		peoplePageResponse,
+		"One page of the people a run's companies hold.",
+		"The page query failed schema validation, or the run holds no people of its own.",
+	),
 });
 
 const ROUTES = [
