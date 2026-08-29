@@ -85,6 +85,30 @@ companies.
 One 100-result call returns more usable companies, with better data, in one
 sixtieth of the time.
 
+## The bounds belong in the query text as well as the filter
+
+Measured 2026-08-29. The synthesizer was told to keep numbers out of the query,
+on the reasoning that a neural query matches pages that discuss a headcount
+rather than companies that have one. That was never measured. It is wrong.
+
+Appending the plan's own bounds to the query as sentences, and changing nothing
+else, on three profiles of a hundred results each:
+
+| Profile | Short query | Long query, no numbers | Long query with the bounds |
+|---|---|---|---|
+| B2B software with outbound sales | 21% | 27% | 37% |
+| construction technology | 21% | 22% | 39% |
+| buyers for a named seller | 21% | 20% | 31% |
+
+The share is of the hundred returned that survive the filter. Length on its own
+moves nothing; the numbers do the work. The filter still has to run, because
+`/search` has no parameter for a headcount and the query only biases the match.
+
+Two things follow. The same call costs the same either way, so this buys result
+slots rather than money. And the identical result set comes back for an
+identical query, so any swing between two runs of a capability is the model
+writing a different query, never Exa.
+
 ## The Agent API is a different endpoint with a provider array
 
 `POST /agent/runs` takes `query` (the only required field) plus:
