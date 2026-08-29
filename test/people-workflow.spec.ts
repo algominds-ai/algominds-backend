@@ -465,6 +465,76 @@ describe("FindPeopleWorkflow: the summary output", () => {
 });
 
 describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
+	it("counts what the plan cost against the ceiling, not only what the batches cost", async () => {
+		const instanceId = "people-plan-ceiling-test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_PEOPLE,
+			instanceId,
+		);
+		try {
+			const companies = Array.from({ length: 10 }, (_, i) =>
+				testCompany({ domain: `plan-co-${i}.com`, name: `Plan Co ${i}` }),
+			);
+			const planCost = config.spend.perRunDollars;
+			const batchZero: FindPeopleResult = {
+				companies: companies.slice(0, 5).map((company) => ({
+					domain: company.domain,
+					people: [],
+					apolloOnly: [],
+					reason: null,
+				})),
+				searched: 5,
+				skippedCompanies: 0,
+				costDollars: 0.01,
+			};
+
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-companies" },
+					{ companies, icpId: "icp-1", unknownDomains: [] },
+				);
+				await m.mockStepResult(
+					{ name: "load-icp" },
+					{ doc: icp, organizationId: "org-1" },
+				);
+				await m.mockStepResult(
+					{ name: "people-plan" },
+					{
+						titles: ["VP of Sales"],
+						queryTemplate: "decision makers at {company}",
+						userLocation: null,
+						costDollars: planCost,
+					},
+				);
+				await m.mockStepResult({ name: "known-people" }, []);
+				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "close-run" }, { id: "x" });
+				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
+				await m.mockStepResult({ name: "save-people" }, {});
+			});
+
+			await testEnv.FIND_PEOPLE.create({
+				id: instanceId,
+				params: {
+					runId: "companies_icp-1_plan-ceiling",
+					organizationId: "org-1",
+				},
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await instance.getOutput();
+			expect(output).toMatchObject({
+				searched: 5,
+				capped: true,
+				costDollars: planCost + 0.01,
+			});
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("FindPeopleWorkflow: a batch that crosses the ceiling", () => {
 	it("stops after the batch that crossed the ceiling and reports the run as capped", async () => {
 		const instanceId = "people-spend-ceiling-test";
 		const instance = await introspectWorkflowInstance(

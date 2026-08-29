@@ -17,10 +17,6 @@ A workflow step that holds several billable calls is retried whole. A people bat
 
 The Exa agent start is a POST that now carries a sixty second client timeout. A timeout raises a retryable error, so the start can be sent again, and the vendor may have accepted and begun billing the first one. There is no idempotency token on the request. Whether Exa charges twice was not measured, so the duplicate charge is suspected rather than confirmed. A timed-out POST should be treated as an indeterminate start rather than a safe retry.
 
-## The people plan's cost escapes the per-run ceiling
-
-A people run resolves its search plan once, paying a model, and then runs its batches. The batch loop starts its own count at zero, so it compares only the batches' spend against the per-run ceiling and reports only that. The plan's cost is real and is not counted, so a run can start another batch after the true total has already passed the cap.
-
 ## The retry-budget check reads one line at a time
 
 `scripts/check-step-config.mjs` finds each `step.do` with a regular expression over a single line and looks for a configuration token in the three lines that follow. A call written as `step["do"]`, split across lines, or bound to a variable passes unchecked, and Cloudflare's default of five retries then applies to a paid call. Every call in the repository today is configured. The check does not prove the next one will be. The fix is to read the syntax tree with the TypeScript parser already installed, with fixtures for the forms the regular expression misses.
