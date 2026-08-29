@@ -238,14 +238,15 @@ async function persistPeople(
 	await appendEvidence(env, evidenceRows);
 }
 
+/** `run.spentAlready` is what the run paid before its first batch, so the ceiling counts every dollar the run owes and not only the batches' own. */
 async function runBatches(
 	batches: readonly PeopleCompany[][],
 	opts: FindPeopleOptions,
 	step: WorkflowStep,
-	runId: string,
+	run: { id: string; spentAlready: number },
 ): Promise<{ batches: FindPeopleResult[]; capped: boolean }> {
 	const results: FindPeopleResult[] = [];
-	let costDollars = 0;
+	let costDollars = run.spentAlready;
 	for (const [index, batch] of batches.entries()) {
 		const batchResult = await step.do(
 			`people-batch-${index}`,
@@ -257,7 +258,7 @@ async function runBatches(
 		await step.do(
 			`people-batch-${index}-spend`,
 			config.stepConfig.databaseCall,
-			() => recordRunSpend(opts.env, runId, costDollars),
+			() => recordRunSpend(opts.env, run.id, costDollars),
 		);
 		if (costDollars >= config.spend.perRunDollars) {
 			return { batches: results, capped: index < batches.length - 1 };
@@ -359,12 +360,10 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		);
 		const resolved = await resolvePlan(icp, this.env, step);
 		const opts: FindPeopleOptions = { icp, env: this.env, plan: resolved };
-		const run = await runBatches(
-			toBatches(scoped, BATCH_SIZE),
-			opts,
-			step,
-			event.instanceId,
-		);
+		const run = await runBatches(toBatches(scoped, BATCH_SIZE), opts, step, {
+			id: event.instanceId,
+			spentAlready: resolved.costDollars,
+		});
 		const merged = mergeResults(run.batches, skipped);
 		const result: FindPeopleWorkflowResult = {
 			...merged,
