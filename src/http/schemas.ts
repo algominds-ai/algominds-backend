@@ -7,17 +7,6 @@ export const icpRef = z.union([
 	z.object({ prompt: z.string().min(1) }),
 ]);
 
-export const companiesFindSchema = z.intersection(
-	icpRef,
-	z.object({
-		count: z
-			.number()
-			.int()
-			.positive()
-			.max(config.limits.maxCompaniesPerRequest),
-	}),
-);
-
 export function normalizedDomainList(
 	values: string[],
 	ctx: z.RefinementCtx,
@@ -38,6 +27,18 @@ export const domainsField = z
 	.min(1)
 	.max(config.limits.maxCompaniesPerPeopleRun)
 	.transform(normalizedDomainList);
+
+export const companiesFindSchema = z.intersection(
+	icpRef,
+	z.object({
+		count: z
+			.number()
+			.int()
+			.positive()
+			.max(config.limits.maxCompaniesPerRequest),
+		excludeDomains: domainsField.optional(),
+	}),
+);
 
 export const maxCompaniesField = z.number().int().positive().optional();
 

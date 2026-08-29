@@ -564,6 +564,63 @@ async function terminateWorkflowRuns(): Promise<void> {
 
 afterEach(terminateWorkflowRuns);
 
+describe("a company the caller already knows", () => {
+	it("names it to the vendor so no result slot is spent on it", async () => {
+		const { search, calls } = scriptedSearch([[goodResult("other.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(
+			icp,
+			1,
+			testOptions({ excludeDomains: ["leadiq.com"] }),
+			{ recentDomains, synthesize, search, gate, judge: scriptedJudge([]) },
+		);
+
+		expect(calls[0]?.excludeDomains).toEqual(["leadiq.com"]);
+	});
+
+	it("sends no exclusion at all when the caller named none", async () => {
+		const { search, calls } = scriptedSearch([[goodResult("other.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(calls[0]?.excludeDomains).toBeUndefined();
+	});
+
+	it("never returns it, even when the vendor answers with it anyway", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("leadiq.com"), goodResult("other.com")],
+		]);
+		const { synthesize } = scriptedSynthesize();
+
+		const result = await findCompanies(
+			icp,
+			2,
+			testOptions({ excludeDomains: ["leadiq.com"] }),
+			{
+				recentDomains: async () => ["leadiq.com"],
+				synthesize,
+				search,
+				gate,
+				judge: scriptedJudge([]),
+			},
+		);
+
+		expect(result.companies.map((row) => row.domain)).not.toContain(
+			"leadiq.com",
+		);
+	});
+});
+
 describe("a round the vendor answers with nothing", () => {
 	it("searches again instead of stopping, and can still find a company", async () => {
 		const { search } = scriptedSearch([[], [goodResult("late.com")]]);

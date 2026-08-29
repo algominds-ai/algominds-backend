@@ -48,6 +48,7 @@ export type FindCompaniesOptions = {
 	maxRounds?: number;
 	pastAngles?: readonly string[];
 	feedback?: readonly string[];
+	excludeDomains?: readonly string[];
 };
 
 export type FindCompaniesDeps = {
@@ -166,7 +167,7 @@ async function runRound(
 	const searchLedger = new CostLedger();
 	const searched = await deps.search(
 		plan,
-		buildSearchRequest(plan),
+		buildSearchRequest(plan, opts.excludeDomains),
 		opts.env,
 		searchLedger,
 	);

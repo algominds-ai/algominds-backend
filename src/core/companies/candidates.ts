@@ -40,12 +40,19 @@ export type CompanyData = {
 	result: CompanyMatch;
 };
 
-export function buildSearchRequest(plan: SearchPlan): ExaSearchRequest {
+/** The Exa request for one round. `excludeDomains` names companies the caller already knows, so the vendor never spends a result slot on one. */
+export function buildSearchRequest(
+	plan: SearchPlan,
+	excludeDomains: readonly string[] = [],
+): ExaSearchRequest {
 	return {
 		query: plan.query,
 		category: "company",
 		numResults: RESULTS_PER_ROUND,
 		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
+		...(excludeDomains.length > 0
+			? { excludeDomains: [...excludeDomains] }
+			: {}),
 	};
 }
 

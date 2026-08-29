@@ -45,6 +45,7 @@ const COMPANY_SOURCE: "exa-search" | "exa-agent" =
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
 	count: z.number().int().positive(),
+	excludeDomains: z.array(z.string().min(1)).optional(),
 });
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
@@ -111,7 +112,9 @@ async function runFindCompaniesRounds(
 	step: WorkflowStep,
 ): Promise<FindCompaniesResult> {
 	const { env, payload, icp, runId } = target;
-	const accumulatedDomains = new Set<string>();
+	const accumulatedDomains = new Set(
+		(payload.excludeDomains ?? []).map(normalizeDomain),
+	);
 	let companies: CompanyRow[] = [];
 	let rejects: FindCompaniesReject[] = [];
 	let costDollars = 0;
@@ -134,6 +137,7 @@ async function runFindCompaniesRounds(
 			maxRounds: 1,
 			pastAngles,
 			feedback,
+			excludeDomains: payload.excludeDomains ?? [],
 		};
 		const deps = roundDeps(accumulatedDomains, step, round, remaining);
 		const stepResult = await step.do(
