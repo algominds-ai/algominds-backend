@@ -40,7 +40,22 @@ export type CompanyData = {
 	result: CompanyMatch;
 };
 
-/** The Exa request for one round. `excludeDomains` names companies the caller already knows, so the vendor never spends a result slot on one. */
+const MAX_EXCLUDED_DOMAINS = 1200;
+
+/**
+ * The domains one round tells the vendor not to return: the caller's own list
+ * plus every domain already seen. A seen company is rejected by the gate
+ * anyway, so naming it up front spends the result slot on a new one instead.
+ * Capped at the most Exa accepts.
+ */
+export function excludedDomains(
+	caller: readonly string[],
+	seen: ReadonlySet<string>,
+): string[] {
+	return [...new Set([...caller, ...seen])].slice(0, MAX_EXCLUDED_DOMAINS);
+}
+
+/** The Exa request for one round. `excludeDomains` names companies the run already knows, so the vendor never spends a result slot on one. */
 export function buildSearchRequest(
 	plan: SearchPlan,
 	excludeDomains: readonly string[] = [],

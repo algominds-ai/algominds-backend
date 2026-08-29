@@ -13,7 +13,10 @@ import type {
 	CompanyCapture,
 	CompanyMatch,
 } from "../src/core/companies/candidates";
-import { toCompanyData } from "../src/core/companies/candidates";
+import {
+	excludedDomains,
+	toCompanyData,
+} from "../src/core/companies/candidates";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 import type { Verdict } from "../src/core/companies/judge";
@@ -563,6 +566,57 @@ async function terminateWorkflowRuns(): Promise<void> {
 }
 
 afterEach(terminateWorkflowRuns);
+
+describe("domains a round tells the vendor not to return", () => {
+	it("names every company an earlier round already found", async () => {
+		const { search, calls } = scriptedSearch([
+			[goodResult("first.com")],
+			[goodResult("second.com")],
+		]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 2, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(calls[0]?.excludeDomains).toBeUndefined();
+		expect(calls[1]?.excludeDomains).toContain("first.com");
+	});
+
+	it("names the domains already seen before the run started", async () => {
+		const { search, calls } = scriptedSearch([[goodResult("new.com")]]);
+		const { synthesize } = scriptedSynthesize();
+
+		await findCompanies(icp, 1, testOptions(), {
+			recentDomains: async () => ["old.com"],
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(calls[0]?.excludeDomains).toContain("old.com");
+	});
+
+	it("keeps the list inside the most the vendor accepts", () => {
+		const seen = new Set(
+			Array.from({ length: 1500 }, (_, i) => `seen-${i}.com`),
+		);
+
+		expect(excludedDomains(["caller.com"], seen)).toHaveLength(1200);
+	});
+
+	it("never repeats a domain the caller and the run both name", () => {
+		const excluded = excludedDomains(["same.com"], new Set(["same.com"]));
+
+		expect(excluded).toEqual(["same.com"]);
+	});
+});
 
 describe("a company the caller already knows", () => {
 	it("names it to the vendor so no result slot is spent on it", async () => {

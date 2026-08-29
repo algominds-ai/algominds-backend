@@ -7,6 +7,7 @@ import {
 	buildSearchRequest,
 	collectDomains,
 	countUnseen,
+	excludedDomains,
 	filterEntities,
 } from "@/core/companies/candidates";
 import type {
@@ -167,7 +168,10 @@ async function runRound(
 	const searchLedger = new CostLedger();
 	const searched = await deps.search(
 		plan,
-		buildSearchRequest(plan, opts.excludeDomains),
+		buildSearchRequest(
+			plan,
+			excludedDomains(opts.excludeDomains ?? [], ctx.seenDomains),
+		),
 		opts.env,
 		searchLedger,
 	);
