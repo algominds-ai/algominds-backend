@@ -113,6 +113,12 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 				countries: [],
 				minWorkforce: null,
 				maxWorkforce: null,
+				minFoundedYear: null,
+				maxFoundedYear: null,
+				minRevenueAnnual: null,
+				maxRevenueAnnual: null,
+				minFundingTotal: null,
+				maxFundingTotal: null,
 				...planOverrides,
 			},
 			ledger,
@@ -567,6 +573,107 @@ async function terminateWorkflowRuns(): Promise<void> {
 
 afterEach(terminateWorkflowRuns);
 
+describe("the figures a profile can bound a company by", () => {
+	it("refuses a company founded before the year the profile allows", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("old.com", { foundedYear: 2005 })],
+		]);
+		const { synthesize } = scriptedSynthesize({ minFoundedYear: 2020 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies).toEqual([]);
+		expect(result.rejects[0]?.reason).toBe(
+			"founding year 2005 below the floor of 2020",
+		);
+	});
+
+	it("refuses a company whose annual revenue is above the ceiling the profile allows", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("big.com", { revenueAnnual: 90_000_000 })],
+		]);
+		const { synthesize } = scriptedSynthesize({
+			maxRevenueAnnual: 10_000_000,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rejects[0]?.reason).toBe(
+			"annual revenue 90000000 above the limit of 10000000",
+		);
+	});
+
+	it("refuses a company that raised less funding than the profile asks for", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("bootstrapped.com", { fundingTotal: 50_000 })],
+		]);
+		const { synthesize } = scriptedSynthesize({ minFundingTotal: 1_000_000 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rejects[0]?.reason).toBe(
+			"funding raised 50000 below the floor of 1000000",
+		);
+	});
+
+	it("keeps a company the profile set no bound for, whatever the figure says", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("anything.com", { foundedYear: 1998, fundingTotal: 0 })],
+		]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["anything.com"]);
+	});
+
+	it("keeps a company whose figure the vendor did not report", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("unknown.com", { foundedYear: null })],
+		]);
+		const { synthesize } = scriptedSynthesize({ minFoundedYear: 2020 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["unknown.com"]);
+	});
+});
+
 describe("what one round hands the next", () => {
 	it("gives a later round every angle the earlier rounds already tried", async () => {
 		const { search } = scriptedSearch([
@@ -828,6 +935,12 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				countries: [],
 				minWorkforce: null,
 				maxWorkforce: null,
+				minFoundedYear: null,
+				maxFoundedYear: null,
+				minRevenueAnnual: null,
+				maxRevenueAnnual: null,
+				minFundingTotal: null,
+				maxFundingTotal: null,
 			};
 			const roundResult: FindCompaniesResult = {
 				companies,
@@ -909,6 +1022,12 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				countries: [],
 				minWorkforce: null,
 				maxWorkforce: null,
+				minFoundedYear: null,
+				maxFoundedYear: null,
+				minRevenueAnnual: null,
+				maxRevenueAnnual: null,
+				minFundingTotal: null,
+				maxFundingTotal: null,
 			};
 			const overTheCeiling = config.spend.perRunDollars + 0.01;
 			const roundOne: FindCompaniesResult = {

@@ -18,6 +18,12 @@ function planFor(query: string): SearchPlan {
 		countries: [],
 		minWorkforce: null,
 		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 	};
 }
 
@@ -131,6 +137,12 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		countries: ["United States"],
 		minWorkforce: null,
 		maxWorkforce: 20,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 		...overrides,
 	};
 }

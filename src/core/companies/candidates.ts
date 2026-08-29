@@ -63,6 +63,7 @@ export function buildSearchRequest(
 	return {
 		query: plan.query,
 		category: "company",
+		type: "fast",
 		numResults: RESULTS_PER_ROUND,
 		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
 		...(excludeDomains.length > 0
@@ -131,24 +132,75 @@ export function companyExaId(data: unknown): string | null {
 	return parsed.success ? (parsed.data?.result?.id ?? null) : null;
 }
 
-function entityRejectReason(
+export type NumericLimit = {
+	label: string;
+	reading: (entity: CompanyEntity) => number | null;
+	floor: (plan: SearchPlan) => number | null;
+	ceiling: (plan: SearchPlan) => number | null;
+};
+
+/** Every figure Exa reports for a company that a profile can bound. */
+export const NUMERIC_LIMITS: readonly NumericLimit[] = [
+	{
+		label: "headcount",
+		reading: (entity) => entity.workforceTotal,
+		floor: (plan) => plan.minWorkforce,
+		ceiling: (plan) => plan.maxWorkforce,
+	},
+	{
+		label: "founding year",
+		reading: (entity) => entity.foundedYear,
+		floor: (plan) => plan.minFoundedYear,
+		ceiling: (plan) => plan.maxFoundedYear,
+	},
+	{
+		label: "annual revenue",
+		reading: (entity) => entity.revenueAnnual,
+		floor: (plan) => plan.minRevenueAnnual,
+		ceiling: (plan) => plan.maxRevenueAnnual,
+	},
+	{
+		label: "funding raised",
+		reading: (entity) => entity.fundingTotal,
+		floor: (plan) => plan.minFundingTotal,
+		ceiling: (plan) => plan.maxFundingTotal,
+	},
+];
+
+function numericRejectReason(
+	entity: CompanyEntity,
+	plan: SearchPlan,
+): string | null {
+	for (const limit of NUMERIC_LIMITS) {
+		const reading = limit.reading(entity);
+		if (reading === null) continue;
+		const ceiling = limit.ceiling(plan);
+		if (ceiling !== null && reading > ceiling)
+			return `${limit.label} ${reading} above the limit of ${ceiling}`;
+		const floor = limit.floor(plan);
+		if (floor !== null && reading < floor)
+			return `${limit.label} ${reading} below the floor of ${floor}`;
+	}
+	return null;
+}
+
+function countryRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
 ): string | null {
 	const { country } = entity;
-	if (plan.countries.length > 0 && country !== null) {
-		const allowed = plan.countries.some(
-			(name) => name.toLowerCase() === country.toLowerCase(),
-		);
-		if (!allowed) return `headquarters in ${country}`;
-	}
-	const staff = entity.workforceTotal;
-	if (staff === null) return null;
-	if (plan.maxWorkforce !== null && staff > plan.maxWorkforce)
-		return `headcount ${staff} above the limit of ${plan.maxWorkforce}`;
-	if (plan.minWorkforce !== null && staff < plan.minWorkforce)
-		return `headcount ${staff} below the floor of ${plan.minWorkforce}`;
-	return null;
+	if (plan.countries.length === 0 || country === null) return null;
+	const allowed = plan.countries.some(
+		(name) => name.toLowerCase() === country.toLowerCase(),
+	);
+	return allowed ? null : `headquarters in ${country}`;
+}
+
+function entityRejectReason(
+	entity: CompanyEntity,
+	plan: SearchPlan,
+): string | null {
+	return countryRejectReason(entity, plan) ?? numericRejectReason(entity, plan);
 }
 
 export type FilterOutcome = {

@@ -20,6 +20,12 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 		countries: [],
 		minWorkforce: null,
 		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 		...band,
 	};
 }
@@ -140,7 +146,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			new CostLedger(),
 		);
 
-		expect(started[0]?.query).toContain("between 10 and 300 employees");
+		expect(started[0]?.query).toContain("headcount between 10 and 300");
 		expect(started[0]?.query).toContain("United States");
 	});
 });
