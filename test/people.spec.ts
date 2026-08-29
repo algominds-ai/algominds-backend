@@ -65,7 +65,6 @@ function testOpts(
 		env: testEnv,
 		plan: {
 			titles: ["VP of Sales"],
-			queryTemplate: "decision makers at {company}",
 			userLocation: null,
 		},
 		...overrides,
@@ -75,7 +74,6 @@ function testOpts(
 function scriptedPlan(titles: string[] = ["VP of Sales"]) {
 	return {
 		titles,
-		queryTemplate: "decision makers at {company}",
 		userLocation: null,
 	};
 }
@@ -261,12 +259,107 @@ describe("findPeople: employment settled by company id", () => {
 			testOpts(),
 			testDeps(search, [null]),
 		);
-		const person = found.companies[0]?.people[0];
+		expect(found.companies[0]?.people).toEqual([]);
+	});
+});
 
-		expect(person?.employment).toEqual([
-			{ company: "Passage", confidence: 1, source: "exa" },
-			{ company: "Passage", confidence: 0.4, source: "target" },
+describe("findPeople: who the search is allowed to claim", () => {
+	it("keeps a person the vendor places at the company by its own id", async () => {
+		const company = testCompany({
+			domain: "acme.com",
+			name: "Acme",
+			exaId: "https://exa.ai/library/organization/acme",
+		});
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				workHistory: [
+					{
+						title: "VP of Sales",
+						companyId: "https://exa.ai/library/organization/acme",
+						companyName: "Acme Corporation",
+					},
+				],
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+
+		expect(found.companies[0]?.people[0]?.fullName).toBe("Jane Doe");
+		expect(found.companies[0]?.people[0]?.employment).toEqual([
+			{ company: "Acme Corporation", confidence: 1, source: "exa" },
 		]);
+	});
+
+	it("refuses a person whose own name resembles the company, which is what the search returns", async () => {
+		const company = testCompany({
+			domain: "mixmax.com",
+			name: "Mixmax AI",
+			exaId: "https://exa.ai/library/organization/mixmax",
+		});
+		const result = personResult(
+			{
+				fullName: "Micky Mixmax",
+				workHistory: [
+					{
+						title: "Animator",
+						companyId: "https://exa.ai/library/organization/other",
+						companyName: "Jm production",
+					},
+				],
+			},
+			"https://linkedin.com/in/micky-mixmax",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+
+		expect(found.companies[0]?.people).toEqual([]);
+	});
+
+	it("stores one employer for a kept person, never a second one it doubts", async () => {
+		const company = testCompany({
+			domain: "acme.com",
+			name: "Acme",
+			exaId: "https://exa.ai/library/organization/acme",
+		});
+		const result = personResult(
+			{
+				fullName: "Jane Doe",
+				workHistory: [
+					{
+						title: "Advisor",
+						companyId: "https://exa.ai/library/organization/other",
+						companyName: "Other Co",
+					},
+					{
+						title: "VP of Sales",
+						companyId: "https://exa.ai/library/organization/acme",
+						companyName: "Acme",
+					},
+				],
+			},
+			"https://linkedin.com/in/janedoe",
+		);
+		const { search } = scriptedSearch([[result]]);
+
+		const found = await findPeople(
+			[company],
+			testOpts(),
+			testDeps(search, [null]),
+		);
+
+		expect(found.companies[0]?.people[0]?.employment).toHaveLength(1);
 	});
 });
 
@@ -352,14 +445,10 @@ describe("findPeople: employment edge cases", () => {
 			testOpts(),
 			testDeps(search, [null]),
 		);
-		const person = found.companies[0]?.people[0];
-
-		expect(person?.employment).toEqual([
-			{ company: "Acme", confidence: 0.4, source: "target" },
-		]);
+		expect(found.companies[0]?.people).toEqual([]);
 	});
 
-	it("reports a person with no work history instead of dropping them", async () => {
+	it("refuses a person the vendor places at no employer at all", async () => {
 		const company = testCompany({ domain: "acme.com", name: "Acme" });
 		const result = personResult(
 			{ fullName: "Jane Doe" },
@@ -372,12 +461,8 @@ describe("findPeople: employment edge cases", () => {
 			testOpts(),
 			testDeps(search, [null]),
 		);
-		const person = found.companies[0]?.people[0];
-
-		expect(person?.fullName).toBe("Jane Doe");
-		expect(person?.employment).toEqual([
-			{ company: "Acme", confidence: 0.4, source: "target" },
-		]);
+		expect(found.companies[0]?.people).toEqual([]);
+		expect(found.companies[0]?.reason).toBe("no people found for this company");
 	});
 });
 
@@ -758,7 +843,7 @@ describe("findPeople: Apollo coverage", () => {
 		]);
 	});
 
-	it("marks an Exa person as apollo-matched when a candidate shares first name and company", async () => {
+	it("leaves a person the search already found out of the Apollo coverage list", async () => {
 		const company = testCompany({ domain: "ramp.com", name: "Ramp" });
 		const result = personResult(
 			{
@@ -790,7 +875,6 @@ describe("findPeople: Apollo coverage", () => {
 			testDeps(search, [apolloResult]),
 		);
 
-		expect(found.companies[0]?.people[0]?.apolloMatched).toBe(true);
 		expect(found.companies[0]?.apolloOnly).toEqual([]);
 	});
 });
@@ -841,7 +925,10 @@ describe("findPeople: capturing the vendor payload", () => {
 	it("captures a profile missing its location with that field null, not a thrown error", async () => {
 		const company = testCompany({ domain: "acme.com", name: "Acme" });
 		const result = personResult(
-			{ fullName: "Jane Doe", workHistory: [{ title: "VP of Sales" }] },
+			{
+				fullName: "Jane Doe",
+				workHistory: [{ title: "VP of Sales", companyName: "Acme" }],
+			},
 			"https://linkedin.com/in/janedoe",
 		);
 		const { search } = scriptedSearch([[result]]);
@@ -911,7 +998,6 @@ describe("toPersonData", () => {
 			confidence: number;
 			source: "exa" | "target";
 		}[],
-		apolloMatched: boolean,
 	) => ({
 		entity: {
 			fullName: "Jane Doe",
@@ -927,50 +1013,24 @@ describe("toPersonData", () => {
 			score: null,
 		},
 		employment,
-		apolloMatched,
 	});
 
 	it("names the provider that produced the capture", () => {
 		const data = toPersonData(
-			capture([{ company: "Acme", confidence: 1, source: "exa" }], false),
+			capture([{ company: "Acme", confidence: 1, source: "exa" }]),
 			"exa",
 		);
 
 		expect(data.provider).toBe("exa");
 	});
 
-	it("keeps the free corroboration Apollo gave, rather than discarding it", () => {
-		const data = toPersonData(
-			capture([{ company: "Acme", confidence: 1, source: "exa" }], true),
-			"exa",
-		);
-
-		expect(data.apolloMatched).toBe(true);
-	});
-
 	it("records full confidence for a person whose current role names the company", () => {
 		const data = toPersonData(
-			capture([{ company: "Acme", confidence: 1, source: "exa" }], false),
+			capture([{ company: "Acme", confidence: 1, source: "exa" }]),
 			"exa",
 		);
 
 		expect(data.confidence).toBe(1);
-	});
-
-	it("records the doubt when the person's employer disagrees with the company searched", () => {
-		const data = toPersonData(
-			capture(
-				[
-					{ company: "Other Co", confidence: 1, source: "exa" },
-					{ company: "Acme", confidence: 0.4, source: "target" },
-				],
-				false,
-			),
-			"exa",
-		);
-
-		expect(data.confidence).toBe(0.4);
-		expect(data.employment).toHaveLength(2);
 	});
 });
 

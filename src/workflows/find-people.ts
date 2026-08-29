@@ -281,7 +281,6 @@ async function resolvePlan(
 		const result = await decisionMakerTitles(icp, env);
 		return {
 			titles: result.titles,
-			queryTemplate: result.queryTemplate,
 			userLocation: result.userLocation,
 			costDollars: result.ledger.total(),
 		};

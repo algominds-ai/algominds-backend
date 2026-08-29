@@ -92,7 +92,13 @@ people:
   # vendor search for someone already stored — the unique constraint on
   # linkedin_url only discarded the duplicate row after the search was paid for.
   seenPeopleWindowDays: 90
-  resultsPerCompany: 3
+  # People asked of Exa for one company. Every result is checked against the
+  # company's own Exa organization id, and a search for a title at a company
+  # name also returns people whose own name resembles it, so this is the pool
+  # the check draws from rather than the number of people expected. Measured
+  # across three companies: three results yielded five verified people for
+  # $0.007 a company, twenty five yielded fourteen for $0.022.
+  resultsPerCompany: 25
   batchSize: 5
   # Which vendor supplies raw people candidates before the Apollo coverage
   # pass. exa-search is one fast, cheap /search call per company. exa-agent

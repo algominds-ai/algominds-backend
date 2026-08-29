@@ -99,7 +99,6 @@ describe("FindPeopleWorkflow: runId", () => {
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: 0,
 					},
@@ -155,7 +154,6 @@ describe("FindPeopleWorkflow: an empty run", () => {
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: 0,
 					},
@@ -228,7 +226,6 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: 0,
 					},
@@ -326,7 +323,6 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: 0,
 					},
@@ -368,7 +364,6 @@ function testPerson(fullName: string): PersonCandidate {
 		rawTitle: "VP of Sales",
 		location: null,
 		employment: [],
-		apolloMatched: false,
 		entity: {
 			fullName,
 			currentTitle: "VP of Sales",
@@ -430,7 +425,6 @@ describe("FindPeopleWorkflow: the summary output", () => {
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: 0,
 					},
@@ -501,7 +495,6 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: planCost,
 					},
@@ -571,7 +564,6 @@ describe("FindPeopleWorkflow: a batch that crosses the ceiling", () => {
 					{ name: "people-plan" },
 					{
 						titles: ["VP of Sales"],
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 						costDollars: 0,
 					},

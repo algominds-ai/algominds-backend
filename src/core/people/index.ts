@@ -52,9 +52,7 @@ const TITLES_INSTRUCTIONS = [
 	"You choose the job titles a sales team should target for outbound at companies matching",
 	"one ideal customer profile. Return three to six decision-maker titles, most senior first,",
 	"for the function that would buy or champion this product.",
-	"Also write the search query that finds those people at one company.",
-	"Write it as you would search for a person, and put {company} where the company name belongs.",
-	"The query is yours to phrase; do not copy the titles verbatim if a better phrasing exists.",
+	"The titles are the whole answer: the search itself is built from them and the company name.",
 	"userLocation is optional and null is the right answer most of the time.",
 	"Set it to a two-letter country only when searching outside that country would return the",
 	"wrong people. A good decision maker often sits somewhere the profile never mentions, and a",
@@ -63,7 +61,6 @@ const TITLES_INSTRUCTIONS = [
 
 const TitlesModelSchema = z.object({
 	titles: z.array(z.string()).min(1),
-	queryTemplate: z.string().min(1),
 	userLocation: z.string().nullable(),
 });
 
@@ -72,8 +69,6 @@ const DEFAULT_TITLES = [
 	"Head of Growth",
 	"Director of Marketing",
 ];
-
-const DEFAULT_QUERY_TEMPLATE = "decision makers at {company}";
 
 const ISO_COUNTRY = /^[A-Za-z]{2}$/;
 
@@ -85,7 +80,6 @@ function countryCode(written: string | null | undefined): string | null {
 
 export type TitlesResult = {
 	titles: string[];
-	queryTemplate: string;
 	userLocation: string | null;
 	ledger: CostLedger;
 };
@@ -152,7 +146,6 @@ export async function decisionMakerTitles(
 	);
 	return {
 		titles: output?.titles ?? DEFAULT_TITLES,
-		queryTemplate: output?.queryTemplate ?? DEFAULT_QUERY_TEMPLATE,
 		userLocation: countryCode(output?.userLocation),
 		ledger,
 	};
@@ -202,7 +195,6 @@ export function splitKnownCompanies(
 
 export type PeopleSearchPlan = {
 	titles: readonly string[];
-	queryTemplate: string;
 	userLocation: string | null;
 };
 
@@ -225,32 +217,33 @@ async function searchCompanyPeople(
 		.filter((candidate): candidate is PersonCandidate => candidate !== null);
 }
 
+/**
+ * The people Apollo lists at this company's domain that the search did not
+ * return. Apollo's people search is free and is scoped to the domain, so it
+ * costs nothing to ask and answers a question the search cannot: who else is
+ * there. It reports an obfuscated surname and no LinkedIn URL, so it widens
+ * coverage rather than standing in for a person the search found.
+ */
 async function apolloCoverage(
 	company: PeopleCompany,
 	titles: readonly string[],
 	people: readonly PersonCandidate[],
 	ctx: PeopleContext,
-): Promise<{ people: PersonCandidate[]; apolloOnly: ApolloCandidate[] }> {
-	const filters: ApolloSearchFilters = {
-		q_organization_domains_list: [company.domain],
-		person_titles: [...titles],
-	};
-	const result = await ctx.deps.apolloSearch(filters, ctx.env);
-	if (!result) return { people: [...people], apolloOnly: [] };
-	const marked = people.map((person) =>
-		result.candidates.some((candidate) =>
-			apolloMatchesPerson(candidate, person, company.name),
-		)
-			? { ...person, apolloMatched: true }
-			: person,
+): Promise<ApolloCandidate[]> {
+	const result = await ctx.deps.apolloSearch(
+		{
+			q_organization_domains_list: [company.domain],
+			person_titles: [...titles],
+		},
+		ctx.env,
 	);
-	const apolloOnly = result.candidates.filter(
+	if (!result) return [];
+	return result.candidates.filter(
 		(candidate) =>
 			!people.some((person) =>
 				apolloMatchesPerson(candidate, person, company.name),
 			),
 	);
-	return { people: marked, apolloOnly };
 }
 
 async function buildCompanyResult(
@@ -259,19 +252,19 @@ async function buildCompanyResult(
 	people: readonly PersonCandidate[],
 	ctx: PeopleContext,
 ): Promise<CompanyPeopleResult> {
-	const coverage = await apolloCoverage(company, titles, people, ctx);
+	const apolloOnly = await apolloCoverage(company, titles, people, ctx);
 	return {
 		domain: company.domain,
-		people: coverage.people,
-		apolloOnly: coverage.apolloOnly.map(toApolloOnlyCandidate),
-		reason: coverage.people.length === 0 ? NO_PEOPLE_REASON : null,
+		people: [...people],
+		apolloOnly: apolloOnly.map(toApolloOnlyCandidate),
+		reason: people.length === 0 ? NO_PEOPLE_REASON : null,
 	};
 }
 
 /**
  * Runs one Exa people search per company plus a free Apollo coverage pass,
- * with no agent loop and no second employment lookup. `currentCompany` from
- * the same search call is the employment check. The search plan is resolved
+ * with no agent loop and no second employment lookup. The work history the
+ * same search call returns is the employment check. The search plan is resolved
  * once for the run and handed in, because it depends only on the profile.
  */
 export async function findPeople(
