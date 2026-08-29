@@ -13,7 +13,11 @@ import type {
 	CompanyCapture,
 	CompanyMatch,
 } from "../src/core/companies/candidates";
-import { toCompanyData } from "../src/core/companies/candidates";
+import {
+	excludedDomains,
+	groupRejectReasons,
+	toCompanyData,
+} from "../src/core/companies/candidates";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 import type { Verdict } from "../src/core/companies/judge";
@@ -29,6 +33,7 @@ import type {
 	SearchPlan,
 	SynthesizeInput,
 } from "../src/core/synthesize";
+import { finalStatus } from "../src/workflows/find-companies";
 
 const icp: IcpDoc = {
 	description:
@@ -80,9 +85,32 @@ function testOptions(
 	return { icpId: "icp-1", env: testEnv, ...overrides };
 }
 
+function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
+	return {
+		query: "fintech companies",
+		angle: "angle-1",
+		userLocation: null,
+		countries: [],
+		minWorkforce: null,
+		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
+		...overrides,
+	};
+}
+
 function scriptedSearch(rounds: ExaResult[][]) {
 	const calls: ExaSearchRequest[] = [];
-	const search: FindCompaniesDeps["search"] = async (req, _env, ledger) => {
+	const search: FindCompaniesDeps["search"] = async (
+		_plan,
+		req,
+		_env,
+		ledger,
+	) => {
 		const results = rounds[calls.length] ?? [];
 		calls.push(req);
 		ledger.reported("exa", "search", 0.01);
@@ -105,6 +133,12 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 				countries: [],
 				minWorkforce: null,
 				maxWorkforce: null,
+				minFoundedYear: null,
+				maxFoundedYear: null,
+				minRevenueAnnual: null,
+				maxRevenueAnnual: null,
+				minFundingTotal: null,
+				maxFundingTotal: null,
 				...planOverrides,
 			},
 			ledger,
@@ -559,6 +593,438 @@ async function terminateWorkflowRuns(): Promise<void> {
 
 afterEach(terminateWorkflowRuns);
 
+describe("the figures a profile can bound a company by", () => {
+	it("refuses a company founded before the year the profile allows", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("old.com", { foundedYear: 2005 })],
+		]);
+		const { synthesize } = scriptedSynthesize({ minFoundedYear: 2020 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies).toEqual([]);
+		expect(result.rejects[0]?.reason).toBe(
+			"founding year 2005 below the floor of 2020",
+		);
+	});
+
+	it("refuses a company whose annual revenue is above the ceiling the profile allows", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("big.com", { revenueAnnual: 90_000_000 })],
+		]);
+		const { synthesize } = scriptedSynthesize({
+			maxRevenueAnnual: 10_000_000,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rejects[0]?.reason).toBe(
+			"annual revenue 90000000 above the limit of 10000000",
+		);
+	});
+
+	it("refuses a company that raised less funding than the profile asks for", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("bootstrapped.com", { fundingTotal: 50_000 })],
+		]);
+		const { synthesize } = scriptedSynthesize({ minFundingTotal: 1_000_000 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rejects[0]?.reason).toBe(
+			"funding raised 50000 below the floor of 1000000",
+		);
+	});
+
+	it("keeps a company the profile set no bound for, whatever the figure says", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("anything.com", { foundedYear: 1998, fundingTotal: 0 })],
+		]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["anything.com"]);
+	});
+
+	it("keeps a company whose figure the vendor did not report", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("unknown.com", { foundedYear: null })],
+		]);
+		const { synthesize } = scriptedSynthesize({ minFoundedYear: 2020 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["unknown.com"]);
+	});
+});
+
+describe("collapsing numeric reject reasons for the synthesizer's feedback", () => {
+	it("collapses many companies below the same headcount floor into one counted line", async () => {
+		const results = Array.from({ length: 5 }, (_, i) =>
+			goodResult(`low${i}.com`, { workforceTotal: 10 + i }),
+		);
+		const { search } = scriptedSearch([results]);
+		const { synthesize } = scriptedSynthesize({ minWorkforce: 20 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 5, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rejects).toHaveLength(5);
+		expect(result.rejects[0]?.reason).toBe(
+			"headcount 10 below the floor of 20",
+		);
+		expect(groupRejectReasons(result.rejects)).toEqual([
+			"5 companies had a headcount below the floor of 20",
+		]);
+	});
+
+	it("passes a judge reject through the grouping untouched", async () => {
+		const { search } = scriptedSearch([[goodResult("wrong.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([[0]]),
+		});
+
+		expect(result.rejects[0]).toEqual({
+			domain: "wrong.com",
+			reason: "does not fit icp",
+			stage: "judge",
+		});
+		expect(groupRejectReasons(result.rejects)).toEqual(["does not fit icp"]);
+	});
+});
+
+describe("what one round hands the next", () => {
+	it("gives a later round every angle the earlier rounds already tried", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("a.com")],
+			[goodResult("b.com")],
+			[goodResult("c.com")],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 9, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(inputs).toHaveLength(3);
+		expect(inputs[0]?.pastAngles).toEqual([]);
+		expect(inputs[1]?.pastAngles).toEqual(["angle-1"]);
+		expect(inputs[2]?.pastAngles).toEqual(["angle-1", "angle-2"]);
+	});
+
+	it("gives a later round the reasons the earlier round's companies were refused", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("wrong.com")],
+			[goodResult("right.com")],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([[0]]),
+		});
+
+		expect(inputs[1]?.feedback.join(" ")).toContain("does not fit icp");
+	});
+
+	it("carries an angle a caller already used, so a second call does not repeat it", async () => {
+		const { search } = scriptedSearch([[goodResult("a.com")]]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(
+			icp,
+			1,
+			testOptions({ pastAngles: ["angle-from-an-earlier-round"] }),
+			{ recentDomains, synthesize, search, gate, judge: scriptedJudge([]) },
+		);
+
+		expect(inputs[0]?.pastAngles).toEqual(["angle-from-an-earlier-round"]);
+	});
+});
+
+describe("domains a round tells the vendor not to return", () => {
+	it("names every company an earlier round already found", async () => {
+		const { search, calls } = scriptedSearch([
+			[goodResult("first.com")],
+			[goodResult("second.com")],
+		]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 2, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(calls[0]?.excludeDomains).toBeUndefined();
+		expect(calls[1]?.excludeDomains).toContain("first.com");
+	});
+
+	it("names the domains already seen before the run started", async () => {
+		const { search, calls } = scriptedSearch([[goodResult("new.com")]]);
+		const { synthesize } = scriptedSynthesize();
+
+		await findCompanies(icp, 1, testOptions(), {
+			recentDomains: async () => ["old.com"],
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(calls[0]?.excludeDomains).toContain("old.com");
+	});
+
+	it("keeps the list inside the most the vendor accepts", () => {
+		const seen = new Set(
+			Array.from({ length: 1500 }, (_, i) => `seen-${i}.com`),
+		);
+
+		expect(excludedDomains(["caller.com"], seen)).toHaveLength(1200);
+	});
+
+	it("never repeats a domain the caller and the run both name", () => {
+		const excluded = excludedDomains(["same.com"], new Set(["same.com"]));
+
+		expect(excluded).toEqual(["same.com"]);
+	});
+});
+
+describe("a company the caller already knows", () => {
+	it("names it to the vendor so no result slot is spent on it", async () => {
+		const { search, calls } = scriptedSearch([[goodResult("other.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(
+			icp,
+			1,
+			testOptions({ excludeDomains: ["leadiq.com"] }),
+			{ recentDomains, synthesize, search, gate, judge: scriptedJudge([]) },
+		);
+
+		expect(calls[0]?.excludeDomains).toEqual(["leadiq.com"]);
+	});
+
+	it("sends no exclusion at all when the caller named none", async () => {
+		const { search, calls } = scriptedSearch([[goodResult("other.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(calls[0]?.excludeDomains).toBeUndefined();
+	});
+
+	it("never returns it, even when the vendor answers with it anyway", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("leadiq.com"), goodResult("other.com")],
+		]);
+		const { synthesize } = scriptedSynthesize();
+
+		const result = await findCompanies(
+			icp,
+			2,
+			testOptions({ excludeDomains: ["leadiq.com"] }),
+			{
+				recentDomains: async () => ["leadiq.com"],
+				synthesize,
+				search,
+				gate,
+				judge: scriptedJudge([]),
+			},
+		);
+
+		expect(result.companies.map((row) => row.domain)).not.toContain(
+			"leadiq.com",
+		);
+	});
+});
+
+describe("a round the vendor answers with nothing", () => {
+	it("searches again instead of stopping, and can still find a company", async () => {
+		const { search } = scriptedSearch([[], [goodResult("late.com")]]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rounds).toBe(2);
+		expect(result.status).toBe("complete");
+		expect(result.companies.map((row) => row.domain)).toEqual(["late.com"]);
+		expect(inputs[1]?.feedback.join(" ")).toContain("too narrow");
+	});
+
+	it("reports empty, not exhausted, when every round matched nothing", async () => {
+		const { search } = scriptedSearch([[], [], []]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.found).toBe(0);
+		expect(result.status).toBe("empty");
+		expect(result.status).not.toBe("exhausted");
+	});
+
+	it("still reports exhausted when the vendor answered but every company was already seen", async () => {
+		const { search } = scriptedSearch([[goodResult("seen.com")]]);
+		const { synthesize } = scriptedSynthesize();
+
+		const result = await findCompanies(icp, 5, testOptions(), {
+			recentDomains: async () => ["seen.com"],
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.status).toBe("exhausted");
+	});
+});
+
+describe("a round the filter refuses outright", () => {
+	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
+		const { search } = scriptedSearch([
+			[
+				goodResult("big1.com", { workforceTotal: 400 }),
+				goodResult("big2.com", { workforceTotal: 500 }),
+			],
+			[goodResult("small.com", { workforceTotal: 10 })],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize({ maxWorkforce: 20 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rounds).toBe(2);
+		expect(result.status).toBe("complete");
+		expect(result.companies.map((row) => row.domain)).toEqual(["small.com"]);
+		expect(inputs[1]?.feedback.join(" ")).toContain(
+			"headcount above the limit of 20",
+		);
+		expect(inputs[1]?.feedback.join(" ")).not.toContain(
+			"matched no companies at all",
+		);
+	});
+});
+
+describe("what one round hands the next when the judge never saw every candidate", () => {
+	it("excludes a domain that passed the filter but fell outside the judge's slice", async () => {
+		const round1 = Array.from({ length: 5 }, (_, i) =>
+			goodResult(`cand${i}.com`),
+		);
+		const { search, calls } = scriptedSearch([
+			round1,
+			[goodResult("final.com")],
+		]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([[0, 1, 2], []]),
+		});
+
+		expect(result.rounds).toBe(2);
+		expect(result.status).toBe("complete");
+		expect(calls[1]?.excludeDomains).toContain("cand3.com");
+		expect(calls[1]?.excludeDomains).toContain("cand4.com");
+		expect(result.seenDomains).toEqual(
+			expect.arrayContaining(["cand3.com", "cand4.com"]),
+		);
+	});
+});
+
 describe("FindCompaniesWorkflow: the summary output", () => {
 	it("returns a bounded summary that does not grow with the number of companies found", async () => {
 		const instanceId = "summary-size-test";
@@ -592,14 +1058,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 					},
 				]),
 			);
-			const plan: SearchPlan = {
-				query: "fintech companies",
-				angle: "angle-1",
-				userLocation: null,
-				countries: [],
-				minWorkforce: null,
-				maxWorkforce: null,
-			};
+			const plan = testPlan();
 			const roundResult: FindCompaniesResult = {
 				companies,
 				requested: count,
@@ -610,6 +1069,8 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				rejects: [],
 				searches: [plan],
 				captures,
+				seenDomains: domains,
+				feedback: [],
 			};
 
 			await instance.modify(async (m) => {
@@ -617,7 +1078,6 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
 				await m.mockStepResult({ name: "round_1" }, roundResult);
 				await m.mockStepResult({ name: "save-companies" }, {});
@@ -639,6 +1099,15 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				costDollars: 0.05,
 				rejects: [],
 				searches: [plan],
+				roundReports: [
+					{
+						round: 1,
+						angle: plan.angle,
+						query: plan.query,
+						found: count,
+						rejected: { filter: 0, gate: 0, judge: 0 },
+					},
+				],
 			});
 		} finally {
 			await instance.dispose();
@@ -665,14 +1134,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					evidenceDate: null,
 				}),
 			);
-			const plan: SearchPlan = {
-				query: "fintech companies",
-				angle: "angle-1",
-				userLocation: null,
-				countries: [],
-				minWorkforce: null,
-				maxWorkforce: null,
-			};
+			const plan = testPlan();
 			const overTheCeiling = config.spend.perRunDollars + 0.01;
 			const roundOne: FindCompaniesResult = {
 				companies,
@@ -684,6 +1146,8 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				rejects: [],
 				searches: [plan],
 				captures: {},
+				seenDomains: companies.map((company) => company.domain ?? ""),
+				feedback: [],
 			};
 
 			await instance.modify(async (m) => {
@@ -691,7 +1155,6 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
 				await m.mockStepResult({ name: "round_1" }, roundOne);
 				await m.mockStepResult({ name: "save-companies" }, {});
@@ -712,9 +1175,32 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				costDollars: overTheCeiling,
 				rejects: [],
 				searches: [plan],
+				roundReports: [
+					{
+						round: 1,
+						angle: plan.angle,
+						query: plan.query,
+						found: companies.length,
+						rejected: { filter: 0, gate: 0, judge: 0 },
+					},
+				],
 			});
 		} finally {
 			await instance.dispose();
 		}
+	});
+});
+
+describe("the status the workflow reports for the whole run", () => {
+	it("never reports empty for a run that saved a company in an earlier round", () => {
+		expect(finalStatus(2, 5, "empty")).toBe("short");
+	});
+
+	it("still reports empty when the run never saved a company at all", () => {
+		expect(finalStatus(0, 5, "empty")).toBe("empty");
+	});
+
+	it("reports complete once the run saved as many companies as requested", () => {
+		expect(finalStatus(5, 5, "empty")).toBe("complete");
 	});
 });

@@ -29,7 +29,7 @@ export const config = {
 		companySource: "exa-search",
 		exaAgentEffort: "low",
 		exaAgentPollIntervalSeconds: 5,
-		exaAgentMaxPollAttempts: 24,
+		exaAgentMaxPollAttempts: 60,
 	},
 	people: {
 		seenPeopleWindowDays: 90,
@@ -44,6 +44,9 @@ export const config = {
 		batchSize: 5,
 		emailTtlDays: 90,
 		linkedinTtlDays: 30,
+		exaAgentEffort: "low",
+		exaAgentPollIntervalSeconds: 5,
+		exaAgentMaxPollAttempts: 24,
 	},
 	spend: {
 		perRunDollars: 2,

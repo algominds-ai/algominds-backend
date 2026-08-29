@@ -106,6 +106,7 @@ export type FindPeopleOptions = {
 
 export type FindPeopleDeps = {
 	search: (
+		company: PeopleCompany,
 		req: ExaSearchRequest,
 		env: Env,
 		ledger: CostLedger,
@@ -217,7 +218,7 @@ async function searchCompanyPeople(
 	ctx: PeopleContext,
 ): Promise<PersonCandidate[]> {
 	const request = buildPersonSearchRequest(company, ctx.plan);
-	const searched = await ctx.deps.search(request, ctx.env, ctx.ledger);
+	const searched = await ctx.deps.search(company, request, ctx.env, ctx.ledger);
 	return searched.results
 		.map(toPersonClaim)
 		.map((claim) => toPersonCandidate(claim, company))

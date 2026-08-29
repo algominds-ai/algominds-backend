@@ -45,6 +45,7 @@ const COMPANY_SOURCE: "exa-search" | "exa-agent" =
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
 	count: z.number().int().positive(),
+	excludeDomains: z.array(z.string().min(1)).optional(),
 });
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
@@ -65,32 +66,23 @@ function roundDeps(
 			return [...known, ...accumulatedDomains];
 		},
 		synthesize: isAgent ? agentSynthesize(step, round) : synthesize,
-		search: isAgent ? agentSearch(step, round, remaining) : search,
+		search: isAgent
+			? agentSearch(step, round, remaining)
+			: (_plan, req, env, ledger) => search(req, env, ledger),
 		gate,
 		judge,
 	};
 }
 
-function trackDomains(
-	domains: Set<string>,
-	companies: readonly CompanyRow[],
-	rejects: readonly FindCompaniesReject[],
-): void {
-	for (const company of companies) {
-		if (company.domain) domains.add(normalizeDomain(company.domain));
-	}
-	for (const reject of rejects) {
-		if (reject.domain) domains.add(normalizeDomain(reject.domain));
-	}
-}
-
-function finalStatus(
+/** A run that saved a company was never empty, whatever its last round reported. */
+export function finalStatus(
 	found: number,
 	requested: number,
 	lastRoundStatus: FindCompaniesStatus,
 ): FindCompaniesStatus {
 	if (found >= requested) return "complete";
 	if (lastRoundStatus === "capped") return "capped";
+	if (lastRoundStatus === "empty") return found > 0 ? "short" : "empty";
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
 }
 
@@ -106,9 +98,11 @@ async function runFindCompaniesRounds(
 		runId: string;
 	},
 	step: WorkflowStep,
-): Promise<FindCompaniesResult> {
+): Promise<ReportedRounds> {
 	const { env, payload, icp, runId } = target;
-	const accumulatedDomains = new Set<string>();
+	const accumulatedDomains = new Set(
+		(payload.excludeDomains ?? []).map(normalizeDomain),
+	);
 	let companies: CompanyRow[] = [];
 	let rejects: FindCompaniesReject[] = [];
 	let costDollars = 0;
@@ -116,6 +110,9 @@ async function runFindCompaniesRounds(
 	const searches: FindCompaniesResult["searches"] = [];
 	const captures: Record<string, CompanyCapture> = {};
 	let lastRoundStatus: FindCompaniesStatus = "short";
+	let pastAngles: string[] = [];
+	let feedback: string[] = [];
+	const roundReports: RoundReport[] = [];
 
 	for (
 		let round = 1;
@@ -127,6 +124,9 @@ async function runFindCompaniesRounds(
 			icpId: payload.icpId,
 			env,
 			maxRounds: 1,
+			pastAngles,
+			feedback,
+			excludeDomains: payload.excludeDomains ?? [],
 		};
 		const deps = roundDeps(accumulatedDomains, step, round, remaining);
 		const stepResult = await step.do(
@@ -140,11 +140,16 @@ async function runFindCompaniesRounds(
 		searches.push(...stepResult.searches);
 		Object.assign(captures, stepResult.captures);
 		rounds += 1;
+		roundReports.push(reportRound(round, stepResult));
 		lastRoundStatus = stepResult.status;
 		await step.do(`round_${round}-spend`, config.stepConfig.databaseCall, () =>
 			recordRunSpend(env, runId, costDollars),
 		);
-		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
+		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
+		pastAngles = pastAngles.concat(
+			stepResult.searches.map((plan) => plan.angle),
+		);
+		feedback = stepResult.feedback;
 		if (stepResult.status === "exhausted") break;
 		if (costDollars >= config.spend.perRunDollars) {
 			lastRoundStatus = "capped";
@@ -162,6 +167,9 @@ async function runFindCompaniesRounds(
 		rejects,
 		searches,
 		captures,
+		seenDomains: [...accumulatedDomains],
+		feedback,
+		roundReports,
 	};
 }
 
@@ -217,6 +225,37 @@ function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
  * and rejects. The row arrays and the vendor capture stay in Postgres, read
  * back a page at a time through `GET /runs/{runId}/companies`.
  */
+type ReportedRounds = FindCompaniesResult & { roundReports: RoundReport[] };
+
+export type RoundReport = {
+	round: number;
+	angle: string;
+	query: string;
+	found: number;
+	rejected: { filter: number; gate: number; judge: number };
+};
+
+/** One line per round: the angle it tried, what it kept, and where the rest fell. */
+export function reportRound(
+	round: number,
+	result: FindCompaniesResult,
+): RoundReport {
+	const plan = result.searches[0];
+	const count = (stage: FindCompaniesReject["stage"]): number =>
+		result.rejects.filter((reject) => reject.stage === stage).length;
+	return {
+		round,
+		angle: plan?.angle ?? "",
+		query: plan?.query ?? "",
+		found: result.companies.length,
+		rejected: {
+			filter: count("filter"),
+			gate: count("gate"),
+			judge: count("judge"),
+		},
+	};
+}
+
 export type FindCompaniesSummary = {
 	requested: number;
 	found: number;
@@ -225,11 +264,10 @@ export type FindCompaniesSummary = {
 	costDollars: number;
 	rejects: FindCompaniesReject[];
 	searches: SearchPlan[];
+	roundReports: RoundReport[];
 };
 
-function summarizeFindCompanies(
-	result: FindCompaniesResult,
-): FindCompaniesSummary {
+function summarizeFindCompanies(result: ReportedRounds): FindCompaniesSummary {
 	return {
 		requested: result.requested,
 		found: result.found,
@@ -238,6 +276,7 @@ function summarizeFindCompanies(
 		costDollars: result.costDollars,
 		rejects: result.rejects,
 		searches: result.searches,
+		roundReports: result.roundReports,
 	};
 }
 
@@ -297,25 +336,21 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
+		await step.do("open-run", config.stepConfig.databaseCall, async () => {
 			const spent = await organizationSpendToday(this.env, organizationId);
 			if (spent >= config.spend.perAccountDailyDollars) {
 				throw new NonRetryableError(
 					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
 				);
 			}
-			return { spent };
-		});
-
-		await step.do("open-run", config.stepConfig.databaseCall, () =>
-			openRun(this.env, {
+			return openRun(this.env, {
 				id: event.instanceId,
 				organizationId,
 				icpId: payload.icpId,
 				capability: "companies",
 				status: "running",
-			}),
-		);
+			});
+		});
 
 		const result = await runFindCompaniesRounds(
 			{ env: this.env, payload, icp, runId: event.instanceId },

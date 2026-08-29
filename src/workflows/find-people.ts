@@ -48,10 +48,15 @@ const PEOPLE_SOURCE: "exa-search" | "exa-agent" = config.people.peopleSource;
 const maxCompaniesField = z.number().int().positive().optional();
 
 const FindPeoplePayloadSchema = z.union([
-	z.object({ runId: z.string().min(1), maxCompanies: maxCompaniesField }),
+	z.object({
+		runId: z.string().min(1),
+		maxCompanies: maxCompaniesField,
+		organizationId: z.string().min(1),
+	}),
 	z.object({
 		domains: z.array(z.string().min(1)).min(1),
 		maxCompanies: maxCompaniesField,
+		organizationId: z.string().min(1),
 	}),
 ]);
 
@@ -100,14 +105,12 @@ function summarizeFindPeople(
  * branches on the configured people source; every other dependency stays
  * the same regardless of source.
  */
-function batchDeps(
-	step: WorkflowStep,
-	batchIndex: number,
-	batch: readonly PeopleCompany[],
-): FindPeopleDeps {
+function batchDeps(step: WorkflowStep, batchIndex: number): FindPeopleDeps {
 	const isAgent = PEOPLE_SOURCE === "exa-agent";
 	return {
-		search: isAgent ? agentPersonSearch(step, batchIndex, batch) : search,
+		search: isAgent
+			? agentPersonSearch(step, batchIndex)
+			: (_company, req, env, ledger) => search(req, env, ledger),
 		apolloSearch: apolloPeopleSearch.run,
 	};
 }
@@ -131,8 +134,13 @@ function companyByDomain(
 	return new Map(companies.map((row) => [row.domain, row]));
 }
 
-function toNewPerson(person: PersonCandidate, companyId: string): NewPerson {
+function toNewPerson(
+	person: PersonCandidate,
+	companyId: string,
+	organizationId: string,
+): NewPerson {
 	return {
+		organizationId,
 		companyId,
 		linkedinUrl: person.linkedinUrl,
 		name: person.fullName,
@@ -144,6 +152,7 @@ function toNewPerson(person: PersonCandidate, companyId: string): NewPerson {
 function collectNewPeople(
 	companies: readonly PeopleCompany[],
 	results: readonly CompanyPeopleResult[],
+	organizationId: string,
 ): { rows: NewPerson[]; byUrl: Map<string, PersonCandidate> } {
 	const byDomain = companyByDomain(companies);
 	const byUrl = new Map<string, PersonCandidate>();
@@ -153,7 +162,7 @@ function collectNewPeople(
 		if (!matchedCompany) continue;
 		for (const person of result.people) {
 			byUrl.set(person.linkedinUrl, person);
-			rows.push(toNewPerson(person, matchedCompany.id));
+			rows.push(toNewPerson(person, matchedCompany.id, organizationId));
 		}
 	}
 	return { rows, byUrl };
@@ -217,8 +226,9 @@ async function persistPeople(
 	env: Env,
 	companies: readonly PeopleCompany[],
 	results: readonly CompanyPeopleResult[],
+	organizationId: string,
 ): Promise<void> {
-	const { rows, byUrl } = collectNewPeople(companies, results);
+	const { rows, byUrl } = collectNewPeople(companies, results, organizationId);
 	const saved = await savePeople(env, rows);
 	const evidenceRows = saved.flatMap((row) => {
 		const candidate =
@@ -240,7 +250,7 @@ async function runBatches(
 		const batchResult = await step.do(
 			`people-batch-${index}`,
 			config.stepConfig.paidCall,
-			() => findPeople(batch, opts, batchDeps(step, index, batch)),
+			() => findPeople(batch, opts, batchDeps(step, index)),
 		);
 		results.push(batchResult);
 		costDollars += batchResult.costDollars;
@@ -293,7 +303,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			() => loadTargetCompanies(this.env, payload),
 		);
 
-		const { doc: icp, organizationId } = await step.do(
+		const { doc: icp } = await step.do(
 			"load-icp",
 			config.stepConfig.databaseCall,
 			async () => {
@@ -303,32 +313,31 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 						`findPeople: unknown icp ${target.icpId}`,
 					);
 				}
-				return {
-					doc: IcpDocSchema.parse(icpRow.doc),
-					organizationId: icpRow.organizationId,
-				};
+				if (icpRow.organizationId !== payload.organizationId) {
+					throw new NonRetryableError(
+						`findPeople: icp ${target.icpId} does not belong to organization ${payload.organizationId}`,
+					);
+				}
+				return { doc: IcpDocSchema.parse(icpRow.doc) };
 			},
 		);
+		const organizationId = payload.organizationId;
 
-		await step.do("daily-ceiling", config.stepConfig.databaseCall, async () => {
+		await step.do("open-run", config.stepConfig.databaseCall, async () => {
 			const spent = await organizationSpendToday(this.env, organizationId);
 			if (spent >= config.spend.perAccountDailyDollars) {
 				throw new NonRetryableError(
 					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
 				);
 			}
-			return { spent };
-		});
-
-		await step.do("open-run", config.stepConfig.databaseCall, () =>
-			openRun(this.env, {
+			return openRun(this.env, {
 				id: event.instanceId,
 				organizationId,
 				icpId: target.icpId,
 				capability: "people",
 				status: "running",
-			}),
-		);
+			});
+		});
 
 		const known = await step.do(
 			"known-people",
@@ -366,7 +375,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		};
 
 		await step.do("save-people", config.stepConfig.databaseCall, () =>
-			persistPeople(this.env, scoped, result.companies),
+			persistPeople(this.env, scoped, result.companies, organizationId),
 		);
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>

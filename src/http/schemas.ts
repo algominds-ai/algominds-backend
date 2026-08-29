@@ -7,17 +7,6 @@ export const icpRef = z.union([
 	z.object({ prompt: z.string().min(1) }),
 ]);
 
-export const companiesFindSchema = z.intersection(
-	icpRef,
-	z.object({
-		count: z
-			.number()
-			.int()
-			.positive()
-			.max(config.limits.maxCompaniesPerRequest),
-	}),
-);
-
 export function normalizedDomainList(
 	values: string[],
 	ctx: z.RefinementCtx,
@@ -39,6 +28,18 @@ export const domainsField = z
 	.max(config.limits.maxCompaniesPerPeopleRun)
 	.transform(normalizedDomainList);
 
+export const companiesFindSchema = z.intersection(
+	icpRef,
+	z.object({
+		count: z
+			.number()
+			.int()
+			.positive()
+			.max(config.limits.maxCompaniesPerRequest),
+		excludeDomains: domainsField.optional(),
+	}),
+);
+
 export const maxCompaniesField = z.number().int().positive().optional();
 
 export const peopleFindSchema = z.union([
@@ -46,8 +47,8 @@ export const peopleFindSchema = z.union([
 	z.strictObject({ domains: domainsField, maxCompanies: maxCompaniesField }),
 ]);
 
-export const enrichSchema = z.object({
-	runId: z.string(),
+export const enrichSchema = z.strictObject({
+	runId: z.string().min(1),
 	channels: z.array(z.enum(["email", "linkedin"])).min(1),
 });
 

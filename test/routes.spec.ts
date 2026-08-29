@@ -217,7 +217,6 @@ async function expectEnrichResolvesSubjects(
 				{ name: "load-source-run" },
 				{ organizationId: "org-1", icpId: "icp-1" },
 			);
-			await m.mockStepResult({ name: "daily-ceiling" }, { spent: 0 });
 			await m.mockStepResult({ name: "open-run" }, { id: runId });
 			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
@@ -372,6 +371,37 @@ describe("POST /companies/find", () => {
 		expect(second.status).toBe(200);
 		expect(secondBody.status).toBe("existing");
 		expect(secondBody.runId).toBe(firstBody.runId);
+	});
+});
+
+describe("POST /companies/find: exclusions and the run id", () => {
+	it("keeps today's plain run id with no exclusions, but diverges once exclusions differ", async () => {
+		const icpId = await seedOwnedIcp("exclusions-diverge");
+		const today = new Date().toISOString().slice(0, 10);
+
+		const withoutExclusions = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 4 }, TOKEN),
+		);
+		const withCompetitor = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 4, excludeDomains: ["competitor.com"] }, TOKEN),
+		);
+		const withOtherExclusion = await authedCall(
+			"/companies/find",
+			postInit({ icpId, count: 4, excludeDomains: ["rival.com"] }, TOKEN),
+		);
+		const withoutBody: { runId: string } = await withoutExclusions.json();
+		const withCompetitorBody: { runId: string } = await withCompetitor.json();
+		const withOtherBody: { runId: string } = await withOtherExclusion.json();
+		await terminateRun(withoutBody.runId);
+		await terminateRun(withCompetitorBody.runId);
+		await terminateRun(withOtherBody.runId);
+
+		expect(withoutBody.runId).toBe(`companies_${icpId}_${today}`);
+		expect(withCompetitorBody.runId).not.toBe(withoutBody.runId);
+		expect(withOtherBody.runId).not.toBe(withoutBody.runId);
+		expect(withOtherBody.runId).not.toBe(withCompetitorBody.runId);
 	});
 });
 
@@ -670,6 +700,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 
 			await savePeople(testEnv, [
 				{
+					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdA,
 					linkedinUrl: `https://linkedin.com/in/${labelA}`,
 					name: "Person A",
@@ -678,6 +709,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 			]);
 			await savePeople(testEnv, [
 				{
+					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdB,
 					linkedinUrl: `https://linkedin.com/in/${labelB}`,
 					name: "Person B",

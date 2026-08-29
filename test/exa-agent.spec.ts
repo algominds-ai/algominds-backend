@@ -6,11 +6,33 @@ import {
 	toExaSearchResult,
 } from "../src/core/companies/agent-search";
 import { CostLedger } from "../src/core/cost";
-import { getAgentRun, startAgentRun } from "../src/core/providers/exa/agent";
+import {
+	getAgentPeopleRun,
+	getAgentRun,
+	startAgentRun,
+} from "../src/core/providers/exa/agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
+import type { SearchPlan } from "../src/core/synthesize";
 import runningRun from "./fixtures/exa-agent-run-running.json";
 
 type FetchStub = { calls: number; init: RequestInit | undefined };
+
+function planFor(query: string): SearchPlan {
+	return {
+		query,
+		angle: "angle-1",
+		userLocation: null,
+		countries: [],
+		minWorkforce: null,
+		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
+	};
+}
 
 const originalFetch = globalThis.fetch;
 
@@ -64,11 +86,7 @@ describe("agent run start request shape", () => {
 		const stub = stubFetch(
 			jsonResponse(200, { id: "run-1", status: "running" }),
 		);
-		const req = buildAgentRunRequest(
-			{ query: "seed stage fintech" },
-			10,
-			"low",
-		);
+		const req = buildAgentRunRequest(planFor("seed stage fintech"), 10, "low");
 
 		await startAgentRun(req, exaEnv());
 
@@ -85,7 +103,7 @@ describe("agent run start request shape", () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
 		const result = await startAgentRun(
-			buildAgentRunRequest({ query: "seed stage fintech" }, 5, "low"),
+			buildAgentRunRequest(planFor("seed stage fintech"), 5, "low"),
 			exaEnv(),
 		);
 
@@ -101,7 +119,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -114,10 +132,70 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest({ query: "GTM leads" }, 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
+	});
+
+	it("raises RetryableProviderError when the request times out", async () => {
+		globalThis.fetch = async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		};
+
+		await expect(
+			startAgentRun(
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
+				exaEnv(),
+			),
+		).rejects.toThrow(RetryableProviderError);
+	});
+});
+
+describe("agent people run linkedin url shape check", () => {
+	function peopleRunBody(linkedinUrl: string | null) {
+		return {
+			id: "run-people",
+			status: "completed",
+			output: {
+				structured: {
+					people: [{ name: "A Person", linkedinUrl }],
+				},
+			},
+			costDollars: { total: 0.01 },
+		};
+	}
+
+	it("nulls a linkedinUrl that is not a linkedin.com profile url", async () => {
+		stubFetch(jsonResponse(200, peopleRunBody("https://example.com/fake")));
+
+		const run = await getAgentPeopleRun(
+			"run-people",
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(run.status).toBe("completed");
+		if (run.status !== "completed") return;
+		expect(run.people[0]?.linkedinUrl).toBeNull();
+	});
+
+	it("keeps a linkedinUrl that is a real linkedin.com profile url", async () => {
+		stubFetch(
+			jsonResponse(200, peopleRunBody("https://www.linkedin.com/in/a-person")),
+		);
+
+		const run = await getAgentPeopleRun(
+			"run-people",
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(run.status).toBe("completed");
+		if (run.status !== "completed") return;
+		expect(run.people[0]?.linkedinUrl).toBe(
+			"https://www.linkedin.com/in/a-person",
+		);
 	});
 });
 

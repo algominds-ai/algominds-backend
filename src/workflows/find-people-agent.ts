@@ -1,8 +1,6 @@
 import type { WorkflowStep } from "cloudflare:workers";
-import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import type { FindPeopleDeps } from "@/core/people";
-import type { PeopleCompany } from "@/core/people/candidates";
 import {
 	buildPersonAgentRunRequest,
 	getAgentPeopleRun,
@@ -24,18 +22,8 @@ const RESULTS_PER_COMPANY = config.people.resultsPerCompany;
 export function agentPersonSearch(
 	step: WorkflowStep,
 	batchIndex: number,
-	companies: readonly PeopleCompany[],
 ): FindPeopleDeps["search"] {
-	let callIndex = 0;
-	return async (req, env, ledger) => {
-		const index = callIndex;
-		callIndex += 1;
-		const company = companies[index];
-		if (!company) {
-			throw new NonRetryableError(
-				`agentPersonSearch: no company at index ${index} for people-batch-${batchIndex}`,
-			);
-		}
+	return async (company, req, env, ledger) => {
 		const name = `people-batch-${batchIndex}-${company.domain}-agent`;
 		const { id } = await step.do(
 			`${name}-start`,

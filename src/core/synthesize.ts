@@ -20,6 +20,12 @@ export type SearchPlan = {
 	countries: string[];
 	minWorkforce: number | null;
 	maxWorkforce: number | null;
+	minFoundedYear: number | null;
+	maxFoundedYear: number | null;
+	minRevenueAnnual: number | null;
+	maxRevenueAnnual: number | null;
+	minFundingTotal: number | null;
+	maxFundingTotal: number | null;
 };
 
 const SearchPlanModelSchema = z.object({
@@ -29,6 +35,12 @@ const SearchPlanModelSchema = z.object({
 	countries: z.array(z.string()),
 	minWorkforce: z.number().nullable(),
 	maxWorkforce: z.number().nullable(),
+	minFoundedYear: z.number().nullish(),
+	maxFoundedYear: z.number().nullish(),
+	minRevenueAnnual: z.number().nullish(),
+	maxRevenueAnnual: z.number().nullish(),
+	minFundingTotal: z.number().nullish(),
+	maxFundingTotal: z.number().nullish(),
 });
 
 export type SynthesizeResult = {
@@ -40,12 +52,18 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"You turn an ideal customer profile into one round of company discovery against Exa's",
 	"company index. Exa matches a query by how a person would describe the company in a",
 	"sentence, not by keywords. Write `query` as one short descriptive sentence of about",
-	"fifteen to twenty-five words. Put no numbers, no revenue band, and no headcount in it.",
-	"Exa returns a structured record for each company, so numeric limits belong in the filter",
-	"fields instead: set `minWorkforce` and `maxWorkforce` to the headcount range the profile",
-	"asks for, `countries` to the full country names the profile allows, written as Exa writes",
+	"fifteen to twenty-five words. Write only the descriptive sentence there; the code adds",
+	"the profile's numeric bounds and countries to it afterward, as its own sentences.",
+	"Exa returns a structured record for each company, so numeric limits also belong in the",
+	"filter fields: set `minWorkforce` and `maxWorkforce` to the headcount range the profile",
+	"asks for, `minFoundedYear` and `maxFoundedYear` to the years it was founded between,",
+	"`minRevenueAnnual` and `maxRevenueAnnual` to the annual revenue in whole US dollars,",
+	"`minFundingTotal` and `maxFundingTotal` to the funding raised in whole US dollars,",
+	"`countries` to the full country names the profile allows, written as Exa writes",
 	"them, for example United States, and `userLocation` to the matching two-letter country",
 	"code, or null when the profile names no country.",
+	"Set a bound only when the profile asks for it. Every bound the profile does not name is",
+	"null, because a limit nobody asked for refuses companies that fit.",
 	"`angle` names the slice of the market this round targets, for example the vertical, the",
 	"buyer, or the product shape.",
 	"A paraphrase of an earlier query returns the same companies, so when earlier angles are",
@@ -78,6 +96,12 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 		countries: [],
 		minWorkforce: null,
 		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 	};
 }
 
@@ -122,6 +146,12 @@ export async function synthesize(
 			countries: output.countries,
 			minWorkforce: output.minWorkforce,
 			maxWorkforce: output.maxWorkforce,
+			minFoundedYear: output.minFoundedYear ?? null,
+			maxFoundedYear: output.maxFoundedYear ?? null,
+			minRevenueAnnual: output.minRevenueAnnual ?? null,
+			maxRevenueAnnual: output.maxRevenueAnnual ?? null,
+			minFundingTotal: output.minFundingTotal ?? null,
+			maxFundingTotal: output.maxFundingTotal ?? null,
 		},
 		ledger,
 	};

@@ -11,9 +11,13 @@ export type TargetCompanies = {
 	unknownDomains: string[];
 };
 
-async function targetByRun(env: Env, runId: string): Promise<TargetCompanies> {
+async function targetByRun(
+	env: Env,
+	runId: string,
+	organizationId: string,
+): Promise<TargetCompanies> {
 	const runRow = await findRun(env, runId);
-	if (!runRow) {
+	if (!runRow || runRow.organizationId !== organizationId) {
 		throw new NonRetryableError(`findPeople: unknown run ${runId}`);
 	}
 	const companies = await companiesForRun(env, runId);
@@ -60,8 +64,9 @@ export function companiesOfOneProfile(
 async function targetByDomains(
 	env: Env,
 	domains: readonly string[],
+	organizationId: string,
 ): Promise<TargetCompanies> {
-	const matches = await companiesForDomains(env, domains);
+	const matches = await companiesForDomains(env, domains, organizationId);
 	if (matches.length === 0) {
 		throw new NonRetryableError(
 			`findPeople: no known company for domains ${domains.join(", ")}`,
@@ -70,12 +75,12 @@ async function targetByDomains(
 	return companiesOfOneProfile(matches, domains);
 }
 
-/** Resolves the companies a people run searches, from a companies run id or a domain list. */
+/** Resolves the companies a people run searches, from a companies run id or a domain list, scoped to the caller's organization. */
 export function loadTargetCompanies(
 	env: Env,
 	payload: FindPeoplePayload,
 ): Promise<TargetCompanies> {
 	return "runId" in payload
-		? targetByRun(env, payload.runId)
-		: targetByDomains(env, payload.domains);
+		? targetByRun(env, payload.runId, payload.organizationId)
+		: targetByDomains(env, payload.domains, payload.organizationId);
 }

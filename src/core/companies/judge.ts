@@ -10,7 +10,7 @@ const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 const VerdictSchema = z.object({
 	index: z.number().int().nonnegative(),
 	keep: z.boolean(),
-	reason: z.string(),
+	reason: z.string().optional(),
 });
 
 export type Verdict = z.infer<typeof VerdictSchema>;
@@ -27,8 +27,9 @@ export type JudgeResult = {
 const JUDGE_INSTRUCTIONS = [
 	"You judge one batch of candidate companies against an ideal customer profile in a single",
 	"pass. For every row, by its index, decide whether it should keep going toward a campaign.",
-	"Return one verdict per row, in the same order, each carrying the row index, a keep",
-	"decision, and a short reason.",
+	"Return one verdict per row, in the same order, each carrying the row index and a keep",
+	"decision. Give a short reason only when you refuse a row. Omit the reason when you keep",
+	"a row.",
 ].join(" ");
 
 function judgePrompt(icp: IcpDoc, rows: readonly CompanyRow[]): string {
@@ -42,11 +43,7 @@ function keepEveryGatedRow(
 	ledger: CostLedger,
 ): JudgeResult {
 	return {
-		verdicts: rows.map((_, index) => ({
-			index,
-			keep: true,
-			reason: "model unavailable, the gate decision stands",
-		})),
+		verdicts: rows.map((_, index) => ({ index, keep: true })),
 		ledger,
 	};
 }

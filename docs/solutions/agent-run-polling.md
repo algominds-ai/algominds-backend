@@ -5,8 +5,12 @@ completes. Two decisions in that loop are not obvious from the code.
 
 ## A retryable error ends the poll, not the caller's step
 
-`pollPersonEmail` in `src/core/providers/exa-agent-email.ts` polls inside a
-single `enrich-batch-N` workflow step, up to 24 attempts, 5 seconds apart.
+`pollPersonEmail` in `src/core/providers/exa/agent-email.ts` polls inside a
+single `enrich-batch-N` workflow step, up to 24 attempts, 5 seconds apart,
+from `enrich.exaAgentMaxPollAttempts`. That setting is the enrichment
+provider's own: it read the company agent's budget until raising that budget
+for constrained company discovery silently took email enrichment from two
+minutes to five.
 
 If a poll raised a `RetryableProviderError` and let it escape, the whole
 batch step would fail. Cloudflare then retries that step from the start,
@@ -42,12 +46,14 @@ per company inside one `people-batch-N` step. Cloudflare caches a step result
 by name, so two companies sharing a nested step name would make the second
 company receive the first company's agent run. Wrong people, no error.
 
-The name carries the company's index in the batch. The index comes from a
-counter incremented in the synchronous prefix of the search call, before any
-await, so concurrent calls started through `Promise.all` over an ordered
-array still take their index in array order, and take the same index again on
-a replay.
+The name carries the company's own domain, and the company is passed to the
+search call rather than inferred. It used to be inferred: a counter was
+incremented on each call and used to index the batch, which was correct only
+while every caller reached the search in array order and never awaited before
+it. The first await added upstream would have given one company another
+company's name, and so another company's cached agent run. The counter is
+gone.
 
-`agentDecisionMakerTitles` exists for a related reason. The poll loop sleeps,
-a sleep replays `run()` from the start, and any paid call not inside its own
-step would be paid again on every wake.
+Every paid call sits in its own step for a related reason. The poll loop
+sleeps, a sleep replays `run()` from the start, and a paid call outside a step
+would be paid again on every wake.

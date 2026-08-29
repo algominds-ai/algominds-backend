@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
-import { getAgentRunOutput, startAgentRun } from "@/core/providers/exa/agent";
+import {
+	agentLinkedinUrl,
+	getAgentRunOutput,
+	startAgentRun,
+} from "@/core/providers/exa/agent";
 import type {
 	FindymailContact,
 	FindymailInput,
@@ -10,15 +14,20 @@ import type {
 import type { Provider } from "@/core/providers/types";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
-const EFFORT = config.companies.exaAgentEffort;
-const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
-const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
+const EFFORT = config.enrich.exaAgentEffort;
+const POLL_INTERVAL_SECONDS = config.enrich.exaAgentPollIntervalSeconds;
+const MAX_POLL_ATTEMPTS = config.enrich.exaAgentMaxPollAttempts;
 
 const ExaAgentEmailContactSchema = z.object({
 	fullName: z.string().nullish(),
 	title: z.string().nullish(),
-	email: z.string().nullish(),
-	linkedinUrl: z.string().nullish(),
+	email: z
+		.string()
+		.nullish()
+		.transform((value) =>
+			value && z.email().safeParse(value).success ? value : null,
+		),
+	linkedinUrl: agentLinkedinUrl,
 	source: z.string().nullish(),
 });
 
@@ -97,14 +106,6 @@ function toContact(
 }
 
 /**
- * Searches for a person's work email through Exa's Agent API, the
- * waterfall's slowest and last email provider: a full run takes on the
- * order of half a minute, so it only ever runs on what Findymail missed. A
- * found address carries the agent's cited source URL, not just a finder
- * label, because the citation is the reason to prefer this over a plain
- * lookup.
- */
-/**
  * Starts one agent email run. Returns null when the vendor is rate limited or
  * unavailable, so the caller's enrich batch is not retried and billed again
  * for every other provider it already ran.
@@ -130,6 +131,11 @@ async function startEmailRun(
 	}
 }
 
+/**
+ * Searches for a person's work email through Exa's Agent API, the waterfall's
+ * slowest and last email provider, so it only ever runs on what Findymail
+ * missed. A found address carries the agent's cited source URL.
+ */
 export const exaAgentEmailProvider: Provider<FindymailInput, FindymailResult> =
 	{
 		id: "exa-agent-email",

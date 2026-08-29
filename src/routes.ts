@@ -21,7 +21,20 @@ export function createApiRoutes(): Hono<ApiEnv> {
 			toJob: async (body, env) => {
 				const icpId = await resolveIcpId(env, body, c.get("organizationId"));
 				if (icpId === null) return null;
-				return { scopeId: icpId, icpId, params: { icpId, count: body.count } };
+				const scopeId = body.excludeDomains
+					? await domainsScopeId(body.excludeDomains, icpId)
+					: icpId;
+				return {
+					scopeId,
+					icpId,
+					params: {
+						icpId,
+						count: body.count,
+						...(body.excludeDomains
+							? { excludeDomains: body.excludeDomains }
+							: {}),
+					},
+				};
 			},
 		}),
 	);
@@ -30,17 +43,25 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, peopleFindSchema, {
 			capability: "people",
 			workflow: c.env.FIND_PEOPLE,
-			toJob: async (body) => {
+			toJob: async (body, _env, organizationId) => {
 				if ("runId" in body) {
 					return {
 						scopeId: body.runId,
 						sourceRunId: body.runId,
-						params: { runId: body.runId, maxCompanies: body.maxCompanies },
+						params: {
+							runId: body.runId,
+							maxCompanies: body.maxCompanies,
+							organizationId,
+						},
 					};
 				}
 				return {
-					scopeId: await domainsScopeId(body.domains),
-					params: { domains: body.domains, maxCompanies: body.maxCompanies },
+					scopeId: await domainsScopeId(body.domains, organizationId),
+					params: {
+						domains: body.domains,
+						maxCompanies: body.maxCompanies,
+						organizationId,
+					},
 				};
 			},
 		}),

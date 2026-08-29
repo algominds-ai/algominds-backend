@@ -7,7 +7,9 @@ import {
 	buildSearchRequest,
 	collectDomains,
 	countUnseen,
+	excludedDomains,
 	filterEntities,
+	groupRejectReasons,
 } from "@/core/companies/candidates";
 import type {
 	CompanyRow,
@@ -46,12 +48,16 @@ export type FindCompaniesOptions = {
 	freshnessDays?: number;
 	scoreFloor?: number;
 	maxRounds?: number;
+	pastAngles?: readonly string[];
+	feedback?: readonly string[];
+	excludeDomains?: readonly string[];
 };
 
 export type FindCompaniesDeps = {
 	recentDomains: (env: Env, icpId: string, days: number) => Promise<string[]>;
 	synthesize: (input: SynthesizeInput, env: Env) => Promise<SynthesizeResult>;
 	search: (
+		plan: SearchPlan,
 		req: ExaSearchRequest,
 		env: Env,
 		ledger: CostLedger,
@@ -68,7 +74,12 @@ export type FindCompaniesDeps = {
 	) => Promise<JudgeResult>;
 };
 
-export type FindCompaniesStatus = "complete" | "short" | "exhausted" | "capped";
+export type FindCompaniesStatus =
+	| "complete"
+	| "short"
+	| "exhausted"
+	| "empty"
+	| "capped";
 
 export type FindCompaniesResult = {
 	companies: CompanyRow[];
@@ -80,6 +91,8 @@ export type FindCompaniesResult = {
 	rejects: FindCompaniesReject[];
 	searches: SearchPlan[];
 	captures: Record<string, CompanyCapture>;
+	seenDomains: string[];
+	feedback: string[];
 };
 
 function toGateRejects(
@@ -106,7 +119,7 @@ function applyVerdicts(
 		else
 			judgeRejects.push({
 				domain: row.domain,
-				reason: verdict.reason,
+				reason: verdict.reason ?? "refused without a reason",
 				stage: "judge",
 			});
 	}
@@ -119,7 +132,7 @@ function spentSoFar(ledgers: readonly CostLedger[]): number {
 }
 
 function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
-	return Array.from(new Set(rejects.map((reject) => reject.reason)));
+	return groupRejectReasons(rejects);
 }
 
 type RoundContext = {
@@ -138,6 +151,7 @@ type RoundOutcome = {
 	keptRows: CompanyRow[];
 	verdicts: Verdict[];
 	unseenCount: number;
+	resultCount: number;
 	ledger: CostLedger;
 	captures: Record<string, CompanyCapture>;
 };
@@ -154,7 +168,11 @@ async function runRound(
 	const plan = synthesized.plan;
 	const searchLedger = new CostLedger();
 	const searched = await deps.search(
-		buildSearchRequest(plan),
+		plan,
+		buildSearchRequest(
+			plan,
+			excludedDomains(opts.excludeDomains ?? [], ctx.seenDomains),
+		),
 		opts.env,
 		searchLedger,
 	);
@@ -176,6 +194,7 @@ async function runRound(
 		keptRows: candidates,
 		verdicts: judged.verdicts,
 		unseenCount,
+		resultCount: searched.results.length,
 		ledger: CostLedger.merge(synthesized.ledger, searchLedger, judged.ledger),
 		captures: filtered.captures,
 	};
@@ -191,7 +210,80 @@ type RoundsAccumulator = {
 	status: FindCompaniesStatus;
 	searches: SearchPlan[];
 	captures: Record<string, CompanyCapture>;
+	feedback: string[];
 };
+
+const EMPTY_ROUND_FEEDBACK =
+	"the previous query matched no companies at all, so it was too narrow: write a broader angle";
+
+type AbsorbedRound = {
+	rejects: FindCompaniesReject[];
+	accepted: CompanyRow[];
+};
+
+/** Records one round's domains as seen and splits its rows into kept and rejected. */
+function absorbRound(
+	outcome: RoundOutcome,
+	seenDomains: Set<string>,
+): AbsorbedRound {
+	for (const domain of collectDomains(outcome.rows)) seenDomains.add(domain);
+	const gateRejects = toGateRejects(outcome.rows, outcome.gateRejects);
+	const { accepted, judgeRejects } = applyVerdicts(
+		outcome.keptRows,
+		outcome.verdicts,
+	);
+	return {
+		rejects: [...outcome.filterRejects, ...gateRejects, ...judgeRejects],
+		accepted,
+	};
+}
+
+type RoundDecision = "complete" | "retry" | "exhausted" | "continue";
+
+/**
+ * What a finished round means for the loop. `retry` says the round is worth
+ * repeating: either the vendor matched nothing at all, or it matched rows
+ * that the filter refused outright, so no company ever reached the seen-domain
+ * check. `exhausted` means the opposite: rows survived the filter, but every
+ * one of them was a domain this run had already seen.
+ */
+export function decideRound(
+	found: number,
+	wanted: number,
+	outcome: { resultCount: number; filteredCount: number; unseenCount: number },
+): RoundDecision {
+	if (found >= wanted) return "complete";
+	if (outcome.resultCount === 0) return "retry";
+	if (outcome.filteredCount === 0) return "retry";
+	if (outcome.unseenCount === 0) return "exhausted";
+	return "continue";
+}
+
+/** `empty` only when every round the run paid for matched nothing at all. */
+export function terminalStatus(
+	status: FindCompaniesStatus,
+	found: number,
+	emptyRounds: number,
+	rounds: number,
+): FindCompaniesStatus {
+	if (found > 0 || rounds === 0) return status;
+	return emptyRounds === rounds ? "empty" : status;
+}
+
+type RetryFeedback = { feedback: string[]; emptyRounds: number };
+
+/** A retry over a vendor answer of zero rows earns the generic too-narrow line and counts toward `empty`; a retry over a filter or gate refusal keeps the reject reasons already in `feedback`. */
+function retryFeedback(
+	feedback: readonly string[],
+	resultCount: number,
+	emptyRounds: number,
+): RetryFeedback {
+	if (resultCount !== 0) return { feedback: [...feedback], emptyRounds };
+	return {
+		feedback: [...feedback, EMPTY_ROUND_FEEDBACK],
+		emptyRounds: emptyRounds + 1,
+	};
+}
 
 async function runRounds(
 	input: RunInput,
@@ -203,11 +295,12 @@ async function runRounds(
 	const ledgers: CostLedger[] = [];
 	const searches: SearchPlan[] = [];
 	const captures: Record<string, CompanyCapture> = {};
-	const pastAngles: string[] = [];
+	const pastAngles: string[] = [...(opts.pastAngles ?? [])];
 	const maxRounds = opts.maxRounds ?? MAX_ROUNDS;
-	let feedback: string[] = [];
+	let feedback: string[] = [...(opts.feedback ?? [])];
 	let status: FindCompaniesStatus = "short";
 	let rounds = 0;
+	let emptyRounds = 0;
 
 	for (let round = 0; round < maxRounds; round++) {
 		if (spentSoFar(ledgers) >= SPEND_PER_RUN) {
@@ -219,8 +312,8 @@ async function runRounds(
 			{
 				icp: input.icp,
 				count: input.count,
-				pastAngles,
-				feedback,
+				pastAngles: [...pastAngles],
+				feedback: [...feedback],
 				seenDomains: input.seenDomains,
 			},
 			opts,
@@ -230,33 +323,37 @@ async function runRounds(
 		searches.push(outcome.plan);
 		pastAngles.push(outcome.plan.angle);
 		Object.assign(captures, outcome.captures);
-		for (const domain of collectDomains(outcome.rows))
-			input.seenDomains.add(domain);
+		const absorbed = absorbRound(outcome, input.seenDomains);
+		rejects.push(...absorbed.rejects);
+		companies.push(...absorbed.accepted);
+		feedback = buildFeedback(absorbed.rejects);
 
-		const gateRejects = toGateRejects(outcome.rows, outcome.gateRejects);
-		const { accepted, judgeRejects } = applyVerdicts(
-			outcome.keptRows,
-			outcome.verdicts,
-		);
-		const roundRejects = [
-			...outcome.filterRejects,
-			...gateRejects,
-			...judgeRejects,
-		];
-		rejects.push(...roundRejects);
-		companies.push(...accepted);
-		feedback = buildFeedback(roundRejects);
-
-		if (companies.length >= input.count) {
-			status = "complete";
-			break;
+		const decision = decideRound(companies.length, input.count, {
+			resultCount: outcome.resultCount,
+			filteredCount: outcome.rows.length,
+			unseenCount: outcome.unseenCount,
+		});
+		if (decision === "retry") {
+			const retried = retryFeedback(feedback, outcome.resultCount, emptyRounds);
+			feedback = retried.feedback;
+			emptyRounds = retried.emptyRounds;
+			continue;
 		}
-		if (outcome.unseenCount === 0) {
-			status = "exhausted";
+		if (decision !== "continue") {
+			status = decision;
 			break;
 		}
 	}
-	return { companies, rejects, ledgers, rounds, status, searches, captures };
+	return {
+		companies,
+		rejects,
+		ledgers,
+		rounds,
+		status: terminalStatus(status, companies.length, emptyRounds, rounds),
+		searches,
+		captures,
+		feedback,
+	};
 }
 
 /**
@@ -289,5 +386,7 @@ export async function findCompanies(
 		rejects: outcome.rejects,
 		searches: outcome.searches,
 		captures: outcome.captures,
+		seenDomains: [...seenDomains],
+		feedback: outcome.feedback,
 	};
 }

@@ -45,17 +45,28 @@ engine does not have today.
 
 ### The daily ceiling is read then decided, with no lock
 
-`accountSpendToday` is a plain read. Two runs for one account that start
-together can both see the same total and both proceed.
+`organizationSpendToday` is a plain read. Two runs for one organization that
+start together can both see the same total and both proceed.
 
-The plan asked for a Postgres advisory lock held across the read and the
-decision. Those are two separate workflow steps and a lock cannot span them.
-Doing it properly means merging the ceiling check and `openRun` into one
-transactional step. That is a restructure, not a small change, and it was not
-worth rushing behind a green gate.
+The check and `openRun` now share one `open-run` workflow step, so the gap
+between them is two database round trips instead of the durable write that
+separates two steps. `test/spend-ceiling.spec.ts` proves an organization at
+the ceiling gets no run row at all.
 
-Incremental spend recording narrows the window: a concurrent run now sees
-what an in-flight run has already spent, rather than zero until it finishes.
+No lock is held, and none is planned. Cloudflare's own guidance is not to
+wrap several statements in one transaction through Hyperdrive, because the
+connection pins for the duration and cannot serve another isolate. This
+engine already exhausted its connections at five concurrent workflows
+(`SQLSTATE 53300`), so a lock on the hottest path would make a measured
+failure worse to close a bounded one: the overshoot is one run's own ceiling
+per concurrent start, against a daily ceiling twenty five times larger. A
+single conditional `INSERT` was also considered and rejected; under read
+committed two of them still both pass, so it buys no correctness for the
+raw SQL it costs.
+
+Incremental spend recording narrows the window further: a concurrent run now
+sees what an in-flight run has already spent, rather than zero until it
+finishes.
 
 ### The per-run overshoot is larger for people than for companies
 
@@ -133,10 +144,10 @@ index on `person.linkedin_url` if duplicates exist.
 This was a greenfield rebuild and that was the right call, but it is asserted
 in a plan document rather than anywhere a deployer would see it.
 
-### `icp_account_idx` has no reader
+### `icp_organization_idx` has no reader
 
-No query filters on `icp.accountId`. It costs a write on every insert and
-serves nothing yet.
+No query filters on `icp.organizationId`. It costs a write on every insert
+and serves nothing yet.
 
 ### `company_icp_found_at_idx` is not the index the planner picks
 

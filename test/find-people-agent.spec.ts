@@ -1,9 +1,11 @@
 import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
+import { CostLedger } from "../src/core/cost";
 import type { FindPeopleDeps, FindPeopleOptions } from "../src/core/people";
 import { findPeople } from "../src/core/people";
 import type { PeopleCompany } from "../src/core/people/candidates";
+import { buildPersonSearchRequest } from "../src/core/people/candidates";
 import { agentPersonSearch } from "../src/workflows/find-people-agent";
 
 const originalFetch = globalThis.fetch;
@@ -159,7 +161,7 @@ describe("agentPersonSearch: two companies in one batch", () => {
 		]);
 
 		const { step, names } = fakeWorkflowStep();
-		const search = agentPersonSearch(step, 0, [companyA, companyB]);
+		const search = agentPersonSearch(step, 0);
 		const opts: FindPeopleOptions = {
 			icp: { description: "seed stage fintech companies" },
 			env: exaEnv(),
@@ -219,7 +221,7 @@ describe("agentPersonSearch: two companies in one batch", () => {
 			},
 		]);
 		const { step, names } = fakeWorkflowStep();
-		const search = agentPersonSearch(step, 3, [companyA, companyB]);
+		const search = agentPersonSearch(step, 3);
 		const opts: FindPeopleOptions = {
 			icp: { description: "seed stage fintech companies" },
 			env: exaEnv(),
@@ -236,6 +238,61 @@ describe("agentPersonSearch: two companies in one batch", () => {
 		expect(names).toContain("people-batch-3-a.example-agent-poll-1");
 		expect(names).toContain("people-batch-3-b.example-agent-start");
 		expect(names).toContain("people-batch-3-b.example-agent-poll-1");
+	});
+});
+
+describe("agentPersonSearch: company attribution does not depend on call order", () => {
+	it("attributes the right company even when the second company's call is awaited first", async () => {
+		stubAgentPeopleFetch([
+			{
+				match: "at Acme Corp",
+				people: [
+					{
+						name: "Alice Acme",
+						linkedinUrl: "https://linkedin.com/in/alice-acme",
+					},
+				],
+			},
+			{
+				match: "at Widget Co",
+				people: [
+					{
+						name: "Bob Widget",
+						linkedinUrl: "https://linkedin.com/in/bob-widget",
+					},
+				],
+			},
+		]);
+		const { step, names } = fakeWorkflowStep();
+		const search = agentPersonSearch(step, 0);
+		const plan = {
+			titles: ["VP of Sales"],
+			queryTemplate: "decision makers at {company}",
+			userLocation: null,
+		};
+		const env = exaEnv();
+
+		const widgetResult = await search(
+			companyB,
+			buildPersonSearchRequest(companyB, plan),
+			env,
+			new CostLedger(),
+		);
+		const acmeResult = await search(
+			companyA,
+			buildPersonSearchRequest(companyA, plan),
+			env,
+			new CostLedger(),
+		);
+
+		expect(widgetResult.results.map((r) => r.person?.fullName)).toEqual([
+			"Bob Widget",
+		]);
+		expect(acmeResult.results.map((r) => r.person?.fullName)).toEqual([
+			"Alice Acme",
+		]);
+		expect(names).toContain("people-batch-0-widget.example-agent-start");
+		expect(names).toContain("people-batch-0-acme.example-agent-start");
 	});
 });
 

@@ -10,6 +10,23 @@ import { startAgentRun } from "../src/core/providers/exa/agent";
 import { search } from "../src/core/providers/exa/search";
 import type { SearchPlan } from "../src/core/synthesize";
 
+function planFor(query: string): SearchPlan {
+	return {
+		query,
+		angle: "angle-1",
+		userLocation: null,
+		countries: [],
+		minWorkforce: null,
+		maxWorkforce: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
+	};
+}
+
 const SEARCH_TYPES = [
 	"instant",
 	"fast",
@@ -120,6 +137,12 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		countries: ["United States"],
 		minWorkforce: null,
 		maxWorkforce: 20,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 		...overrides,
 	};
 }
@@ -142,6 +165,26 @@ describe("company search request stays inside the measured Exa /search schema", 
 		const request = buildSearchRequest(samplePlan({ userLocation: null }));
 
 		expect(MeasuredSearchRequestSchema.safeParse(request).success).toBe(true);
+	});
+});
+
+describe("the search query carries the plan's bounds", () => {
+	it("appends the numeric bounds and countries as sentences after the descriptive query", () => {
+		const request = buildSearchRequest(samplePlan());
+
+		expect(request.query).toBe(
+			"fintech companies at seed stage with a small team Every company must have a headcount of at most 20. Every company must be based in United States.",
+		);
+	});
+
+	it("leaves the query unchanged when the plan carries no bounds and no countries", () => {
+		const request = buildSearchRequest(
+			samplePlan({ maxWorkforce: null, countries: [] }),
+		);
+
+		expect(request.query).toBe(
+			"fintech companies at seed stage with a small team",
+		);
 	});
 });
 
@@ -170,7 +213,7 @@ describe("person search request stays inside the measured Exa /search schema, as
 describe("agent run request stays inside the measured Exa /agent/runs schema", () => {
 	it("emits only fields and enum values the measured schema allows", () => {
 		const request = buildAgentRunRequest(
-			{ query: "small US software teams" },
+			planFor("small US software teams"),
 			10,
 			"low",
 		);
@@ -300,7 +343,7 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		await startAgentRun(
-			buildAgentRunRequest({ query: "ten fintech companies" }, 10, "low"),
+			buildAgentRunRequest(planFor("ten fintech companies"), 10, "low"),
 			exaEnv(),
 		);
 
