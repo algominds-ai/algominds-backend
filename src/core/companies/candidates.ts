@@ -18,6 +18,7 @@ export type FindCompaniesReject = {
 	domain: string | null;
 	reason: string;
 	stage: "filter" | "gate" | "judge";
+	group?: string;
 };
 
 export type CompanyMatch = {
@@ -55,13 +56,19 @@ export function excludedDomains(
 	return [...new Set([...caller, ...seen])].slice(0, MAX_EXCLUDED_DOMAINS);
 }
 
-/** The Exa request for one round. `excludeDomains` names companies the run already knows, so the vendor never spends a result slot on one. */
+/**
+ * The Exa request for one round. `query` is the plan's descriptive sentence
+ * followed by its numeric bounds and countries as trailing sentences;
+ * `excludeDomains` names companies the run already knows, so the vendor
+ * never spends a result slot on one.
+ */
 export function buildSearchRequest(
 	plan: SearchPlan,
 	excludeDomains: readonly string[] = [],
 ): ExaSearchRequest {
+	const constraints = planConstraints(plan);
 	return {
-		query: plan.query,
+		query: constraints ? `${plan.query} ${constraints}` : plan.query,
 		category: "company",
 		type: "fast",
 		numResults: RESULTS_PER_ROUND,
@@ -167,19 +174,59 @@ export const NUMERIC_LIMITS: readonly NumericLimit[] = [
 	},
 ];
 
+function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
+	const floor = limit.floor(plan);
+	const ceiling = limit.ceiling(plan);
+	if (floor !== null && ceiling !== null) {
+		return `Every company must have a ${limit.label} between ${floor} and ${ceiling}.`;
+	}
+	if (ceiling !== null) {
+		return `Every company must have a ${limit.label} of at most ${ceiling}.`;
+	}
+	if (floor !== null) {
+		return `Every company must have a ${limit.label} of at least ${floor}.`;
+	}
+	return null;
+}
+
+/** The plan's bounds and countries as sentences, appended to a query so the vendor's search and any agent both see them stated. */
+export function planConstraints(plan: SearchPlan): string {
+	const rules = NUMERIC_LIMITS.map((limit) => limitRule(limit, plan)).filter(
+		(rule): rule is string => rule !== null,
+	);
+	if (plan.countries.length > 0) {
+		rules.push(
+			`Every company must be based in ${plan.countries.join(" or ")}.`,
+		);
+	}
+	return rules.join(" ");
+}
+
+type RejectDetail = { reason: string; group?: string };
+
 function numericRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
-): string | null {
+): RejectDetail | null {
 	for (const limit of NUMERIC_LIMITS) {
 		const reading = limit.reading(entity);
 		if (reading === null) continue;
 		const ceiling = limit.ceiling(plan);
-		if (ceiling !== null && reading > ceiling)
-			return `${limit.label} ${reading} above the limit of ${ceiling}`;
+		if (ceiling !== null && reading > ceiling) {
+			const group = `${limit.label} above the limit of ${ceiling}`;
+			return {
+				reason: `${limit.label} ${reading} above the limit of ${ceiling}`,
+				group,
+			};
+		}
 		const floor = limit.floor(plan);
-		if (floor !== null && reading < floor)
-			return `${limit.label} ${reading} below the floor of ${floor}`;
+		if (floor !== null && reading < floor) {
+			const group = `${limit.label} below the floor of ${floor}`;
+			return {
+				reason: `${limit.label} ${reading} below the floor of ${floor}`,
+				group,
+			};
+		}
 	}
 	return null;
 }
@@ -199,8 +246,10 @@ function countryRejectReason(
 function entityRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
-): string | null {
-	return countryRejectReason(entity, plan) ?? numericRejectReason(entity, plan);
+): RejectDetail | null {
+	const countryReason = countryRejectReason(entity, plan);
+	if (countryReason !== null) return { reason: countryReason };
+	return numericRejectReason(entity, plan);
 }
 
 export type FilterOutcome = {
@@ -231,12 +280,13 @@ export function filterEntities(
 			});
 			continue;
 		}
-		const reason = entityRejectReason(entity, plan);
-		if (reason) {
+		const detail = entityRejectReason(entity, plan);
+		if (detail) {
 			outcome.rejects.push({
 				domain: normalizeDomain(result.url),
-				reason,
+				reason: detail.reason,
 				stage: "filter",
+				...(detail.group ? { group: detail.group } : {}),
 			});
 			continue;
 		}
@@ -276,4 +326,27 @@ export function countUnseen(
 		if (domain && !seen.has(domain)) count += 1;
 	}
 	return count;
+}
+
+/**
+ * Collapses rejects that share a numeric group into one counted line, for
+ * example `47 companies had a headcount below the floor of 20`. A reject
+ * with no group keeps its own reason, deduplicated as before.
+ */
+export function groupRejectReasons(
+	rejects: readonly FindCompaniesReject[],
+): string[] {
+	const counts = new Map<string, number>();
+	const ungrouped = new Set<string>();
+	for (const reject of rejects) {
+		if (reject.group)
+			counts.set(reject.group, (counts.get(reject.group) ?? 0) + 1);
+		else ungrouped.add(reject.reason);
+	}
+	const grouped = Array.from(
+		counts,
+		([group, count]) =>
+			`${count} ${count === 1 ? "company" : "companies"} had a ${group}`,
+	);
+	return [...grouped, ...ungrouped];
 }

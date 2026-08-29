@@ -1,5 +1,4 @@
-import type { NumericLimit } from "@/core/companies/candidates";
-import { NUMERIC_LIMITS } from "@/core/companies/candidates";
+import { planConstraints } from "@/core/companies/candidates";
 import type {
 	ExaAgentCompany,
 	ExaAgentRunRequest,
@@ -32,34 +31,6 @@ const EXA_AGENT_COMPANY_SCHEMA = {
 	},
 	required: ["name", "website"],
 };
-
-function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
-	const floor = limit.floor(plan);
-	const ceiling = limit.ceiling(plan);
-	if (floor !== null && ceiling !== null) {
-		return `Every company must have a ${limit.label} between ${floor} and ${ceiling}.`;
-	}
-	if (ceiling !== null) {
-		return `Every company must have a ${limit.label} of at most ${ceiling}.`;
-	}
-	if (floor !== null) {
-		return `Every company must have a ${limit.label} of at least ${floor}.`;
-	}
-	return null;
-}
-
-/** The plan's bounds as sentences, because an agent reads instructions where a search index cannot. */
-function planConstraints(plan: SearchPlan): string {
-	const rules = NUMERIC_LIMITS.map((limit) => limitRule(limit, plan)).filter(
-		(rule): rule is string => rule !== null,
-	);
-	if (plan.countries.length > 0) {
-		rules.push(
-			`Every company must be based in ${plan.countries.join(" or ")}.`,
-		);
-	}
-	return rules.join(" ");
-}
 
 function agentQuery(plan: SearchPlan, count: number): string {
 	const constraints = planConstraints(plan);

@@ -9,6 +9,7 @@ import {
 	countUnseen,
 	excludedDomains,
 	filterEntities,
+	groupRejectReasons,
 } from "@/core/companies/candidates";
 import type {
 	CompanyRow,
@@ -116,7 +117,7 @@ function applyVerdicts(
 		else
 			judgeRejects.push({
 				domain: row.domain,
-				reason: verdict.reason,
+				reason: verdict.reason ?? "refused without a reason",
 				stage: "judge",
 			});
 	}
@@ -131,7 +132,7 @@ function spentSoFar(ledgers: readonly CostLedger[]): number {
 export function buildFeedback(
 	rejects: readonly FindCompaniesReject[],
 ): string[] {
-	return Array.from(new Set(rejects.map((reject) => reject.reason)));
+	return groupRejectReasons(rejects);
 }
 
 type RoundContext = {

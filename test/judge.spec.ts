@@ -113,14 +113,15 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 }
 
 function verdictsFor(rowSet: readonly CompanyRow[]): {
-	verdicts: Array<{ index: number; keep: boolean; reason: string }>;
+	verdicts: Array<{ index: number; keep: boolean; reason?: string }>;
 } {
 	return {
-		verdicts: rowSet.map((_, index) => ({
-			index,
-			keep: index !== 1,
-			reason: index === 1 ? "no qualifying signal" : "matches the ICP",
-		})),
+		verdicts: rowSet.map((_, index) => {
+			const keep = index !== 1;
+			return keep
+				? { index, keep }
+				: { index, keep, reason: "no qualifying signal" };
+		}),
 	};
 }
 
@@ -245,6 +246,35 @@ describe("judge: verdicts and retries", () => {
 			expect(verdict.index).toBe(index);
 		});
 		expect(result.verdicts[1]?.keep).toBe(false);
+	});
+
+	it("parses a kept row that carries no reason", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				objectReply({
+					verdicts: rows.map((_, index) => ({ index, keep: true })),
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await judge(icp, rows, env);
+
+		expect(result.verdicts.every((verdict) => verdict.keep)).toBe(true);
+		expect(
+			result.verdicts.every((verdict) => verdict.reason === undefined),
+		).toBe(true);
+	});
+
+	it("carries a refused row's reason through to the caller", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await judge(icp, rows, env);
+
+		expect(result.verdicts[1]?.reason).toBe("no qualifying signal");
 	});
 
 	it("retries once after a schema failure and returns the retry's result", async () => {

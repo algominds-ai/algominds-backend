@@ -168,6 +168,26 @@ describe("company search request stays inside the measured Exa /search schema", 
 	});
 });
 
+describe("the search query carries the plan's bounds", () => {
+	it("appends the numeric bounds and countries as sentences after the descriptive query", () => {
+		const request = buildSearchRequest(samplePlan());
+
+		expect(request.query).toBe(
+			"fintech companies at seed stage with a small team Every company must have a headcount of at most 20. Every company must be based in United States.",
+		);
+	});
+
+	it("leaves the query unchanged when the plan carries no bounds and no countries", () => {
+		const request = buildSearchRequest(
+			samplePlan({ maxWorkforce: null, countries: [] }),
+		);
+
+		expect(request.query).toBe(
+			"fintech companies at seed stage with a small team",
+		);
+	});
+});
+
 describe("person search request stays inside the measured Exa /search schema, aside from category", () => {
 	it("emits only fields and enum values the measured schema allows", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {

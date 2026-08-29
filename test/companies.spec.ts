@@ -15,6 +15,7 @@ import type {
 } from "../src/core/companies/candidates";
 import {
 	excludedDomains,
+	groupRejectReasons,
 	toCompanyData,
 } from "../src/core/companies/candidates";
 import type { CompanyRow } from "../src/core/companies/gate";
@@ -671,6 +672,54 @@ describe("the figures a profile can bound a company by", () => {
 		});
 
 		expect(result.companies.map((row) => row.domain)).toEqual(["unknown.com"]);
+	});
+});
+
+describe("collapsing numeric reject reasons for the synthesizer's feedback", () => {
+	it("collapses many companies below the same headcount floor into one counted line", async () => {
+		const results = Array.from({ length: 5 }, (_, i) =>
+			goodResult(`low${i}.com`, { workforceTotal: 10 + i }),
+		);
+		const { search } = scriptedSearch([results]);
+		const { synthesize } = scriptedSynthesize({ minWorkforce: 20 });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 5, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rejects).toHaveLength(5);
+		expect(result.rejects[0]?.reason).toBe(
+			"headcount 10 below the floor of 20",
+		);
+		expect(groupRejectReasons(result.rejects)).toEqual([
+			"5 companies had a headcount below the floor of 20",
+		]);
+	});
+
+	it("passes a judge reject through the grouping untouched", async () => {
+		const { search } = scriptedSearch([[goodResult("wrong.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([[0]]),
+		});
+
+		expect(result.rejects[0]).toEqual({
+			domain: "wrong.com",
+			reason: "does not fit icp",
+			stage: "judge",
+		});
+		expect(groupRejectReasons(result.rejects)).toEqual(["does not fit icp"]);
 	});
 });
 
