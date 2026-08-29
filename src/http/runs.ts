@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { z } from "zod";
 import { config } from "@/config";
 import { findRun } from "@/core/db/queries";
 import { companiesPage, peoplePage } from "@/core/db/run-pages";
@@ -30,6 +31,51 @@ async function callersRun(
 	return runRow.organizationId === c.get("organizationId") ? runRow : undefined;
 }
 
+const InstanceStatusSchema = z.object({
+	status: z.string(),
+	output: z
+		.object({
+			requested: z.number().nullish(),
+			found: z.number().nullish(),
+			rounds: z.number().nullish(),
+			searched: z.number().nullish(),
+			peopleFound: z.number().nullish(),
+			capped: z.boolean().nullish(),
+			status: z.string().nullish(),
+			roundReports: z.array(z.unknown()).nullish(),
+		})
+		.nullish(),
+	error: z.unknown().nullish(),
+});
+
+/**
+ * What a caller is told about a run. `status` answers whether it is still
+ * going, and comes from the engine running it. `outcome` answers how it went
+ * and is the capability's own word, which is not the same question: a run
+ * that ends `short` has finished. The engine's instance object is not passed
+ * through, because it carries every step's cached result, which for one ten
+ * company run was sixty nine kilobytes of the run's working state.
+ */
+function runReport(row: Run, instance: unknown) {
+	const parsed = InstanceStatusSchema.safeParse(instance);
+	const output = parsed.success ? parsed.data.output : undefined;
+	return {
+		runId: row.id,
+		capability: row.capability,
+		status: parsed.success ? parsed.data.status : "unknown",
+		outcome: row.finishedAt === null ? null : row.status,
+		costDollars: row.costDollars,
+		startedAt: row.startedAt,
+		finishedAt: row.finishedAt,
+		...(output ? { summary: output } : {}),
+		...(parsed.success &&
+		parsed.data.error !== null &&
+		parsed.data.error !== undefined
+			? { error: parsed.data.error }
+			: {}),
+	};
+}
+
 export async function getRunStatus(
 	c: Context<ApiEnv, "/runs/:runId">,
 ): Promise<Response> {
@@ -37,12 +83,11 @@ export async function getRunStatus(
 	const capability = runId.split("_")[0] ?? "";
 	const workflow = workflowForCapability(c.env, capability);
 	if (!workflow) return c.json({ error: "unknown run" }, 404);
-	if (!(await callersRun(c, runId))) {
-		return c.json({ error: "unknown run" }, 404);
-	}
+	const row = await callersRun(c, runId);
+	if (!row) return c.json({ error: "unknown run" }, 404);
 	try {
 		const instance = await workflow.get(runId);
-		return c.json(await instance.status(), 200);
+		return c.json(runReport(row, await instance.status()), 200);
 	} catch {
 		return c.json({ error: "unknown run" }, 404);
 	}

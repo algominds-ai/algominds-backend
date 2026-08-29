@@ -513,7 +513,7 @@ describe("GET /runs/:runId", () => {
 		expect(response.status).toBe(404);
 	});
 
-	it("reports the real instance status verbatim, with no completed output", async () => {
+	it("reports the run this engine keeps, and none of the engine's own working state", async () => {
 		const icpId = await seedOwnedIcp("instance-status");
 		const started = await authedCall(
 			"/companies/find",
@@ -522,13 +522,21 @@ describe("GET /runs/:runId", () => {
 		const { runId }: { runId: string } = await started.json();
 
 		const statusResponse = await waitForRunVisible(runId);
-		const status: { status: string; output?: unknown } =
-			await statusResponse.json();
+		const status: {
+			runId: string;
+			capability: string;
+			status: string;
+			costDollars: number;
+		} = await statusResponse.json();
 		await terminateRun(runId);
 
 		expect(statusResponse.status).toBe(200);
-		expect(typeof status.status).toBe("string");
-		expect(status.output == null).toBe(true);
+		expect(status.runId).toBe(runId);
+		expect(status.capability).toBe("companies");
+		expect(typeof status.costDollars).toBe("number");
+		expect(Object.keys(status)).not.toContain("__LOCAL_DEV_STEP_OUTPUTS");
+		expect(Object.keys(status)).not.toContain("rejects");
+		expect(Object.keys(status)).not.toContain("searches");
 	});
 });
 

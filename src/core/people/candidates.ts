@@ -14,7 +14,6 @@ export type PeopleCompany = Pick<Company, "id" | "domain" | "name"> & {
 
 const RESULTS_PER_COMPANY = config.people.resultsPerCompany;
 const MATCHED_CONFIDENCE = 1;
-const MISMATCHED_CONFIDENCE = 0.4;
 const TITLE_CUT_CHARS = ["@", "(", "|"];
 
 export type EmploymentClaim = {
@@ -43,7 +42,6 @@ export type PersonData = {
 	entity: PersonEntity;
 	result: PersonMatch;
 	employment: EmploymentClaim[];
-	apolloMatched: boolean;
 	confidence: number;
 };
 
@@ -54,7 +52,6 @@ export type PersonCandidate = {
 	rawTitle: string | null;
 	location: string | null;
 	employment: EmploymentClaim[];
-	apolloMatched: boolean;
 	entity: PersonEntity;
 	result: PersonMatch;
 };
@@ -67,27 +64,18 @@ export type ApolloOnlyCandidate = {
 	hasEmailPath: boolean;
 };
 
-const COMPANY_PLACEHOLDER = "{company}";
-
 /**
- * The Exa request for one company's decision makers. The model writes the
- * query and names the company with `{company}`; only that substitution and
- * the category are the code's, because the category is what the endpoint
- * means, not a choice.
+ * The Exa request for one company's decision makers. The company name is
+ * quoted, because unquoted it matches people whose own name merely resembles
+ * it: a search for Ediphi returned three people called Ed, and none of the
+ * twenty five worked there. Quoted, twenty of twenty five did.
  */
 export function buildPersonSearchRequest(
 	company: PeopleCompany,
-	plan: {
-		titles: readonly string[];
-		queryTemplate: string;
-		userLocation: string | null;
-	},
+	plan: { titles: readonly string[]; userLocation: string | null },
 ): ExaSearchRequest {
-	const written = plan.queryTemplate.includes(COMPANY_PLACEHOLDER)
-		? plan.queryTemplate
-		: `${plan.queryTemplate} at ${COMPANY_PLACEHOLDER}`;
 	return {
-		query: written.replaceAll(COMPANY_PLACEHOLDER, company.name),
+		query: `${plan.titles.join(", ")} at "${company.name}"`,
 		numResults: RESULTS_PER_COMPANY,
 		type: "fast",
 		category: "people",
@@ -151,10 +139,7 @@ export function toPersonClaim(result: ExaResult): PersonClaim {
  * at the company the run searched.
  */
 export function toPersonData(
-	person: Pick<
-		PersonCandidate,
-		"entity" | "result" | "employment" | "apolloMatched"
-	>,
+	person: Pick<PersonCandidate, "entity" | "result" | "employment">,
 	provider: string,
 ): PersonData {
 	return {
@@ -162,7 +147,6 @@ export function toPersonData(
 		entity: person.entity,
 		result: person.result,
 		employment: person.employment,
-		apolloMatched: person.apolloMatched,
 		confidence: employmentConfidence(person.employment),
 	};
 }
@@ -213,58 +197,43 @@ function entryMatchesCompany(
 	);
 }
 
-function employmentClaims(
+/** The one employer a verified person has: the entry whose id is the company's. */
+function verifiedEmployment(
 	workHistory: readonly PersonWorkHistoryEntry[],
 	company: PeopleCompany,
-): EmploymentClaim[] {
-	const current = workHistory.filter((entry) => entry.current);
-	const first = current[0];
-	if (first === undefined) {
-		return [
-			{
-				company: company.name,
-				confidence: MISMATCHED_CONFIDENCE,
-				source: "target",
-			},
-		];
-	}
-	const matched = current.find((entry) => entryMatchesCompany(entry, company));
-	if (matched) {
-		return [
-			{
-				company: matched.companyName ?? company.name,
-				confidence: MATCHED_CONFIDENCE,
-				source: "exa",
-			},
-		];
-	}
-	return [
-		{
-			company: first.companyName ?? "unknown employer",
-			confidence: MATCHED_CONFIDENCE,
-			source: "exa",
-		},
-		{
-			company: company.name,
-			confidence: MISMATCHED_CONFIDENCE,
-			source: "target",
-		},
-	];
+): EmploymentClaim | null {
+	const matched = workHistory
+		.filter((entry) => entry.current)
+		.find((entry) => entryMatchesCompany(entry, company));
+	if (!matched) return null;
+	return {
+		company: matched.companyName ?? company.name,
+		confidence: MATCHED_CONFIDENCE,
+		source: "exa",
+	};
 }
 
+/**
+ * One searched person, or `null` when the vendor's own work history does not
+ * place them at this company. A search for a title at a company name also
+ * returns people whose own name resembles it, and every company Exa returns
+ * carries an identifier, so employment is decided by that identifier rather
+ * than scored against the name that was searched for.
+ */
 export function toPersonCandidate(
 	claim: PersonClaim,
 	company: PeopleCompany,
 ): PersonCandidate | null {
 	if (claim.fullName === null) return null;
+	const employment = verifiedEmployment(claim.workHistory, company);
+	if (employment === null) return null;
 	return {
 		fullName: claim.fullName,
 		linkedinUrl: claim.linkedinUrl,
 		title: claim.rawTitle !== null ? normalizeTitle(claim.rawTitle) : null,
 		rawTitle: claim.rawTitle,
 		location: claim.location,
-		employment: employmentClaims(claim.workHistory, company),
-		apolloMatched: false,
+		employment: [employment],
 		entity: claim.entity,
 		result: claim.result,
 	};

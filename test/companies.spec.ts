@@ -1097,8 +1097,6 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				rounds: 1,
 				status: "complete",
 				costDollars: 0.05,
-				rejects: [],
-				searches: [plan],
 				roundReports: [
 					{
 						round: 1,
@@ -1173,8 +1171,6 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				rounds: 1,
 				status: "capped",
 				costDollars: overTheCeiling,
-				rejects: [],
-				searches: [plan],
 				roundReports: [
 					{
 						round: 1,

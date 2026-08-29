@@ -54,9 +54,23 @@ const unauthorizedResponse = z
 
 const runStatusResponse = z
 	.object({
-		status: z.string(),
-		output: z.unknown().optional(),
-		error: z.string().optional(),
+		runId: z.string(),
+		capability: z.string(),
+		status: z.string().openapi({
+			description:
+				"Whether the run is still going: running, complete or errored. Poll this.",
+		}),
+		outcome: z.string().nullable().openapi({
+			description:
+				"How it went, once it has finished: complete, short, empty, exhausted or capped. Null while it is still running.",
+		}),
+		costDollars: z.number(),
+		startedAt: z.string(),
+		finishedAt: z.string().nullable(),
+		summary: z.unknown().optional().openapi({
+			description:
+				"The counts the capability reported: how many were asked for, how many were found, and one line per round.",
+		}),
 	})
 	.openapi("RunStatus");
 
@@ -229,7 +243,7 @@ const runStatusRoute = createRoute({
 	responses: {
 		200: jsonResponse(
 			runStatusResponse,
-			"The Workflow instance status, verbatim.",
+			"The run, and the counts its capability reported.",
 		),
 		404: jsonResponse(errorResponse, UNKNOWN_RUN),
 		401: unauthorizedEntry,

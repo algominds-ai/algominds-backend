@@ -192,7 +192,6 @@ describe("person search request stays inside the measured Exa /search schema, as
 	it("emits only fields and enum values the measured schema allows", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["Chief Executive Officer"],
-			queryTemplate: "decision makers at {company}",
 			userLocation: null,
 		});
 
@@ -202,7 +201,6 @@ describe("person search request stays inside the measured Exa /search schema, as
 	it("sends a category value from the measured enum", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["Chief Executive Officer"],
-			queryTemplate: "decision makers at {company}",
 			userLocation: null,
 		});
 
@@ -357,7 +355,6 @@ describe("the people request carries only filters the people category accepts", 
 	it("sends the country the model wrote, uppercased", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["VP of Sales"],
-			queryTemplate: "sales leaders at {company}",
 			userLocation: "US",
 		});
 
@@ -368,7 +365,6 @@ describe("the people request carries only filters the people category accepts", 
 	it("omits the country entirely when the model named none", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["VP of Sales"],
-			queryTemplate: "sales leaders at {company}",
 			userLocation: null,
 		});
 
@@ -378,7 +374,6 @@ describe("the people request carries only filters the people category accepts", 
 	it("never sends a filter the people category rejects", () => {
 		const request = buildPersonSearchRequest(samplePeopleCompany(), {
 			titles: ["VP of Sales"],
-			queryTemplate: "sales leaders at {company}",
 			userLocation: "US",
 		});
 
@@ -387,14 +382,15 @@ describe("the people request carries only filters the people category accepts", 
 		expect("endPublishedDate" in request).toBe(false);
 	});
 
-	it("names the company where the model put its placeholder", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			queryTemplate: "who leads revenue at {company} today",
+	it("quotes the company name, which is what stops a person of the same name matching", () => {
+		const company = samplePeopleCompany();
+		const request = buildPersonSearchRequest(company, {
+			titles: ["VP of Sales", "Head of Growth"],
 			userLocation: null,
 		});
 
-		expect(request.query).toContain("who leads revenue at");
-		expect(request.query).not.toContain("{company}");
+		expect(request.query).toBe(
+			`VP of Sales, Head of Growth at "${company.name}"`,
+		);
 	});
 });

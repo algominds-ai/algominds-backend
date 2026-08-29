@@ -33,7 +33,7 @@ export const config = {
 	},
 	people: {
 		seenPeopleWindowDays: 90,
-		resultsPerCompany: 3,
+		resultsPerCompany: 25,
 		batchSize: 5,
 		peopleSource: "exa-search",
 		exaAgentEffort: "low",

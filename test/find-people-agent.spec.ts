@@ -139,7 +139,7 @@ describe("agentPersonSearch: two companies in one batch", () => {
 	it("gives each company its own distinct people, never the other's", async () => {
 		const fetchState = stubAgentPeopleFetch([
 			{
-				match: "at Acme Corp",
+				match: 'at "Acme Corp"',
 				people: [
 					{
 						name: "Alice Acme",
@@ -149,7 +149,7 @@ describe("agentPersonSearch: two companies in one batch", () => {
 				],
 			},
 			{
-				match: "at Widget Co",
+				match: 'at "Widget Co"',
 				people: [
 					{
 						name: "Bob Widget",
@@ -167,7 +167,6 @@ describe("agentPersonSearch: two companies in one batch", () => {
 			env: exaEnv(),
 			plan: {
 				titles: ["VP of Sales"],
-				queryTemplate: "decision makers at {company}",
 				userLocation: null,
 			},
 		};
@@ -208,13 +207,13 @@ describe("agentPersonSearch: two companies in one batch", () => {
 		};
 		stubAgentPeopleFetch([
 			{
-				match: "at Company A",
+				match: 'at "Company A"',
 				people: [
 					{ name: "Person A", linkedinUrl: "https://linkedin.com/in/a" },
 				],
 			},
 			{
-				match: "at Company B",
+				match: 'at "Company B"',
 				people: [
 					{ name: "Person B", linkedinUrl: "https://linkedin.com/in/b" },
 				],
@@ -227,7 +226,6 @@ describe("agentPersonSearch: two companies in one batch", () => {
 			env: exaEnv(),
 			plan: {
 				titles: ["VP of Sales"],
-				queryTemplate: "decision makers at {company}",
 				userLocation: null,
 			},
 		};
@@ -245,7 +243,7 @@ describe("agentPersonSearch: company attribution does not depend on call order",
 	it("attributes the right company even when the second company's call is awaited first", async () => {
 		stubAgentPeopleFetch([
 			{
-				match: "at Acme Corp",
+				match: 'at "Acme Corp"',
 				people: [
 					{
 						name: "Alice Acme",
@@ -254,7 +252,7 @@ describe("agentPersonSearch: company attribution does not depend on call order",
 				],
 			},
 			{
-				match: "at Widget Co",
+				match: 'at "Widget Co"',
 				people: [
 					{
 						name: "Bob Widget",
@@ -267,7 +265,6 @@ describe("agentPersonSearch: company attribution does not depend on call order",
 		const search = agentPersonSearch(step, 0);
 		const plan = {
 			titles: ["VP of Sales"],
-			queryTemplate: "decision makers at {company}",
 			userLocation: null,
 		};
 		const env = exaEnv();
@@ -316,7 +313,6 @@ function _titlesChatResponse(titles: string[]): Response {
 					role: "assistant",
 					content: JSON.stringify({
 						titles,
-						queryTemplate: "decision makers at {company}",
 						userLocation: null,
 					}),
 				},
