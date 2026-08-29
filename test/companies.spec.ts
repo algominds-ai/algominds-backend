@@ -567,6 +567,65 @@ async function terminateWorkflowRuns(): Promise<void> {
 
 afterEach(terminateWorkflowRuns);
 
+describe("what one round hands the next", () => {
+	it("gives a later round every angle the earlier rounds already tried", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("a.com")],
+			[goodResult("b.com")],
+			[goodResult("c.com")],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 9, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(inputs).toHaveLength(3);
+		expect(inputs[0]?.pastAngles).toEqual([]);
+		expect(inputs[1]?.pastAngles).toEqual(["angle-1"]);
+		expect(inputs[2]?.pastAngles).toEqual(["angle-1", "angle-2"]);
+	});
+
+	it("gives a later round the reasons the earlier round's companies were refused", async () => {
+		const { search } = scriptedSearch([
+			[goodResult("wrong.com")],
+			[goodResult("right.com")],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([[0]]),
+		});
+
+		expect(inputs[1]?.feedback.join(" ")).toContain("does not fit icp");
+	});
+
+	it("carries an angle a caller already used, so a second call does not repeat it", async () => {
+		const { search } = scriptedSearch([[goodResult("a.com")]]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		await findCompanies(
+			icp,
+			1,
+			testOptions({ pastAngles: ["angle-from-an-earlier-round"] }),
+			{ recentDomains, synthesize, search, gate, judge: scriptedJudge([]) },
+		);
+
+		expect(inputs[0]?.pastAngles).toEqual(["angle-from-an-earlier-round"]);
+	});
+});
+
 describe("domains a round tells the vendor not to return", () => {
 	it("names every company an earlier round already found", async () => {
 		const { search, calls } = scriptedSearch([
@@ -808,6 +867,15 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				costDollars: 0.05,
 				rejects: [],
 				searches: [plan],
+				roundReports: [
+					{
+						round: 1,
+						angle: plan.angle,
+						query: plan.query,
+						found: count,
+						rejected: { filter: 0, gate: 0, judge: 0 },
+					},
+				],
 			});
 		} finally {
 			await instance.dispose();
@@ -880,6 +948,15 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				costDollars: overTheCeiling,
 				rejects: [],
 				searches: [plan],
+				roundReports: [
+					{
+						round: 1,
+						angle: plan.angle,
+						query: plan.query,
+						found: companies.length,
+						rejected: { filter: 0, gate: 0, judge: 0 },
+					},
+				],
 			});
 		} finally {
 			await instance.dispose();

@@ -110,7 +110,7 @@ async function runFindCompaniesRounds(
 		runId: string;
 	},
 	step: WorkflowStep,
-): Promise<FindCompaniesResult> {
+): Promise<ReportedRounds> {
 	const { env, payload, icp, runId } = target;
 	const accumulatedDomains = new Set(
 		(payload.excludeDomains ?? []).map(normalizeDomain),
@@ -124,6 +124,7 @@ async function runFindCompaniesRounds(
 	let lastRoundStatus: FindCompaniesStatus = "short";
 	let pastAngles: string[] = [];
 	let feedback: string[] = [];
+	const roundReports: RoundReport[] = [];
 
 	for (
 		let round = 1;
@@ -151,6 +152,7 @@ async function runFindCompaniesRounds(
 		searches.push(...stepResult.searches);
 		Object.assign(captures, stepResult.captures);
 		rounds += 1;
+		roundReports.push(reportRound(round, stepResult));
 		lastRoundStatus = stepResult.status;
 		await step.do(`round_${round}-spend`, config.stepConfig.databaseCall, () =>
 			recordRunSpend(env, runId, costDollars),
@@ -177,6 +179,7 @@ async function runFindCompaniesRounds(
 		rejects,
 		searches,
 		captures,
+		roundReports,
 	};
 }
 
@@ -232,6 +235,37 @@ function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
  * and rejects. The row arrays and the vendor capture stay in Postgres, read
  * back a page at a time through `GET /runs/{runId}/companies`.
  */
+type ReportedRounds = FindCompaniesResult & { roundReports: RoundReport[] };
+
+export type RoundReport = {
+	round: number;
+	angle: string;
+	query: string;
+	found: number;
+	rejected: { filter: number; gate: number; judge: number };
+};
+
+/** One line per round: the angle it tried, what it kept, and where the rest fell. */
+export function reportRound(
+	round: number,
+	result: FindCompaniesResult,
+): RoundReport {
+	const plan = result.searches[0];
+	const count = (stage: FindCompaniesReject["stage"]): number =>
+		result.rejects.filter((reject) => reject.stage === stage).length;
+	return {
+		round,
+		angle: plan?.angle ?? "",
+		query: plan?.query ?? "",
+		found: result.companies.length,
+		rejected: {
+			filter: count("filter"),
+			gate: count("gate"),
+			judge: count("judge"),
+		},
+	};
+}
+
 export type FindCompaniesSummary = {
 	requested: number;
 	found: number;
@@ -240,11 +274,10 @@ export type FindCompaniesSummary = {
 	costDollars: number;
 	rejects: FindCompaniesReject[];
 	searches: SearchPlan[];
+	roundReports: RoundReport[];
 };
 
-function summarizeFindCompanies(
-	result: FindCompaniesResult,
-): FindCompaniesSummary {
+function summarizeFindCompanies(result: ReportedRounds): FindCompaniesSummary {
 	return {
 		requested: result.requested,
 		found: result.found,
@@ -253,6 +286,7 @@ function summarizeFindCompanies(
 		costDollars: result.costDollars,
 		rejects: result.rejects,
 		searches: result.searches,
+		roundReports: result.roundReports,
 	};
 }
 

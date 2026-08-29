@@ -292,8 +292,8 @@ async function runRounds(
 			{
 				icp: input.icp,
 				count: input.count,
-				pastAngles,
-				feedback,
+				pastAngles: [...pastAngles],
+				feedback: [...feedback],
 				seenDomains: input.seenDomains,
 			},
 			opts,
