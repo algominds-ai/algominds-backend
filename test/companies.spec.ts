@@ -564,6 +564,60 @@ async function terminateWorkflowRuns(): Promise<void> {
 
 afterEach(terminateWorkflowRuns);
 
+describe("a round the vendor answers with nothing", () => {
+	it("searches again instead of stopping, and can still find a company", async () => {
+		const { search } = scriptedSearch([[], [goodResult("late.com")]]);
+		const { synthesize, inputs } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.rounds).toBe(2);
+		expect(result.status).toBe("complete");
+		expect(result.companies.map((row) => row.domain)).toEqual(["late.com"]);
+		expect(inputs[1]?.feedback.join(" ")).toContain("too narrow");
+	});
+
+	it("reports empty, not exhausted, when every round matched nothing", async () => {
+		const { search } = scriptedSearch([[], [], []]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.found).toBe(0);
+		expect(result.status).toBe("empty");
+		expect(result.status).not.toBe("exhausted");
+	});
+
+	it("still reports exhausted when the vendor answered but every company was already seen", async () => {
+		const { search } = scriptedSearch([[goodResult("seen.com")]]);
+		const { synthesize } = scriptedSynthesize();
+
+		const result = await findCompanies(icp, 5, testOptions(), {
+			recentDomains: async () => ["seen.com"],
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.status).toBe("exhausted");
+	});
+});
+
 describe("FindCompaniesWorkflow: the summary output", () => {
 	it("returns a bounded summary that does not grow with the number of companies found", async () => {
 		const instanceId = "summary-size-test";

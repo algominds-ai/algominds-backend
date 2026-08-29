@@ -10,7 +10,7 @@ import type {
 	FindCompaniesResult,
 	FindCompaniesStatus,
 } from "@/core/companies";
-import { findCompanies } from "@/core/companies";
+import { buildFeedback, findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
@@ -93,6 +93,7 @@ function finalStatus(
 ): FindCompaniesStatus {
 	if (found >= requested) return "complete";
 	if (lastRoundStatus === "capped") return "capped";
+	if (lastRoundStatus === "empty") return "empty";
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
 }
 
@@ -118,6 +119,8 @@ async function runFindCompaniesRounds(
 	const searches: FindCompaniesResult["searches"] = [];
 	const captures: Record<string, CompanyCapture> = {};
 	let lastRoundStatus: FindCompaniesStatus = "short";
+	let pastAngles: string[] = [];
+	let feedback: string[] = [];
 
 	for (
 		let round = 1;
@@ -129,6 +132,8 @@ async function runFindCompaniesRounds(
 			icpId: payload.icpId,
 			env,
 			maxRounds: 1,
+			pastAngles,
+			feedback,
 		};
 		const deps = roundDeps(accumulatedDomains, step, round, remaining);
 		const stepResult = await step.do(
@@ -147,6 +152,10 @@ async function runFindCompaniesRounds(
 			recordRunSpend(env, runId, costDollars),
 		);
 		trackDomains(accumulatedDomains, stepResult.companies, stepResult.rejects);
+		pastAngles = pastAngles.concat(
+			stepResult.searches.map((plan) => plan.angle),
+		);
+		feedback = buildFeedback(stepResult.rejects);
 		if (stepResult.status === "exhausted") break;
 		if (costDollars >= config.spend.perRunDollars) {
 			lastRoundStatus = "capped";
