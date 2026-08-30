@@ -323,16 +323,21 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		);
 		const organizationId = payload.organizationId;
 
-		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			await assertUnderDailyCeiling(this.env, organizationId);
-			return openRun(this.env, {
-				id: event.instanceId,
-				organizationId,
-				icpId: target.icpId,
-				capability: "people",
-				status: "running",
-			});
-		});
+		const alreadySpent = await step.do(
+			"open-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				await assertUnderDailyCeiling(this.env, organizationId);
+				const row = await openRun(this.env, {
+					id: event.instanceId,
+					organizationId,
+					icpId: target.icpId,
+					capability: "people",
+					status: "running",
+				});
+				return { alreadySpent: row.costDollars };
+			},
+		);
 
 		const known = await step.do(
 			"known-people",
@@ -356,7 +361,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const opts: FindPeopleOptions = { icp, env: this.env, plan: resolved };
 		const run = await runBatches(toBatches(scoped, BATCH_SIZE), opts, step, {
 			id: event.instanceId,
-			spentAlready: resolved.costDollars,
+			spentAlready: alreadySpent.alreadySpent + resolved.costDollars,
 		});
 		const merged = mergeResults(run.batches, skipped);
 		const result: FindPeopleWorkflowResult = {

@@ -50,19 +50,24 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			await assertUnderDailyCeiling(this.env, source.organizationId);
-			return openRun(this.env, {
-				id: event.instanceId,
-				organizationId: source.organizationId,
-				icpId: source.icpId,
-				capability: "enrich",
-				status: "running",
-			});
-		});
+		const alreadySpent = await step.do(
+			"open-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				await assertUnderDailyCeiling(this.env, source.organizationId);
+				const row = await openRun(this.env, {
+					id: event.instanceId,
+					organizationId: source.organizationId,
+					icpId: source.icpId,
+					capability: "enrich",
+					status: "running",
+				});
+				return { alreadySpent: row.costDollars };
+			},
+		);
 
 		const outcomes: EnrichOutcome[] = [];
-		let costDollars = 0;
+		let costDollars = alreadySpent.alreadySpent;
 		for (const [index, batch] of toBatches(subjects, BATCH_SIZE).entries()) {
 			const batchResult = await step.do(
 				`enrich-batch-${index}`,

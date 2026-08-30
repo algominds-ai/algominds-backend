@@ -217,7 +217,7 @@ async function expectEnrichResolvesSubjects(
 				{ name: "load-source-run" },
 				{ organizationId: "org-1", icpId: "icp-1" },
 			);
-			await m.mockStepResult({ name: "open-run" }, { id: runId });
+			await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
 			await m.mockStepResult(

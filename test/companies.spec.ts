@@ -1159,7 +1159,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "round_1" }, roundResult);
 				await m.mockStepResult({ name: "round_1-spend" }, {});
 				await m.mockStepResult({ name: "round_2-spend" }, {});
@@ -1235,7 +1235,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "round_1" }, roundOne);
 				await m.mockStepResult({ name: "round_1-spend" }, {});
 				await m.mockStepResult({ name: "round_2-spend" }, {});

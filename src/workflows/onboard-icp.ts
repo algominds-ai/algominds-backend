@@ -117,7 +117,7 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 					capability: "onboarding",
 					status: "running",
 				});
-				return row.costDollars;
+				return { alreadySpent: row.costDollars };
 			},
 		);
 
@@ -132,7 +132,12 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 		await step.do(
 			ONBOARD_STEPS.bankSearch,
 			config.stepConfig.databaseCall,
-			() => recordRunSpend(this.env, runId, alreadySpent + read.costDollars),
+			() =>
+				recordRunSpend(
+					this.env,
+					runId,
+					alreadySpent.alreadySpent + read.costDollars,
+				),
 		);
 
 		const written = await step.do(
@@ -155,7 +160,8 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 			description: written.description,
 			seller: written.seller,
 			wroteProfile: written.wroteProfile,
-			costDollars: alreadySpent + read.costDollars + written.costDollars,
+			costDollars:
+				alreadySpent.alreadySpent + read.costDollars + written.costDollars,
 		};
 
 		const icpId = await step.do(

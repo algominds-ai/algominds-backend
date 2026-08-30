@@ -111,6 +111,7 @@ async function runFindCompaniesRounds(
 		payload: FindCompaniesPayload;
 		icp: IcpDoc;
 		runId: string;
+		alreadySpent: number;
 	},
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
@@ -123,7 +124,7 @@ async function runFindCompaniesRounds(
 	);
 	let companies: CompanyRow[] = [];
 	let rejects: FindCompaniesReject[] = [];
-	let costDollars = 0;
+	let costDollars = target.alreadySpent;
 	let rounds = 0;
 	const searches: FindCompaniesResult["searches"] = [];
 	const captures: Record<string, CompanyCapture> = {};
@@ -370,19 +371,30 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			await assertUnderDailyCeiling(this.env, organizationId);
-			return openRun(this.env, {
-				id: event.instanceId,
-				organizationId,
-				icpId: payload.icpId,
-				capability: "companies",
-				status: "running",
-			});
-		});
+		const alreadySpent = await step.do(
+			"open-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				await assertUnderDailyCeiling(this.env, organizationId);
+				const row = await openRun(this.env, {
+					id: event.instanceId,
+					organizationId,
+					icpId: payload.icpId,
+					capability: "companies",
+					status: "running",
+				});
+				return { alreadySpent: row.costDollars };
+			},
+		);
 
 		const result = await runFindCompaniesRounds(
-			{ env: this.env, payload, icp, runId: event.instanceId },
+			{
+				env: this.env,
+				payload,
+				icp,
+				runId: event.instanceId,
+				alreadySpent: alreadySpent.alreadySpent,
+			},
 			step,
 		);
 

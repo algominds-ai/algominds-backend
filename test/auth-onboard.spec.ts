@@ -109,7 +109,10 @@ describe("an organization that names a domain begins onboarding", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult({ name: ONBOARD_STEPS.checkSpend }, {});
-				await m.mockStepResult({ name: ONBOARD_STEPS.openRun }, 0);
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.openRun },
+					{ alreadySpent: 0 },
+				);
 				await m.mockStepResult(
 					{ name: ONBOARD_STEPS.readSeller },
 					{ pages: [], costDollars: 0 },

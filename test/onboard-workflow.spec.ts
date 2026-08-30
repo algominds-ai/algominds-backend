@@ -145,7 +145,10 @@ describe("POST /icp/onboard: starts a workflow without waiting for the profile",
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult({ name: ONBOARD_STEPS.checkSpend }, {});
-				await m.mockStepResult({ name: ONBOARD_STEPS.openRun }, {});
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.openRun },
+					{ alreadySpent: 0 },
+				);
 				await m.mockStepResult(
 					{ name: ONBOARD_STEPS.readSeller },
 					{
@@ -471,6 +474,74 @@ describe("POST /icp/onboard: after a run has failed", () => {
 			expect(body.status).toBe("started");
 		} finally {
 			await instance.dispose();
+			await deleteIcpAndRun(runId);
+		}
+	});
+});
+
+describe("OnboardIcpWorkflow: a second attempt after a failed one", () => {
+	it("adds to what the failed attempt spent rather than replacing it", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`onboard-additive-${crypto.randomUUID()}.internal`,
+			"onboard-additive",
+		);
+		const runId = `onboarding_additive-${crypto.randomUUID()}`;
+		const domain = `additive-${crypto.randomUUID()}.example`;
+		const params = { domain, note: null, organizationId: org.id };
+
+		const first = await introspectWorkflowInstance(testEnv.ONBOARD_ICP, runId);
+		try {
+			await first.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.readSeller },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.04,
+					},
+				);
+				await m.mockStepError(
+					{ name: ONBOARD_STEPS.writeProfile },
+					new NonRetryableError("the model was unreachable"),
+				);
+			});
+			await testEnv.ONBOARD_ICP.create({ id: runId, params });
+			await first.waitForStatus("errored");
+			expect((await findRun(testEnv, runId))?.costDollars).toBe(0.04);
+		} finally {
+			await first.dispose();
+		}
+
+		const second = await introspectWorkflowInstance(testEnv.ONBOARD_ICP, runId);
+		try {
+			await second.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.readSeller },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.01,
+					},
+				);
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.writeProfile },
+					{
+						description: "a profile written on the second attempt",
+						seller: mockedSeller(domain),
+						wroteProfile: true,
+						costDollars: 0.02,
+					},
+				);
+			});
+			await testEnv.ONBOARD_ICP.create({ id: runId, params });
+			await second.waitForStatus("complete");
+
+			expect((await findRun(testEnv, runId))?.costDollars).toBeCloseTo(0.07, 5);
+			expect(await organizationSpendToday(testEnv, org.id)).toBeCloseTo(
+				0.07,
+				5,
+			);
+		} finally {
+			await second.dispose();
 			await deleteIcpAndRun(runId);
 		}
 	});
