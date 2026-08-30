@@ -108,7 +108,7 @@ describe("agent run start request shape", () => {
 		expect(body.query).toContain("10");
 		expect(body.effort).toBe("low");
 		expect(body.dataSources).toEqual([{ provider: "fiber" }]);
-		expect(body.outputSchema.properties.companies.minItems).toBe(10);
+		expect(body.outputSchema.properties.companies.minItems).toBe(1);
 	});
 
 	it("returns the started run's id", async () => {
@@ -759,5 +759,19 @@ describe("evidence outside the window the profile asks for is refused in code", 
 
 	it("keeps an undated page when the profile asks for nothing recent", () => {
 		expect(outcomeFor(null, null).rows).toHaveLength(1);
+	});
+});
+
+describe("a thin round comes back thin, never empty", () => {
+	it("never sets a floor the agent can fail, because a failed schema discards everything it found", () => {
+		const req = buildAgentRunRequest(
+			planFor("payment platforms"),
+			30,
+			"2026-08-30",
+		);
+		const schema = JSON.parse(JSON.stringify(req.outputSchema));
+
+		expect(schema.properties.companies.minItems).toBe(1);
+		expect(req.query).toContain("30 distinct companies");
 	});
 });

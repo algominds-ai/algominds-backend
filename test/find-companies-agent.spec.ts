@@ -120,7 +120,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 
 		const wanted = remaining * config.companies.judgeCandidateMultiple;
 		expect(started).toHaveLength(1);
-		expect(started[0]?.minItems).toBe(wanted);
+		expect(started[0]?.minItems).toBe(1);
 		expect(started[0]?.query).toContain(`${wanted} distinct companies`);
 	});
 
@@ -141,9 +141,9 @@ describe("the company agent run asks for more candidates than the caller wants",
 			new CostLedger(),
 		);
 
-		expect(started[0]?.minItems).toBeGreaterThan(remaining);
-		expect(started[0]?.minItems).toBe(
-			remaining * config.companies.judgeCandidateMultiple,
+		expect(started[0]?.minItems).toBe(1);
+		expect(started[0]?.query).toContain(
+			`${remaining * config.companies.judgeCandidateMultiple} distinct companies`,
 		);
 	});
 
@@ -164,12 +164,12 @@ describe("the company agent run asks for more candidates than the caller wants",
 			new CostLedger(),
 		);
 
-		expect(started[0]?.minItems).toBe(config.companies.resultsPerRound);
-		expect(started[0]?.minItems).toBeLessThan(
-			remaining * config.companies.judgeCandidateMultiple,
-		);
+		expect(started[0]?.minItems).toBe(1);
 		expect(started[0]?.query).toContain(
 			`${config.companies.resultsPerRound} distinct companies`,
+		);
+		expect(started[0]?.query).not.toContain(
+			`${remaining * config.companies.judgeCandidateMultiple} distinct`,
 		);
 	});
 

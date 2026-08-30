@@ -77,10 +77,12 @@ function agentSystemPrompt(today: string): string {
 
 /**
  * Turns one search plan and the number of companies wanted into an Exa agent
- * run request. The count reaches the agent twice, in the query text and as
- * `minItems`, so the run does not stop early with too few rows. The plan's
- * headcount band and countries reach it as words, because the filter that
- * follows rejects on them and a candidate refused there was still paid for.
+ * run request. The count reaches the agent in the query text only. It is not
+ * the schema's floor: a run told to return thirty and finding twelve fails the
+ * schema outright, and the vendor discards all twelve and reports "failed", so
+ * a narrow profile loses everything it found. The plan's headcount band and
+ * countries reach it as words, because the filter that follows rejects on them
+ * and a candidate refused there was still paid for.
  */
 export function buildAgentRunRequest(
 	plan: SearchPlan,
@@ -95,7 +97,7 @@ export function buildAgentRunRequest(
 		outputSchema: z.json().parse(
 			z.toJSONSchema(
 				z.object({
-					companies: z.array(agentCompanySchema(plan)).min(count),
+					companies: z.array(agentCompanySchema(plan)).min(1),
 				}),
 				{ io: "input" },
 			),
