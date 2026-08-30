@@ -14,6 +14,7 @@ export function workflowForCapability(
 	if (capability === "companies") return env.FIND_COMPANIES;
 	if (capability === "people") return env.FIND_PEOPLE;
 	if (capability === "enrich") return env.ENRICH;
+	if (capability === "onboarding") return env.ONBOARD_ICP;
 	return undefined;
 }
 

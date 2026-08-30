@@ -11,6 +11,7 @@ import {
 import {
 	companiesFindSchema,
 	enrichSchema,
+	onboardIcpSchema,
 	peopleFindSchema,
 } from "@/http/schemas";
 
@@ -80,6 +81,21 @@ export function createApiRoutes(): Hono<ApiEnv> {
 				scopeId: body.runId,
 				sourceRunId: body.runId,
 				params: body,
+			}),
+		}),
+	);
+
+	api.post("/icp/onboard", (c) =>
+		startJob(c, onboardIcpSchema, {
+			capability: "onboarding",
+			workflow: c.env.ONBOARD_ICP,
+			toJob: async (body, _env, organizationId) => ({
+				scopeId: await domainsScopeId([body.domain], organizationId),
+				params: {
+					domain: body.domain,
+					note: body.note ?? null,
+					organizationId,
+				},
 			}),
 		}),
 	);

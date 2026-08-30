@@ -28,6 +28,8 @@ import {
 	round,
 	type run,
 } from "@/core/db/schema";
+import type { IcpDoc, IcpSeller } from "@/core/synthesize";
+import { IcpDocSchema } from "@/core/synthesize";
 
 export type Organization = typeof organization.$inferSelect;
 export type NewOrganization = typeof organization.$inferInsert;
@@ -202,9 +204,9 @@ export async function loadIcp(
 
 export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 	description: string;
+	seller?: IcpSeller | null;
 };
 
-/** Stores a free-text ideal customer profile and returns the stored row. */
 export type OrganizationSelectConnection = SelectAllWhereConnection<
 	typeof organization,
 	Organization
@@ -224,18 +226,23 @@ export async function organizationDomain(
 	return rows[0]?.domain ?? null;
 }
 
+/** Stores the whole ideal customer profile document, description and seller block alike. */
 export async function createIcp(
 	env: DbEnv,
 	input: NewIcpInput,
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
 	const connection = buildDb(env, "cached");
+	const doc: IcpDoc = IcpDocSchema.parse({
+		description: input.description,
+		seller: input.seller ?? null,
+	});
 	const rows = await connection
 		.insert(icp)
 		.values({
 			domain: input.domain,
 			organizationId: input.organizationId,
-			doc: { description: input.description },
+			doc,
 		})
 		.returning();
 	const row = rows[0];

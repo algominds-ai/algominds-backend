@@ -9,7 +9,7 @@ import {
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
-const CAPABILITIES = ["companies", "people", "enrich"] as const;
+const CAPABILITIES = ["companies", "people", "enrich", "onboarding"] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
 export function todayUtc(now: Date): string {

@@ -17,6 +17,7 @@ import type {
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
 	IcpConnection,
+	IcpInsertConnection,
 	Organization,
 	OrganizationConnection,
 	OrganizationSpendConnection,
@@ -30,6 +31,7 @@ import {
 	appendEvidence,
 	closeRun,
 	companiesForRun,
+	createIcp,
 	cutoffDate,
 	deletePerson,
 	latestEvidence,
@@ -54,6 +56,7 @@ import type {
 	Icp,
 	NewCompany,
 	NewEvidence,
+	NewIcp,
 	NewPerson,
 	NewRound,
 	NewRun,
@@ -67,6 +70,7 @@ import {
 	person,
 	run,
 } from "../src/core/db/schema";
+import type { IcpSeller } from "../src/core/synthesize";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
 	return {
@@ -281,6 +285,77 @@ describe("loadIcp", () => {
 
 		expect(recordedMode).toBe("cached");
 		expect(result).toEqual(row);
+	});
+});
+
+describe("createIcp", () => {
+	const env = fakeEnv("postgres://cached", "postgres://direct");
+	const storedRow: Icp = {
+		id: "icp-1",
+		organizationId: "org-1",
+		domain: "acme.com",
+		doc: null,
+		createdAt: new Date("2026-01-01T00:00:00.000Z"),
+	};
+
+	it("writes the whole document, description and seller block alike", async () => {
+		const seller: IcpSeller = {
+			domain: "acme.com",
+			customers: ["Acme Corp"],
+			competitorTest: "A competitor sells the same tooling to other vendors.",
+		};
+		let insertedDoc: unknown;
+		const buildDb: DbFactory<IcpInsertConnection> = () => ({
+			insert: () => ({
+				values: (row: NewIcp | NewIcp[]) => {
+					insertedDoc = Array.isArray(row) ? row[0]?.doc : row.doc;
+					return { returning: () => Promise.resolve([storedRow]) };
+				},
+			}),
+		});
+
+		await createIcp(
+			env,
+			{
+				domain: "acme.com",
+				organizationId: "org-1",
+				description: "an ideal customer profile",
+				seller,
+			},
+			buildDb,
+		);
+
+		expect(insertedDoc).toEqual({
+			description: "an ideal customer profile",
+			seller,
+		});
+	});
+
+	it("writes a null seller when the caller gives none, matching the prompt-only onboarding path", async () => {
+		let insertedDoc: unknown;
+		const buildDb: DbFactory<IcpInsertConnection> = () => ({
+			insert: () => ({
+				values: (row: NewIcp | NewIcp[]) => {
+					insertedDoc = Array.isArray(row) ? row[0]?.doc : row.doc;
+					return { returning: () => Promise.resolve([storedRow]) };
+				},
+			}),
+		});
+
+		await createIcp(
+			env,
+			{
+				domain: "acme.com",
+				organizationId: "org-1",
+				description: "an ideal customer profile",
+			},
+			buildDb,
+		);
+
+		expect(insertedDoc).toEqual({
+			description: "an ideal customer profile",
+			seller: null,
+		});
 	});
 });
 

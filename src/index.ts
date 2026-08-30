@@ -8,6 +8,7 @@ import { createApiRoutes } from "@/routes";
 export { EnrichWorkflow } from "@/workflows/enrich";
 export { FindCompaniesWorkflow } from "@/workflows/find-companies";
 export { FindPeopleWorkflow } from "@/workflows/find-people";
+export { OnboardIcpWorkflow } from "@/workflows/onboard-icp";
 
 const bundled = {
 	generateText: typeof generateText,

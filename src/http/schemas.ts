@@ -28,6 +28,20 @@ export const domainsField = z
 	.max(config.limits.maxCompaniesPerPeopleRun)
 	.transform(normalizedDomainList);
 
+export function normalizedDomainValue(
+	value: string,
+	ctx: z.RefinementCtx,
+): string {
+	try {
+		return normalizeDomain(value);
+	} catch {
+		ctx.addIssue({ code: "custom", message: `not a valid domain: ${value}` });
+		return value;
+	}
+}
+
+export const domainField = z.string().min(1).transform(normalizedDomainValue);
+
 export const companiesFindSchema = z.intersection(
 	icpRef,
 	z.object({
@@ -50,6 +64,11 @@ export const peopleFindSchema = z.union([
 export const enrichSchema = z.strictObject({
 	runId: z.string().min(1),
 	channels: z.array(z.enum(["email", "linkedin"])).min(1),
+});
+
+export const onboardIcpSchema = z.strictObject({
+	domain: domainField,
+	note: z.string().max(2000).optional(),
 });
 
 export const pageQuerySchema = z.object({

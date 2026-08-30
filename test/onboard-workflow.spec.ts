@@ -1,0 +1,334 @@
+import { introspectWorkflowInstance } from "cloudflare:test";
+import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
+import { eq } from "drizzle-orm";
+import { beforeAll, describe, expect, it } from "vitest";
+import { createAuth } from "../src/auth";
+import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
+import { config } from "../src/config";
+import { db } from "../src/core/db/client";
+import { organizationForSlug } from "../src/core/db/organizations";
+import {
+	closeRun,
+	createIcp,
+	findRun,
+	loadIcp,
+	openRun,
+} from "../src/core/db/queries";
+import { icp as icpTable, run } from "../src/core/db/schema";
+import type { IcpSeller } from "../src/core/synthesize";
+import { buildRunId, domainsScopeId } from "../src/http/jobs";
+import app from "../src/index";
+import { publicHostname } from "../src/workflows/onboard-icp";
+
+const BASE = "https://onboard.test";
+
+let TOKEN = "";
+let CALLER_ORGANIZATION_ID = "";
+
+/**
+ * Mints a real key for a real organization by walking the provisioning path
+ * a caller would: sign up a user, create an organization it owns, then mint
+ * a key for that organization.
+ */
+async function issueKey(
+	label: string,
+): Promise<{ key: string; organizationId: string }> {
+	const auth = createAuth(testEnv);
+	const signedUp = await auth.api.signUpEmail({
+		body: {
+			name: label,
+			email: `${label}@onboard.test`,
+			password: "correct-horse-battery-staple",
+		},
+	});
+	const org = await auth.api.createOrganization({
+		body: { name: label, slug: label, userId: signedUp.user.id },
+	});
+	const created = await auth.api.createApiKey({
+		body: {
+			configId: ORGANIZATION_KEY_CONFIG_ID,
+			organizationId: org.id,
+			userId: signedUp.user.id,
+			name: "test-key",
+		},
+	});
+	return { key: created.key, organizationId: org.id };
+}
+
+beforeAll(async () => {
+	const issued = await issueKey(`onboard-caller-${crypto.randomUUID()}`);
+	TOKEN = issued.key;
+	CALLER_ORGANIZATION_ID = issued.organizationId;
+});
+
+async function authedCall(path: string, init?: RequestInit): Promise<Response> {
+	return app.fetch(new Request(`${BASE}${path}`, init), testEnv);
+}
+
+function postInit(body: unknown, token: string): RequestInit {
+	return {
+		method: "POST",
+		headers: {
+			"content-type": "application/json",
+			authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify(body),
+	};
+}
+
+function authedGetInit(): RequestInit {
+	return { headers: { authorization: `Bearer ${TOKEN}` } };
+}
+
+function mockedSeller(domain: string): IcpSeller {
+	return { domain, customers: ["Acme Corp"], competitorTest: "test" };
+}
+
+async function deleteIcpAndRun(runId: string): Promise<void> {
+	const runRow = await findRun(testEnv, runId);
+	await db(testEnv, "direct").delete(run).where(eq(run.id, runId));
+	if (runRow) {
+		await db(testEnv, "direct")
+			.delete(icpTable)
+			.where(eq(icpTable.id, runRow.icpId));
+	}
+}
+
+describe("POST /icp/onboard: validation", () => {
+	it("rejects a body with no domain", async () => {
+		const response = await authedCall("/icp/onboard", postInit({}, TOKEN));
+		const body: { issues?: unknown[] } = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(Array.isArray(body.issues)).toBe(true);
+		expect(body.issues?.length).toBeGreaterThan(0);
+	});
+
+	it("rejects a body whose domain is not a public hostname", async () => {
+		const response = await authedCall(
+			"/icp/onboard",
+			postInit({ domain: "not a domain" }, TOKEN),
+		);
+		const body: { issues?: unknown[] } = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(Array.isArray(body.issues)).toBe(true);
+	});
+});
+
+describe("POST /icp/onboard: starts a workflow without waiting for the profile", () => {
+	it("returns 202 with a runId built from the domain scope, well under the profile's own latency", async () => {
+		const domain = `acme-${crypto.randomUUID()}.example`;
+		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const runId = buildRunId("onboarding", scopeId);
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			runId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "check-spend" }, {});
+				await m.mockStepResult(
+					{ name: "build-icp" },
+					{
+						description: "a mocked ideal customer profile",
+						seller: mockedSeller(domain),
+						costDollars: 0.02,
+					},
+				);
+				await m.mockStepResult({ name: "save-icp" }, "mocked-icp-id");
+			});
+
+			const started = Date.now();
+			const response = await authedCall(
+				"/icp/onboard",
+				postInit({ domain }, TOKEN),
+			);
+			const elapsedMs = Date.now() - started;
+			const body: { runId?: string; status?: string; icpId?: string } =
+				await response.json();
+
+			expect(response.status).toBe(202);
+			expect(body.runId).toBe(runId);
+			expect(body.status).toBe("started");
+			expect(body.icpId).toBeUndefined();
+			expect(elapsedMs).toBeLessThan(2000);
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("POST /icp/onboard: a same-day repeat", () => {
+	it("does not create a second icp or run row for the same organization and domain", async () => {
+		const domain = `acme-${crypto.randomUUID()}.example`;
+		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const runId = buildRunId("onboarding", scopeId);
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			runId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "build-icp" },
+					{
+						description: "a mocked ideal customer profile",
+						seller: mockedSeller(domain),
+						costDollars: 0.01,
+					},
+				);
+			});
+
+			const first = await authedCall(
+				"/icp/onboard",
+				postInit({ domain }, TOKEN),
+			);
+			const firstBody: { runId: string; status?: string } = await first.json();
+			await instance.waitForStatus("complete");
+
+			const second = await authedCall(
+				"/icp/onboard",
+				postInit({ domain }, TOKEN),
+			);
+			const secondBody: { runId: string; status?: string } =
+				await second.json();
+
+			expect(first.status).toBe(202);
+			expect(firstBody.status).toBe("started");
+			expect(second.status).toBe(200);
+			expect(secondBody.status).toBe("existing");
+			expect(secondBody.runId).toBe(firstBody.runId);
+
+			const icpRows = await db(testEnv, "direct")
+				.select()
+				.from(icpTable)
+				.where(eq(icpTable.domain, domain));
+			expect(icpRows).toHaveLength(1);
+		} finally {
+			await instance.dispose();
+			await deleteIcpAndRun(runId);
+		}
+	});
+});
+
+describe("OnboardIcpWorkflow: persisting the profile", () => {
+	it("writes one icp row carrying the description and seller block, and a run row GET /runs/:runId resolves", async () => {
+		const domain = `acme-${crypto.randomUUID()}.example`;
+		const instanceId = `onboarding_persist-${crypto.randomUUID()}`;
+		const seller = mockedSeller(domain);
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			instanceId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "build-icp" },
+					{
+						description: "a four paragraph ideal customer profile",
+						seller,
+						costDollars: 0.03,
+					},
+				);
+			});
+
+			await testEnv.ONBOARD_ICP.create({
+				id: instanceId,
+				params: {
+					domain,
+					note: null,
+					organizationId: CALLER_ORGANIZATION_ID,
+				},
+			});
+			await instance.waitForStatus("complete");
+
+			const runRow = await findRun(testEnv, instanceId);
+			if (!runRow) throw new Error("expected a run row for onboarding");
+			expect(runRow.status).toBe("complete");
+			expect(runRow.costDollars).toBe(0.03);
+			expect(runRow.capability).toBe("onboarding");
+
+			const output = await instance.getOutput();
+			expect(output).toEqual({ icpId: runRow.icpId, costDollars: 0.03 });
+
+			const icpRow = await loadIcp(testEnv, runRow.icpId);
+			if (!icpRow) throw new Error("expected an icp row for onboarding");
+			expect(icpRow.doc).toEqual({
+				description: "a four paragraph ideal customer profile",
+				seller,
+			});
+
+			const statusResponse = await authedCall(
+				`/runs/${instanceId}`,
+				authedGetInit(),
+			);
+			const statusBody: { runId?: string; costDollars?: number } =
+				await statusResponse.json();
+			expect(statusResponse.status).toBe(200);
+			expect(statusBody.runId).toBe(instanceId);
+			expect(statusBody.costDollars).toBe(0.03);
+		} finally {
+			await instance.dispose();
+			await deleteIcpAndRun(instanceId);
+		}
+	});
+});
+
+describe("OnboardIcpWorkflow: the daily spend ceiling", () => {
+	it("refuses a run for an account whose day already costs the ceiling, before any paid call", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`onboard-ceiling-${crypto.randomUUID()}.internal`,
+			"onboard-ceiling",
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed profile for the onboarding ceiling test",
+			domain: org.slug,
+			organizationId: org.id,
+		});
+		const spentRunId = `companies_onboard-ceiling-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: spentRunId,
+			organizationId: org.id,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "running",
+		});
+		await closeRun(testEnv, spentRunId, {
+			status: "complete",
+			costDollars: config.spend.perAccountDailyDollars,
+		});
+
+		const instanceId = `onboarding_ceiling-${crypto.randomUUID()}`;
+		const domain = `ceiling-${crypto.randomUUID()}.example`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			instanceId,
+		);
+		try {
+			await testEnv.ONBOARD_ICP.create({
+				id: instanceId,
+				params: { domain, note: null, organizationId: org.id },
+			});
+			await instance.waitForStatus("errored");
+
+			expect(await findRun(testEnv, instanceId)).toBeUndefined();
+		} finally {
+			await instance.dispose();
+			await db(testEnv, "direct").delete(run).where(eq(run.id, spentRunId));
+			await db(testEnv, "direct")
+				.delete(icpTable)
+				.where(eq(icpTable.id, icpRow.id));
+		}
+	});
+});
+
+describe("the onboarding workflow refuses a domain that is not a public hostname", () => {
+	it("refuses a host with no dot and an address literal, and accepts a real domain", () => {
+		expect(() => publicHostname("localhost")).toThrow(NonRetryableError);
+		expect(() => publicHostname("192.168.0.1")).toThrow(NonRetryableError);
+		expect(publicHostname("https://www.form3.tech/about")).toBe("form3.tech");
+	});
+});

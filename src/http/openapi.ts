@@ -4,6 +4,7 @@ import type { Hono } from "hono";
 import {
 	companiesFindSchema,
 	enrichSchema,
+	onboardIcpSchema,
 	pageQuerySchema,
 	peopleFindSchema,
 } from "@/http/schemas";
@@ -234,6 +235,32 @@ const enrichRoute = createRoute({
 	responses: startRouteResponses("The referenced source run is unknown."),
 });
 
+const onboardIcpRoute = createRoute({
+	method: "post",
+	path: "/icp/onboard",
+	tags: ["icp"],
+	security: SECURITY,
+	request: {
+		body: jsonBodyWithExamples(onboardIcpSchema, {
+			"onboard from a domain": {
+				summary: "Reads the seller's own site and writes its profile.",
+				value: { domain: "acme.example" },
+			},
+			"onboard with added context": {
+				summary:
+					"Adds a note the model reads for context, never as an instruction.",
+				value: {
+					domain: "acme.example",
+					note: "Our best account is Globex, grew from 5 to 40 seats.",
+				},
+			},
+		}),
+	},
+	responses: startRouteResponses(
+		"The route never returns this: onboarding needs no existing reference.",
+	),
+});
+
 const runStatusRoute = createRoute({
 	method: "get",
 	path: "/runs/{runId}",
@@ -280,6 +307,7 @@ const ROUTES = [
 	findCompaniesRoute,
 	findPeopleRoute,
 	enrichRoute,
+	onboardIcpRoute,
 	runStatusRoute,
 	runCompaniesRoute,
 	runPeopleRoute,
