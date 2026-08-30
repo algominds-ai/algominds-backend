@@ -1,5 +1,5 @@
 {
-  "id": "f8fe4487-91bf-40d6-9aa4-3d8172b81391",
+  "id": "152b44b8-98fb-4c50-b22b-a2993e53f2bd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -463,6 +463,12 @@
         },
         "rejected": {
           "name": "rejected",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejects": {
+          "name": "rejects",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false

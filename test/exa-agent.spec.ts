@@ -24,6 +24,7 @@ function planFor(query: string): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
 		agentEffort: "low",
@@ -492,7 +493,8 @@ describe("the agent's evidence reaches the row the judge reads", () => {
 				evidencePublisher: null,
 			},
 		]);
-		return filterEntities(results, planFor("security companies")).rows[0];
+		return filterEntities(results, planFor("security companies"), "2026-08-30")
+			.rows[0];
 	}
 
 	it("cites the proving page, keeps the company as the domain, and shows the judge the signal", () => {
@@ -539,7 +541,11 @@ describe("what is stored keeps the evidence, not just the company", () => {
 				evidencePublisher: null,
 			},
 		]);
-		const { captures } = filterEntities(results, planFor("security companies"));
+		const { captures } = filterEntities(
+			results,
+			planFor("security companies"),
+			"2026-08-30",
+		);
 		const capture = captures["kastle.com"];
 
 		expect(capture?.result.signal).toBe("posted a Head of Sales role");
@@ -605,7 +611,8 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 				evidencePublisher: null,
 			},
 		]);
-		return filterEntities(results, planFor("security companies")).rows[0];
+		return filterEntities(results, planFor("security companies"), "2026-08-30")
+			.rows[0];
 	}
 
 	it("keeps a linkedin.com/company address", () => {
@@ -682,7 +689,11 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 				evidencePublisher: "Kastle Careers",
 			},
 		]);
-		const outcome = filterEntities(results, planFor("security companies"));
+		const outcome = filterEntities(
+			results,
+			planFor("security companies"),
+			"2026-08-30",
+		);
 
 		expect(outcome.rows[0]?.evidenceQuote).toBe(
 			"Kastle is hiring a Head of Sales in San Francisco.",
@@ -694,5 +705,58 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 		expect(outcome.captures["kastle.com"]?.result.publisher).toBe(
 			"Kastle Careers",
 		);
+	});
+});
+
+describe("evidence outside the window the profile asks for is refused in code", () => {
+	function outcomeFor(evidenceDate: string | null, recencyDays: number | null) {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kadmos",
+				website: "https://kadmos.io",
+				linkedinUrl: null,
+				description: null,
+				foundedYear: null,
+				workforceTotal: null,
+				city: null,
+				country: null,
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "granted an electronic money institution licence",
+				evidenceUrl: "https://kadmos.io/press-releases/emi",
+				evidenceDate,
+				evidenceQuote:
+					"Kadmos granted FCA Electronic Money Institution authorisation",
+				evidencePublisher: "Kadmos",
+			},
+		]);
+		return filterEntities(
+			results,
+			{ ...planFor("payment providers"), recencyDays },
+			"2026-08-30",
+		);
+	}
+
+	it("refuses a page four days past the window, which the judge read as about a year", () => {
+		const outcome = outcomeFor("2025-08-26", 365);
+
+		expect(outcome.rows).toHaveLength(0);
+		expect(outcome.rejects[0]?.reason).toContain("369 days old");
+		expect(outcome.rejects[0]?.stage).toBe("filter");
+	});
+
+	it("keeps a page inside the window", () => {
+		expect(outcomeFor("2026-08-19", 365).rows).toHaveLength(1);
+	});
+
+	it("refuses a page carrying no date when the profile asks for something recent", () => {
+		const outcome = outcomeFor(null, 90);
+
+		expect(outcome.rows).toHaveLength(0);
+		expect(outcome.rejects[0]?.reason).toBe("no date on the evidence page");
+	});
+
+	it("keeps an undated page when the profile asks for nothing recent", () => {
+		expect(outcomeFor(null, null).rows).toHaveLength(1);
 	});
 });

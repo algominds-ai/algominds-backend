@@ -66,6 +66,7 @@ export const round = pgTable(
 		plan: jsonb("plan"),
 		found: integer("found").notNull(),
 		rejected: jsonb("rejected"),
+		rejects: jsonb("rejects"),
 		startedAt: timestamp("started_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),

@@ -48,6 +48,7 @@ CREATE TABLE "round" (
 	"plan" jsonb,
 	"found" integer NOT NULL,
 	"rejected" jsonb,
+	"rejects" jsonb,
 	"started_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "round_run_ordinal_unique" UNIQUE("run_id","ordinal")
 );

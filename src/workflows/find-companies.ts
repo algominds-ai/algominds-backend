@@ -39,6 +39,8 @@ import {
 
 const MAX_ROUNDS = config.companies.maxRounds;
 const EVIDENCE_SOURCE = "exa";
+/** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
+const STORED_REJECTS_PER_ROUND = 120;
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -92,7 +94,7 @@ type PersistRoundInput = {
 	env: Env;
 	runId: string;
 	costDollars: number;
-	searches: readonly SearchPlan[];
+	result: FindCompaniesResult;
 	report: RoundReport;
 };
 
@@ -107,9 +109,10 @@ async function persistRound(input: PersistRoundInput): Promise<void> {
 			await saveRound(env, {
 				runId,
 				ordinal: report.round,
-				plan: input.searches[0] ?? null,
+				plan: input.result.searches[0] ?? null,
 				found: report.found,
 				rejected: report.rejected,
+				rejects: input.result.rejects.slice(0, STORED_REJECTS_PER_ROUND),
 			});
 		},
 	);
@@ -187,7 +190,7 @@ async function runFindCompaniesRounds(
 			env,
 			runId,
 			costDollars,
-			searches: stepResult.searches,
+			result: stepResult,
 			report,
 		});
 		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
@@ -278,6 +281,7 @@ export type RoundReport = {
 	angle: string;
 	query: string;
 	recency: string | null;
+	recencyDays: number | null;
 	source: string;
 	type: string;
 	agentEffort: string;
@@ -299,6 +303,7 @@ export function reportRound(
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
 		recency: plan?.recency ?? null,
+		recencyDays: plan?.recencyDays ?? null,
 		source: plan?.source ?? "",
 		type: plan?.type ?? "",
 		agentEffort: plan?.agentEffort ?? "",

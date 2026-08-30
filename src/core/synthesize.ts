@@ -29,6 +29,7 @@ export type SearchPlan = {
 	query: string;
 	angle: string;
 	recency: string | null;
+	recencyDays: number | null;
 	source: (typeof SEARCH_SOURCES)[number];
 	type: (typeof SEARCH_TYPES)[number];
 	agentEffort: (typeof AGENT_EFFORTS)[number];
@@ -49,6 +50,7 @@ const SearchPlanModelSchema = z.object({
 	query: z.string(),
 	angle: z.string(),
 	recency: z.string().nullish(),
+	recencyDays: z.number().int().positive().nullish(),
 	source: z.enum(SEARCH_SOURCES).nullish(),
 	type: z.enum(SEARCH_TYPES).nullish(),
 	agentEffort: z.enum(AGENT_EFFORTS).nullish(),
@@ -115,6 +117,11 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"every company asked for, with a signal and a proving page each, and `high` cost about",
 	"ten times as much and took half again as long. Raise it above `low` only when an",
 	"earlier round on this run came back short of the count.",
+	"`recencyDays` is the same demand as a number: the most days old a page may be and still",
+	"prove the signal. Set it to the widest window the profile allows, so thirty for a role",
+	"posted in the last thirty days and three hundred and sixty five for a statement in the",
+	"last year. The code refuses a page older than this, and refuses one carrying no date,",
+	"so leave `recencyDays` null whenever `recency` is null.",
 	"`recency` carries the freshness the profile demands, written as its own sentences that",
 	"name each event and the window it must fall inside, for example a platform engineering",
 	"role posted in the last thirty days, or a postmortem published in the last ninety days.",
@@ -157,6 +164,7 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 		query: icp.description,
 		angle: "the profile as written",
 		recency: null,
+		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
 		agentEffort: "low",
@@ -224,6 +232,7 @@ function toPlan(output: SearchPlanModel): SearchPlan {
 		query: output.query,
 		angle: output.angle,
 		recency: output.recency ?? null,
+		recencyDays: output.recencyDays ?? null,
 		source: output.source ?? "exa-search",
 		type,
 		agentEffort: output.agentEffort ?? "low",

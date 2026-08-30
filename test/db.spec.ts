@@ -1096,3 +1096,56 @@ describe("saveRound", () => {
 		expect(Array.isArray(conflictTarget)).toBe(true);
 	});
 });
+
+describe("a round records why it refused, not only how many", () => {
+	const env = fakeEnv("postgres://cached", "postgres://direct");
+
+	it("stores the reject reasons alongside the counts", async () => {
+		const received: NewRound[] = [];
+		const buildDb: DbFactory<RoundInsertConnection> = () => ({
+			insert: () => ({
+				values: (rows: NewRound | NewRound[]) => {
+					received.push(...(Array.isArray(rows) ? rows : [rows]));
+					return {
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([]),
+						}),
+					};
+				},
+			}),
+		});
+
+		await saveRound(
+			env,
+			{
+				runId: "run-1",
+				ordinal: 1,
+				plan: null,
+				found: 1,
+				rejected: { filter: 1, gate: 0, judge: 1 },
+				rejects: [
+					{
+						domain: "a.com",
+						reason: "evidence is 369 days old",
+						stage: "filter",
+					},
+					{
+						domain: "b.com",
+						reason: "sells payments infrastructure",
+						stage: "judge",
+					},
+				],
+			},
+			buildDb,
+		);
+
+		expect(received[0]?.rejects).toEqual([
+			{ domain: "a.com", reason: "evidence is 369 days old", stage: "filter" },
+			{
+				domain: "b.com",
+				reason: "sells payments infrastructure",
+				stage: "judge",
+			},
+		]);
+	});
+});

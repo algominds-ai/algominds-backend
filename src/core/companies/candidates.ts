@@ -280,9 +280,53 @@ export type FilterOutcome = {
 };
 
 /** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
+/**
+ * Why a dated page cannot prove a signal the profile wants fresh: it is older
+ * than the window, or it carries no date at all. Null when the profile asks
+ * for nothing recent, or when the page is inside the window.
+ */
+export function staleRejectReason(
+	evidenceDate: string | null,
+	recencyDays: number | null,
+	today: string,
+): string | null {
+	if (recencyDays === null) return null;
+	if (evidenceDate === null) return "no date on the evidence page";
+	const age = Math.round(
+		(Date.parse(today) - Date.parse(evidenceDate)) / 86_400_000,
+	);
+	if (Number.isNaN(age)) return "no date on the evidence page";
+	return age > recencyDays
+		? `evidence is ${age} days old, older than the ${recencyDays} the profile allows`
+		: null;
+}
+
+/** Why one result cannot become a row: its record misses the profile's limits, or its evidence is outside the window. */
+function rowRejectReason(
+	result: ExaResult,
+	entity: CompanyEntity,
+	plan: SearchPlan,
+	today: string,
+): RejectDetail | null {
+	const detail = entityRejectReason(entity, plan);
+	if (detail) return detail;
+	const stale = staleRejectReason(
+		result.publishedDate ?? null,
+		plan.recencyDays,
+		today,
+	);
+	return stale
+		? {
+				reason: stale,
+				group: "evidence outside the window the profile asks for",
+			}
+		: null;
+}
+
 export function filterEntities(
 	results: readonly ExaResult[],
 	plan: SearchPlan,
+	today: string,
 ): FilterOutcome {
 	const outcome: FilterOutcome = {
 		rows: [],
@@ -300,7 +344,7 @@ export function filterEntities(
 			});
 			continue;
 		}
-		const detail = entityRejectReason(entity, plan);
+		const detail = rowRejectReason(result, entity, plan, today);
 		if (detail) {
 			outcome.rejects.push({
 				domain: normalizeDomain(result.url),

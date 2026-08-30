@@ -183,7 +183,7 @@ async function runRound(
 		opts.env,
 		searchLedger,
 	);
-	const filtered = filterEntities(searched.results, plan);
+	const filtered = filterEntities(searched.results, plan, opts.today);
 	const unseenCount = countUnseen(filtered.rows, ctx.seenDomains);
 	const gated = deps.gate(filtered.rows, filtered.results, {
 		seenDomains: ctx.seenDomains,
