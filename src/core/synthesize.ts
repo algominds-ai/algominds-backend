@@ -3,19 +3,11 @@ import { CostLedger } from "@/core/cost";
 import { generateStructured, reasoningModel } from "@/core/model";
 
 export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
-export const SEARCH_TYPES = [
-	"fast",
-	"deep-lite",
-	"deep",
-	"deep-reasoning",
-] as const;
+/** `deep-lite` is absent on purpose: measured against `category: "company"` it returns pages with no company record, so every row falls at the filter. */
+export const SEARCH_TYPES = ["fast", "deep", "deep-reasoning"] as const;
 export const AGENT_EFFORTS = ["minimal", "low", "medium", "high"] as const;
 
-const DEEP_TYPES: ReadonlySet<string> = new Set([
-	"deep-lite",
-	"deep",
-	"deep-reasoning",
-]);
+const DEEP_TYPES: ReadonlySet<string> = new Set(["deep", "deep-reasoning"]);
 
 /** True when a search type runs the multi-step planner that `additionalQueries` feeds. */
 export function acceptsAdditionalQueries(type: string): boolean {
@@ -106,17 +98,23 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"Choose `exa-search` when the profile describes a lasting shape, such as a size, a",
 	"country or an industry, and asks for nothing recent.",
 	"`type` chooses how hard the search itself works, and applies to `exa-search` only.",
-	"`fast` answers in under a second and suits a plain description. `deep-lite`, `deep` and",
-	"`deep-reasoning` plan across several steps and take seconds, and only they read",
-	"`additionalQueries`. Choose `fast` unless the profile hides several distinct kinds of",
-	"company that one sentence cannot describe together.",
+	"Measured on one profile asking for twenty five records: `fast` returned twenty five in",
+	"half a second, `deep` returned fifteen in four seconds, and `deep-reasoning` returned",
+	"twenty five in fourteen seconds and reached a different set of companies. Only `deep`",
+	"and `deep-reasoning` read `additionalQueries`. Choose `fast` unless the profile hides",
+	"several distinct kinds of company that one sentence cannot describe together, and then",
+	"choose `deep` and write the variations.",
 	"`additionalQueries` are extra query sentences the deep types run beside the main one.",
 	"Write one for each distinct direction the profile allows, for example a different",
-	"vertical or a different job the product does. Leave the list empty on `fast`, because",
-	"nothing reads it there.",
+	"vertical or a different job the product does. Measured: three variations took one deep",
+	"search from fifteen records to twenty five, and twenty two of those twenty five",
+	"companies were ones the same search without variations never found. Leave the list",
+	"empty on `fast`, where the vendor accepts the field and ignores it.",
 	"`agentEffort` is how long `exa-agent` may work, and applies to `exa-agent` only.",
-	"`minimal` and `low` come back quickly and suit a profile whose signal is easy to find.",
-	"`medium` and `high` spend longer, and suit a narrow window or a rare event.",
+	"Choose `low`. On the same profile and the same count, `low` and `high` both returned",
+	"every company asked for, with a signal and a proving page each, and `high` cost about",
+	"ten times as much and took half again as long. Raise it above `low` only when an",
+	"earlier round on this run came back short of the count.",
 	"`recency` carries the freshness the profile demands, written as its own sentences that",
 	"name each event and the window it must fall inside, for example a platform engineering",
 	"role posted in the last thirty days, or a postmortem published in the last ninety days.",
