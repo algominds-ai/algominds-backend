@@ -67,6 +67,8 @@ function agentSystemPrompt(today: string): string {
 		"`evidencePublisher` the name that page gives for whoever publishes it, copied from",
 		"the page. Write `the page does not say` in `evidencePublisher` when the page names",
 		"nobody, rather than guessing a name from the address.",
+		"Put the industry the company operates in into `industry`, in two or three words,",
+		"as the market it sells into rather than the product it makes.",
 		"Give the company's own LinkedIn page in `linkedinUrl`. It is a",
 		"linkedin.com/company address and never a personal profile. Every real company of",
 		"this kind has one, so find the page rather than assembling an address from the",

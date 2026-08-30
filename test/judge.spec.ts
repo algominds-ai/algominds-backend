@@ -26,6 +26,7 @@ function row(name: string, domain: string): CompanyRow {
 		evidenceUrl: `https://${domain}/careers`,
 		evidenceQuote: null,
 		evidencePublisher: null,
+		industry: null,
 		description: null,
 		signal: "hiring a founding engineer",
 		evidenceDate: "2026-08-20",

@@ -112,6 +112,7 @@ const nullableNumber = z
 export const CompanyRecordSchema = z.object({
 	name: nullableString,
 	description: nullableString,
+	industry: nullableString,
 	foundedYear: nullableNumber,
 	workforceTotal: nullableNumber,
 	city: nullableString,
@@ -260,6 +261,7 @@ function toCompanyEntity(entities: readonly Entity[]): CompanyEntity | null {
 	return {
 		name: p.name ?? null,
 		description: p.description ?? null,
+		industry: null,
 		foundedYear: p.foundedYear ?? null,
 		workforceTotal: p.workforce?.total ?? null,
 		city: p.headquarters?.city ?? null,

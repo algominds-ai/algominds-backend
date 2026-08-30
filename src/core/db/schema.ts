@@ -87,6 +87,7 @@ export const company = pgTable(
 		domain: text("domain").notNull(),
 		name: text("name").notNull(),
 		linkedinUrl: text("linkedin_url"),
+		industry: text("industry"),
 		data: jsonb("data"),
 		runId: text("run_id")
 			.notNull()

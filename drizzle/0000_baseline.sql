@@ -4,6 +4,7 @@ CREATE TABLE "company" (
 	"domain" text NOT NULL,
 	"name" text NOT NULL,
 	"linkedin_url" text,
+	"industry" text,
 	"data" jsonb,
 	"run_id" text NOT NULL,
 	"found_at" timestamp with time zone DEFAULT now() NOT NULL,

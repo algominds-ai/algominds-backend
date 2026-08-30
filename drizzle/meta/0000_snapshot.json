@@ -1,5 +1,5 @@
 {
-  "id": "152b44b8-98fb-4c50-b22b-a2993e53f2bd",
+  "id": "5649a2a3-09c5-4bcf-87c1-9c408e8440ba",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -35,6 +35,12 @@
         },
         "linkedin_url": {
           "name": "linkedin_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "industry": {
+          "name": "industry",
           "type": "text",
           "primaryKey": false,
           "notNull": false

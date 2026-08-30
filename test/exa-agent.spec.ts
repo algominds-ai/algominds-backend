@@ -287,6 +287,7 @@ describe("agent run to CompanyEntity mapping", () => {
 		expect(result.results[0]?.company).toEqual({
 			name: "Acme",
 			description: null,
+			industry: null,
 			foundedYear: null,
 			workforceTotal: null,
 			city: null,
@@ -415,6 +416,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -445,6 +447,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: 470,
 				city: null,
@@ -462,6 +465,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 		expect(results[0]?.company).toEqual({
 			name: "Kastle",
 			description: null,
+			industry: null,
 			foundedYear: null,
 			workforceTotal: 470,
 			city: null,
@@ -480,6 +484,7 @@ describe("the agent's evidence reaches the row the judge reads", () => {
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: "a security company",
+				industry: null,
 				foundedYear: null,
 				workforceTotal: 470,
 				city: null,
@@ -528,6 +533,7 @@ describe("what is stored keeps the evidence, not just the company", () => {
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: "a security company",
+				industry: null,
 				foundedYear: null,
 				workforceTotal: 470,
 				city: null,
@@ -599,6 +605,7 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 				website: "https://kastle.com",
 				linkedinUrl: linkedinUrl || null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -677,6 +684,7 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -717,6 +725,7 @@ describe("evidence outside the window the profile asks for is refused in code", 
 				website: "https://kadmos.io",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -773,5 +782,53 @@ describe("a thin round comes back thin, never empty", () => {
 
 		expect(schema.properties.companies.minItems).toBe(1);
 		expect(req.query).toContain("30 distinct companies");
+	});
+});
+
+describe("the industry the agent reports reaches the row and the stored company", () => {
+	it("carries the industry through, and describes the company with it", () => {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Zealhire",
+				website: "https://zealhire.com",
+				linkedinUrl: "https://linkedin.com/company/zealhire",
+				description: null,
+				industry: "IT staffing and recruitment",
+				foundedYear: null,
+				workforceTotal: 40,
+				city: null,
+				country: "United States",
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted for a India based recruiter on US shift",
+				evidenceUrl: "https://linkedin.com/posts/zealhire_hiring",
+				evidenceDate: "2026-08-03",
+				evidenceQuote: "Shift: Night Shift (US EST Timings)",
+				evidencePublisher: "Zealhire",
+			},
+		]);
+		const outcome = filterEntities(
+			results,
+			planFor("staffing agencies"),
+			"2026-08-30",
+		);
+
+		expect(outcome.rows[0]?.industry).toBe("IT staffing and recruitment");
+		expect(outcome.rows[0]?.description).toContain(
+			"IT staffing and recruitment",
+		);
+		expect(outcome.captures["zealhire.com"]?.entity.industry).toBe(
+			"IT staffing and recruitment",
+		);
+	});
+
+	it("asks the agent for the market it sells into", () => {
+		const req = buildAgentRunRequest(
+			planFor("staffing agencies"),
+			5,
+			"2026-08-30",
+		);
+
+		expect(req.systemPrompt).toContain("`industry`");
 	});
 });

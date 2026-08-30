@@ -89,6 +89,7 @@ export function buildSearchRequest(
 
 function describeCompany(entity: CompanyEntity): string {
 	const facts: string[] = [];
+	if (entity.industry !== null) facts.push(entity.industry);
 	if (entity.workforceTotal !== null)
 		facts.push(`headcount ${entity.workforceTotal}`);
 	if (entity.country !== null)
@@ -115,6 +116,7 @@ function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 		evidenceUrl: evidenceUrlOf(result),
 		evidenceQuote: result.evidenceQuote ?? null,
 		evidencePublisher: result.evidencePublisher ?? null,
+		industry: entity.industry,
 		description: describeCompany(entity) || null,
 		signal: result.signal ?? null,
 		evidenceDate: result.publishedDate ?? null,

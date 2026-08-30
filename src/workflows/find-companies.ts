@@ -234,6 +234,7 @@ function toNewCompany(
 		domain: row.domain,
 		name: row.name,
 		linkedinUrl: row.linkedinUrl,
+		industry: row.industry,
 		data: toCompanyData(capture),
 		runId,
 	};
