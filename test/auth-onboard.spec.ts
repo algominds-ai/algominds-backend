@@ -83,8 +83,9 @@ describe("an organization that names a domain begins onboarding", () => {
 		).resolves.toBeUndefined();
 	});
 
-	it("reaches the real workflow binding, not only a recording stand-in", async () => {
-		const auth = createAuth(testEnv);
+	it("starts onboarding because the hook is wired, not because a test called it", async () => {
+		const { env, started } = recordingEnv();
+		const auth = createAuth(env);
 		const label = `hooked-${crypto.randomUUID()}`;
 		const domain = `hooked-${crypto.randomUUID()}.example`;
 		const signedUp = await auth.api.signUpEmail({
@@ -94,52 +95,35 @@ describe("an organization that names a domain begins onboarding", () => {
 				password: "correct-horse-battery-staple",
 			},
 		});
+
 		const organization = await auth.api.createOrganization({
+			body: { name: label, slug: label, domain, userId: signedUp.user.id },
+		});
+
+		expect(started).toHaveLength(1);
+		expect(started[0]?.params).toEqual({
+			domain,
+			note: null,
+			organizationId: String(organization?.id),
+		});
+	});
+
+	it("starts nothing when the organization it creates names no domain", async () => {
+		const { env, started } = recordingEnv();
+		const auth = createAuth(env);
+		const label = `unhooked-${crypto.randomUUID()}`;
+		const signedUp = await auth.api.signUpEmail({
+			body: {
+				name: label,
+				email: `${label}@example.com`,
+				password: "correct-horse-battery-staple",
+			},
+		});
+
+		await auth.api.createOrganization({
 			body: { name: label, slug: label, userId: signedUp.user.id },
 		});
-		const organizationId = String(organization?.id);
-		const runId = buildRunId(
-			"onboarding",
-			await domainsScopeId([domain], organizationId),
-		);
-		const instance = await introspectWorkflowInstance(
-			testEnv.ONBOARD_ICP,
-			runId,
-		);
-		try {
-			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: ONBOARD_STEPS.checkSpend }, {});
-				await m.mockStepResult(
-					{ name: ONBOARD_STEPS.openRun },
-					{ alreadySpent: 0 },
-				);
-				await m.mockStepResult(
-					{ name: ONBOARD_STEPS.readSeller },
-					{ pages: [], costDollars: 0 },
-				);
-				await m.mockStepResult({ name: ONBOARD_STEPS.bankSearch }, {});
-				await m.mockStepResult(
-					{ name: ONBOARD_STEPS.writeProfile },
-					{
-						description: "a mocked ideal customer profile",
-						seller: { domain, customers: [], competitorTest: "none" },
-						wroteProfile: true,
-						costDollars: 0,
-					},
-				);
-				await m.mockStepResult(
-					{ name: ONBOARD_STEPS.saveIcp },
-					"mocked-icp-id",
-				);
-			});
 
-			await startOnboarding(testEnv, { id: organizationId, domain });
-
-			const handle = await testEnv.ONBOARD_ICP.get(runId);
-			expect(handle.id).toBe(runId);
-			await instance.waitForStatus("complete");
-		} finally {
-			await instance.dispose();
-		}
+		expect(started).toHaveLength(0);
 	});
 });

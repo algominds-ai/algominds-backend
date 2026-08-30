@@ -26,8 +26,18 @@ function constantValues(text) {
 }
 
 const literals = new Set();
-const prefixes = [];
+const patterns = [];
 const constants = new Map();
+
+/** A step template compiled to a pattern, with each interpolation standing for one name segment. */
+function templatePattern(template) {
+	const parts = template.split(/\$\{[^}]*\}/g).map(escapeLiteral);
+	return new RegExp(`^${parts.join("[A-Za-z0-9_]+")}$`);
+}
+
+function escapeLiteral(text) {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 for (const [, text] of sources(WORKFLOWS, ".ts")) {
 	for (const [key, value] of constantValues(text)) constants.set(key, value);
@@ -35,8 +45,7 @@ for (const [, text] of sources(WORKFLOWS, ".ts")) {
 		const [, template, quoted, identifier] = call;
 		if (quoted) literals.add(quoted);
 		else if (template) {
-			const head = template.split("${")[0];
-			if (head) prefixes.push(head);
+			if (template.includes("${")) patterns.push(templatePattern(template));
 			else literals.add(template);
 		} else if (identifier) {
 			const value = constants.get(identifier.split(".").pop());
@@ -50,10 +59,10 @@ for (const [path, text] of sources(TESTS, ".ts")) {
 	for (const call of text.matchAll(MOCK_CALL)) {
 		const [, template, quoted, identifier] = call;
 		if (identifier) continue;
-		const name = quoted ?? template.split("${")[0];
-		if (!name) continue;
+		const name = quoted ?? template;
+		if (!name || name.includes("${")) continue;
 		const known =
-			literals.has(name) || prefixes.some((head) => name.startsWith(head));
+			literals.has(name) || patterns.some((pattern) => pattern.test(name));
 		if (!known) {
 			const line = text.slice(0, call.index).split("\n").length;
 			failures.push(

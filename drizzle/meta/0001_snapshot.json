@@ -1,6 +1,6 @@
 {
-  "id": "152b44b8-98fb-4c50-b22b-a2993e53f2bd",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "9ccb6132-40d9-40f2-b5b6-33c1d107ab72",
+  "prevId": "152b44b8-98fb-4c50-b22b-a2993e53f2bd",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -35,6 +35,12 @@
         },
         "linkedin_url": {
           "name": "linkedin_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "industry": {
+          "name": "industry",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -548,7 +554,7 @@
           "name": "icp_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "capability": {
           "name": "capability",

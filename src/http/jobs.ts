@@ -130,13 +130,19 @@ export async function startJob<Body>(
 		}
 	}
 	const runId = buildRunId(config.capability, job.scopeId);
-	if (await instanceExists(config.workflow, runId)) {
+	const existingResponse = async () => {
 		const existing = await findRun(c.env, runId);
 		return c.json(
 			{ runId, icpId: existing?.icpId ?? job.icpId, status: "existing" },
 			200,
 		);
+	};
+	if (await instanceExists(config.workflow, runId)) return existingResponse();
+	try {
+		await config.workflow.createBatch([{ id: runId, params: job.params }]);
+	} catch (error) {
+		if (!(await instanceExists(config.workflow, runId))) throw error;
+		return existingResponse();
 	}
-	await config.workflow.createBatch([{ id: runId, params: job.params }]);
 	return c.json({ runId, icpId: job.icpId, status: "started" }, 202);
 }

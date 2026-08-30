@@ -4,7 +4,6 @@ CREATE TABLE "company" (
 	"domain" text NOT NULL,
 	"name" text NOT NULL,
 	"linkedin_url" text,
-	"industry" text,
 	"data" jsonb,
 	"run_id" text NOT NULL,
 	"found_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -57,7 +56,7 @@ CREATE TABLE "round" (
 CREATE TABLE "run" (
 	"id" text PRIMARY KEY NOT NULL,
 	"organization_id" text NOT NULL,
-	"icp_id" uuid,
+	"icp_id" uuid NOT NULL,
 	"capability" text NOT NULL,
 	"status" text NOT NULL,
 	"cost_dollars" real DEFAULT 0 NOT NULL,
