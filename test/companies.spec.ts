@@ -82,13 +82,14 @@ function entitylessResult(id: number): ExaResult {
 function testOptions(
 	overrides: Partial<FindCompaniesOptions> = {},
 ): FindCompaniesOptions {
-	return { icpId: "icp-1", env: testEnv, ...overrides };
+	return { icpId: "icp-1", env: testEnv, today: "2026-08-30", ...overrides };
 }
 
 function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
+		recency: null,
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -129,6 +130,7 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 			plan: {
 				query: `${input.icp.description} round-${inputs.length}`,
 				angle: `angle-${inputs.length}`,
+				recency: null,
 				userLocation: null,
 				countries: [],
 				minWorkforce: null,
@@ -528,6 +530,9 @@ describe("findCompanies — captures across sources", () => {
 			country: "United States",
 			revenueAnnual: null,
 			fundingTotal: null,
+			signal: "opened a platform engineering role",
+			evidenceUrl: "https://jobs.example.com/agent-co/platform",
+			evidenceDate: "2026-08-12",
 		};
 		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
 		const { search } = scriptedSearch([agentSearchResult.results]);

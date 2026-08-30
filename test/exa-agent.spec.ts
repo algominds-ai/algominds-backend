@@ -21,6 +21,7 @@ function planFor(query: string): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
+		recency: null,
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -86,7 +87,12 @@ describe("agent run start request shape", () => {
 		const stub = stubFetch(
 			jsonResponse(200, { id: "run-1", status: "running" }),
 		);
-		const req = buildAgentRunRequest(planFor("seed stage fintech"), 10, "low");
+		const req = buildAgentRunRequest(
+			planFor("seed stage fintech"),
+			10,
+			"low",
+			"2026-08-30",
+		);
 
 		await startAgentRun(req, exaEnv());
 
@@ -103,7 +109,12 @@ describe("agent run start request shape", () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
 		const result = await startAgentRun(
-			buildAgentRunRequest(planFor("seed stage fintech"), 5, "low"),
+			buildAgentRunRequest(
+				planFor("seed stage fintech"),
+				5,
+				"low",
+				"2026-08-30",
+			),
 			exaEnv(),
 		);
 
@@ -119,7 +130,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low", "2026-08-30"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -132,7 +143,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low", "2026-08-30"),
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
@@ -145,7 +156,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "low"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "low", "2026-08-30"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -332,5 +343,123 @@ describe("a run that is still working", () => {
 		await getAgentRun(runningRun.id, exaEnv(), ledger);
 
 		expect(ledger.total()).toBe(0);
+	});
+});
+
+describe("the agent is asked for evidence, and for evidence inside a window", () => {
+	function companySchema(count: number, plan: SearchPlan) {
+		const req = buildAgentRunRequest(plan, count, "low", "2026-08-30");
+		const parsed = JSON.parse(JSON.stringify(req.outputSchema));
+		return parsed.properties.companies.items;
+	}
+
+	it("demands the signal and the page that proves it, and leaves the date optional", () => {
+		const items = companySchema(5, planFor("payment platforms"));
+
+		expect(items.required).toContain("signal");
+		expect(items.required).toContain("evidenceUrl");
+		expect(items.required).toContain("name");
+		expect(items.required).toContain("website");
+		expect(items.required).not.toContain("evidenceDate");
+		expect(items.properties.evidenceDate).toBeDefined();
+	});
+
+	it("keeps the directory-host pattern on the company site and off the evidence page", () => {
+		const items = companySchema(5, planFor("payment platforms"));
+
+		expect(items.properties.website.pattern).toContain("linkedin");
+		expect(items.properties.evidenceUrl.pattern).toBeUndefined();
+	});
+
+	it("tells the agent today's date so a window in the query means something", () => {
+		const req = buildAgentRunRequest(
+			planFor("payment platforms"),
+			5,
+			"low",
+			"2026-08-30",
+		);
+
+		expect(req.systemPrompt).toContain("2026-08-30");
+		expect(req.systemPrompt).toContain("YYYY-MM-DD");
+	});
+
+	it("carries the profile's freshness windows into the query, and nothing when it asks for none", () => {
+		const withWindow = buildAgentRunRequest(
+			{
+				...planFor("payment platforms"),
+				recency: "A role posted in the last 30 days.",
+			},
+			5,
+			"low",
+			"2026-08-30",
+		);
+		const without = buildAgentRunRequest(
+			planFor("payment platforms"),
+			5,
+			"low",
+			"2026-08-30",
+		);
+
+		expect(withWindow.query).toContain("last 30 days");
+		expect(without.query).not.toContain("last 30 days");
+	});
+});
+
+describe("an agent company becomes a row whose domain is the company, not the evidence host", () => {
+	it("keeps the website as the result url and the proving page as the evidence url", () => {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kastle",
+				website: "https://kastle.com",
+				description: null,
+				foundedYear: null,
+				workforceTotal: null,
+				city: null,
+				country: null,
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted a Head of Sales role",
+				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
+				evidenceDate: "2026-08-12",
+			},
+		]);
+
+		expect(results).toHaveLength(1);
+		expect(results[0]?.url).toBe("https://kastle.com");
+		expect(results[0]?.evidenceUrl).toBe(
+			"https://jobs.ashbyhq.com/kastle/735bed91",
+		);
+		expect(results[0]?.publishedDate).toBe("2026-08-12");
+		expect(results[0]?.signal).toBe("posted a Head of Sales role");
+	});
+
+	it("drops the agent's extra fields from the stored company record", () => {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kastle",
+				website: "https://kastle.com",
+				description: null,
+				foundedYear: null,
+				workforceTotal: 470,
+				city: null,
+				country: "United States",
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted a Head of Sales role",
+				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
+				evidenceDate: "2026-08-12",
+			},
+		]);
+
+		expect(results[0]?.company).toEqual({
+			name: "Kastle",
+			description: null,
+			foundedYear: null,
+			workforceTotal: 470,
+			city: null,
+			country: "United States",
+			revenueAnnual: null,
+			fundingTotal: null,
+		});
 	});
 });

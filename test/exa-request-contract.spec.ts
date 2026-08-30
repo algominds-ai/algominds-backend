@@ -14,6 +14,7 @@ function planFor(query: string): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
+		recency: null,
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -133,6 +134,7 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies at seed stage with a small team",
 		angle: "founder-led vertical software",
+		recency: null,
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
@@ -214,6 +216,7 @@ describe("agent run request stays inside the measured Exa /agent/runs schema", (
 			planFor("small US software teams"),
 			10,
 			"low",
+			"2026-08-30",
 		);
 
 		const parsed = MeasuredAgentRunRequestSchema.safeParse(request);
@@ -341,7 +344,12 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		await startAgentRun(
-			buildAgentRunRequest(planFor("ten fintech companies"), 10, "low"),
+			buildAgentRunRequest(
+				planFor("ten fintech companies"),
+				10,
+				"low",
+				"2026-08-30",
+			),
 			exaEnv(),
 		);
 

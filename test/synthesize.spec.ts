@@ -127,7 +127,7 @@ function runSynthesize(
 	pastAngles: readonly string[] = [],
 	feedback: readonly string[] = [],
 ) {
-	return synthesize({ icp, pastAngles, feedback }, env);
+	return synthesize({ icp, pastAngles, feedback, today: "2026-08-30" }, env);
 }
 
 describe("synthesize: gateway wiring", () => {

@@ -16,6 +16,7 @@ export type IcpDoc = z.infer<typeof IcpDocSchema>;
 export type SearchPlan = {
 	query: string;
 	angle: string;
+	recency: string | null;
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
@@ -31,6 +32,7 @@ export type SearchPlan = {
 const SearchPlanModelSchema = z.object({
 	query: z.string(),
 	angle: z.string(),
+	recency: z.string().nullish(),
 	userLocation: z.string().nullable(),
 	countries: z.array(z.string()),
 	minWorkforce: z.number().nullable(),
@@ -66,6 +68,12 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"null, because a limit nobody asked for refuses companies that fit.",
 	"`angle` names the slice of the market this round targets, for example the vertical, the",
 	"buyer, or the product shape.",
+	"`recency` carries the freshness the profile demands, written as its own sentences that",
+	"name each event and the window it must fall inside, for example a platform engineering",
+	"role posted in the last thirty days, or a postmortem published in the last ninety days.",
+	"Write every window as a span counted back from today, never as a fixed date. Set",
+	"`recency` to null when the profile asks for nothing recent, because a freshness demand",
+	"nobody made refuses companies that fit.",
 	"A paraphrase of an earlier query returns the same companies, so when earlier angles are",
 	"given, choose a genuinely different angle and write a query for it. Keep every constraint",
 	"of the profile true of that new angle.",
@@ -79,12 +87,13 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"apply again.",
 ].join(" ");
 
-function synthesizePrompt(
-	icp: IcpDoc,
-	pastAngles: readonly string[],
-	feedback: readonly string[],
-): string {
-	const lines = ["Ideal customer profile:", icp.description];
+function synthesizePrompt(input: SynthesizeInput): string {
+	const { icp, pastAngles, feedback } = input;
+	const lines = [
+		`Today is ${input.today}.`,
+		"Ideal customer profile:",
+		icp.description,
+	];
 	if (pastAngles.length > 0) {
 		lines.push("Angles already searched, do not repeat them:");
 		for (const angle of pastAngles) lines.push(`- ${angle}`);
@@ -100,6 +109,7 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 	return {
 		query: icp.description,
 		angle: "the profile as written",
+		recency: null,
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -117,6 +127,7 @@ export type SynthesizeInput = {
 	icp: IcpDoc;
 	pastAngles: readonly string[];
 	feedback: readonly string[];
+	today: string;
 };
 
 /**
@@ -135,7 +146,7 @@ export async function synthesize(
 			model: await workerModel(env),
 			configuredId: env.MODEL_ROUTE_WORKER,
 			instructions: SYNTHESIZE_INSTRUCTIONS,
-			prompt: synthesizePrompt(input.icp, input.pastAngles, input.feedback),
+			prompt: synthesizePrompt(input),
 			schema: SearchPlanModelSchema,
 			headers: { "cf-aig-skip-cache": "true" },
 		},
@@ -147,6 +158,7 @@ export async function synthesize(
 		plan: {
 			query: output.query,
 			angle: output.angle,
+			recency: output.recency ?? null,
 			userLocation:
 				output.userLocation && output.userLocation.length === 2
 					? output.userLocation.toUpperCase()

@@ -6,6 +6,10 @@ import type {
 	ExaSearchRequest,
 	ExaSearchResult,
 } from "@/core/providers/exa/search";
+import {
+	CompanyRecordSchema,
+	nullableString,
+} from "@/core/providers/exa/search";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
@@ -57,16 +61,12 @@ const ExaAgentCostSchema = z.object({
 	phoneNumbers: z.number().nullish(),
 });
 
-const ExaAgentCompanySchema = z.object({
-	name: z.string().nullish(),
-	website: z.string().nullish(),
-	description: z.string().nullish(),
-	foundedYear: z.number().nullish(),
-	workforceTotal: z.number().nullish(),
-	city: z.string().nullish(),
-	country: z.string().nullish(),
-	revenueAnnual: z.number().nullish(),
-	fundingTotal: z.number().nullish(),
+/** The shared company record plus the fields only the agent can give: the company's own site and the page that proves the signal. */
+export const ExaAgentCompanySchema = CompanyRecordSchema.extend({
+	website: nullableString,
+	signal: nullableString,
+	evidenceUrl: nullableString,
+	evidenceDate: nullableString,
 });
 
 /** One company as Exa's agent reports it, matching the `outputSchema` a caller sent to `startAgentRun`. */

@@ -45,6 +45,7 @@ const {
 export type FindCompaniesOptions = {
 	icpId: string;
 	env: Env;
+	today: string;
 	freshnessDays?: number;
 	scoreFloor?: number;
 	maxRounds?: number;
@@ -162,7 +163,12 @@ async function runRound(
 	deps: FindCompaniesDeps,
 ): Promise<RoundOutcome> {
 	const synthesized = await deps.synthesize(
-		{ icp: ctx.icp, pastAngles: ctx.pastAngles, feedback: ctx.feedback },
+		{
+			icp: ctx.icp,
+			pastAngles: ctx.pastAngles,
+			feedback: ctx.feedback,
+			today: opts.today,
+		},
 		opts.env,
 	);
 	const plan = synthesized.plan;

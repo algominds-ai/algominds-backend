@@ -50,12 +50,16 @@ const FindCompaniesPayloadSchema = z.object({
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
 
-function roundDeps(
-	accumulatedDomains: ReadonlySet<string>,
-	step: WorkflowStep,
-	round: number,
-	remaining: number,
-): FindCompaniesDeps {
+type RoundDepsInput = {
+	accumulatedDomains: ReadonlySet<string>;
+	step: WorkflowStep;
+	round: number;
+	remaining: number;
+	today: string;
+};
+
+function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
+	const { accumulatedDomains, step, round, remaining, today } = input;
 	const isAgent = COMPANY_SOURCE === "exa-agent";
 	const lookupRecentDomains = isAgent
 		? agentRecentDomains(step, round)
@@ -67,7 +71,7 @@ function roundDeps(
 		},
 		synthesize: isAgent ? agentSynthesize(step, round) : synthesize,
 		search: isAgent
-			? agentSearch(step, round, remaining)
+			? agentSearch({ step, round, remaining, today })
 			: (_plan, req, env, ledger) => search(req, env, ledger),
 		gate,
 		judge,
@@ -100,6 +104,9 @@ async function runFindCompaniesRounds(
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
 	const { env, payload, icp, runId } = target;
+	const today = await step.do("today", config.stepConfig.databaseCall, () =>
+		Promise.resolve(new Date().toISOString().slice(0, 10)),
+	);
 	const accumulatedDomains = new Set(
 		(payload.excludeDomains ?? []).map(normalizeDomain),
 	);
@@ -123,12 +130,19 @@ async function runFindCompaniesRounds(
 		const opts: FindCompaniesOptions = {
 			icpId: payload.icpId,
 			env,
+			today,
 			maxRounds: 1,
 			pastAngles,
 			feedback,
 			excludeDomains: payload.excludeDomains ?? [],
 		};
-		const deps = roundDeps(accumulatedDomains, step, round, remaining);
+		const deps = roundDeps({
+			accumulatedDomains,
+			step,
+			round,
+			remaining,
+			today,
+		});
 		const stepResult = await step.do(
 			`round_${round}`,
 			config.stepConfig.paidCall,
