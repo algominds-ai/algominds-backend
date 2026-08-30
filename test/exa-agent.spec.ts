@@ -582,11 +582,12 @@ describe("a signal is only demanded when the profile asks for something recent",
 		expect(items.required).toContain("website");
 	});
 
-	it("asks for a LinkedIn company page, never a personal profile", () => {
+	it("requires a LinkedIn company page, never a personal profile", () => {
 		const items = itemsFor(planFor("payment platforms"));
 
 		expect(items.properties.linkedinUrl.pattern).toContain("company");
-		expect(items.required).not.toContain("linkedinUrl");
+		expect(items.required).toContain("linkedinUrl");
+		expect(items.required).toContain("website");
 	});
 });
 

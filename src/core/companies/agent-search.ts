@@ -18,10 +18,7 @@ const NOT_A_DIRECTORY_HOST =
 const AgentCompanyRequestSchema = ExaAgentCompanySchema.extend({
 	name: z.string(),
 	website: z.string().regex(new RegExp(NOT_A_DIRECTORY_HOST)),
-	linkedinUrl: z
-		.string()
-		.regex(new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i"))
-		.optional(),
+	linkedinUrl: z.string().regex(new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i")),
 });
 
 /**
@@ -70,8 +67,10 @@ function agentSystemPrompt(today: string): string {
 		"`evidencePublisher` the name that page gives for whoever publishes it, copied from",
 		"the page. Write `the page does not say` in `evidencePublisher` when the page names",
 		"nobody, rather than guessing a name from the address.",
-		"Give the company's LinkedIn page in `linkedinUrl` when you can find it,",
-		"which is a linkedin.com/company address and never a personal profile.",
+		"Give the company's own LinkedIn page in `linkedinUrl`. It is a",
+		"linkedin.com/company address and never a personal profile. Every real company of",
+		"this kind has one, so find the page rather than assembling an address from the",
+		"company's name, and drop the company if no such page exists.",
 		"Never repeat a company.",
 	].join(" ");
 }
