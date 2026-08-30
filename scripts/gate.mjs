@@ -12,21 +12,38 @@ const STEPS = [
 	["bundle", "bunx", ["wrangler", "deploy", "--dry-run"]],
 ];
 
-const failures = [];
+const TAIL_LINES = 40;
+
+function tail(text) {
+	return text
+		.split("\n")
+		.filter((line) => line.trim() !== "")
+		.slice(-TAIL_LINES)
+		.join("\n");
+}
+
+const failures = new Map();
 for (const [name, cmd, args] of STEPS) {
 	process.stdout.write(`\n──── ${name} ────\n`);
-	const run = spawnSync(cmd, args, { stdio: "inherit" });
-	if (run.status !== 0) failures.push(name);
+	const run = spawnSync(cmd, args, { encoding: "utf8" });
+	const output = `${run.stdout ?? ""}${run.stderr ?? ""}`;
+	process.stdout.write(output);
+	if (run.status !== 0) failures.set(name, output);
 }
 
 process.stdout.write("\n════ gate ════\n");
 for (const [name] of STEPS) {
+	process.stdout.write(`${failures.has(name) ? "FAIL" : "pass"}  ${name}\n`);
+}
+if (failures.size === 0) {
+	process.stdout.write("\ngate PASSED\n");
+	process.exit(0);
+}
+for (const [name, output] of failures) {
 	process.stdout.write(
-		`${failures.includes(name) ? "FAIL" : "pass"}  ${name}\n`,
+		`\n──── why ${name} failed (last ${TAIL_LINES} lines) ────\n`,
 	);
+	process.stdout.write(`${tail(output)}\n`);
 }
-if (failures.length > 0) {
-	process.stdout.write(`\ngate FAILED: ${failures.join(", ")}\n`);
-	process.exit(1);
-}
-process.stdout.write("\ngate PASSED\n");
+process.stdout.write(`\ngate FAILED: ${[...failures.keys()].join(", ")}\n`);
+process.exit(1);

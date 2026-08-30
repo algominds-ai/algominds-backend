@@ -246,6 +246,7 @@ export type RoundReport = {
 	round: number;
 	angle: string;
 	query: string;
+	recency: string | null;
 	found: number;
 	rejected: { filter: number; gate: number; judge: number };
 };
@@ -262,6 +263,7 @@ export function reportRound(
 		round,
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
+		recency: plan?.recency ?? null,
 		found: result.companies.length,
 		rejected: {
 			filter: count("filter"),

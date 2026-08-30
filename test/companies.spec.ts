@@ -33,7 +33,7 @@ import type {
 	SearchPlan,
 	SynthesizeInput,
 } from "../src/core/synthesize";
-import { finalStatus } from "../src/workflows/find-companies";
+import { finalStatus, reportRound } from "../src/workflows/find-companies";
 
 const icp: IcpDoc = {
 	description:
@@ -1114,6 +1114,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 						round: 1,
 						angle: plan.angle,
 						query: plan.query,
+						recency: plan.recency,
 						found: count,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},
@@ -1189,6 +1190,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 						round: 1,
 						angle: plan.angle,
 						query: plan.query,
+						recency: plan.recency,
 						found: companies.length,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},
@@ -1211,5 +1213,34 @@ describe("the status the workflow reports for the whole run", () => {
 
 	it("reports complete once the run saved as many companies as requested", () => {
 		expect(finalStatus(5, 5, "empty")).toBe("complete");
+	});
+});
+
+describe("a round reports the freshness it demanded", () => {
+	function resultWith(plan: SearchPlan): FindCompaniesResult {
+		return {
+			companies: [],
+			requested: 1,
+			found: 0,
+			rounds: 1,
+			status: "short",
+			costDollars: 0,
+			rejects: [],
+			searches: [plan],
+			captures: {},
+			seenDomains: [],
+			feedback: [],
+		};
+	}
+
+	it("shows the window the plan asked for, and null when it asked for none", () => {
+		const withWindow = reportRound(
+			1,
+			resultWith(testPlan({ recency: "A role posted in the last 30 days." })),
+		);
+		const without = reportRound(1, resultWith(testPlan()));
+
+		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
+		expect(without.recency).toBeNull();
 	});
 });
