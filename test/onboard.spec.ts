@@ -398,3 +398,36 @@ describe("buildIcp: saying whether the model wrote the profile", () => {
 		expect(result.description).toBe("a short note");
 	});
 });
+
+describe("the note boundary is unguessable, not merely long", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	async function boundaryFor(note: string): Promise<string | undefined> {
+		const gateway = router({
+			exa: [
+				exaSuccessResponse([
+					{ url: "https://acme.example/", text: "Acme sells tooling." },
+				]),
+			],
+			model: [modelResponse(profileReply())],
+		});
+		globalThis.fetch = gateway.fetch;
+		await buildIcp(onboardEnv(), "acme.example", note);
+		return modelUserContent(gateway.modelCalls[0]).match(
+			/--- end note ([0-9a-f-]{36}) ---/,
+		)?.[1];
+	}
+
+	it("uses a different boundary on every call, so one cannot be learned from another", async () => {
+		const first = await boundaryFor("a note");
+		const second = await boundaryFor("a note");
+
+		expect(first).toBeDefined();
+		expect(second).toBeDefined();
+		expect(first).not.toBe(second);
+	});
+});

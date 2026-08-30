@@ -274,6 +274,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 					{
 						description: "a four paragraph ideal customer profile",
 						seller,
+						wroteProfile: true,
 						costDollars: 0.02,
 					},
 				);
@@ -298,7 +299,11 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 			const icpId = runRow.icpId;
 			if (icpId === null) throw new Error("expected the run to name a profile");
 			const output = await instance.getOutput();
-			expect(output).toEqual({ icpId, costDollars: 0.03 });
+			expect(output).toEqual({
+				icpId,
+				costDollars: 0.03,
+				wroteProfile: true,
+			});
 
 			const icpRow = await loadIcp(testEnv, icpId);
 			if (!icpRow) throw new Error("expected an icp row for onboarding");

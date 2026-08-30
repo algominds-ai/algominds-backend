@@ -79,6 +79,11 @@ export type JobConfig<Body> = {
 	toJob: (body: Body, env: Env, organizationId: string) => Promise<Job | null>;
 };
 
+/** The part of a Workflow binding this file reads: one instance, and whether it is still going. */
+type RunLookup = {
+	get: (id: string) => Promise<{ status: () => Promise<{ status: string }> }>;
+};
+
 const FAILED_STATUSES: ReadonlySet<string> = new Set(["errored", "terminated"]);
 
 /**
@@ -89,10 +94,10 @@ const FAILED_STATUSES: ReadonlySet<string> = new Set(["errored", "terminated"]);
  * never causes a second paid run.
  */
 export async function instanceExists(
-	workflow: Workflow<unknown>,
+	workflow: RunLookup,
 	runId: string,
 ): Promise<boolean> {
-	let handle: Awaited<ReturnType<Workflow<unknown>["get"]>>;
+	let handle: Awaited<ReturnType<RunLookup["get"]>>;
 	try {
 		handle = await workflow.get(runId);
 	} catch {

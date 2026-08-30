@@ -14,6 +14,7 @@ import {
 } from "../src/core/db/queries";
 import { company, icp as icpTable, person, run } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
+import { instanceExists } from "../src/http/jobs";
 import app from "../src/index";
 
 const BASE = "https://algo.test";
@@ -767,5 +768,28 @@ describe("OpenAPI document and Swagger UI", () => {
 	it("answers the Swagger UI page with no API key", async () => {
 		const response = await publicCall("/docs");
 		expect(response.status).toBe(200);
+	});
+});
+
+describe("a run whose state cannot be read is treated as still going", () => {
+	function fakeWorkflow(status: () => Promise<{ status: string }>) {
+		return {
+			get: async () => ({ status }),
+			create: async () => ({ id: "x" }),
+			createBatch: async () => [],
+			deleteBatch: async () => undefined,
+		};
+	}
+
+	it("blocks a second start when the status cannot be read, and frees a terminated one", async () => {
+		const unreadable = fakeWorkflow(async () => {
+			throw new Error("the control plane is unreachable");
+		});
+		const terminated = fakeWorkflow(async () => ({ status: "terminated" }));
+		const running = fakeWorkflow(async () => ({ status: "running" }));
+
+		expect(await instanceExists(unreadable, "run-1")).toBe(true);
+		expect(await instanceExists(terminated, "run-1")).toBe(false);
+		expect(await instanceExists(running, "run-1")).toBe(true);
 	});
 });
