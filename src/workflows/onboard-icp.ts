@@ -23,6 +23,16 @@ const OnboardIcpPayloadSchema = z.object({
 
 export type OnboardIcpPayload = z.infer<typeof OnboardIcpPayloadSchema>;
 
+/** The name of every durable step this workflow runs. A test mocking a paid step by hand would silently stop mocking it after a rename. */
+export const ONBOARD_STEPS = {
+	checkSpend: "check-spend",
+	openRun: "open-run",
+	readSeller: "read-seller",
+	bankSearch: "bank-search",
+	writeProfile: "write-profile",
+	saveIcp: "save-icp",
+} as const;
+
 export type OnboardIcpSummary = {
 	icpId: string;
 	costDollars: number;
@@ -91,12 +101,14 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 
 		const runId = event.instanceId;
 
-		await step.do("check-spend", config.stepConfig.databaseCall, () =>
-			assertUnderDailyCeiling(this.env, payload.organizationId),
+		await step.do(
+			ONBOARD_STEPS.checkSpend,
+			config.stepConfig.databaseCall,
+			() => assertUnderDailyCeiling(this.env, payload.organizationId),
 		);
 
 		const alreadySpent = await step.do(
-			"open-run",
+			ONBOARD_STEPS.openRun,
 			config.stepConfig.databaseCall,
 			async () => {
 				const row = await openRun(this.env, {
@@ -110,19 +122,21 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 		);
 
 		const read: ReadSellerStep = await step.do(
-			"read-seller",
+			ONBOARD_STEPS.readSeller,
 			config.stepConfig.paidCall,
 			async () => {
 				const result = await readSellerPages(this.env, domain);
 				return { pages: result.pages, costDollars: result.ledger.total() };
 			},
 		);
-		await step.do("bank-search", config.stepConfig.databaseCall, () =>
-			recordRunSpend(this.env, runId, alreadySpent + read.costDollars),
+		await step.do(
+			ONBOARD_STEPS.bankSearch,
+			config.stepConfig.databaseCall,
+			() => recordRunSpend(this.env, runId, alreadySpent + read.costDollars),
 		);
 
 		const written = await step.do(
-			"write-profile",
+			ONBOARD_STEPS.writeProfile,
 			config.stepConfig.paidCall,
 			() =>
 				writeSellerProfile(
@@ -145,7 +159,7 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 		};
 
 		const icpId = await step.do(
-			"save-icp",
+			ONBOARD_STEPS.saveIcp,
 			config.stepConfig.databaseCall,
 			() =>
 				persistIcp({

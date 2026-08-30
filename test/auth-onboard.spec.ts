@@ -3,6 +3,7 @@ import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { createAuth, startOnboarding } from "../src/auth";
 import { buildRunId, domainsScopeId } from "../src/http/jobs";
+import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 
 type StartedBatch = Parameters<Env["ONBOARD_ICP"]["createBatch"]>[0][number];
 
@@ -107,22 +108,33 @@ describe("an organization that names a domain begins onboarding", () => {
 		);
 		try {
 			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "check-spend" }, {});
+				await m.mockStepResult({ name: ONBOARD_STEPS.checkSpend }, {});
+				await m.mockStepResult({ name: ONBOARD_STEPS.openRun }, 0);
 				await m.mockStepResult(
-					{ name: "build-icp" },
+					{ name: ONBOARD_STEPS.readSeller },
+					{ pages: [], costDollars: 0 },
+				);
+				await m.mockStepResult({ name: ONBOARD_STEPS.bankSearch }, {});
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.writeProfile },
 					{
 						description: "a mocked ideal customer profile",
 						seller: { domain, customers: [], competitorTest: "none" },
+						wroteProfile: true,
 						costDollars: 0,
 					},
 				);
-				await m.mockStepResult({ name: "save-icp" }, "mocked-icp-id");
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.saveIcp },
+					"mocked-icp-id",
+				);
 			});
 
 			await startOnboarding(testEnv, { id: organizationId, domain });
 
 			const handle = await testEnv.ONBOARD_ICP.get(runId);
 			expect(handle.id).toBe(runId);
+			await instance.waitForStatus("complete");
 		} finally {
 			await instance.dispose();
 		}

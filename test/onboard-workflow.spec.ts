@@ -21,7 +21,7 @@ import { NOTE_MAX_LENGTH } from "../src/core/onboard";
 import type { IcpSeller } from "../src/core/synthesize";
 import { buildRunId, domainsScopeId } from "../src/http/jobs";
 import app from "../src/index";
-import { publicHostname } from "../src/workflows/onboard-icp";
+import { ONBOARD_STEPS, publicHostname } from "../src/workflows/onboard-icp";
 
 const BASE = "https://onboard.test";
 
@@ -144,25 +144,28 @@ describe("POST /icp/onboard: starts a workflow without waiting for the profile",
 		);
 		try {
 			await instance.modify(async (m) => {
-				await m.mockStepResult({ name: "check-spend" }, {});
-				await m.mockStepResult({ name: "open-run" }, {});
+				await m.mockStepResult({ name: ONBOARD_STEPS.checkSpend }, {});
+				await m.mockStepResult({ name: ONBOARD_STEPS.openRun }, {});
 				await m.mockStepResult(
-					{ name: "read-seller" },
+					{ name: ONBOARD_STEPS.readSeller },
 					{
 						pages: [{ url: `https://${domain}/`, text: "" }],
 						costDollars: 0.01,
 					},
 				);
-				await m.mockStepResult({ name: "bank-search" }, {});
+				await m.mockStepResult({ name: ONBOARD_STEPS.bankSearch }, {});
 				await m.mockStepResult(
-					{ name: "write-profile" },
+					{ name: ONBOARD_STEPS.writeProfile },
 					{
 						description: "a mocked ideal customer profile",
 						seller: mockedSeller(domain),
 						costDollars: 0.01,
 					},
 				);
-				await m.mockStepResult({ name: "save-icp" }, "mocked-icp-id");
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.saveIcp },
+					"mocked-icp-id",
+				);
 			});
 
 			const started = Date.now();
@@ -197,14 +200,14 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
-					{ name: "read-seller" },
+					{ name: ONBOARD_STEPS.readSeller },
 					{
 						pages: [{ url: `https://${domain}/`, text: "" }],
 						costDollars: 0.01,
 					},
 				);
 				await m.mockStepResult(
-					{ name: "write-profile" },
+					{ name: ONBOARD_STEPS.writeProfile },
 					{
 						description: "a mocked ideal customer profile",
 						seller: mockedSeller(domain),
@@ -257,14 +260,14 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
-					{ name: "read-seller" },
+					{ name: ONBOARD_STEPS.readSeller },
 					{
 						pages: [{ url: `https://${domain}/`, text: "" }],
 						costDollars: 0.01,
 					},
 				);
 				await m.mockStepResult(
-					{ name: "write-profile" },
+					{ name: ONBOARD_STEPS.writeProfile },
 					{
 						description: "a four paragraph ideal customer profile",
 						seller,
@@ -349,6 +352,17 @@ describe("OnboardIcpWorkflow: the daily spend ceiling", () => {
 			instanceId,
 		);
 		try {
+			await instance.modify(async (m) => {
+				await m.mockStepError(
+					{ name: ONBOARD_STEPS.readSeller },
+					new NonRetryableError("the ceiling should have refused this run"),
+				);
+				await m.mockStepError(
+					{ name: ONBOARD_STEPS.writeProfile },
+					new NonRetryableError("the ceiling should have refused this run"),
+				);
+			});
+
 			await testEnv.ONBOARD_ICP.create({
 				id: instanceId,
 				params: { domain, note: null, organizationId: org.id },
@@ -390,14 +404,14 @@ describe("OnboardIcpWorkflow: a run that dies after buying something", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
-					{ name: "read-seller" },
+					{ name: ONBOARD_STEPS.readSeller },
 					{
 						pages: [{ url: `https://${domain}/`, text: "" }],
 						costDollars: 0.04,
 					},
 				);
 				await m.mockStepError(
-					{ name: "write-profile" },
+					{ name: ONBOARD_STEPS.writeProfile },
 					new NonRetryableError("the model was unreachable"),
 				);
 			});
@@ -432,7 +446,7 @@ describe("POST /icp/onboard: after a run has failed", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepError(
-					{ name: "check-spend" },
+					{ name: ONBOARD_STEPS.checkSpend },
 					new NonRetryableError("the ceiling read failed"),
 				);
 			});

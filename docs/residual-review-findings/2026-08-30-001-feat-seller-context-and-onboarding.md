@@ -73,6 +73,15 @@ what the failed attempt spent rather than replacing it.
   in-process instead, because publishing this source to another vendor is not
   authorized in this session. Twelve reviewers in twelve separate contexts is
   real independence between lenses, but every one of them is the same model.
-- **The testing reviewer never returned findings.** Its lens — whether a test
-  can silently pass, and whether any test can reach a paid vendor — was covered
-  only by my own check, which found and fixed one such test.
+- **The testing reviewer returned late, after the branch was closed, and was
+  right.** Splitting the paid step into `read-seller` and `write-profile` left
+  the wiring test in `test/auth-onboard.spec.ts` mocking `build-icp`, a name
+  that no longer existed. Mocks register lazily by name and nothing validates
+  them, so the mock became a no-op and both paid steps ran unmocked in a test
+  written to stop exactly that. The step names now live in one exported
+  constant, `ONBOARD_STEPS`, which both the workflow and the tests read, so a
+  rename cannot orphan a mock again. The ceiling test, which relied on the
+  guard alone with no mocks at all, now fails its paid steps as a backstop.
+
+  The lesson is not about that one test. A mock keyed to a string the compiler
+  never checks is a silent-pass mechanism, and this one guarded money.
