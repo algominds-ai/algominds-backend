@@ -79,16 +79,29 @@ export type JobConfig<Body> = {
 	toJob: (body: Body, env: Env, organizationId: string) => Promise<Job | null>;
 };
 
-/** Whether an instance already exists for `runId`, per the Workflows engine itself. */
+const FAILED_STATUSES: ReadonlySet<string> = new Set(["errored", "terminated"]);
+
+/**
+ * Whether a run under `runId` is still worth waiting on. A finished or running
+ * instance blocks a second start; one that failed does not, because the engine
+ * accepts its id again and the caller would otherwise wait for the day to roll.
+ * A status that cannot be read counts as blocking, so an unreadable instance
+ * never causes a second paid run.
+ */
 export async function instanceExists(
 	workflow: Workflow<unknown>,
 	runId: string,
 ): Promise<boolean> {
+	let handle: Awaited<ReturnType<Workflow<unknown>["get"]>>;
 	try {
-		await workflow.get(runId);
-		return true;
+		handle = await workflow.get(runId);
 	} catch {
 		return false;
+	}
+	try {
+		return !FAILED_STATUSES.has(String((await handle.status()).status));
+	} catch {
+		return true;
 	}
 }
 

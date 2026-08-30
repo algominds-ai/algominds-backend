@@ -95,14 +95,19 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 			assertUnderDailyCeiling(this.env, payload.organizationId),
 		);
 
-		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			await openRun(this.env, {
-				id: runId,
-				organizationId: payload.organizationId,
-				capability: "onboarding",
-				status: "running",
-			});
-		});
+		const alreadySpent = await step.do(
+			"open-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				const row = await openRun(this.env, {
+					id: runId,
+					organizationId: payload.organizationId,
+					capability: "onboarding",
+					status: "running",
+				});
+				return row.costDollars;
+			},
+		);
 
 		const read: ReadSellerStep = await step.do(
 			"read-seller",
@@ -113,7 +118,7 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 			},
 		);
 		await step.do("bank-search", config.stepConfig.databaseCall, () =>
-			recordRunSpend(this.env, runId, read.costDollars),
+			recordRunSpend(this.env, runId, alreadySpent + read.costDollars),
 		);
 
 		const written = await step.do(
@@ -136,7 +141,7 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 			description: written.description,
 			seller: written.seller,
 			wroteProfile: written.wroteProfile,
-			costDollars: read.costDollars + written.costDollars,
+			costDollars: alreadySpent + read.costDollars + written.costDollars,
 		};
 
 		const icpId = await step.do(

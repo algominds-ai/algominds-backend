@@ -419,3 +419,45 @@ describe("OnboardIcpWorkflow: a run that dies after buying something", () => {
 		}
 	});
 });
+
+describe("POST /icp/onboard: after a run has failed", () => {
+	it("lets the caller retry the same day rather than waiting for it to roll over", async () => {
+		const domain = `retry-${crypto.randomUUID()}.example`;
+		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const runId = buildRunId("onboarding", scopeId);
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			runId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepError(
+					{ name: "check-spend" },
+					new NonRetryableError("the ceiling read failed"),
+				);
+			});
+			await testEnv.ONBOARD_ICP.create({
+				id: runId,
+				params: {
+					domain,
+					note: null,
+					organizationId: CALLER_ORGANIZATION_ID,
+				},
+			});
+			await instance.waitForStatus("errored");
+
+			const retry = await authedCall(
+				"/icp/onboard",
+				postInit({ domain }, TOKEN),
+			);
+			const body: { runId?: string; status?: string } = await retry.json();
+
+			expect(retry.status).toBe(202);
+			expect(body.runId).toBe(runId);
+			expect(body.status).toBe("started");
+		} finally {
+			await instance.dispose();
+			await deleteIcpAndRun(runId);
+		}
+	});
+});

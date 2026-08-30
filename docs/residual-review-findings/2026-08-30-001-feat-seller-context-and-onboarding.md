@@ -23,19 +23,20 @@ is configuration this repository does not apply.
 constraint on `(organization_id, domain)`. A second onboarding for a domain an
 organization already has writes a second row rather than replacing the first.
 
-## A real defect, deliberately left
+## Fixed after probing, not deferred
 
-**A failed onboarding blocks its own retry for the rest of the UTC day.**
-`instanceExists` asks only whether the engine still holds a handle for the run
-id, which it does for an errored instance, so `startJob` answers a retry with
-`{status: "existing"}`. The run id carries the UTC date, so the caller waits
-until the day rolls over. `src/auth.ts` promises the endpoint is the recovery
-path for exactly the failure the signup hook swallows; for up to 24 hours it is
-not.
+**A failed onboarding used to block its own retry for the rest of the UTC day.**
+`instanceExists` asked only whether the engine still held a handle for the run
+id, which it does for an errored instance, so a retry got `{status: "existing"}`
+and the caller waited for the date to roll. `src/auth.ts` promises the endpoint
+is the recovery path for exactly the failure the signup hook swallows.
 
-Not fixed here because the fix changes `startJob` for all four capabilities and
-depends on whether Cloudflare Workflows will accept `createBatch` for an id
-whose instance has terminated. That needs a probe, not a guess.
+This was nearly deferred on the question of whether Workflows accepts
+`createBatch` for a terminated id. Probed: it does — re-creating a terminated
+instance resolves rather than throwing. `instanceExists` now treats `errored`
+and `terminated` as not blocking, and a status it cannot read as blocking, so an
+unreadable instance never causes a second paid run. A retried onboarding adds to
+what the failed attempt spent rather than replacing it.
 
 ## Weighed and declined
 
