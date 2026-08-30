@@ -150,13 +150,14 @@ describe("synthesize: gateway wiring", () => {
 		expect(new URL(String(call?.url)).pathname).toContain("/compat");
 	});
 
-	it("selects MODEL_ROUTE_WORKER in the request body", async () => {
+	it("runs on the reasoning route, because the plan now chooses the source and the type", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
 		await runSynthesize();
 
-		expect(modelInBody(gateway.calls[0])).toBe(env.MODEL_ROUTE_WORKER);
+		expect(modelInBody(gateway.calls[0])).toBe(env.MODEL_ROUTE_REASONING);
+		expect(modelInBody(gateway.calls[0])).not.toBe(env.MODEL_ROUTE_WORKER);
 	});
 
 	it("sends cf-aig-skip-cache on every call, including a retry", async () => {

@@ -37,6 +37,7 @@ const ExaSearchRequestSchema = z.object({
 	endPublishedDate: z.string().optional(),
 	includeDomains: z.array(z.string()).max(1200).optional(),
 	excludeDomains: z.array(z.string()).max(1200).optional(),
+	additionalQueries: z.array(z.string()).optional(),
 	systemPrompt: z.string().optional(),
 	contents: z
 		.object({

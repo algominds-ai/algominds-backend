@@ -14,12 +14,31 @@ const STEPS = [
 
 const TAIL_LINES = 40;
 
-function tail(text) {
+const NOISE = [
+	/^Using secrets defined in/,
+	/^Sourcemap for /,
+	/DeprecationWarning/,
+	/--trace-deprecation/,
+	/^stack: [0-9a-f]+$/,
+	/^\s*\[wrangler:info\]/,
+	/^Your Worker has access to/,
+];
+
+function signal(text) {
 	return text
 		.split("\n")
 		.filter((line) => line.trim() !== "")
-		.slice(-TAIL_LINES)
-		.join("\n");
+		.filter((line) => !NOISE.some((pattern) => pattern.test(line)));
+}
+
+/** The end of a failing check's output, with the runner's chatter removed so the reason is visible. */
+function tail(text) {
+	const lines = signal(text);
+	const marked = lines.findIndex((line) =>
+		/Failed Tests|✗|×|error TS|FAIL /.test(line),
+	);
+	const from = marked === -1 ? Math.max(0, lines.length - TAIL_LINES) : marked;
+	return lines.slice(from, from + TAIL_LINES).join("\n");
 }
 
 const failures = new Map();

@@ -67,14 +67,10 @@ companies:
   descriptionChars: 600
   # Window for treating a domain as already seen.
   seenDomainsWindowDays: 90
-  # Which vendor supplies raw company candidates before filter, gate, and judge run.
-  # exa-search is one fast, cheap /search call per round. exa-agent trades speed and
-  # cost for evidenced rows via Exa's /agent/runs, polled to completion.
-  companySource: exa-search
-  # Effort Exa's agent spends per run when companySource is exa-agent. Measured:
-  # "low" returns in about 5 seconds for $0.025. Do not set "max": the vendor
-  # requires a beta request header for it that this client does not send.
-  exaAgentEffort: low
+  # The source and the agent's effort are no longer set here. The synthesizer picks
+  # both per round from the profile, because only it knows whether the profile asks
+  # for a recent event. Measured: "low" effort returns in about 5 seconds for $0.025.
+  # The vendor requires a beta request header for "max", which this client does not send.
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
   # Polls allowed before a stuck exa-agent run is treated as failed. A run that

@@ -24,6 +24,10 @@ function planFor(query: string): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -92,7 +96,6 @@ describe("agent run start request shape", () => {
 		const req = buildAgentRunRequest(
 			planFor("seed stage fintech"),
 			10,
-			"low",
 			"2026-08-30",
 		);
 
@@ -111,12 +114,7 @@ describe("agent run start request shape", () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
 		const result = await startAgentRun(
-			buildAgentRunRequest(
-				planFor("seed stage fintech"),
-				5,
-				"low",
-				"2026-08-30",
-			),
+			buildAgentRunRequest(planFor("seed stage fintech"), 5, "2026-08-30"),
 			exaEnv(),
 		);
 
@@ -132,7 +130,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "low", "2026-08-30"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -145,7 +143,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "low", "2026-08-30"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30"),
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
@@ -158,7 +156,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "low", "2026-08-30"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30"),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -353,7 +351,6 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 		const req = buildAgentRunRequest(
 			{ ...plan, recency: "A role posted in the last 30 days." },
 			count,
-			"low",
 			"2026-08-30",
 		);
 		const parsed = JSON.parse(JSON.stringify(req.outputSchema));
@@ -382,7 +379,6 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 		const req = buildAgentRunRequest(
 			planFor("payment platforms"),
 			5,
-			"low",
 			"2026-08-30",
 		);
 
@@ -397,13 +393,11 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 				recency: "A role posted in the last 30 days.",
 			},
 			5,
-			"low",
 			"2026-08-30",
 		);
 		const without = buildAgentRunRequest(
 			planFor("payment platforms"),
 			5,
-			"low",
 			"2026-08-30",
 		);
 
@@ -550,7 +544,7 @@ describe("what is stored keeps the evidence, not just the company", () => {
 
 describe("a signal is only demanded when the profile asks for something recent", () => {
 	function itemsFor(plan: SearchPlan) {
-		const req = buildAgentRunRequest(plan, 5, "low", "2026-08-30");
+		const req = buildAgentRunRequest(plan, 5, "2026-08-30");
 		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
 			.items;
 	}

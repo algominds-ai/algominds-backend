@@ -26,8 +26,6 @@ export const config = {
 		judgeCandidateMultiple: 3,
 		descriptionChars: 600,
 		seenDomainsWindowDays: 90,
-		companySource: "exa-search",
-		exaAgentEffort: "low",
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 60,
 	},

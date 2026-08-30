@@ -11,7 +11,6 @@ import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
 
-const EFFORT = config.companies.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
 const JUDGE_CANDIDATE_MULTIPLE = config.companies.judgeCandidateMultiple;
@@ -43,8 +42,7 @@ export function agentSearch(
 		const { id } = await step.do(
 			`${name}-start`,
 			config.stepConfig.paidCall,
-			() =>
-				startAgentRun(buildAgentRunRequest(plan, wanted, EFFORT, today), env),
+			() => startAgentRun(buildAgentRunRequest(plan, wanted, today), env),
 		);
 		const companies = await pollAgentRun(
 			{

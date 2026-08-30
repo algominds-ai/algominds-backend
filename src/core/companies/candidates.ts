@@ -7,7 +7,7 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
-import type { SearchPlan } from "@/core/synthesize";
+import { acceptsAdditionalQueries, type SearchPlan } from "@/core/synthesize";
 
 const {
 	resultsPerRound: RESULTS_PER_ROUND,
@@ -30,10 +30,11 @@ export type CompanyMatch = {
 	score: number | null;
 };
 
-/** The vendor's own entity object next to the fields that describe the match, kept apart until a provider is known. */
+/** The vendor's own entity object, the fields that describe the match, and which source produced them. */
 export type CompanyCapture = {
 	entity: CompanyEntity;
 	result: CompanyMatch;
+	source: string;
 };
 
 export type CompanyData = {
@@ -68,11 +69,15 @@ export function buildSearchRequest(
 	excludeDomains: readonly string[] = [],
 ): ExaSearchRequest {
 	const constraints = planConstraints(plan);
+	const variations = acceptsAdditionalQueries(plan.type)
+		? plan.additionalQueries
+		: [];
 	return {
 		query: constraints ? `${plan.query} ${constraints}` : plan.query,
 		category: "company",
-		type: "fast",
+		type: plan.type,
 		numResults: RESULTS_PER_ROUND,
+		...(variations.length > 0 ? { additionalQueries: variations } : {}),
 		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
 		...(excludeDomains.length > 0
 			? { excludeDomains: [...excludeDomains] }
@@ -129,12 +134,13 @@ function toCompanyMatch(result: ExaResult): CompanyMatch {
 	};
 }
 
-/** Wraps one capture with the vendor that produced it, for the row's `data` column. */
-export function toCompanyData(
-	capture: CompanyCapture,
-	provider: string,
-): CompanyData {
-	return { provider, entity: capture.entity, result: capture.result };
+/** Names the vendor that produced one capture, for the row's `data` column. */
+export function toCompanyData(capture: CompanyCapture): CompanyData {
+	return {
+		provider: capture.source,
+		entity: capture.entity,
+		result: capture.result,
+	};
 }
 
 const CompanyDataIdSchema = z
@@ -305,6 +311,7 @@ export function filterEntities(
 			outcome.captures[row.domain] = {
 				entity,
 				result: toCompanyMatch(result),
+				source: plan.source,
 			};
 		}
 	}

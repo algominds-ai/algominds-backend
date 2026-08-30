@@ -22,7 +22,6 @@ import {
 	loadIcp,
 	openRun,
 	organizationSpendToday,
-	recentDomains,
 	recordRunSpend,
 	saveCompanies,
 } from "@/core/db/queries";
@@ -30,7 +29,7 @@ import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 import { search } from "@/core/providers/exa/search";
 import type { IcpDoc } from "@/core/synthesize";
-import { IcpDocSchema, synthesize } from "@/core/synthesize";
+import { IcpDocSchema } from "@/core/synthesize";
 import {
 	agentRecentDomains,
 	agentSearch,
@@ -39,8 +38,6 @@ import {
 
 const MAX_ROUNDS = config.companies.maxRounds;
 const EVIDENCE_SOURCE = "exa";
-const COMPANY_SOURCE: "exa-search" | "exa-agent" =
-	config.companies.companySource;
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -60,19 +57,18 @@ type RoundDepsInput = {
 
 function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 	const { accumulatedDomains, step, round, remaining, today } = input;
-	const isAgent = COMPANY_SOURCE === "exa-agent";
-	const lookupRecentDomains = isAgent
-		? agentRecentDomains(step, round)
-		: recentDomains;
+	const lookupRecentDomains = agentRecentDomains(step, round);
+	const viaAgent = agentSearch({ step, round, remaining, today });
 	return {
 		recentDomains: async (env, icpId, days) => {
 			const known = await lookupRecentDomains(env, icpId, days);
 			return [...known, ...accumulatedDomains];
 		},
-		synthesize: isAgent ? agentSynthesize(step, round) : synthesize,
-		search: isAgent
-			? agentSearch({ step, round, remaining, today })
-			: (_plan, req, env, ledger) => search(req, env, ledger),
+		synthesize: agentSynthesize(step, round),
+		search: (plan, req, env, ledger) =>
+			plan.source === "exa-agent"
+				? viaAgent(plan, req, env, ledger)
+				: search(req, env, ledger),
 		gate,
 		judge,
 	};
@@ -200,7 +196,7 @@ function toNewCompany(
 		domain: row.domain,
 		name: row.name,
 		linkedinUrl: row.linkedinUrl,
-		data: toCompanyData(capture, COMPANY_SOURCE),
+		data: toCompanyData(capture),
 		runId,
 	};
 }

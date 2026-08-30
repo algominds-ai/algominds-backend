@@ -15,6 +15,10 @@ function planFor(query: string): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -135,6 +139,10 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		query: "fintech companies at seed stage with a small team",
 		angle: "founder-led vertical software",
 		recency: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
@@ -215,7 +223,6 @@ describe("agent run request stays inside the measured Exa /agent/runs schema", (
 		const request = buildAgentRunRequest(
 			planFor("small US software teams"),
 			10,
-			"low",
 			"2026-08-30",
 		);
 
@@ -344,12 +351,7 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		await startAgentRun(
-			buildAgentRunRequest(
-				planFor("ten fintech companies"),
-				10,
-				"low",
-				"2026-08-30",
-			),
+			buildAgentRunRequest(planFor("ten fintech companies"), 10, "2026-08-30"),
 			exaEnv(),
 		);
 
@@ -400,5 +402,47 @@ describe("the people request carries only filters the people category accepts", 
 		expect(request.query).toBe(
 			`VP of Sales, Head of Growth at "${company.name}"`,
 		);
+	});
+});
+
+describe("the plan chooses the search type, and only a deep type reads its variations", () => {
+	it("sends the type the plan picked", () => {
+		const request = buildSearchRequest(samplePlan({ type: "deep" }));
+
+		expect(request.type).toBe("deep");
+	});
+
+	it("passes the variations on a deep type", () => {
+		const request = buildSearchRequest(
+			samplePlan({
+				type: "deep",
+				additionalQueries: ["payment processors", "core banking vendors"],
+			}),
+		);
+
+		expect(request.additionalQueries).toEqual([
+			"payment processors",
+			"core banking vendors",
+		]);
+	});
+
+	it("drops the variations on a fast search, where nothing reads them", () => {
+		const request = buildSearchRequest(
+			samplePlan({ type: "fast", additionalQueries: ["payment processors"] }),
+		);
+
+		expect(request.additionalQueries).toBeUndefined();
+	});
+});
+
+describe("the plan chooses how hard the agent works", () => {
+	it("sends the effort the plan picked, not a fixed setting", () => {
+		const request = buildAgentRunRequest(
+			samplePlan({ agentEffort: "high" }),
+			5,
+			"2026-08-30",
+		);
+
+		expect(request.effort).toBe("high");
 	});
 });

@@ -90,6 +90,10 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		query: "fintech companies",
 		angle: "angle-1",
 		recency: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -131,6 +135,10 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 				query: `${input.icp.description} round-${inputs.length}`,
 				angle: `angle-${inputs.length}`,
 				recency: null,
+				source: "exa-search",
+				type: "fast",
+				agentEffort: "low",
+				additionalQueries: [],
 				userLocation: null,
 				countries: [],
 				minWorkforce: null,
@@ -554,6 +562,7 @@ describe("findCompanies — captures across sources", () => {
 		expect(capture ? Object.keys(capture).sort() : []).toEqual([
 			"entity",
 			"result",
+			"source",
 		]);
 		expect(capture ? Object.keys(capture.entity).sort() : []).toEqual(
 			Object.keys(entity()).sort(),
@@ -570,8 +579,8 @@ describe("findCompanies — captures across sources", () => {
 });
 
 describe("toCompanyData", () => {
-	it("names the provider that produced the capture", () => {
-		const capture: CompanyCapture = {
+	function captureFrom(source: string): CompanyCapture {
+		return {
 			entity: entity(),
 			result: {
 				id: "https://exa.ai/library/organization/example",
@@ -581,14 +590,20 @@ describe("toCompanyData", () => {
 				publishedDate: null,
 				score: null,
 			},
+			source,
 		};
+	}
 
-		expect(toCompanyData(capture, "exa-search")).toEqual({
+	it("names the source the round chose, so two sources in one run stay apart", () => {
+		const searched = captureFrom("exa-search");
+		const agented = captureFrom("exa-agent");
+
+		expect(toCompanyData(searched)).toEqual({
 			provider: "exa-search",
-			entity: capture.entity,
-			result: capture.result,
+			entity: searched.entity,
+			result: searched.result,
 		});
-		expect(toCompanyData(capture, "exa-agent").provider).toBe("exa-agent");
+		expect(toCompanyData(agented).provider).toBe("exa-agent");
 	});
 });
 
@@ -1067,6 +1082,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							publishedDate: null,
 							score: null,
 						},
+						source: "exa-search",
 					},
 				]),
 			);

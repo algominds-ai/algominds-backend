@@ -59,6 +59,10 @@ function agentSystemPrompt(today: string): string {
 		"Leave `evidenceDate` out when the page shows no date; never guess one.",
 		"A page published outside the window the query gives for its signal",
 		"disqualifies that company, so find a different company instead.",
+		"The page in `evidenceUrl` must credibly belong to the company it names: its own",
+		"site, or a service it plainly uses such as its applicant tracking system or its",
+		"status page. A page about the company on an unrelated shared host, such as a free",
+		"subdomain, proves nothing, so find the company's own page or drop the company.",
 		"Give the company's LinkedIn page in `linkedinUrl` when you can find it,",
 		"which is a linkedin.com/company address and never a personal profile.",
 		"Never repeat a company.",
@@ -75,13 +79,12 @@ function agentSystemPrompt(today: string): string {
 export function buildAgentRunRequest(
 	plan: SearchPlan,
 	count: number,
-	effort: ExaAgentRunRequest["effort"],
 	today: string,
 ): ExaAgentRunRequest {
 	return {
 		query: agentQuery(plan, count),
 		systemPrompt: agentSystemPrompt(today),
-		effort,
+		effort: plan.agentEffort,
 		dataSources: [{ provider: "fiber" }],
 		outputSchema: z.json().parse(
 			z.toJSONSchema(
