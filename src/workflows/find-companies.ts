@@ -243,6 +243,10 @@ export type RoundReport = {
 	angle: string;
 	query: string;
 	recency: string | null;
+	source: string;
+	type: string;
+	agentEffort: string;
+	additionalQueries: string[];
 	found: number;
 	rejected: { filter: number; gate: number; judge: number };
 };
@@ -260,6 +264,10 @@ export function reportRound(
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
 		recency: plan?.recency ?? null,
+		source: plan?.source ?? "",
+		type: plan?.type ?? "",
+		agentEffort: plan?.agentEffort ?? "",
+		additionalQueries: plan?.additionalQueries ?? [],
 		found: result.companies.length,
 		rejected: {
 			filter: count("filter"),

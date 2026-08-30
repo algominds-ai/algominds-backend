@@ -1131,6 +1131,10 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 						angle: plan.angle,
 						query: plan.query,
 						recency: plan.recency,
+						source: plan.source,
+						type: plan.type,
+						agentEffort: plan.agentEffort,
+						additionalQueries: plan.additionalQueries,
 						found: count,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},
@@ -1207,6 +1211,10 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 						angle: plan.angle,
 						query: plan.query,
 						recency: plan.recency,
+						source: plan.source,
+						type: plan.type,
+						agentEffort: plan.agentEffort,
+						additionalQueries: plan.additionalQueries,
 						found: companies.length,
 						rejected: { filter: 0, gate: 0, judge: 0 },
 					},
@@ -1258,5 +1266,7 @@ describe("a round reports the freshness it demanded", () => {
 
 		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
 		expect(without.recency).toBeNull();
+		expect(withWindow.source).toBe("exa-search");
+		expect(withWindow.type).toBe("fast");
 	});
 });
