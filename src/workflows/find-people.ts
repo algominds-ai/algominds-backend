@@ -366,7 +366,8 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const merged = mergeResults(run.batches, skipped);
 		const result: FindPeopleWorkflowResult = {
 			...merged,
-			costDollars: merged.costDollars + resolved.costDollars,
+			costDollars:
+				alreadySpent.alreadySpent + merged.costDollars + resolved.costDollars,
 			unknownDomains: target.unknownDomains,
 			knownDomains: filtered.skipped,
 			capped: run.capped,
