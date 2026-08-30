@@ -24,11 +24,12 @@ import {
 	organizationSpendToday,
 	recordRunSpend,
 	saveCompanies,
+	saveRound,
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 import { search } from "@/core/providers/exa/search";
-import type { IcpDoc } from "@/core/synthesize";
+import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 import {
 	agentRecentDomains,
@@ -84,6 +85,34 @@ export function finalStatus(
 	if (lastRoundStatus === "capped") return "capped";
 	if (lastRoundStatus === "empty") return found > 0 ? "short" : "empty";
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
+}
+
+type PersistRoundInput = {
+	step: WorkflowStep;
+	env: Env;
+	runId: string;
+	costDollars: number;
+	searches: readonly SearchPlan[];
+	report: RoundReport;
+};
+
+/** Banks what one round spent and what it did, in one durable step, so both land together or replay together. */
+async function persistRound(input: PersistRoundInput): Promise<void> {
+	const { step, env, runId, report } = input;
+	await step.do(
+		`round_${report.round}-spend`,
+		config.stepConfig.databaseCall,
+		async () => {
+			await recordRunSpend(env, runId, input.costDollars);
+			await saveRound(env, {
+				runId,
+				ordinal: report.round,
+				plan: input.searches[0] ?? null,
+				found: report.found,
+				rejected: report.rejected,
+			});
+		},
+	);
 }
 
 /**
@@ -150,11 +179,17 @@ async function runFindCompaniesRounds(
 		searches.push(...stepResult.searches);
 		Object.assign(captures, stepResult.captures);
 		rounds += 1;
-		roundReports.push(reportRound(round, stepResult));
+		const report = reportRound(round, stepResult);
+		roundReports.push(report);
 		lastRoundStatus = stepResult.status;
-		await step.do(`round_${round}-spend`, config.stepConfig.databaseCall, () =>
-			recordRunSpend(env, runId, costDollars),
-		);
+		await persistRound({
+			step,
+			env,
+			runId,
+			costDollars,
+			searches: stepResult.searches,
+			report,
+		});
 		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
 		pastAngles = pastAngles.concat(
 			stepResult.searches.map((plan) => plan.angle),

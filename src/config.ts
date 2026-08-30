@@ -16,10 +16,6 @@ export const config = {
 			"https://*.algominds.ai",
 		],
 	},
-	seller: {
-		domain: "algominds.ai",
-		name: "Algominds",
-	},
 	companies: {
 		maxRounds: 3,
 		resultsPerRound: 100,

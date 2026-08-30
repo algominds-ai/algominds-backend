@@ -2,7 +2,7 @@ import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
 import { companyExaId } from "@/core/companies/candidates";
-import type { organization } from "@/core/db/auth-schema";
+import { organization } from "@/core/db/auth-schema";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
@@ -13,8 +13,10 @@ import type {
 	NewEvidence,
 	NewIcp,
 	NewPerson,
+	NewRound,
 	NewRun,
 	Person,
+	Round,
 	Run,
 } from "@/core/db/schema";
 import {
@@ -23,6 +25,7 @@ import {
 	icp,
 	normalizeDomain,
 	person,
+	round,
 	type run,
 } from "@/core/db/schema";
 
@@ -45,6 +48,14 @@ interface SelectLimitConnection<TTable, TRow> {
 			where(condition: SQL | undefined): {
 				limit(count: number): Promise<TRow[]>;
 			};
+		};
+	};
+}
+
+interface SelectAllWhereConnection<TTable, TRow> {
+	select(): {
+		from(table: TTable): {
+			where(condition: SQL | undefined): Promise<TRow[]>;
 		};
 	};
 }
@@ -119,6 +130,11 @@ export type CompanyInsertConnection = InsertConnection<
 	NewCompany,
 	Company
 >;
+export type RoundInsertConnection = InsertConnection<
+	typeof round,
+	NewRound,
+	Round
+>;
 export type PersonInsertConnection = InsertConnection<
 	typeof person,
 	NewPerson,
@@ -189,6 +205,25 @@ export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 };
 
 /** Stores a free-text ideal customer profile and returns the stored row. */
+export type OrganizationSelectConnection = SelectAllWhereConnection<
+	typeof organization,
+	Organization
+>;
+
+/** The domain the account sells for, or null when the account never set one. */
+export async function organizationDomain(
+	env: DbEnv,
+	organizationId: string,
+	buildDb: DbFactory<OrganizationSelectConnection> = db,
+): Promise<string | null> {
+	const connection = buildDb(env, "cached");
+	const rows = await connection
+		.select()
+		.from(organization)
+		.where(eq(organization.id, organizationId));
+	return rows[0]?.domain ?? null;
+}
+
 export async function createIcp(
 	env: DbEnv,
 	input: NewIcpInput,
@@ -250,6 +285,39 @@ export async function recentDomains(
 			and(eq(company.icpId, icpId), gte(company.foundAt, cutoffDate(days))),
 		);
 	return rows.map((row) => row.domain);
+}
+
+/**
+ * Records one round of a run: the plan the synthesizer wrote and what the
+ * round kept and refused. Writing the same round twice is a no-op, so a
+ * replayed step never doubles a row.
+ */
+export async function saveRound(
+	env: DbEnv,
+	row: NewRound,
+	buildDb: DbFactory<RoundInsertConnection> = db,
+): Promise<Round[]> {
+	const connection = buildDb(env, "cached");
+	return connection
+		.insert(round)
+		.values([row])
+		.onConflictDoNothing({ target: [round.runId, round.ordinal] })
+		.returning();
+}
+
+export type RoundSelectConnection = SelectAllWhereConnection<
+	typeof round,
+	Round
+>;
+
+/** Every round a run recorded, oldest first. Read through the cached binding, since a finished run never changes. */
+export async function roundsForRun(
+	env: DbEnv,
+	runId: string,
+	buildDb: DbFactory<RoundSelectConnection> = db,
+): Promise<Round[]> {
+	const connection = buildDb(env, "cached");
+	return connection.select().from(round).where(eq(round.runId, runId));
 }
 
 export async function saveCompanies(

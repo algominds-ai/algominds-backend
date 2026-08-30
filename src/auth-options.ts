@@ -22,7 +22,15 @@ export const authOptions = {
 	trustedOrigins: [...config.auth.trustedOrigins],
 	emailAndPassword: { enabled: true },
 	plugins: [
-		organization(),
+		organization({
+			schema: {
+				organization: {
+					additionalFields: {
+						domain: { type: "string", input: true, required: false },
+					},
+				},
+			},
+		}),
 		apiKey([
 			{
 				configId: ORGANIZATION_KEY_CONFIG_ID,

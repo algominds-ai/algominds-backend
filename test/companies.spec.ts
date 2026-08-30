@@ -1060,6 +1060,50 @@ describe("what one round hands the next when the judge never saw every candidate
 	});
 });
 
+/** What a round report looks like for one plan, so a workflow test states the plan once. */
+function reportFor(
+	plan: SearchPlan,
+	round: number,
+	found: number,
+	rejected: { filter: number; gate: number; judge: number } = {
+		filter: 0,
+		gate: 0,
+		judge: 0,
+	},
+) {
+	return {
+		round,
+		angle: plan.angle,
+		query: plan.query,
+		recency: plan.recency,
+		source: plan.source,
+		type: plan.type,
+		agentEffort: plan.agentEffort,
+		additionalQueries: plan.additionalQueries,
+		found,
+		rejected,
+	};
+}
+
+type StepMocker = {
+	mockStepResult: (
+		reference: { name: string },
+		result: unknown,
+	) => Promise<unknown>;
+};
+
+/** The side effects both workflow tests stand in for: opening the run, banking each round, saving the rows, closing the run. */
+async function mockRunSideEffects(
+	m: StepMocker,
+	instanceId: string,
+): Promise<void> {
+	await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+	await m.mockStepResult({ name: "round_1-spend" }, {});
+	await m.mockStepResult({ name: "round_2-spend" }, {});
+	await m.mockStepResult({ name: "save-companies" }, {});
+	await m.mockStepResult({ name: "close-run" }, {});
+}
+
 describe("FindCompaniesWorkflow: the summary output", () => {
 	it("returns a bounded summary that does not grow with the number of companies found", async () => {
 		const instanceId = "summary-size-test";
@@ -1122,6 +1166,8 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				);
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
 				await m.mockStepResult({ name: "round_1" }, roundResult);
+				await m.mockStepResult({ name: "round_1-spend" }, {});
+				await m.mockStepResult({ name: "round_2-spend" }, {});
 				await m.mockStepResult({ name: "save-companies" }, {});
 				await m.mockStepResult({ name: "close-run" }, {});
 			});
@@ -1140,18 +1186,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				status: "complete",
 				costDollars: 0.05,
 				roundReports: [
-					{
-						round: 1,
-						angle: plan.angle,
-						query: plan.query,
-						recency: plan.recency,
-						source: plan.source,
-						type: plan.type,
-						agentEffort: plan.agentEffort,
-						additionalQueries: plan.additionalQueries,
-						found: count,
-						rejected: { filter: 0, gate: 0, judge: 0 },
-					},
+					reportFor(plan, 1, count, { filter: 0, gate: 0, judge: 0 }),
 				],
 			});
 		} finally {
@@ -1205,6 +1240,8 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				);
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
 				await m.mockStepResult({ name: "round_1" }, roundOne);
+				await m.mockStepResult({ name: "round_1-spend" }, {});
+				await m.mockStepResult({ name: "round_2-spend" }, {});
 				await m.mockStepResult({ name: "save-companies" }, {});
 				await m.mockStepResult({ name: "close-run" }, {});
 			});
@@ -1222,18 +1259,11 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				status: "capped",
 				costDollars: overTheCeiling,
 				roundReports: [
-					{
-						round: 1,
-						angle: plan.angle,
-						query: plan.query,
-						recency: plan.recency,
-						source: plan.source,
-						type: plan.type,
-						agentEffort: plan.agentEffort,
-						additionalQueries: plan.additionalQueries,
-						found: companies.length,
-						rejected: { filter: 0, gate: 0, judge: 0 },
-					},
+					reportFor(plan, 1, companies.length, {
+						filter: 0,
+						gate: 0,
+						judge: 0,
+					}),
 				],
 			});
 		} finally {

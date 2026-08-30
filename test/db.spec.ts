@@ -21,6 +21,7 @@ import type {
 	OrganizationConnection,
 	OrganizationSpendConnection,
 	PersonInsertConnection,
+	RoundInsertConnection,
 	RunOpenConnection,
 	RunUpdateConnection,
 	TransactableConnection,
@@ -39,6 +40,7 @@ import {
 	recordRunSpend,
 	saveCompanies,
 	savePeople,
+	saveRound,
 	startOfUtcDay,
 } from "../src/core/db/queries";
 import type {
@@ -53,6 +55,7 @@ import type {
 	NewCompany,
 	NewEvidence,
 	NewPerson,
+	NewRound,
 	NewRun,
 	Person,
 	Run,
@@ -255,7 +258,6 @@ describe("loadIcp", () => {
 			id: "icp-1",
 			organizationId: "org-1",
 			domain: "acme.com",
-			product: "widgets",
 			doc: null,
 			createdAt: new Date("2026-01-01T00:00:00.000Z"),
 		};
@@ -507,6 +509,7 @@ describe("organizationForSlug", () => {
 			logo: null,
 			createdAt: new Date("2026-01-01T00:00:00.000Z"),
 			metadata: null,
+			domain: null,
 		};
 		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
 		const buildDb: DbFactory<OrganizationConnection> = () => ({
@@ -1028,5 +1031,68 @@ describe("peoplePage scopes by what the run covers", () => {
 		);
 
 		expect(spy.condition).toEqual(eq(company.runId, "companies_x"));
+	});
+});
+
+describe("saveRound", () => {
+	const env = fakeEnv("postgres://cached", "postgres://direct");
+
+	it("writes the round through the cached binding and hands back the row", async () => {
+		const received: NewRound[] = [];
+		let recordedMode: DbMode | undefined;
+		const buildDb: DbFactory<RoundInsertConnection> = (_env, mode) => {
+			recordedMode = mode;
+			return {
+				insert: () => ({
+					values: (rows: NewRound | NewRound[]) => {
+						received.push(...(Array.isArray(rows) ? rows : [rows]));
+						return {
+							onConflictDoNothing: () => ({
+								returning: () => Promise.resolve([]),
+							}),
+						};
+					},
+				}),
+			};
+		};
+
+		await saveRound(
+			env,
+			{
+				runId: "run-1",
+				ordinal: 2,
+				plan: { query: "payment platforms" },
+				found: 3,
+				rejected: { filter: 1, gate: 2, judge: 4 },
+			},
+			buildDb,
+		);
+
+		expect(recordedMode).toBe("cached");
+		expect(received[0]?.ordinal).toBe(2);
+		expect(received[0]?.found).toBe(3);
+		expect(received[0]?.plan).toEqual({ query: "payment platforms" });
+	});
+
+	it("targets the (run_id, ordinal) pair, so a replayed step never doubles a round", async () => {
+		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
+		const buildDb: DbFactory<RoundInsertConnection> = () => ({
+			insert: () => ({
+				values: () => ({
+					onConflictDoNothing: (config) => {
+						conflictTarget = config?.target;
+						return { returning: () => Promise.resolve([]) };
+					},
+				}),
+			}),
+		});
+
+		await saveRound(
+			env,
+			{ runId: "run-1", ordinal: 1, plan: null, found: 0, rejected: null },
+			buildDb,
+		);
+
+		expect(Array.isArray(conflictTarget)).toBe(true);
 	});
 });

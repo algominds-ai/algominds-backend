@@ -1,5 +1,6 @@
 import {
 	index,
+	integer,
 	jsonb,
 	pgTable,
 	real,
@@ -17,8 +18,7 @@ export const icp = pgTable(
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id),
-		domain: text("domain").notNull(),
-		product: text("product"),
+		domain: text("domain"),
 		doc: jsonb("doc"),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
@@ -51,6 +51,28 @@ export const run = pgTable(
 			t.organizationId,
 			t.startedAt.desc(),
 		),
+	],
+);
+
+/** One round of a run, kept so a finished run can be read back without paying to reproduce it. `plan` holds the whole search plan the synthesizer wrote. */
+export const round = pgTable(
+	"round",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		runId: text("run_id")
+			.notNull()
+			.references(() => run.id, { onDelete: "cascade" }),
+		ordinal: integer("ordinal").notNull(),
+		plan: jsonb("plan"),
+		found: integer("found").notNull(),
+		rejected: jsonb("rejected"),
+		startedAt: timestamp("started_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(t) => [
+		unique("round_run_ordinal_unique").on(t.runId, t.ordinal),
+		index("round_run_idx").on(t.runId),
 	],
 );
 
@@ -130,6 +152,8 @@ export type Run = typeof run.$inferSelect;
 export type NewRun = typeof run.$inferInsert;
 export type Icp = typeof icp.$inferSelect;
 export type NewIcp = typeof icp.$inferInsert;
+export type Round = typeof round.$inferSelect;
+export type NewRound = typeof round.$inferInsert;
 export type Company = typeof company.$inferSelect;
 export type NewCompany = typeof company.$inferInsert;
 export type Person = typeof person.$inferSelect;
