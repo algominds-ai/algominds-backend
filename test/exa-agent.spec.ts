@@ -423,6 +423,8 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				signal: "posted a Head of Sales role",
 				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
 				evidenceDate: "2026-08-12",
+				evidenceQuote: null,
+				evidencePublisher: null,
 			},
 		]);
 
@@ -451,6 +453,8 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				signal: "posted a Head of Sales role",
 				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
 				evidenceDate: "2026-08-12",
+				evidenceQuote: null,
+				evidencePublisher: null,
 			},
 		]);
 
@@ -484,6 +488,8 @@ describe("the agent's evidence reaches the row the judge reads", () => {
 				signal,
 				evidenceUrl,
 				evidenceDate: "2026-08-12",
+				evidenceQuote: null,
+				evidencePublisher: null,
 			},
 		]);
 		return filterEntities(results, planFor("security companies")).rows[0];
@@ -529,6 +535,8 @@ describe("what is stored keeps the evidence, not just the company", () => {
 				signal: "posted a Head of Sales role",
 				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
 				evidenceDate: "2026-08-12",
+				evidenceQuote: null,
+				evidencePublisher: null,
 			},
 		]);
 		const { captures } = filterEntities(results, planFor("security companies"));
@@ -593,6 +601,8 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 				signal: null,
 				evidenceUrl: null,
 				evidenceDate: null,
+				evidenceQuote: null,
+				evidencePublisher: null,
 			},
 		]);
 		return filterEntities(results, planFor("security companies")).rows[0];
@@ -613,5 +623,76 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 
 		expect(parsed.linkedinUrl).toBeNull();
 		expect(rowFor(parsed.linkedinUrl)?.linkedinUrl).toBeNull();
+	});
+});
+
+describe("the agent hands over the page, not only its own summary of it", () => {
+	function itemsFor(recency: string | null) {
+		const req = buildAgentRunRequest(
+			{ ...planFor("payment platforms"), recency },
+			5,
+			"2026-08-30",
+		);
+		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
+			.items;
+	}
+
+	it("demands a verbatim quote and a named publisher when a window is asked for", () => {
+		const items = itemsFor("A role posted in the last 30 days.");
+
+		expect(items.required).toContain("evidenceQuote");
+		expect(items.required).toContain("evidencePublisher");
+	});
+
+	it("asks for neither when the profile wants nothing recent", () => {
+		const items = itemsFor(null);
+
+		expect(items.required).not.toContain("evidenceQuote");
+		expect(items.required).not.toContain("evidencePublisher");
+	});
+
+	it("tells the agent to copy the sentence and never to guess a publisher", () => {
+		const req = buildAgentRunRequest(
+			planFor("payment platforms"),
+			5,
+			"2026-08-30",
+		);
+
+		expect(req.systemPrompt).toContain("copied word for word");
+		expect(req.systemPrompt).toContain("the page does not say");
+	});
+
+	it("carries the quote and the publisher onto the row and the capture", () => {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kastle",
+				website: "https://kastle.com",
+				linkedinUrl: null,
+				description: null,
+				foundedYear: null,
+				workforceTotal: null,
+				city: null,
+				country: null,
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted a Head of Sales role",
+				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
+				evidenceDate: "2026-08-12",
+				evidenceQuote: "Kastle is hiring a Head of Sales in San Francisco.",
+				evidencePublisher: "Kastle Careers",
+			},
+		]);
+		const outcome = filterEntities(results, planFor("security companies"));
+
+		expect(outcome.rows[0]?.evidenceQuote).toBe(
+			"Kastle is hiring a Head of Sales in San Francisco.",
+		);
+		expect(outcome.rows[0]?.evidencePublisher).toBe("Kastle Careers");
+		expect(outcome.captures["kastle.com"]?.result.quote).toBe(
+			"Kastle is hiring a Head of Sales in San Francisco.",
+		);
+		expect(outcome.captures["kastle.com"]?.result.publisher).toBe(
+			"Kastle Careers",
+		);
 	});
 });

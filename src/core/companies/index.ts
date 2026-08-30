@@ -72,6 +72,7 @@ export type FindCompaniesDeps = {
 		icp: IcpDoc,
 		rows: readonly CompanyRow[],
 		env: Env,
+		recency: string | null,
 	) => Promise<JudgeResult>;
 };
 
@@ -190,7 +191,7 @@ async function runRound(
 	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
 	const judged =
 		candidates.length > 0
-			? await deps.judge(ctx.icp, candidates, opts.env)
+			? await deps.judge(ctx.icp, candidates, opts.env, plan.recency)
 			: { verdicts: [], ledger: new CostLedger() };
 	return {
 		plan,

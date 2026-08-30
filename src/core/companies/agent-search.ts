@@ -34,6 +34,8 @@ function agentCompanySchema(plan: SearchPlan) {
 	return AgentCompanyRequestSchema.extend({
 		signal: z.string(),
 		evidenceUrl: z.string(),
+		evidenceQuote: z.string(),
+		evidencePublisher: z.string(),
 	});
 }
 
@@ -63,6 +65,11 @@ function agentSystemPrompt(today: string): string {
 		"site, or a service it plainly uses such as its applicant tracking system or its",
 		"status page. A page about the company on an unrelated shared host, such as a free",
 		"subdomain, proves nothing, so find the company's own page or drop the company.",
+		"Put in `evidenceQuote` one sentence copied word for word from the evidence page,",
+		"exactly as it appears there and never in your own wording, and in",
+		"`evidencePublisher` the name that page gives for whoever publishes it, copied from",
+		"the page. Write `the page does not say` in `evidencePublisher` when the page names",
+		"nobody, rather than guessing a name from the address.",
 		"Give the company's LinkedIn page in `linkedinUrl` when you can find it,",
 		"which is a linkedin.com/company address and never a personal profile.",
 		"Never repeat a company.",
@@ -109,6 +116,10 @@ function toExaResult(company: ExaAgentCompany): ExaResult | null {
 		person: null,
 		...(company.linkedinUrl ? { linkedinUrl: company.linkedinUrl } : {}),
 		...(company.signal ? { signal: company.signal } : {}),
+		...(company.evidenceQuote ? { evidenceQuote: company.evidenceQuote } : {}),
+		...(company.evidencePublisher
+			? { evidencePublisher: company.evidencePublisher }
+			: {}),
 		...(company.evidenceUrl ? { evidenceUrl: company.evidenceUrl } : {}),
 		...(company.evidenceDate ? { publishedDate: company.evidenceDate } : {}),
 	};

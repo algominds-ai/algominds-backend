@@ -26,6 +26,8 @@ export type CompanyMatch = {
 	url: string;
 	title: string;
 	signal: string | null;
+	quote: string | null;
+	publisher: string | null;
 	publishedDate: string | null;
 	score: number | null;
 };
@@ -111,6 +113,8 @@ function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 		domain: normalizeDomain(result.url),
 		linkedinUrl: result.linkedinUrl ?? null,
 		evidenceUrl: evidenceUrlOf(result),
+		evidenceQuote: result.evidenceQuote ?? null,
+		evidencePublisher: result.evidencePublisher ?? null,
 		description: describeCompany(entity) || null,
 		signal: result.signal ?? null,
 		evidenceDate: result.publishedDate ?? null,
@@ -129,6 +133,8 @@ function toCompanyMatch(result: ExaResult): CompanyMatch {
 		url: evidenceUrlOf(result),
 		title: result.title,
 		signal: result.signal ?? null,
+		quote: result.evidenceQuote ?? null,
+		publisher: result.evidencePublisher ?? null,
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
 	};
