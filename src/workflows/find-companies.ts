@@ -4,7 +4,6 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
 import type {
-	FindCompaniesDeps,
 	FindCompaniesOptions,
 	FindCompaniesReject,
 	FindCompaniesResult,
@@ -14,8 +13,6 @@ import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
-import { gate } from "@/core/companies/gate";
-import { judge } from "@/core/companies/judge";
 import {
 	appendEvidence,
 	closeRun,
@@ -28,14 +25,9 @@ import {
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
-import { search } from "@/core/providers/exa/search";
-import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
-import {
-	agentRecentDomains,
-	agentSearch,
-	agentSynthesize,
-} from "@/workflows/find-companies-agent";
+import { roundDeps } from "@/workflows/find-companies-agent";
 
 const MAX_ROUNDS = config.companies.maxRounds;
 const EVIDENCE_SOURCE = "exa";
@@ -49,33 +41,6 @@ const FindCompaniesPayloadSchema = z.object({
 });
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
-
-type RoundDepsInput = {
-	accumulatedDomains: ReadonlySet<string>;
-	step: WorkflowStep;
-	round: number;
-	remaining: number;
-	today: string;
-};
-
-function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
-	const { accumulatedDomains, step, round, remaining, today } = input;
-	const lookupRecentDomains = agentRecentDomains(step, round);
-	const viaAgent = agentSearch({ step, round, remaining, today });
-	return {
-		recentDomains: async (env, icpId, days) => {
-			const known = await lookupRecentDomains(env, icpId, days);
-			return [...known, ...accumulatedDomains];
-		},
-		synthesize: agentSynthesize(step, round),
-		search: (plan, req, env, ledger) =>
-			plan.source === "exa-agent"
-				? viaAgent(plan, req, env, ledger)
-				: search(req, env, ledger),
-		gate,
-		judge,
-	};
-}
 
 /** A run that saved a company was never empty, whatever its last round reported. */
 export function finalStatus(
@@ -118,6 +83,24 @@ async function persistRound(input: PersistRoundInput): Promise<void> {
 	);
 }
 
+/** The options one round runs under, carrying the angles and reject reasons the rounds before it produced. */
+function roundOptions(
+	payload: FindCompaniesPayload,
+	env: Env,
+	today: string,
+	history: { pastAngles: readonly string[]; feedback: readonly string[] },
+): FindCompaniesOptions {
+	return {
+		icpId: payload.icpId,
+		env,
+		today,
+		maxRounds: 1,
+		pastAngles: history.pastAngles,
+		feedback: history.feedback,
+		excludeDomains: payload.excludeDomains ?? [],
+	};
+}
+
 /**
  * Runs up to three rounds, each in its own `step.do` for durability, and
  * merges their plain results into one `FindCompaniesResult`.
@@ -155,21 +138,14 @@ async function runFindCompaniesRounds(
 		round++
 	) {
 		const remaining = payload.count - companies.length;
-		const opts: FindCompaniesOptions = {
-			icpId: payload.icpId,
-			env,
-			today,
-			maxRounds: 1,
-			pastAngles,
-			feedback,
-			excludeDomains: payload.excludeDomains ?? [],
-		};
+		const opts = roundOptions(payload, env, today, { pastAngles, feedback });
 		const deps = roundDeps({
 			accumulatedDomains,
 			step,
 			round,
 			remaining,
 			today,
+			seller: icp.seller,
 		});
 		const stepResult = await step.do(
 			`round_${round}`,

@@ -17,7 +17,13 @@ const env = Object.fromEntries(
 		.filter((l) => l.includes("=") && !l.startsWith("#"))
 		.map((l) => {
 			const i = l.indexOf("=");
-			return [l.slice(0, i).trim(), l.slice(i + 1).trim().replace(/^["']|["']$/g, "")];
+			return [
+				l.slice(0, i).trim(),
+				l
+					.slice(i + 1)
+					.trim()
+					.replace(/^["']|["']$/g, ""),
+			];
 		}),
 );
 
@@ -44,7 +50,11 @@ const res = await fetch("https://api.exa.ai/search", {
 		numResults: MAX,
 		includeDomains: [DOMAIN],
 		systemPrompt: "Prefer the company's own pages and avoid duplicate results.",
-		contents: { text: { maxCharacters: 4000 }, maxAgeHours: 0, livecrawlTimeout: 12000 },
+		contents: {
+			text: { maxCharacters: 4000 },
+			maxAgeHours: 0,
+			livecrawlTimeout: 12000,
+		},
 	}),
 });
 const body = await res.json();
@@ -53,7 +63,9 @@ if (!res.ok) {
 	process.exit(1);
 }
 const pages = body.results ?? [];
-console.error(`${pages.length} pages, $${(body.costDollars?.total ?? 0).toFixed(4)}`);
+console.error(
+	`${pages.length} pages, $${(body.costDollars?.total ?? 0).toFixed(4)}`,
+);
 for (const p of pages) {
 	console.log(`--- ${p.url}\n${(p.text ?? "").replace(/\n{2,}/g, "\n")}\n`);
 }

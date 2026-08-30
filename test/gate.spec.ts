@@ -10,6 +10,7 @@ function companyRow(overrides: Partial<CompanyRow> = {}): CompanyRow {
 		evidenceUrl: "https://acme.com/",
 		evidenceQuote: null,
 		evidencePublisher: null,
+		evidenceKind: null,
 		industry: null,
 		description: null,
 		signal: null,

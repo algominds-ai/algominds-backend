@@ -47,7 +47,7 @@ function jsonResponse(body: unknown): Response {
 	});
 }
 
-type StartedRun = { query: string; minItems: number };
+type StartedRun = { query: string; systemPrompt: string; minItems: number };
 
 function stubAgentCompanyFetch(): { started: StartedRun[] } {
 	const started: StartedRun[] = [];
@@ -56,6 +56,7 @@ function stubAgentCompanyFetch(): { started: StartedRun[] } {
 			const body = JSON.parse(String(init.body));
 			started.push({
 				query: String(body.query),
+				systemPrompt: String(body.systemPrompt),
 				minItems: Number(body.outputSchema?.properties?.companies?.minItems),
 			});
 			return jsonResponse({ id: `run-${started.length}`, status: "running" });
@@ -110,6 +111,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: remaining,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("small US software teams"),
@@ -133,6 +135,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: remaining,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("seed stage fintech"),
@@ -156,6 +159,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: remaining,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("every mid-market SaaS company"),
@@ -181,6 +185,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: 1,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("B2B software with an outbound team", {
@@ -195,5 +200,32 @@ describe("the company agent run asks for more candidates than the caller wants",
 
 		expect(started[0]?.query).toContain("headcount between 10 and 300");
 		expect(started[0]?.query).toContain("United States");
+	});
+});
+
+describe("the round tells the agent which seller it prospects for", () => {
+	it("carries the profile's seller into the started run", async () => {
+		const { started } = stubAgentCompanyFetch();
+
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: 1,
+			today: "2026-08-30",
+			seller: {
+				domain: "form3.tech",
+				customers: ["Klarna"],
+				competitorTest: "A competitor sells payment infrastructure to banks.",
+			},
+		});
+		await search(
+			planFor("large European platform teams"),
+			{ query: "large European platform teams" },
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(started[0]?.systemPrompt).toContain("form3.tech");
+		expect(started[0]?.systemPrompt).toContain("Klarna");
 	});
 });

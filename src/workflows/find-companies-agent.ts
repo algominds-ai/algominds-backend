@@ -5,9 +5,13 @@ import {
 	buildAgentRunRequest,
 	toExaSearchResult,
 } from "@/core/companies/agent-search";
+import { gate } from "@/core/companies/gate";
+import { judge } from "@/core/companies/judge";
 import { CostLedger } from "@/core/cost";
 import { recentDomains } from "@/core/db/queries";
 import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
+import { search } from "@/core/providers/exa/search";
+import type { IcpDoc, IcpSeller } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
 
@@ -27,12 +31,13 @@ export type AgentSearchInput = {
 	round: number;
 	remaining: number;
 	today: string;
+	seller: IcpSeller | null;
 };
 
 export function agentSearch(
 	input: AgentSearchInput,
 ): FindCompaniesDeps["search"] {
-	const { step, round, remaining, today } = input;
+	const { step, round, remaining, today, seller } = input;
 	return async (plan, _req, env, ledger) => {
 		const name = `round_${round}-agent`;
 		const wanted = Math.min(
@@ -42,7 +47,8 @@ export function agentSearch(
 		const { id } = await step.do(
 			`${name}-start`,
 			config.stepConfig.paidCall,
-			() => startAgentRun(buildAgentRunRequest(plan, wanted, today), env),
+			() =>
+				startAgentRun(buildAgentRunRequest(plan, wanted, today, seller), env),
 		);
 		const companies = await pollAgentRun(
 			{
@@ -106,4 +112,34 @@ export function agentRecentDomains(
 			config.stepConfig.databaseCall,
 			() => recentDomains(env, icpId, days),
 		);
+}
+
+/** Builds every dependency one round runs on, sending the round to the agent when its plan chose one and to a single Exa search when it did not. */
+export type RoundDepsInput = {
+	accumulatedDomains: ReadonlySet<string>;
+	step: WorkflowStep;
+	round: number;
+	remaining: number;
+	today: string;
+	seller: IcpDoc["seller"];
+};
+
+export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
+	const { accumulatedDomains, step, round, remaining, today } = input;
+	const seller = input.seller ?? null;
+	const lookupRecentDomains = agentRecentDomains(step, round);
+	const viaAgent = agentSearch({ step, round, remaining, today, seller });
+	return {
+		recentDomains: async (env, icpId, days) => {
+			const known = await lookupRecentDomains(env, icpId, days);
+			return [...known, ...accumulatedDomains];
+		},
+		synthesize: agentSynthesize(step, round),
+		search: (plan, req, env, ledger) =>
+			plan.source === "exa-agent"
+				? viaAgent(plan, req, env, ledger)
+				: search(req, env, ledger),
+		gate,
+		judge,
+	};
 }

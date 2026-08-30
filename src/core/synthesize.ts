@@ -16,9 +16,18 @@ export function acceptsAdditionalQueries(type: string): boolean {
 
 export const IcpDocSchema = z.object({
 	description: z.string(),
+	seller: z
+		.object({
+			domain: z.string(),
+			customers: z.array(z.string()),
+			competitorTest: z.string(),
+		})
+		.nullish(),
 });
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
+
+export type IcpSeller = NonNullable<IcpDoc["seller"]>;
 
 /**
  * One round's Exa request plus the constraints applied to the returned
@@ -113,10 +122,10 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"companies were ones the same search without variations never found. Leave the list",
 	"empty on `fast`, where the vendor accepts the field and ignores it.",
 	"`agentEffort` is how long `exa-agent` may work, and applies to `exa-agent` only.",
-	"Choose `low`. On the same profile and the same count, `low` and `high` both returned",
-	"every company asked for, with a signal and a proving page each, and `high` cost about",
-	"ten times as much and took half again as long. Raise it above `low` only when an",
-	"earlier round on this run came back short of the count.",
+	"Choose `medium`. Measured on the same profile and the same count, `medium` returned",
+	"evidence with a median age of thirty two days against `low`'s fifty three, both fully",
+	"inside the window the profile asked for, at indistinguishable cost. Raise it above",
+	"`medium` only when an earlier round on this run came back short of the count.",
 	"`recencyDays` is the same demand as a number: the most days old a page may be and still",
 	"prove the signal. Set it to the widest window the profile allows, so thirty for a role",
 	"posted in the last thirty days and three hundred and sixty five for a statement in the",
@@ -167,7 +176,7 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
-		agentEffort: "low",
+		agentEffort: "medium",
 		additionalQueries: [],
 		userLocation: null,
 		countries: [],
@@ -235,7 +244,7 @@ function toPlan(output: SearchPlanModel): SearchPlan {
 		recencyDays: output.recencyDays ?? null,
 		source: output.source ?? "exa-search",
 		type,
-		agentEffort: output.agentEffort ?? "low",
+		agentEffort: output.agentEffort ?? "medium",
 		additionalQueries: acceptsAdditionalQueries(type)
 			? (output.additionalQueries ?? [])
 			: [],

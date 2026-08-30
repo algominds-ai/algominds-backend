@@ -1,6 +1,5 @@
 import type { Context } from "hono";
 import type { z } from "zod";
-import { config } from "@/config";
 import {
 	createIcp,
 	findRun,

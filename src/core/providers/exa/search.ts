@@ -41,8 +41,15 @@ const ExaSearchRequestSchema = z.object({
 	systemPrompt: z.string().optional(),
 	contents: z
 		.object({
-			text: z.boolean().optional(),
+			text: z
+				.union([
+					z.boolean(),
+					z.object({ maxCharacters: z.number().int().positive() }),
+				])
+				.optional(),
 			summary: z.object({ schema: JsonValueSchema.optional() }).optional(),
+			maxAgeHours: z.number().nonnegative().optional(),
+			livecrawlTimeout: z.number().int().positive().optional(),
 		})
 		.optional(),
 });
@@ -216,6 +223,7 @@ export type ExaResult = {
 	evidenceUrl?: string;
 	evidenceQuote?: string;
 	evidencePublisher?: string;
+	evidenceKind?: string;
 	linkedinUrl?: string;
 	summary: Json | null;
 	company: CompanyEntity | null;

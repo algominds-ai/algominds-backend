@@ -53,7 +53,10 @@ function judgePrompt(
 ): string {
 	const criteria = [`Ideal customer profile:`, icp.description];
 	if (recency !== null) criteria.push("Freshness window:", recency);
-	const numbered = rows.map((row, index) => `${index}: ${JSON.stringify(row)}`);
+	const numbered = rows.map((row, index) => {
+		const { evidenceKind: _kind, ...judged } = row;
+		return `${index}: ${JSON.stringify(judged)}`;
+	});
 	return [...criteria, "Rows:", ...numbered].join("\n");
 }
 

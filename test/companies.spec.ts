@@ -503,6 +503,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			signal: null,
 			quote: null,
 			publisher: null,
+			kind: null,
 			publishedDate: null,
 			score: null,
 		});
@@ -525,6 +526,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			"description",
 			"domain",
 			"evidenceDate",
+			"evidenceKind",
 			"evidencePublisher",
 			"evidenceQuote",
 			"evidenceUrl",
@@ -555,6 +557,7 @@ describe("findCompanies — captures across sources", () => {
 			evidenceDate: "2026-08-12",
 			evidenceQuote: "Agent Co is hiring a Platform Engineer.",
 			evidencePublisher: "Agent Co Careers",
+			evidenceKind: null,
 		};
 		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
 		const { search } = scriptedSearch([agentSearchResult.results]);
@@ -580,6 +583,7 @@ describe("findCompanies — captures across sources", () => {
 		);
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
 			"id",
+			"kind",
 			"publishedDate",
 			"publisher",
 			"quote",
@@ -602,6 +606,7 @@ describe("toCompanyData", () => {
 				signal: null,
 				quote: null,
 				publisher: null,
+				kind: null,
 				publishedDate: null,
 				score: null,
 			},
@@ -1091,25 +1096,6 @@ function reportFor(
 	};
 }
 
-type StepMocker = {
-	mockStepResult: (
-		reference: { name: string },
-		result: unknown,
-	) => Promise<unknown>;
-};
-
-/** The side effects both workflow tests stand in for: opening the run, banking each round, saving the rows, closing the run. */
-async function mockRunSideEffects(
-	m: StepMocker,
-	instanceId: string,
-): Promise<void> {
-	await m.mockStepResult({ name: "open-run" }, { id: instanceId });
-	await m.mockStepResult({ name: "round_1-spend" }, {});
-	await m.mockStepResult({ name: "round_2-spend" }, {});
-	await m.mockStepResult({ name: "save-companies" }, {});
-	await m.mockStepResult({ name: "close-run" }, {});
-}
-
 describe("FindCompaniesWorkflow: the summary output", () => {
 	it("returns a bounded summary that does not grow with the number of companies found", async () => {
 		const instanceId = "summary-size-test";
@@ -1127,6 +1113,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				evidenceUrl: `https://${domain}`,
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
 				industry: null,
 				description: null,
 				signal: null,
@@ -1144,6 +1131,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							signal: null,
 							quote: null,
 							publisher: null,
+							kind: null,
 							publishedDate: null,
 							score: null,
 						},
@@ -1219,6 +1207,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					evidenceUrl: `https://${domain}`,
 					evidenceQuote: null,
 					evidencePublisher: null,
+					evidenceKind: null,
 					industry: null,
 					description: null,
 					signal: null,
@@ -1322,5 +1311,31 @@ describe("a round reports the freshness it demanded", () => {
 		expect(without.recency).toBeNull();
 		expect(withWindow.source).toBe("exa-search");
 		expect(withWindow.type).toBe("fast");
+	});
+});
+
+describe("the sort of page a company was proved by survives onto the saved row", () => {
+	it("carries the kind onto the row and onto the capture beside it", async () => {
+		const proved: ExaResult = {
+			...goodResult("displaced.com"),
+			evidenceUrl: "https://vendor.example/customers/displaced",
+			evidenceKind: "vendor-case-study",
+		};
+		const { search } = scriptedSearch([[proved]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies[0]?.evidenceKind).toBe("vendor-case-study");
+		expect(result.captures["displaced.com"]?.result.kind).toBe(
+			"vendor-case-study",
+		);
 	});
 });

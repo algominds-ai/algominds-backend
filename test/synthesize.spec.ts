@@ -357,3 +357,46 @@ describe("synthesize: prompt drift and retries", () => {
 		expect(result.plan.countries).toEqual([]);
 	});
 });
+
+describe("the agent is given the effort that keeps evidence freshest", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	function everyMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("names medium as the default and no longer tells the model to choose low", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("Choose `medium`");
+		expect(sent).not.toContain("Choose `low`");
+	});
+
+	it("fills medium when the model leaves the field out", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+
+	it("carries medium on the template the second failure falls back to", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse({ content: "", finishReason: "length" }),
+			chatCompletionResponse({ content: "", finishReason: "length" }),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+});
