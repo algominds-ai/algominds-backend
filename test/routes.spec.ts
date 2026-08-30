@@ -745,7 +745,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 });
 
 describe("OpenAPI document and Swagger UI", () => {
-	it("answers the OpenAPI document with no API key, naming all seven paths", async () => {
+	it("answers the OpenAPI document with no API key, naming all eight paths", async () => {
 		const response = await publicCall("/openapi.json");
 		const body: { paths?: { [path: string]: unknown } } = await response.json();
 
@@ -759,6 +759,7 @@ describe("OpenAPI document and Swagger UI", () => {
 				"/runs/{runId}",
 				"/runs/{runId}/companies",
 				"/runs/{runId}/people",
+				"/runs/{runId}/rounds",
 			].sort(),
 		);
 	});

@@ -42,6 +42,7 @@ const InstanceStatusSchema = z.object({
 			searched: z.number().nullish(),
 			peopleFound: z.number().nullish(),
 			capped: z.boolean().nullish(),
+			icpId: z.string().nullish(),
 			status: z.string().nullish(),
 			roundReports: z.array(z.unknown()).nullish(),
 		})

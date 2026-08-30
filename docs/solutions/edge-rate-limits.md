@@ -1,6 +1,6 @@
 # Edge rate limits on the job-starting routes
 
-The three job routes each start paid vendor work, so an unbounded client loop
+The four job routes each start paid vendor work, so an unbounded client loop
 would spend real money. The limit is Cloudflare dashboard configuration, not
 application code, so it cannot be bypassed by a bug in a handler. This file is
 where the intended thresholds are reviewable and diffable.
@@ -12,7 +12,13 @@ where the intended thresholds are reviewable and diffable.
 | `POST /companies/find` | 20 | 1 minute | block |
 | `POST /people/find` | 20 | 1 minute | block |
 | `POST /enrich` | 60 | 1 minute | block |
+| `POST /icp/onboard` | 5 | 1 minute | block |
 | `GET /runs/*` | 600 | 1 minute | block |
+
+`POST /icp/onboard` is the tightest of the four because one call buys a deep
+search plus a reasoning call for about seven cents, and an account needs a
+profile once, not repeatedly. The signup hook starts the same run under the
+same per-day id, so a rule here bounds both entry paths.
 
 Counting key: the bearer token, falling back to client IP when absent.
 

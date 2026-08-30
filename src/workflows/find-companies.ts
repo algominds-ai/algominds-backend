@@ -15,10 +15,10 @@ import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import {
 	appendEvidence,
+	assertUnderDailyCeiling,
 	closeRun,
 	loadIcp,
 	openRun,
-	organizationSpendToday,
 	recordRunSpend,
 	saveCompanies,
 	saveRound,
@@ -371,12 +371,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		);
 
 		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			const spent = await organizationSpendToday(this.env, organizationId);
-			if (spent >= config.spend.perAccountDailyDollars) {
-				throw new NonRetryableError(
-					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
-				);
-			}
+			await assertUnderDailyCeiling(this.env, organizationId);
 			return openRun(this.env, {
 				id: event.instanceId,
 				organizationId,

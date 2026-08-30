@@ -414,6 +414,7 @@ export async function deletePerson(
 }
 
 export {
+	assertUnderDailyCeiling,
 	closeRun,
 	findRun,
 	openRun,

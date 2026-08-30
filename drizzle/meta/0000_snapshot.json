@@ -1,5 +1,5 @@
 {
-  "id": "5649a2a3-09c5-4bcf-87c1-9c408e8440ba",
+  "id": "2f714000-3211-4cc2-8635-24d37a907feb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -554,7 +554,7 @@
           "name": "icp_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "capability": {
           "name": "capability",

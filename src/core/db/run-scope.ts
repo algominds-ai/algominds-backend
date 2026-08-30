@@ -12,7 +12,9 @@ import { company } from "@/core/db/schema";
  */
 export function companyScopeForRun(run: Run): SQL | undefined {
 	if (run.capability === "companies") return eq(company.runId, run.id);
-	if (run.capability === "people") return eq(company.icpId, run.icpId);
+	if (run.capability === "people" && run.icpId !== null) {
+		return eq(company.icpId, run.icpId);
+	}
 	throw new NonRetryableError(
 		`run ${run.id} has no company scope for capability ${run.capability}`,
 	);

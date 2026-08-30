@@ -4,10 +4,10 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import { toBatches } from "@/core/batches";
 import {
+	assertUnderDailyCeiling,
 	closeRun,
 	findRun,
 	openRun,
-	organizationSpendToday,
 	recordRunSpend,
 } from "@/core/db/queries";
 import type { EnrichChannel, EnrichOutcome } from "@/core/enrich";
@@ -51,15 +51,7 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 		);
 
 		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			const spent = await organizationSpendToday(
-				this.env,
-				source.organizationId,
-			);
-			if (spent >= config.spend.perAccountDailyDollars) {
-				throw new NonRetryableError(
-					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
-				);
-			}
+			await assertUnderDailyCeiling(this.env, source.organizationId);
 			return openRun(this.env, {
 				id: event.instanceId,
 				organizationId: source.organizationId,

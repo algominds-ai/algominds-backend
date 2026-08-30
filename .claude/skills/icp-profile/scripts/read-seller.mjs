@@ -11,8 +11,15 @@ if (!DOMAIN) {
 	process.exit(1);
 }
 const envPath = `${process.env.REPO ?? process.cwd()}/.env`;
+let envText;
+try {
+	envText = readFileSync(envPath, "utf8");
+} catch {
+	console.error(`no .env at ${envPath}; set REPO to the repository root`);
+	process.exit(1);
+}
 const env = Object.fromEntries(
-	readFileSync(envPath, "utf8")
+	envText
 		.split("\n")
 		.filter((l) => l.includes("=") && !l.startsWith("#"))
 		.map((l) => {
@@ -26,6 +33,11 @@ const env = Object.fromEntries(
 			];
 		}),
 );
+
+if (!env.EXA_API_KEY) {
+	console.error(`no EXA_API_KEY in ${envPath}`);
+	process.exit(1);
+}
 
 const ANGLES = [
 	`what ${DOMAIN} sells and the problem its product solves`,

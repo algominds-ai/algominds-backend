@@ -300,7 +300,7 @@ export function staleRejectReason(
 	const age = Math.round(
 		(Date.parse(today) - Date.parse(evidenceDate)) / 86_400_000,
 	);
-	if (Number.isNaN(age)) return null;
+	if (Number.isNaN(age)) return "the evidence date is not a date";
 	return age > recencyDays
 		? `evidence is ${age} days old, older than the ${recencyDays} the profile allows`
 		: null;

@@ -57,7 +57,7 @@ CREATE TABLE "round" (
 CREATE TABLE "run" (
 	"id" text PRIMARY KEY NOT NULL,
 	"organization_id" text NOT NULL,
-	"icp_id" uuid NOT NULL,
+	"icp_id" uuid,
 	"capability" text NOT NULL,
 	"status" text NOT NULL,
 	"cost_dollars" real DEFAULT 0 NOT NULL,

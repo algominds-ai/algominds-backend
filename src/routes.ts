@@ -15,7 +15,7 @@ import {
 	peopleFindSchema,
 } from "@/http/schemas";
 
-/** The bearer-protected job API: three start routes plus one status route. */
+/** The bearer-protected job API: four routes that start a capability, and the routes that read a run back. */
 export function createApiRoutes(): Hono<ApiEnv> {
 	const api = new Hono<ApiEnv>();
 	api.use("*", requireApiKey);

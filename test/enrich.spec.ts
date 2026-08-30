@@ -779,9 +779,10 @@ describe("subjectsForRun", () => {
 
 	it("resolves the same people for a people run id, rather than an empty set", async () => {
 		const run = runRow({ id: "people_icp-1_2026-08-27", capability: "people" });
+		const icpId = run.icpId ?? "icp-1";
 		const companyRow: Company = {
 			id: "company-1",
-			icpId: run.icpId,
+			icpId,
 			domain: "acme.com",
 			name: "Acme",
 			linkedinUrl: null,
@@ -801,8 +802,8 @@ describe("subjectsForRun", () => {
 		const subjects = await subjectsForRun(testEnv, run.id, deps);
 
 		expect(subjects).toEqual(EXPECTED_SUBJECTS);
-		expect(existsRecorded.condition).toEqual(eq(company.icpId, run.icpId));
-		expect(peopleRecorded.condition).toEqual(eq(company.icpId, run.icpId));
+		expect(existsRecorded.condition).toEqual(eq(company.icpId, icpId));
+		expect(peopleRecorded.condition).toEqual(eq(company.icpId, icpId));
 	});
 
 	it("throws rather than returning an empty list when the run matches no company", async () => {

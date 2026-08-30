@@ -4,8 +4,8 @@ import { z } from "zod";
 import { authOptions, buildPlugins } from "@/auth-options";
 import * as authSchema from "@/core/db/auth-schema";
 import { db } from "@/core/db/client";
+import { publicDomain } from "@/core/db/schema";
 import { buildRunId, domainsScopeId } from "@/http/jobs";
-import { publicHostname } from "@/workflows/onboard-icp";
 
 const CreatedOrganizationSchema = z.object({
 	id: z.string().min(1),
@@ -14,12 +14,7 @@ const CreatedOrganizationSchema = z.object({
 
 /** The organization's domain as a hostname worth crawling, or null when it named none or named something else. */
 function onboardableDomain(value: string | null | undefined): string | null {
-	if (!value) return null;
-	try {
-		return publicHostname(value);
-	} catch {
-		return null;
-	}
+	return value ? publicDomain(value) : null;
 }
 
 /**

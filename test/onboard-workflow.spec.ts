@@ -15,7 +15,9 @@ import {
 	loadIcp,
 	openRun,
 } from "../src/core/db/queries";
+import { organizationSpendToday } from "../src/core/db/runs";
 import { icp as icpTable, run } from "../src/core/db/schema";
+import { NOTE_MAX_LENGTH } from "../src/core/onboard";
 import type { IcpSeller } from "../src/core/synthesize";
 import { buildRunId, domainsScopeId } from "../src/http/jobs";
 import app from "../src/index";
@@ -88,7 +90,7 @@ function mockedSeller(domain: string): IcpSeller {
 async function deleteIcpAndRun(runId: string): Promise<void> {
 	const runRow = await findRun(testEnv, runId);
 	await db(testEnv, "direct").delete(run).where(eq(run.id, runId));
-	if (runRow) {
+	if (runRow?.icpId) {
 		await db(testEnv, "direct")
 			.delete(icpTable)
 			.where(eq(icpTable.id, runRow.icpId));
@@ -106,14 +108,28 @@ describe("POST /icp/onboard: validation", () => {
 	});
 
 	it("rejects a body whose domain is not a public hostname", async () => {
+		for (const domain of ["not a domain", "localhost", "10.0.0.7"]) {
+			const response = await authedCall(
+				"/icp/onboard",
+				postInit({ domain }, TOKEN),
+			);
+			const body: { issues?: unknown[] } = await response.json();
+
+			expect(response.status).toBe(400);
+			expect(Array.isArray(body.issues)).toBe(true);
+		}
+	});
+
+	it("refuses a note longer than the cap the core function enforces", async () => {
 		const response = await authedCall(
 			"/icp/onboard",
-			postInit({ domain: "not a domain" }, TOKEN),
+			postInit(
+				{ domain: "acme.example", note: "x".repeat(NOTE_MAX_LENGTH + 1) },
+				TOKEN,
+			),
 		);
-		const body: { issues?: unknown[] } = await response.json();
 
 		expect(response.status).toBe(400);
-		expect(Array.isArray(body.issues)).toBe(true);
 	});
 });
 
@@ -129,12 +145,21 @@ describe("POST /icp/onboard: starts a workflow without waiting for the profile",
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult({ name: "check-spend" }, {});
+				await m.mockStepResult({ name: "open-run" }, {});
 				await m.mockStepResult(
-					{ name: "build-icp" },
+					{ name: "read-seller" },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.01,
+					},
+				);
+				await m.mockStepResult({ name: "bank-search" }, {});
+				await m.mockStepResult(
+					{ name: "write-profile" },
 					{
 						description: "a mocked ideal customer profile",
 						seller: mockedSeller(domain),
-						costDollars: 0.02,
+						costDollars: 0.01,
 					},
 				);
 				await m.mockStepResult({ name: "save-icp" }, "mocked-icp-id");
@@ -172,11 +197,18 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
-					{ name: "build-icp" },
+					{ name: "read-seller" },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.01,
+					},
+				);
+				await m.mockStepResult(
+					{ name: "write-profile" },
 					{
 						description: "a mocked ideal customer profile",
 						seller: mockedSeller(domain),
-						costDollars: 0.01,
+						costDollars: 0,
 					},
 				);
 			});
@@ -225,11 +257,18 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 		try {
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
-					{ name: "build-icp" },
+					{ name: "read-seller" },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.01,
+					},
+				);
+				await m.mockStepResult(
+					{ name: "write-profile" },
 					{
 						description: "a four paragraph ideal customer profile",
 						seller,
-						costDollars: 0.03,
+						costDollars: 0.02,
 					},
 				);
 			});
@@ -250,10 +289,12 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 			expect(runRow.costDollars).toBe(0.03);
 			expect(runRow.capability).toBe("onboarding");
 
+			const icpId = runRow.icpId;
+			if (icpId === null) throw new Error("expected the run to name a profile");
 			const output = await instance.getOutput();
-			expect(output).toEqual({ icpId: runRow.icpId, costDollars: 0.03 });
+			expect(output).toEqual({ icpId, costDollars: 0.03 });
 
-			const icpRow = await loadIcp(testEnv, runRow.icpId);
+			const icpRow = await loadIcp(testEnv, icpId);
 			if (!icpRow) throw new Error("expected an icp row for onboarding");
 			expect(icpRow.doc).toEqual({
 				description: "a four paragraph ideal customer profile",
@@ -330,5 +371,51 @@ describe("the onboarding workflow refuses a domain that is not a public hostname
 		expect(() => publicHostname("localhost")).toThrow(NonRetryableError);
 		expect(() => publicHostname("192.168.0.1")).toThrow(NonRetryableError);
 		expect(publicHostname("https://www.form3.tech/about")).toBe("form3.tech");
+	});
+});
+
+describe("OnboardIcpWorkflow: a run that dies after buying something", () => {
+	it("still leaves a run row carrying what it spent, so the ceiling counts it", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`onboard-banked-${crypto.randomUUID()}.internal`,
+			"onboard-banked",
+		);
+		const instanceId = `onboarding_banked-${crypto.randomUUID()}`;
+		const domain = `banked-${crypto.randomUUID()}.example`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			instanceId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "read-seller" },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.04,
+					},
+				);
+				await m.mockStepError(
+					{ name: "write-profile" },
+					new NonRetryableError("the model was unreachable"),
+				);
+			});
+
+			await testEnv.ONBOARD_ICP.create({
+				id: instanceId,
+				params: { domain, note: null, organizationId: org.id },
+			});
+			await instance.waitForStatus("errored");
+
+			const runRow = await findRun(testEnv, instanceId);
+			if (!runRow) throw new Error("expected a run row for the failed run");
+			expect(runRow.costDollars).toBe(0.04);
+			expect(runRow.icpId).toBeNull();
+			expect(await organizationSpendToday(testEnv, org.id)).toBe(0.04);
+		} finally {
+			await instance.dispose();
+			await deleteIcpAndRun(instanceId);
+		}
 	});
 });

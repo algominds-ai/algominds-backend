@@ -43,11 +43,26 @@ Keep it to roughly 1500 to 2500 characters. Longer stops helping.
 
 ## Store and run
 
+The `seller` block is not optional in practice: without it the engine cannot
+tell the seller's own customers apart from prospects, and `competitorTest` is
+one sentence naming who a competitor sells to, never a list of names.
+
 ```sql
 INSERT INTO icp (organization_id, domain, doc)
-VALUES ('<org>', '<seller domain>', '{"description": "<the text>"}'::jsonb)
+VALUES ('<org>', '<seller domain>', '{
+  "description": "<the text>",
+  "seller": {
+    "domain": "<seller domain>",
+    "customers": ["<a customer the site names>"],
+    "competitorTest": "<one sentence naming who a competitor sells to>"
+  }
+}'::jsonb)
 RETURNING id;
 ```
+
+`POST /icp/onboard {"domain": "<seller domain>"}` writes the same row for you,
+including the seller block. Do this by hand only when you are rewriting a
+profile the endpoint already produced.
 
 ```http
 POST /companies/find

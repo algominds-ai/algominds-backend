@@ -7,10 +7,10 @@ import { toBatches } from "@/core/batches";
 import { knownPeopleDomains } from "@/core/db/known-people";
 import {
 	appendEvidence,
+	assertUnderDailyCeiling,
 	closeRun,
 	loadIcp,
 	openRun,
-	organizationSpendToday,
 	recordRunSpend,
 	savePeople,
 } from "@/core/db/queries";
@@ -324,12 +324,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const organizationId = payload.organizationId;
 
 		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			const spent = await organizationSpendToday(this.env, organizationId);
-			if (spent >= config.spend.perAccountDailyDollars) {
-				throw new NonRetryableError(
-					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
-				);
-			}
+			await assertUnderDailyCeiling(this.env, organizationId);
 			return openRun(this.env, {
 				id: event.instanceId,
 				organizationId,

@@ -13,11 +13,7 @@ export type AfterCreateOrganization = NonNullable<
 	>["afterCreateOrganization"]
 >;
 
-/**
- * The plugin list, optionally carrying a callback to run once an organization
- * exists. The schema generator calls this with nothing, so it describes the
- * same tables whether or not the runtime has a hook to run.
- */
+/** The plugin list, optionally carrying a callback to run once an organization exists. */
 export function buildPlugins(
 	afterCreateOrganization?: AfterCreateOrganization,
 ) {

@@ -623,6 +623,7 @@ describe("openRun", () => {
 		};
 		const storedRun: Run = {
 			...newRun,
+			icpId: newRun.icpId ?? null,
 			costDollars: 0,
 			startedAt: new Date("2026-08-27T00:00:00.000Z"),
 			finishedAt: null,
@@ -661,6 +662,7 @@ describe("openRun", () => {
 		};
 		const storedRun: Run = {
 			...newRun,
+			icpId: newRun.icpId ?? null,
 			costDollars: 0,
 			startedAt: new Date("2026-08-27T00:00:00.000Z"),
 			finishedAt: null,

@@ -18,7 +18,9 @@ the probe wins.
 | `additionalQueries` | 1-10 strings | Deep search types only. |
 | `systemPrompt` | string | Source preference, novelty, and duplication guidance. |
 | `outputSchema` | JSON Schema | Synthesized output. Adds about 2 seconds. |
-| `contents` | object | `text`, `highlights`, `summary`, `extras`, `subpages`, `maxAgeHours`. |
+| `contents` | object | `text`, `highlights`, `summary`, `extras`, `subpages`, `maxAgeHours`, `livecrawlTimeout`. |
+| `contents.text` | boolean or `{ maxCharacters }` | The object form caps the text returned per page. |
+| `contents.livecrawlTimeout` | milliseconds | How long a live crawl may take per page. Paired with `maxAgeHours: 0`. |
 | `moderation`, `compliance`, `stream` | | |
 
 ## Parameters that do not exist

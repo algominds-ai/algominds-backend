@@ -1,4 +1,6 @@
+import { NonRetryableError } from "cloudflare:workflows";
 import { and, eq, gte } from "drizzle-orm";
+import { config } from "@/config";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
@@ -71,7 +73,8 @@ export async function recordRunSpend(
 export async function closeRun(
 	env: DbEnv,
 	runId: string,
-	outcome: Pick<NewRun, "status" | "costDollars">,
+	outcome: Pick<NewRun, "status" | "costDollars"> &
+		Partial<Pick<NewRun, "icpId">>,
 	buildDb: DbFactory<RunUpdateConnection> = db,
 ): Promise<void> {
 	const connection = buildDb(env, "cached");
@@ -93,6 +96,19 @@ export function startOfUtcDay(now: Date = new Date()): Date {
  * read through the cache-disabled binding so a same-run write is never
  * missed.
  */
+/** Throws when the account has already spent its daily ceiling, so a refused run never reaches a paid step. */
+export async function assertUnderDailyCeiling(
+	env: DbEnv,
+	organizationId: string,
+): Promise<void> {
+	const spent = await organizationSpendToday(env, organizationId);
+	if (spent >= config.spend.perAccountDailyDollars) {
+		throw new NonRetryableError(
+			`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
+		);
+	}
+}
+
 export async function organizationSpendToday(
 	env: DbEnv,
 	organizationId: string,

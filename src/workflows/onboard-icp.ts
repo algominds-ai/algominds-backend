@@ -4,13 +4,15 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
 import {
+	assertUnderDailyCeiling,
 	closeRun,
 	createIcp,
 	openRun,
-	organizationSpendToday,
+	recordRunSpend,
 } from "@/core/db/queries";
-import { normalizeDomain } from "@/core/db/schema";
-import { buildIcp } from "@/core/onboard";
+import { publicDomain } from "@/core/db/schema";
+import type { SellerPage } from "@/core/onboard";
+import { readSellerPages, writeSellerProfile } from "@/core/onboard";
 import type { IcpSeller } from "@/core/synthesize";
 
 const OnboardIcpPayloadSchema = z.object({
@@ -26,62 +28,23 @@ export type OnboardIcpSummary = {
 	costDollars: number;
 };
 
-const IPV4_HOST = /^\d+(\.\d+)*$/;
-
-/**
- * `domain` normalized to a public hostname, or a `NonRetryableError` for
- * anything else. `normalizeDomain` alone accepts `localhost` and an address
- * literal, and a paid crawl of either finds nothing.
- */
+/** `domain` as a public hostname, or a `NonRetryableError`. Both entry paths cross this, so it is the one place the refusal belongs. */
 export function publicHostname(domain: string): string {
-	let host: string;
-	try {
-		host = normalizeDomain(domain);
-	} catch {
-		throw new NonRetryableError(`onboardIcp: not a public hostname: ${domain}`);
-	}
-	if (!host.includes(".") || IPV4_HOST.test(host)) {
+	const host = publicDomain(domain);
+	if (host === null) {
 		throw new NonRetryableError(`onboardIcp: not a public hostname: ${domain}`);
 	}
 	return host;
 }
 
-/** Refuses the run once the account has spent its daily ceiling for today. */
-async function refuseIfOverCeiling(
-	env: Env,
-	organizationId: string,
-): Promise<void> {
-	const spent = await organizationSpendToday(env, organizationId);
-	if (spent >= config.spend.perAccountDailyDollars) {
-		throw new NonRetryableError(
-			`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
-		);
-	}
-}
+type ReadSellerStep = { pages: SellerPage[]; costDollars: number };
 
-/**
- * The profile plus its cost as plain data, never the `CostLedger` instance
- * `buildIcp` returns it in: a `step.do` result is replayed from its
- * serialized form, which a class instance does not survive.
- */
+/** The profile plus its cost as plain data. See `docs/solutions/onboarding-run-accounting.md`. */
 type BuiltIcp = {
 	description: string;
 	seller: IcpSeller;
 	costDollars: number;
 };
-
-async function buildAndPriceIcp(
-	env: Env,
-	domain: string,
-	note: string | null,
-): Promise<BuiltIcp> {
-	const result = await buildIcp(env, domain, note);
-	return {
-		description: result.description,
-		seller: result.seller,
-		costDollars: result.ledger.total(),
-	};
-}
 
 type PersistIcpInput = {
 	env: Env;
@@ -91,13 +54,7 @@ type PersistIcpInput = {
 	built: BuiltIcp;
 };
 
-/**
- * Writes the profile, opens the run against it, and closes the run with the
- * ledger's total, all in one durable step. Returns the run's own `icpId`
- * rather than the row `createIcp` just inserted: a retried step that reaches
- * `createIcp` again would write a second icp row, and `openRun`'s replay
- * safety keeps the run pointed at whichever row won that race.
- */
+/** Writes the profile, points the already-open run at it, and closes the run with what it spent. Returns the new profile's id. */
 async function persistIcp(input: PersistIcpInput): Promise<string> {
 	const { env, runId, organizationId, domain, built } = input;
 	const row = await createIcp(env, {
@@ -106,18 +63,12 @@ async function persistIcp(input: PersistIcpInput): Promise<string> {
 		description: built.description,
 		seller: built.seller,
 	});
-	const runRow = await openRun(env, {
-		id: runId,
-		organizationId,
-		icpId: row.id,
-		capability: "onboarding",
-		status: "running",
-	});
 	await closeRun(env, runId, {
 		status: "complete",
 		costDollars: built.costDollars,
+		icpId: row.id,
 	});
-	return runRow.icpId;
+	return row.id;
 }
 
 /**
@@ -136,13 +87,53 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 		const payload = OnboardIcpPayloadSchema.parse(event.payload);
 		const domain = publicHostname(payload.domain);
 
+		const runId = event.instanceId;
+
 		await step.do("check-spend", config.stepConfig.databaseCall, () =>
-			refuseIfOverCeiling(this.env, payload.organizationId),
+			assertUnderDailyCeiling(this.env, payload.organizationId),
 		);
 
-		const built = await step.do("build-icp", config.stepConfig.paidCall, () =>
-			buildAndPriceIcp(this.env, domain, payload.note ?? null),
+		await step.do("open-run", config.stepConfig.databaseCall, async () => {
+			await openRun(this.env, {
+				id: runId,
+				organizationId: payload.organizationId,
+				capability: "onboarding",
+				status: "running",
+			});
+		});
+
+		const read: ReadSellerStep = await step.do(
+			"read-seller",
+			config.stepConfig.paidCall,
+			async () => {
+				const result = await readSellerPages(this.env, domain);
+				return { pages: result.pages, costDollars: result.ledger.total() };
+			},
 		);
+		await step.do("bank-search", config.stepConfig.databaseCall, () =>
+			recordRunSpend(this.env, runId, read.costDollars),
+		);
+
+		const written = await step.do(
+			"write-profile",
+			config.stepConfig.paidCall,
+			() =>
+				writeSellerProfile(
+					this.env,
+					domain,
+					read.pages,
+					payload.note ?? null,
+				).then((result) => ({
+					description: result.description,
+					seller: result.seller,
+					costDollars: result.ledger.total(),
+				})),
+		);
+		const built: BuiltIcp = {
+			description: written.description,
+			seller: written.seller,
+			costDollars: read.costDollars + written.costDollars,
+		};
 
 		const icpId = await step.do(
 			"save-icp",
@@ -150,7 +141,7 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 			() =>
 				persistIcp({
 					env: this.env,
-					runId: event.instanceId,
+					runId,
 					organizationId: payload.organizationId,
 					domain,
 					built,

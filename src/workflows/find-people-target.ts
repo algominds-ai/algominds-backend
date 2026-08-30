@@ -20,6 +20,9 @@ async function targetByRun(
 	if (!runRow || runRow.organizationId !== organizationId) {
 		throw new NonRetryableError(`findPeople: unknown run ${runId}`);
 	}
+	if (runRow.icpId === null) {
+		throw new NonRetryableError(`findPeople: run ${runId} produced no profile`);
+	}
 	const companies = await companiesForRun(env, runId);
 	return { companies, icpId: runRow.icpId, unknownDomains: [] };
 }

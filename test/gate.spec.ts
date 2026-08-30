@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { staleRejectReason } from "../src/core/companies/candidates";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 
@@ -154,5 +155,18 @@ describe("gate — a profile page is not the company's own site", () => {
 		const result = gate(rows, [{}], { seenDomains: new Set() });
 
 		expect(result.kept).toEqual(rows);
+	});
+});
+
+describe("a date the code cannot read is not a date it can trust", () => {
+	const TODAY = "2026-08-30";
+
+	it("rejects an unparseable date, passes a missing one to the judge, and does the arithmetic otherwise", () => {
+		expect(staleRejectReason("not-a-date", 30, TODAY)).toBe(
+			"the evidence date is not a date",
+		);
+		expect(staleRejectReason(null, 30, TODAY)).toBeNull();
+		expect(staleRejectReason("2026-08-20", 30, TODAY)).toBeNull();
+		expect(staleRejectReason("2025-08-20", 30, TODAY)).toContain("days old");
 	});
 });
