@@ -199,6 +199,7 @@ function toNewCompany(
 		icpId,
 		domain: row.domain,
 		name: row.name,
+		linkedinUrl: row.linkedinUrl,
 		data: toCompanyData(capture, COMPANY_SOURCE),
 		runId,
 	};

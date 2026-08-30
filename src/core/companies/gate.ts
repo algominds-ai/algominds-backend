@@ -10,6 +10,7 @@ const FIELD_NAMES = [
 	"domain",
 	"linkedinUrl",
 	"evidenceUrl",
+	"description",
 	"signal",
 	"evidenceDate",
 ] as const;

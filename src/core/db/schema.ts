@@ -63,6 +63,7 @@ export const company = pgTable(
 			.references(() => icp.id),
 		domain: text("domain").notNull(),
 		name: text("name").notNull(),
+		linkedinUrl: text("linkedin_url"),
 		data: jsonb("data"),
 		runId: text("run_id")
 			.notNull()

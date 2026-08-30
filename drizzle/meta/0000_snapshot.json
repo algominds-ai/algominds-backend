@@ -1,5 +1,5 @@
 {
-  "id": "8dcb0017-0e2a-45c7-be99-e740bcee260e",
+  "id": "a1da613b-b737-4f99-a05e-76e32c66fa91",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -32,6 +32,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "linkedin_url": {
+          "name": "linkedin_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "data": {
           "name": "data",

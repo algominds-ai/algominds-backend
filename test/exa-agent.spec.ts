@@ -5,8 +5,10 @@ import {
 	buildAgentRunRequest,
 	toExaSearchResult,
 } from "../src/core/companies/agent-search";
+import { filterEntities } from "../src/core/companies/candidates";
 import { CostLedger } from "../src/core/cost";
 import {
+	ExaAgentCompanySchema,
 	getAgentPeopleRun,
 	getAgentRun,
 	startAgentRun,
@@ -348,7 +350,12 @@ describe("a run that is still working", () => {
 
 describe("the agent is asked for evidence, and for evidence inside a window", () => {
 	function companySchema(count: number, plan: SearchPlan) {
-		const req = buildAgentRunRequest(plan, count, "low", "2026-08-30");
+		const req = buildAgentRunRequest(
+			{ ...plan, recency: "A role posted in the last 30 days." },
+			count,
+			"low",
+			"2026-08-30",
+		);
 		const parsed = JSON.parse(JSON.stringify(req.outputSchema));
 		return parsed.properties.companies.items;
 	}
@@ -411,6 +418,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 			{
 				name: "Kastle",
 				website: "https://kastle.com",
+				linkedinUrl: null,
 				description: null,
 				foundedYear: null,
 				workforceTotal: null,
@@ -438,6 +446,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 			{
 				name: "Kastle",
 				website: "https://kastle.com",
+				linkedinUrl: null,
 				description: null,
 				foundedYear: null,
 				workforceTotal: 470,
@@ -461,5 +470,154 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 			revenueAnnual: null,
 			fundingTotal: null,
 		});
+	});
+});
+
+describe("the agent's evidence reaches the row the judge reads", () => {
+	function rowFor(signal: string | null, evidenceUrl: string | null) {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kastle",
+				website: "https://kastle.com",
+				linkedinUrl: null,
+				description: "a security company",
+				foundedYear: null,
+				workforceTotal: 470,
+				city: null,
+				country: "United States",
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal,
+				evidenceUrl,
+				evidenceDate: "2026-08-12",
+			},
+		]);
+		return filterEntities(results, planFor("security companies")).rows[0];
+	}
+
+	it("cites the proving page, keeps the company as the domain, and shows the judge the signal", () => {
+		const row = rowFor(
+			"posted a Head of Sales role on 2026-08-12",
+			"https://jobs.ashbyhq.com/kastle/735bed91",
+		);
+
+		expect(row?.domain).toBe("kastle.com");
+		expect(row?.evidenceUrl).toBe("https://jobs.ashbyhq.com/kastle/735bed91");
+		expect(row?.evidenceDate).toBe("2026-08-12");
+		expect(row?.signal).toBe("posted a Head of Sales role on 2026-08-12");
+		expect(row?.description).toContain("headcount 470");
+		expect(row?.description).not.toContain("posted a Head of Sales");
+	});
+
+	it("falls back to the company's own site when a source proves nothing", () => {
+		const row = rowFor(null, null);
+
+		expect(row?.evidenceUrl).toBe("https://kastle.com");
+		expect(row?.signal).toBeNull();
+		expect(row?.description).toContain("headcount 470");
+	});
+});
+
+describe("what is stored keeps the evidence, not just the company", () => {
+	it("captures the signal and the proving page for the row that gets saved", () => {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kastle",
+				website: "https://kastle.com",
+				linkedinUrl: null,
+				description: "a security company",
+				foundedYear: null,
+				workforceTotal: 470,
+				city: null,
+				country: "United States",
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted a Head of Sales role",
+				evidenceUrl: "https://jobs.ashbyhq.com/kastle/735bed91",
+				evidenceDate: "2026-08-12",
+			},
+		]);
+		const { captures } = filterEntities(results, planFor("security companies"));
+		const capture = captures["kastle.com"];
+
+		expect(capture?.result.signal).toBe("posted a Head of Sales role");
+		expect(capture?.result.url).toBe(
+			"https://jobs.ashbyhq.com/kastle/735bed91",
+		);
+		expect(capture?.result.publishedDate).toBe("2026-08-12");
+	});
+});
+
+describe("a signal is only demanded when the profile asks for something recent", () => {
+	function itemsFor(plan: SearchPlan) {
+		const req = buildAgentRunRequest(plan, 5, "low", "2026-08-30");
+		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
+			.items;
+	}
+
+	it("demands the signal and its page when the profile names a window", () => {
+		const items = itemsFor({
+			...planFor("payment platforms"),
+			recency: "A role posted in the last 30 days.",
+		});
+
+		expect(items.required).toContain("signal");
+		expect(items.required).toContain("evidenceUrl");
+	});
+
+	it("asks for no signal when the profile names no window, so none is invented", () => {
+		const items = itemsFor(planFor("payment platforms"));
+
+		expect(items.required).not.toContain("signal");
+		expect(items.required).not.toContain("evidenceUrl");
+		expect(items.required).toContain("name");
+		expect(items.required).toContain("website");
+	});
+
+	it("asks for a LinkedIn company page, never a personal profile", () => {
+		const items = itemsFor(planFor("payment platforms"));
+
+		expect(items.properties.linkedinUrl.pattern).toContain("company");
+		expect(items.required).not.toContain("linkedinUrl");
+	});
+});
+
+describe("a company LinkedIn page reaches the row, a personal profile does not", () => {
+	function rowFor(linkedinUrl: string | null) {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Kastle",
+				website: "https://kastle.com",
+				linkedinUrl: linkedinUrl || null,
+				description: null,
+				foundedYear: null,
+				workforceTotal: null,
+				city: null,
+				country: null,
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: null,
+				evidenceUrl: null,
+				evidenceDate: null,
+			},
+		]);
+		return filterEntities(results, planFor("security companies")).rows[0];
+	}
+
+	it("keeps a linkedin.com/company address", () => {
+		expect(rowFor("https://linkedin.com/company/kastle")?.linkedinUrl).toBe(
+			"https://linkedin.com/company/kastle",
+		);
+	});
+
+	it("drops a personal profile the agent mistook for the company", () => {
+		const parsed = ExaAgentCompanySchema.parse({
+			name: "Kastle",
+			website: "https://kastle.com",
+			linkedinUrl: "https://linkedin.com/in/some-person",
+		});
+
+		expect(parsed.linkedinUrl).toBeNull();
+		expect(rowFor(parsed.linkedinUrl)?.linkedinUrl).toBeNull();
 	});
 });

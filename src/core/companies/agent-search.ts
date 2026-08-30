@@ -4,7 +4,10 @@ import type {
 	ExaAgentCompany,
 	ExaAgentRunRequest,
 } from "@/core/providers/exa/agent";
-import { ExaAgentCompanySchema } from "@/core/providers/exa/agent";
+import {
+	ExaAgentCompanySchema,
+	LINKEDIN_COMPANY_URL_PATTERN,
+} from "@/core/providers/exa/agent";
 import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import { CompanyRecordSchema } from "@/core/providers/exa/search";
 import type { SearchPlan } from "@/core/synthesize";
@@ -12,13 +15,27 @@ import type { SearchPlan } from "@/core/synthesize";
 const NOT_A_DIRECTORY_HOST =
 	"^(?!(https?://)?(www\\.)?(linkedin|twitter|x|facebook|instagram|youtube|tiktok|medium|substack|github|crunchbase|pitchbook|tracxn|bloomberg|wellfound|angel|ycombinator|producthunt|glassdoor|indeed)\\.)";
 
-/** The four fields a run must come back with. Everything else stays optional, so a thin record still counts. */
 const AgentCompanyRequestSchema = ExaAgentCompanySchema.extend({
 	name: z.string(),
 	website: z.string().regex(new RegExp(NOT_A_DIRECTORY_HOST)),
-	signal: z.string(),
-	evidenceUrl: z.string(),
+	linkedinUrl: z
+		.string()
+		.regex(new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i"))
+		.optional(),
 });
+
+/**
+ * What one company in the reply must carry. A profile that asks for a recent
+ * event demands the signal and the page proving it; a profile that asks for
+ * none leaves both out, so the agent never invents a signal to fill a field.
+ */
+function agentCompanySchema(plan: SearchPlan) {
+	if (plan.recency === null) return AgentCompanyRequestSchema;
+	return AgentCompanyRequestSchema.extend({
+		signal: z.string(),
+		evidenceUrl: z.string(),
+	});
+}
 
 function agentQuery(plan: SearchPlan, count: number): string {
 	const constraints = planConstraints(plan);
@@ -42,6 +59,8 @@ function agentSystemPrompt(today: string): string {
 		"Leave `evidenceDate` out when the page shows no date; never guess one.",
 		"A page published outside the window the query gives for its signal",
 		"disqualifies that company, so find a different company instead.",
+		"Give the company's LinkedIn page in `linkedinUrl` when you can find it,",
+		"which is a linkedin.com/company address and never a personal profile.",
 		"Never repeat a company.",
 	].join(" ");
 }
@@ -67,7 +86,7 @@ export function buildAgentRunRequest(
 		outputSchema: z.json().parse(
 			z.toJSONSchema(
 				z.object({
-					companies: z.array(AgentCompanyRequestSchema).min(count),
+					companies: z.array(agentCompanySchema(plan)).min(count),
 				}),
 				{ io: "input" },
 			),
@@ -85,6 +104,7 @@ function toExaResult(company: ExaAgentCompany): ExaResult | null {
 		summary: null,
 		company: CompanyRecordSchema.parse(company),
 		person: null,
+		...(company.linkedinUrl ? { linkedinUrl: company.linkedinUrl } : {}),
 		...(company.signal ? { signal: company.signal } : {}),
 		...(company.evidenceUrl ? { evidenceUrl: company.evidenceUrl } : {}),
 		...(company.evidenceDate ? { publishedDate: company.evidenceDate } : {}),

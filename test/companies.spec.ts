@@ -489,6 +489,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			id: "https://exa.ai/library/organization/noscore.com",
 			url: "https://noscore.com/",
 			title: "Company noscore.com",
+			signal: null,
 			publishedDate: null,
 			score: null,
 		});
@@ -508,6 +509,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 		});
 
 		expect(Object.keys(result.companies[0] ?? {}).sort()).toEqual([
+			"description",
 			"domain",
 			"evidenceDate",
 			"evidenceUrl",
@@ -523,6 +525,7 @@ describe("findCompanies — captures across sources", () => {
 		const agentCompany: ExaAgentCompany = {
 			name: "Agent Co",
 			website: "https://agentco.com",
+			linkedinUrl: null,
 			description: "found by the agent",
 			foundedYear: 2020,
 			workforceTotal: 12,
@@ -559,6 +562,7 @@ describe("findCompanies — captures across sources", () => {
 			"id",
 			"publishedDate",
 			"score",
+			"signal",
 			"title",
 			"url",
 		]);
@@ -573,6 +577,7 @@ describe("toCompanyData", () => {
 				id: "https://exa.ai/library/organization/example",
 				url: "https://example.com/",
 				title: "Example",
+				signal: null,
 				publishedDate: null,
 				score: null,
 			},
@@ -1045,6 +1050,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				domain,
 				linkedinUrl: null,
 				evidenceUrl: `https://${domain}`,
+				description: null,
 				signal: null,
 				evidenceDate: null,
 			}));
@@ -1057,6 +1063,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							id: null,
 							url: `https://${domain}/`,
 							title: domain,
+							signal: null,
 							publishedDate: null,
 							score: null,
 						},
@@ -1133,6 +1140,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					domain,
 					linkedinUrl: null,
 					evidenceUrl: `https://${domain}`,
+					description: null,
 					signal: null,
 					evidenceDate: null,
 				}),

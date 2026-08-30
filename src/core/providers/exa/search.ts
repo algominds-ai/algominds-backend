@@ -212,6 +212,7 @@ export type ExaResult = {
 	text?: string;
 	signal?: string;
 	evidenceUrl?: string;
+	linkedinUrl?: string;
 	summary: Json | null;
 	company: CompanyEntity | null;
 	person: PersonRecord | null;

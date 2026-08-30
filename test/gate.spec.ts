@@ -8,6 +8,7 @@ function companyRow(overrides: Partial<CompanyRow> = {}): CompanyRow {
 		domain: "acme.com",
 		linkedinUrl: null,
 		evidenceUrl: "https://acme.com/",
+		description: null,
 		signal: null,
 		evidenceDate: null,
 		...overrides,

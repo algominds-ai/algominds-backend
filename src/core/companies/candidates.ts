@@ -25,6 +25,7 @@ export type CompanyMatch = {
 	id: string | null;
 	url: string;
 	title: string;
+	signal: string | null;
 	publishedDate: string | null;
 	score: number | null;
 };
@@ -94,13 +95,19 @@ function describeCompany(entity: CompanyEntity): string {
 	return [facts.join("; "), description].filter(Boolean).join(". ");
 }
 
+/** The page a row cites: the one that proves the signal when a source gave one, else the company's own site. */
+function evidenceUrlOf(result: ExaResult): string {
+	return result.evidenceUrl ?? result.url;
+}
+
 function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 	return {
 		name: entity.name ?? result.title,
 		domain: normalizeDomain(result.url),
-		linkedinUrl: null,
-		evidenceUrl: result.url,
-		signal: describeCompany(entity) || null,
+		linkedinUrl: result.linkedinUrl ?? null,
+		evidenceUrl: evidenceUrlOf(result),
+		description: describeCompany(entity) || null,
+		signal: result.signal ?? null,
 		evidenceDate: result.publishedDate ?? null,
 	};
 }
@@ -114,8 +121,9 @@ function toSearchResult(result: ExaResult): SearchResult {
 function toCompanyMatch(result: ExaResult): CompanyMatch {
 	return {
 		id: result.id,
-		url: result.url,
+		url: evidenceUrlOf(result),
 		title: result.title,
+		signal: result.signal ?? null,
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
 	};

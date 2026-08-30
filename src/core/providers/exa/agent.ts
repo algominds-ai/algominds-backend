@@ -61,9 +61,23 @@ const ExaAgentCostSchema = z.object({
 	phoneNumbers: z.number().nullish(),
 });
 
-/** The shared company record plus the fields only the agent can give: the company's own site and the page that proves the signal. */
+/** A LinkedIn company page, which is `/company/<name>`, never the `/in/<name>` of a person. */
+export const LINKEDIN_COMPANY_URL_PATTERN =
+	"^(https?://)?([a-z]{2,3}\\.)?linkedin\\.com/company/[^\\s/?#]+/?$";
+
+const linkedinCompanyUrl = z
+	.string()
+	.nullish()
+	.transform((value) =>
+		value && new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i").test(value)
+			? value
+			: null,
+	);
+
+/** The shared company record plus the fields only the agent can give: the company's own site, its LinkedIn page, and the page that proves the signal. */
 export const ExaAgentCompanySchema = CompanyRecordSchema.extend({
 	website: nullableString,
+	linkedinUrl: linkedinCompanyUrl,
 	signal: nullableString,
 	evidenceUrl: nullableString,
 	evidenceDate: nullableString,

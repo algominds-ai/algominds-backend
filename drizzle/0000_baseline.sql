@@ -3,6 +3,7 @@ CREATE TABLE "company" (
 	"icp_id" uuid NOT NULL,
 	"domain" text NOT NULL,
 	"name" text NOT NULL,
+	"linkedin_url" text,
 	"data" jsonb,
 	"run_id" text NOT NULL,
 	"found_at" timestamp with time zone DEFAULT now() NOT NULL,
