@@ -1,6 +1,18 @@
 import { z } from "zod";
 import { CostLedger } from "@/core/cost";
-import { generateStructured, workerModel } from "@/core/model";
+import { generateStructured, reasoningModel } from "@/core/model";
+
+export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
+/** `deep-lite` is absent on purpose: measured against `category: "company"` it returns pages with no company record, so every row falls at the filter. */
+export const SEARCH_TYPES = ["fast", "deep", "deep-reasoning"] as const;
+export const AGENT_EFFORTS = ["minimal", "low", "medium", "high"] as const;
+
+const DEEP_TYPES: ReadonlySet<string> = new Set(["deep", "deep-reasoning"]);
+
+/** True when a search type runs the multi-step planner that `additionalQueries` feeds. */
+export function acceptsAdditionalQueries(type: string): boolean {
+	return DEEP_TYPES.has(type);
+}
 
 export const IcpDocSchema = z.object({
 	description: z.string(),
@@ -16,6 +28,12 @@ export type IcpDoc = z.infer<typeof IcpDocSchema>;
 export type SearchPlan = {
 	query: string;
 	angle: string;
+	recency: string | null;
+	recencyDays: number | null;
+	source: (typeof SEARCH_SOURCES)[number];
+	type: (typeof SEARCH_TYPES)[number];
+	agentEffort: (typeof AGENT_EFFORTS)[number];
+	additionalQueries: string[];
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
@@ -31,6 +49,12 @@ export type SearchPlan = {
 const SearchPlanModelSchema = z.object({
 	query: z.string(),
 	angle: z.string(),
+	recency: z.string().nullish(),
+	recencyDays: z.number().int().positive().nullish(),
+	source: z.enum(SEARCH_SOURCES).nullish(),
+	type: z.enum(SEARCH_TYPES).nullish(),
+	agentEffort: z.enum(AGENT_EFFORTS).nullish(),
+	additionalQueries: z.array(z.string()).nullish(),
 	userLocation: z.string().nullable(),
 	countries: z.array(z.string()),
 	minWorkforce: z.number().nullable(),
@@ -66,6 +90,44 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"null, because a limit nobody asked for refuses companies that fit.",
 	"`angle` names the slice of the market this round targets, for example the vertical, the",
 	"buyer, or the product shape.",
+	"`source` chooses where the round buys its candidates. `exa-search` is one fast call",
+	"against Exa's company index: it returns a structured record for each company, with",
+	"headcount, country, revenue and funding, but the index holds no events, so a round on",
+	"it can never show what a company did lately. `exa-agent` searches the open web, reads",
+	"the pages it finds, and gives back the signal, the page that proves it and that page's",
+	"date, but it takes minutes rather than seconds. A profile that asks for a recent event",
+	"cannot be answered by `exa-search`, so choose `exa-agent` whenever you set `recency`.",
+	"Choose `exa-search` when the profile describes a lasting shape, such as a size, a",
+	"country or an industry, and asks for nothing recent.",
+	"`type` chooses how hard the search itself works, and applies to `exa-search` only.",
+	"Measured on one profile asking for twenty five records: `fast` returned twenty five in",
+	"half a second, `deep` returned fifteen in four seconds, and `deep-reasoning` returned",
+	"twenty five in fourteen seconds and reached a different set of companies. Only `deep`",
+	"and `deep-reasoning` read `additionalQueries`. Choose `fast` unless the profile hides",
+	"several distinct kinds of company that one sentence cannot describe together, and then",
+	"choose `deep` and write the variations.",
+	"`additionalQueries` are extra query sentences the deep types run beside the main one.",
+	"Write one for each distinct direction the profile allows, for example a different",
+	"vertical or a different job the product does. Measured: three variations took one deep",
+	"search from fifteen records to twenty five, and twenty two of those twenty five",
+	"companies were ones the same search without variations never found. Leave the list",
+	"empty on `fast`, where the vendor accepts the field and ignores it.",
+	"`agentEffort` is how long `exa-agent` may work, and applies to `exa-agent` only.",
+	"Choose `low`. On the same profile and the same count, `low` and `high` both returned",
+	"every company asked for, with a signal and a proving page each, and `high` cost about",
+	"ten times as much and took half again as long. Raise it above `low` only when an",
+	"earlier round on this run came back short of the count.",
+	"`recencyDays` is the same demand as a number: the most days old a page may be and still",
+	"prove the signal. Set it to the widest window the profile allows, so thirty for a role",
+	"posted in the last thirty days and three hundred and sixty five for a statement in the",
+	"last year. The code refuses a page older than this, and refuses one carrying no date,",
+	"so leave `recencyDays` null whenever `recency` is null.",
+	"`recency` carries the freshness the profile demands, written as its own sentences that",
+	"name each event and the window it must fall inside, for example a platform engineering",
+	"role posted in the last thirty days, or a postmortem published in the last ninety days.",
+	"Write every window as a span counted back from today, never as a fixed date. Set",
+	"`recency` to null when the profile asks for nothing recent, because a freshness demand",
+	"nobody made refuses companies that fit.",
 	"A paraphrase of an earlier query returns the same companies, so when earlier angles are",
 	"given, choose a genuinely different angle and write a query for it. Keep every constraint",
 	"of the profile true of that new angle.",
@@ -79,12 +141,13 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"apply again.",
 ].join(" ");
 
-function synthesizePrompt(
-	icp: IcpDoc,
-	pastAngles: readonly string[],
-	feedback: readonly string[],
-): string {
-	const lines = ["Ideal customer profile:", icp.description];
+function synthesizePrompt(input: SynthesizeInput): string {
+	const { icp, pastAngles, feedback } = input;
+	const lines = [
+		`Today is ${input.today}.`,
+		"Ideal customer profile:",
+		icp.description,
+	];
 	if (pastAngles.length > 0) {
 		lines.push("Angles already searched, do not repeat them:");
 		for (const angle of pastAngles) lines.push(`- ${angle}`);
@@ -100,6 +163,12 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 	return {
 		query: icp.description,
 		angle: "the profile as written",
+		recency: null,
+		recencyDays: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -117,7 +186,62 @@ export type SynthesizeInput = {
 	icp: IcpDoc;
 	pastAngles: readonly string[];
 	feedback: readonly string[];
+	today: string;
 };
+
+type SearchPlanModel = z.infer<typeof SearchPlanModelSchema>;
+
+/** A two-letter country code the vendor accepts, or null for anything else the model wrote. */
+function countryCode(value: string | null | undefined): string | null {
+	return value && value.length === 2 ? value.toUpperCase() : null;
+}
+
+type PlanBounds = Pick<
+	SearchPlan,
+	| "userLocation"
+	| "countries"
+	| "minWorkforce"
+	| "maxWorkforce"
+	| "minFoundedYear"
+	| "maxFoundedYear"
+	| "minRevenueAnnual"
+	| "maxRevenueAnnual"
+	| "minFundingTotal"
+	| "maxFundingTotal"
+>;
+
+/** Every limit the profile put on the records a round keeps. An absent limit is null, never zero. */
+function toBounds(output: SearchPlanModel): PlanBounds {
+	return {
+		userLocation: countryCode(output.userLocation),
+		countries: output.countries,
+		minWorkforce: output.minWorkforce,
+		maxWorkforce: output.maxWorkforce,
+		minFoundedYear: output.minFoundedYear ?? null,
+		maxFoundedYear: output.maxFoundedYear ?? null,
+		minRevenueAnnual: output.minRevenueAnnual ?? null,
+		maxRevenueAnnual: output.maxRevenueAnnual ?? null,
+		minFundingTotal: output.minFundingTotal ?? null,
+		maxFundingTotal: output.maxFundingTotal ?? null,
+	};
+}
+
+function toPlan(output: SearchPlanModel): SearchPlan {
+	const type = output.type ?? "fast";
+	return {
+		query: output.query,
+		angle: output.angle,
+		recency: output.recency ?? null,
+		recencyDays: output.recencyDays ?? null,
+		source: output.source ?? "exa-search",
+		type,
+		agentEffort: output.agentEffort ?? "low",
+		additionalQueries: acceptsAdditionalQueries(type)
+			? (output.additionalQueries ?? [])
+			: [],
+		...toBounds(output),
+	};
+}
 
 /**
  * Turns an ideal customer profile, the angles already tried, and the previous
@@ -132,10 +256,10 @@ export async function synthesize(
 	const ledger = new CostLedger();
 	const output = await generateStructured(
 		{
-			model: await workerModel(env),
-			configuredId: env.MODEL_ROUTE_WORKER,
+			model: await reasoningModel(env),
+			configuredId: env.MODEL_ROUTE_REASONING,
 			instructions: SYNTHESIZE_INSTRUCTIONS,
-			prompt: synthesizePrompt(input.icp, input.pastAngles, input.feedback),
+			prompt: synthesizePrompt(input),
 			schema: SearchPlanModelSchema,
 			headers: { "cf-aig-skip-cache": "true" },
 		},
@@ -143,24 +267,5 @@ export async function synthesize(
 		"synthesize",
 	);
 	if (!output) return { plan: templatePlan(input.icp), ledger };
-	return {
-		plan: {
-			query: output.query,
-			angle: output.angle,
-			userLocation:
-				output.userLocation && output.userLocation.length === 2
-					? output.userLocation.toUpperCase()
-					: null,
-			countries: output.countries,
-			minWorkforce: output.minWorkforce,
-			maxWorkforce: output.maxWorkforce,
-			minFoundedYear: output.minFoundedYear ?? null,
-			maxFoundedYear: output.maxFoundedYear ?? null,
-			minRevenueAnnual: output.minRevenueAnnual ?? null,
-			maxRevenueAnnual: output.maxRevenueAnnual ?? null,
-			minFundingTotal: output.minFundingTotal ?? null,
-			maxFundingTotal: output.maxFundingTotal ?? null,
-		},
-		ledger,
-	};
+	return { plan: toPlan(output), ledger };
 }

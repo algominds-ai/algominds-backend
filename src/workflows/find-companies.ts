@@ -22,15 +22,15 @@ import {
 	loadIcp,
 	openRun,
 	organizationSpendToday,
-	recentDomains,
 	recordRunSpend,
 	saveCompanies,
+	saveRound,
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 import { search } from "@/core/providers/exa/search";
-import type { IcpDoc } from "@/core/synthesize";
-import { IcpDocSchema, synthesize } from "@/core/synthesize";
+import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import { IcpDocSchema } from "@/core/synthesize";
 import {
 	agentRecentDomains,
 	agentSearch,
@@ -39,8 +39,8 @@ import {
 
 const MAX_ROUNDS = config.companies.maxRounds;
 const EVIDENCE_SOURCE = "exa";
-const COMPANY_SOURCE: "exa-search" | "exa-agent" =
-	config.companies.companySource;
+/** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
+const STORED_REJECTS_PER_ROUND = 120;
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -50,25 +50,28 @@ const FindCompaniesPayloadSchema = z.object({
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
 
-function roundDeps(
-	accumulatedDomains: ReadonlySet<string>,
-	step: WorkflowStep,
-	round: number,
-	remaining: number,
-): FindCompaniesDeps {
-	const isAgent = COMPANY_SOURCE === "exa-agent";
-	const lookupRecentDomains = isAgent
-		? agentRecentDomains(step, round)
-		: recentDomains;
+type RoundDepsInput = {
+	accumulatedDomains: ReadonlySet<string>;
+	step: WorkflowStep;
+	round: number;
+	remaining: number;
+	today: string;
+};
+
+function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
+	const { accumulatedDomains, step, round, remaining, today } = input;
+	const lookupRecentDomains = agentRecentDomains(step, round);
+	const viaAgent = agentSearch({ step, round, remaining, today });
 	return {
 		recentDomains: async (env, icpId, days) => {
 			const known = await lookupRecentDomains(env, icpId, days);
 			return [...known, ...accumulatedDomains];
 		},
-		synthesize: isAgent ? agentSynthesize(step, round) : synthesize,
-		search: isAgent
-			? agentSearch(step, round, remaining)
-			: (_plan, req, env, ledger) => search(req, env, ledger),
+		synthesize: agentSynthesize(step, round),
+		search: (plan, req, env, ledger) =>
+			plan.source === "exa-agent"
+				? viaAgent(plan, req, env, ledger)
+				: search(req, env, ledger),
 		gate,
 		judge,
 	};
@@ -86,6 +89,35 @@ export function finalStatus(
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
 }
 
+type PersistRoundInput = {
+	step: WorkflowStep;
+	env: Env;
+	runId: string;
+	costDollars: number;
+	result: FindCompaniesResult;
+	report: RoundReport;
+};
+
+/** Banks what one round spent and what it did, in one durable step, so both land together or replay together. */
+async function persistRound(input: PersistRoundInput): Promise<void> {
+	const { step, env, runId, report } = input;
+	await step.do(
+		`round_${report.round}-spend`,
+		config.stepConfig.databaseCall,
+		async () => {
+			await recordRunSpend(env, runId, input.costDollars);
+			await saveRound(env, {
+				runId,
+				ordinal: report.round,
+				plan: input.result.searches[0] ?? null,
+				found: report.found,
+				rejected: report.rejected,
+				rejects: input.result.rejects.slice(0, STORED_REJECTS_PER_ROUND),
+			});
+		},
+	);
+}
+
 /**
  * Runs up to three rounds, each in its own `step.do` for durability, and
  * merges their plain results into one `FindCompaniesResult`.
@@ -100,6 +132,9 @@ async function runFindCompaniesRounds(
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
 	const { env, payload, icp, runId } = target;
+	const today = await step.do("today", config.stepConfig.databaseCall, () =>
+		Promise.resolve(new Date().toISOString().slice(0, 10)),
+	);
 	const accumulatedDomains = new Set(
 		(payload.excludeDomains ?? []).map(normalizeDomain),
 	);
@@ -123,12 +158,19 @@ async function runFindCompaniesRounds(
 		const opts: FindCompaniesOptions = {
 			icpId: payload.icpId,
 			env,
+			today,
 			maxRounds: 1,
 			pastAngles,
 			feedback,
 			excludeDomains: payload.excludeDomains ?? [],
 		};
-		const deps = roundDeps(accumulatedDomains, step, round, remaining);
+		const deps = roundDeps({
+			accumulatedDomains,
+			step,
+			round,
+			remaining,
+			today,
+		});
 		const stepResult = await step.do(
 			`round_${round}`,
 			config.stepConfig.paidCall,
@@ -140,11 +182,17 @@ async function runFindCompaniesRounds(
 		searches.push(...stepResult.searches);
 		Object.assign(captures, stepResult.captures);
 		rounds += 1;
-		roundReports.push(reportRound(round, stepResult));
+		const report = reportRound(round, stepResult);
+		roundReports.push(report);
 		lastRoundStatus = stepResult.status;
-		await step.do(`round_${round}-spend`, config.stepConfig.databaseCall, () =>
-			recordRunSpend(env, runId, costDollars),
-		);
+		await persistRound({
+			step,
+			env,
+			runId,
+			costDollars,
+			result: stepResult,
+			report,
+		});
 		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
 		pastAngles = pastAngles.concat(
 			stepResult.searches.map((plan) => plan.angle),
@@ -185,7 +233,8 @@ function toNewCompany(
 		icpId,
 		domain: row.domain,
 		name: row.name,
-		data: toCompanyData(capture, COMPANY_SOURCE),
+		linkedinUrl: row.linkedinUrl,
+		data: toCompanyData(capture),
 		runId,
 	};
 }
@@ -231,6 +280,12 @@ export type RoundReport = {
 	round: number;
 	angle: string;
 	query: string;
+	recency: string | null;
+	recencyDays: number | null;
+	source: string;
+	type: string;
+	agentEffort: string;
+	additionalQueries: string[];
 	found: number;
 	rejected: { filter: number; gate: number; judge: number };
 };
@@ -247,6 +302,12 @@ export function reportRound(
 		round,
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
+		recency: plan?.recency ?? null,
+		recencyDays: plan?.recencyDays ?? null,
+		source: plan?.source ?? "",
+		type: plan?.type ?? "",
+		agentEffort: plan?.agentEffort ?? "",
+		additionalQueries: plan?.additionalQueries ?? [],
 		found: result.companies.length,
 		rejected: {
 			filter: count("filter"),

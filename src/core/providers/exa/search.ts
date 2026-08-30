@@ -37,6 +37,7 @@ const ExaSearchRequestSchema = z.object({
 	endPublishedDate: z.string().optional(),
 	includeDomains: z.array(z.string()).max(1200).optional(),
 	excludeDomains: z.array(z.string()).max(1200).optional(),
+	additionalQueries: z.array(z.string()).optional(),
 	systemPrompt: z.string().optional(),
 	contents: z
 		.object({
@@ -92,6 +93,32 @@ function flattenCost(rest: Omit<ExaCost, "total">): Record<string, number> {
 	}
 	return flat;
 }
+
+/** A field that may be absent, null, or present, and is always read as a value or null. */
+export const nullableString = z
+	.string()
+	.nullish()
+	.transform((v) => v ?? null);
+const nullableNumber = z
+	.number()
+	.nullish()
+	.transform((v) => v ?? null);
+
+/**
+ * The company record both Exa endpoints resolve to. The entity index sends it
+ * nested and the agent sends it flat, so each has its own parser, but this is
+ * the one shape the rest of the code sees.
+ */
+export const CompanyRecordSchema = z.object({
+	name: nullableString,
+	description: nullableString,
+	foundedYear: nullableNumber,
+	workforceTotal: nullableNumber,
+	city: nullableString,
+	country: nullableString,
+	revenueAnnual: nullableNumber,
+	fundingTotal: nullableNumber,
+});
 
 const CompanyPropertiesSchema = z.object({
 	name: z.string().nullish(),
@@ -158,17 +185,8 @@ const ExaErrorSchema = z.object({
 	message: z.string().optional(),
 });
 
-/** The structured company record Exa returns for `category: "company"`. Every field can be absent; see `docs/solutions/exa-search-contract.md` for the measured fill rates. */
-export type CompanyEntity = {
-	name: string | null;
-	description: string | null;
-	foundedYear: number | null;
-	workforceTotal: number | null;
-	city: string | null;
-	country: string | null;
-	revenueAnnual: number | null;
-	fundingTotal: number | null;
-};
+/** The structured company record Exa returns. Every field can be absent; see `docs/solutions/exa-search-contract.md` for the measured fill rates. */
+export type CompanyEntity = z.infer<typeof CompanyRecordSchema>;
 
 /** One employer a person's work history names, as `category: "people"` reports it. `companyId` is the same identifier the `company` category returns for that organization, and is frequently null even for a real employer. `current` is true only when the role carries an explicit null end date. */
 export type PersonWorkHistoryEntry = {
@@ -193,6 +211,11 @@ export type ExaResult = {
 	publishedDate?: string;
 	score?: number;
 	text?: string;
+	signal?: string;
+	evidenceUrl?: string;
+	evidenceQuote?: string;
+	evidencePublisher?: string;
+	linkedinUrl?: string;
 	summary: Json | null;
 	company: CompanyEntity | null;
 	person: PersonRecord | null;

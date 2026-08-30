@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { z } from "zod";
 import { config } from "@/config";
-import { findRun } from "@/core/db/queries";
+import { findRun, roundsForRun } from "@/core/db/queries";
 import { companiesPage, peoplePage } from "@/core/db/run-pages";
 import type { Run } from "@/core/db/schema";
 import type { ApiEnv } from "@/http/auth";
@@ -128,6 +128,17 @@ export async function getRunCompanies(
 		{ rows: page.rows, nextCursor: page.nextCursor, limit: query.limit },
 		200,
 	);
+}
+
+/** Every round a run recorded: the plan the synthesizer wrote and what that round kept and refused. Read from the database, so it survives the workflow instance the run report reads. */
+export async function getRunRounds(
+	c: Context<ApiEnv, "/runs/:runId/rounds">,
+): Promise<Response> {
+	const runId = c.req.param("runId");
+	const runRow = await callersRun(c, runId);
+	if (!runRow) return c.json({ error: "unknown run" }, 404);
+	const rows = await roundsForRun(c.env, runId);
+	return c.json({ rows }, 200);
 }
 
 export async function getRunPeople(

@@ -1,7 +1,12 @@
 import type { Context } from "hono";
 import type { z } from "zod";
 import { config } from "@/config";
-import { createIcp, findRun, loadIcp } from "@/core/db/queries";
+import {
+	createIcp,
+	findRun,
+	loadIcp,
+	organizationDomain,
+} from "@/core/db/queries";
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
@@ -37,7 +42,7 @@ export async function resolveIcpId(
 	}
 	const row = await createIcp(env, {
 		description: body.prompt,
-		domain: config.seller.domain,
+		domain: await organizationDomain(env, organizationId),
 		organizationId,
 	});
 	return row.id;

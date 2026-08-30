@@ -11,7 +11,6 @@ import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
 
-const EFFORT = config.companies.exaAgentEffort;
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
 const JUDGE_CANDIDATE_MULTIPLE = config.companies.judgeCandidateMultiple;
@@ -23,11 +22,17 @@ const RESULTS_PER_ROUND = config.companies.resultsPerRound;
  * survive the filter, the gate and the judge that follow,
  * then polls it to completion with durable sleeps the workflow owns.
  */
+export type AgentSearchInput = {
+	step: WorkflowStep;
+	round: number;
+	remaining: number;
+	today: string;
+};
+
 export function agentSearch(
-	step: WorkflowStep,
-	round: number,
-	remaining: number,
+	input: AgentSearchInput,
 ): FindCompaniesDeps["search"] {
+	const { step, round, remaining, today } = input;
 	return async (plan, _req, env, ledger) => {
 		const name = `round_${round}-agent`;
 		const wanted = Math.min(
@@ -37,7 +42,7 @@ export function agentSearch(
 		const { id } = await step.do(
 			`${name}-start`,
 			config.stepConfig.paidCall,
-			() => startAgentRun(buildAgentRunRequest(plan, wanted, EFFORT), env),
+			() => startAgentRun(buildAgentRunRequest(plan, wanted, today), env),
 		);
 		const companies = await pollAgentRun(
 			{

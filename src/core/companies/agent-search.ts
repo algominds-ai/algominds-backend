@@ -1,40 +1,78 @@
+import { z } from "zod";
 import { planConstraints } from "@/core/companies/candidates";
 import type {
 	ExaAgentCompany,
 	ExaAgentRunRequest,
 } from "@/core/providers/exa/agent";
-import type {
-	CompanyEntity,
-	ExaResult,
-	ExaSearchResult,
-} from "@/core/providers/exa/search";
+import {
+	ExaAgentCompanySchema,
+	LINKEDIN_COMPANY_URL_PATTERN,
+} from "@/core/providers/exa/agent";
+import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
+import { CompanyRecordSchema } from "@/core/providers/exa/search";
 import type { SearchPlan } from "@/core/synthesize";
 
 const NOT_A_DIRECTORY_HOST =
 	"^(?!(https?://)?(www\\.)?(linkedin|twitter|x|facebook|instagram|youtube|tiktok|medium|substack|github|crunchbase|pitchbook|tracxn|bloomberg|wellfound|angel|ycombinator|producthunt|glassdoor|indeed)\\.)";
 
-const EXA_AGENT_COMPANY_SCHEMA = {
-	type: "object",
-	properties: {
-		name: { type: "string" },
-		website: {
-			type: "string",
-			pattern: NOT_A_DIRECTORY_HOST,
-		},
-		description: { type: "string" },
-		foundedYear: { type: "number" },
-		workforceTotal: { type: "number" },
-		city: { type: "string" },
-		country: { type: "string" },
-		revenueAnnual: { type: "number" },
-		fundingTotal: { type: "number" },
-	},
-	required: ["name", "website"],
-};
+const AgentCompanyRequestSchema = ExaAgentCompanySchema.extend({
+	name: z.string(),
+	website: z.string().regex(new RegExp(NOT_A_DIRECTORY_HOST)),
+	linkedinUrl: z.string().regex(new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i")),
+});
+
+/**
+ * What one company in the reply must carry. A profile that asks for a recent
+ * event demands the signal and the page proving it; a profile that asks for
+ * none leaves both out, so the agent never invents a signal to fill a field.
+ */
+function agentCompanySchema(plan: SearchPlan) {
+	if (plan.recency === null) return AgentCompanyRequestSchema;
+	return AgentCompanyRequestSchema.extend({
+		signal: z.string(),
+		evidenceUrl: z.string(),
+		evidenceQuote: z.string(),
+		evidencePublisher: z.string(),
+	});
+}
 
 function agentQuery(plan: SearchPlan, count: number): string {
 	const constraints = planConstraints(plan);
-	return `${plan.query} Return exactly ${count} distinct companies.${constraints ? ` ${constraints}` : ""}`;
+	const parts = [
+		plan.query,
+		`Return exactly ${count} distinct companies.`,
+		constraints,
+		plan.recency,
+	];
+	return parts.filter((part) => part !== null && part !== "").join(" ");
+}
+
+/** Tells the agent what day it is, so a window in the query means something, and where the proof must come from. */
+function agentSystemPrompt(today: string): string {
+	return [
+		`Today's date is ${today}.`,
+		"Give the company's own website domain in `website`, never a profile or",
+		"directory page such as LinkedIn, Crunchbase, or GitHub. Put the page that",
+		"proves the signal in `evidenceUrl`, never a careers index or a blog index,",
+		"and the date printed on that page in `evidenceDate`, written as YYYY-MM-DD.",
+		"Leave `evidenceDate` out when the page shows no date; never guess one.",
+		"A page published outside the window the query gives for its signal",
+		"disqualifies that company, so find a different company instead.",
+		"The page in `evidenceUrl` must credibly belong to the company it names: its own",
+		"site, or a service it plainly uses such as its applicant tracking system or its",
+		"status page. A page about the company on an unrelated shared host, such as a free",
+		"subdomain, proves nothing, so find the company's own page or drop the company.",
+		"Put in `evidenceQuote` one sentence copied word for word from the evidence page,",
+		"exactly as it appears there and never in your own wording, and in",
+		"`evidencePublisher` the name that page gives for whoever publishes it, copied from",
+		"the page. Write `the page does not say` in `evidencePublisher` when the page names",
+		"nobody, rather than guessing a name from the address.",
+		"Give the company's own LinkedIn page in `linkedinUrl`. It is a",
+		"linkedin.com/company address and never a personal profile. Every real company of",
+		"this kind has one, so find the page rather than assembling an address from the",
+		"company's name, and drop the company if no such page exists.",
+		"Never repeat a company.",
+	].join(" ");
 }
 
 /**
@@ -47,38 +85,21 @@ function agentQuery(plan: SearchPlan, count: number): string {
 export function buildAgentRunRequest(
 	plan: SearchPlan,
 	count: number,
-	effort: ExaAgentRunRequest["effort"],
+	today: string,
 ): ExaAgentRunRequest {
 	return {
 		query: agentQuery(plan, count),
-		systemPrompt:
-			"Give the company's own website domain, never a profile or directory page such as LinkedIn, Crunchbase, or GitHub. Never repeat a company.",
-		effort,
+		systemPrompt: agentSystemPrompt(today),
+		effort: plan.agentEffort,
 		dataSources: [{ provider: "fiber" }],
-		outputSchema: {
-			type: "object",
-			properties: {
-				companies: {
-					type: "array",
-					minItems: count,
-					items: EXA_AGENT_COMPANY_SCHEMA,
-				},
-			},
-			required: ["companies"],
-		},
-	};
-}
-
-function toCompanyEntity(company: ExaAgentCompany): CompanyEntity {
-	return {
-		name: company.name ?? null,
-		description: company.description ?? null,
-		foundedYear: company.foundedYear ?? null,
-		workforceTotal: company.workforceTotal ?? null,
-		city: company.city ?? null,
-		country: company.country ?? null,
-		revenueAnnual: company.revenueAnnual ?? null,
-		fundingTotal: company.fundingTotal ?? null,
+		outputSchema: z.json().parse(
+			z.toJSONSchema(
+				z.object({
+					companies: z.array(agentCompanySchema(plan)).min(count),
+				}),
+				{ io: "input" },
+			),
+		),
 	};
 }
 
@@ -90,8 +111,16 @@ function toExaResult(company: ExaAgentCompany): ExaResult | null {
 		url: website,
 		title: company.name ?? website,
 		summary: null,
-		company: toCompanyEntity(company),
+		company: CompanyRecordSchema.parse(company),
 		person: null,
+		...(company.linkedinUrl ? { linkedinUrl: company.linkedinUrl } : {}),
+		...(company.signal ? { signal: company.signal } : {}),
+		...(company.evidenceQuote ? { evidenceQuote: company.evidenceQuote } : {}),
+		...(company.evidencePublisher
+			? { evidencePublisher: company.evidencePublisher }
+			: {}),
+		...(company.evidenceUrl ? { evidenceUrl: company.evidenceUrl } : {}),
+		...(company.evidenceDate ? { publishedDate: company.evidenceDate } : {}),
 	};
 }
 

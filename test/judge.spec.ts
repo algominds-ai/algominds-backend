@@ -24,6 +24,9 @@ function row(name: string, domain: string): CompanyRow {
 		domain,
 		linkedinUrl: null,
 		evidenceUrl: `https://${domain}/careers`,
+		evidenceQuote: null,
+		evidencePublisher: null,
+		description: null,
 		signal: "hiring a founding engineer",
 		evidenceDate: "2026-08-20",
 	};
@@ -138,7 +141,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env);
+		await judge(icp, rows, env, null);
 
 		const call = gateway.calls[0];
 		expect(call?.headers.get("cf-aig-authorization")).toBe(
@@ -153,7 +156,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env);
+		await judge(icp, rows, env, null);
 
 		expect(modelInBody(gateway.calls[0])).toBe(env.MODEL_ROUTE_REASONING);
 	});
@@ -165,7 +168,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env);
+		await judge(icp, rows, env, null);
 
 		expect(gateway.calls).toHaveLength(2);
 		for (const call of gateway.calls) {
@@ -180,7 +183,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(result.ledger.total()).toBeCloseTo(0.0000091, 12);
 	});
@@ -220,7 +223,7 @@ describe("judge: cost recording without a cost field", () => {
 		const gateway = fakeGateway([response]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(result.ledger.total()).toBe(0);
 	});
@@ -239,7 +242,7 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(result.verdicts).toHaveLength(rows.length);
 		result.verdicts.forEach((verdict, index) => {
@@ -258,7 +261,7 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(result.verdicts.every((verdict) => verdict.keep)).toBe(true);
 		expect(
@@ -272,7 +275,7 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(result.verdicts[1]?.reason).toBe("no qualifying signal");
 	});
@@ -284,7 +287,7 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(gateway.calls).toHaveLength(2);
 		expect(result.verdicts).toHaveLength(rows.length);
@@ -297,7 +300,7 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env);
+		const result = await judge(icp, rows, env, null);
 
 		expect(gateway.calls).toHaveLength(2);
 		expect(result.verdicts).toHaveLength(rows.length);
@@ -305,5 +308,53 @@ describe("judge: verdicts and retries", () => {
 		result.verdicts.forEach((verdict, index) => {
 			expect(verdict.index).toBe(index);
 		});
+	});
+});
+
+describe("the judge is told the window it must hold rows to", () => {
+	function userMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("carries the freshness window when the profile asked for one", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, "A role posted in the last 30 days.");
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("Freshness window:");
+		expect(sent).toContain("A role posted in the last 30 days.");
+	});
+
+	it("says nothing about a window when the profile asked for none", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, null);
+
+		expect(userMessage({ body: gateway.calls[0]?.body })).not.toContain(
+			"Freshness window:",
+		);
+	});
+
+	it("tells the judge to weigh the page, not only the profile", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, null);
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("evidenceQuote");
+		expect(sent).toContain("names no publisher");
 	});
 });

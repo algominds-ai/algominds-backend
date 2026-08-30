@@ -45,6 +45,7 @@ const {
 export type FindCompaniesOptions = {
 	icpId: string;
 	env: Env;
+	today: string;
 	freshnessDays?: number;
 	scoreFloor?: number;
 	maxRounds?: number;
@@ -71,6 +72,7 @@ export type FindCompaniesDeps = {
 		icp: IcpDoc,
 		rows: readonly CompanyRow[],
 		env: Env,
+		recency: string | null,
 	) => Promise<JudgeResult>;
 };
 
@@ -162,7 +164,12 @@ async function runRound(
 	deps: FindCompaniesDeps,
 ): Promise<RoundOutcome> {
 	const synthesized = await deps.synthesize(
-		{ icp: ctx.icp, pastAngles: ctx.pastAngles, feedback: ctx.feedback },
+		{
+			icp: ctx.icp,
+			pastAngles: ctx.pastAngles,
+			feedback: ctx.feedback,
+			today: opts.today,
+		},
 		opts.env,
 	);
 	const plan = synthesized.plan;
@@ -176,7 +183,7 @@ async function runRound(
 		opts.env,
 		searchLedger,
 	);
-	const filtered = filterEntities(searched.results, plan);
+	const filtered = filterEntities(searched.results, plan, opts.today);
 	const unseenCount = countUnseen(filtered.rows, ctx.seenDomains);
 	const gated = deps.gate(filtered.rows, filtered.results, {
 		seenDomains: ctx.seenDomains,
@@ -184,7 +191,7 @@ async function runRound(
 	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
 	const judged =
 		candidates.length > 0
-			? await deps.judge(ctx.icp, candidates, opts.env)
+			? await deps.judge(ctx.icp, candidates, opts.env, plan.recency)
 			: { verdicts: [], ledger: new CostLedger() };
 	return {
 		plan,

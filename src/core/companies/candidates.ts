@@ -7,7 +7,7 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
-import type { SearchPlan } from "@/core/synthesize";
+import { acceptsAdditionalQueries, type SearchPlan } from "@/core/synthesize";
 
 const {
 	resultsPerRound: RESULTS_PER_ROUND,
@@ -25,14 +25,18 @@ export type CompanyMatch = {
 	id: string | null;
 	url: string;
 	title: string;
+	signal: string | null;
+	quote: string | null;
+	publisher: string | null;
 	publishedDate: string | null;
 	score: number | null;
 };
 
-/** The vendor's own entity object next to the fields that describe the match, kept apart until a provider is known. */
+/** The vendor's own entity object, the fields that describe the match, and which source produced them. */
 export type CompanyCapture = {
 	entity: CompanyEntity;
 	result: CompanyMatch;
+	source: string;
 };
 
 export type CompanyData = {
@@ -67,11 +71,15 @@ export function buildSearchRequest(
 	excludeDomains: readonly string[] = [],
 ): ExaSearchRequest {
 	const constraints = planConstraints(plan);
+	const variations = acceptsAdditionalQueries(plan.type)
+		? plan.additionalQueries
+		: [];
 	return {
 		query: constraints ? `${plan.query} ${constraints}` : plan.query,
 		category: "company",
-		type: "fast",
+		type: plan.type,
 		numResults: RESULTS_PER_ROUND,
+		...(variations.length > 0 ? { additionalQueries: variations } : {}),
 		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
 		...(excludeDomains.length > 0
 			? { excludeDomains: [...excludeDomains] }
@@ -94,13 +102,21 @@ function describeCompany(entity: CompanyEntity): string {
 	return [facts.join("; "), description].filter(Boolean).join(". ");
 }
 
+/** The page a row cites: the one that proves the signal when a source gave one, else the company's own site. */
+function evidenceUrlOf(result: ExaResult): string {
+	return result.evidenceUrl ?? result.url;
+}
+
 function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 	return {
 		name: entity.name ?? result.title,
 		domain: normalizeDomain(result.url),
-		linkedinUrl: null,
-		evidenceUrl: result.url,
-		signal: describeCompany(entity) || null,
+		linkedinUrl: result.linkedinUrl ?? null,
+		evidenceUrl: evidenceUrlOf(result),
+		evidenceQuote: result.evidenceQuote ?? null,
+		evidencePublisher: result.evidencePublisher ?? null,
+		description: describeCompany(entity) || null,
+		signal: result.signal ?? null,
 		evidenceDate: result.publishedDate ?? null,
 	};
 }
@@ -114,19 +130,23 @@ function toSearchResult(result: ExaResult): SearchResult {
 function toCompanyMatch(result: ExaResult): CompanyMatch {
 	return {
 		id: result.id,
-		url: result.url,
+		url: evidenceUrlOf(result),
 		title: result.title,
+		signal: result.signal ?? null,
+		quote: result.evidenceQuote ?? null,
+		publisher: result.evidencePublisher ?? null,
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
 	};
 }
 
-/** Wraps one capture with the vendor that produced it, for the row's `data` column. */
-export function toCompanyData(
-	capture: CompanyCapture,
-	provider: string,
-): CompanyData {
-	return { provider, entity: capture.entity, result: capture.result };
+/** Names the vendor that produced one capture, for the row's `data` column. */
+export function toCompanyData(capture: CompanyCapture): CompanyData {
+	return {
+		provider: capture.source,
+		entity: capture.entity,
+		result: capture.result,
+	};
 }
 
 const CompanyDataIdSchema = z
@@ -260,9 +280,53 @@ export type FilterOutcome = {
 };
 
 /** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
+/**
+ * Why a dated page cannot prove a signal the profile wants fresh: it is older
+ * than the window, or it carries no date at all. Null when the profile asks
+ * for nothing recent, or when the page is inside the window.
+ */
+export function staleRejectReason(
+	evidenceDate: string | null,
+	recencyDays: number | null,
+	today: string,
+): string | null {
+	if (recencyDays === null) return null;
+	if (evidenceDate === null) return "no date on the evidence page";
+	const age = Math.round(
+		(Date.parse(today) - Date.parse(evidenceDate)) / 86_400_000,
+	);
+	if (Number.isNaN(age)) return "no date on the evidence page";
+	return age > recencyDays
+		? `evidence is ${age} days old, older than the ${recencyDays} the profile allows`
+		: null;
+}
+
+/** Why one result cannot become a row: its record misses the profile's limits, or its evidence is outside the window. */
+function rowRejectReason(
+	result: ExaResult,
+	entity: CompanyEntity,
+	plan: SearchPlan,
+	today: string,
+): RejectDetail | null {
+	const detail = entityRejectReason(entity, plan);
+	if (detail) return detail;
+	const stale = staleRejectReason(
+		result.publishedDate ?? null,
+		plan.recencyDays,
+		today,
+	);
+	return stale
+		? {
+				reason: stale,
+				group: "evidence outside the window the profile asks for",
+			}
+		: null;
+}
+
 export function filterEntities(
 	results: readonly ExaResult[],
 	plan: SearchPlan,
+	today: string,
 ): FilterOutcome {
 	const outcome: FilterOutcome = {
 		rows: [],
@@ -280,7 +344,7 @@ export function filterEntities(
 			});
 			continue;
 		}
-		const detail = entityRejectReason(entity, plan);
+		const detail = rowRejectReason(result, entity, plan, today);
 		if (detail) {
 			outcome.rejects.push({
 				domain: normalizeDomain(result.url),
@@ -297,6 +361,7 @@ export function filterEntities(
 			outcome.captures[row.domain] = {
 				entity,
 				result: toCompanyMatch(result),
+				source: plan.source,
 			};
 		}
 	}

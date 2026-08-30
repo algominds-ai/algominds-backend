@@ -16,6 +16,12 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
+		recency: null,
+		recencyDays: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -99,7 +105,12 @@ describe("the company agent run asks for more candidates than the caller wants",
 		const { started } = stubAgentCompanyFetch();
 		const remaining = 1;
 
-		const search = agentSearch(fakeWorkflowStep(), 1, remaining);
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: remaining,
+			today: "2026-08-30",
+		});
 		await search(
 			planFor("small US software teams"),
 			{ query: "small US software teams" },
@@ -117,7 +128,12 @@ describe("the company agent run asks for more candidates than the caller wants",
 		const { started } = stubAgentCompanyFetch();
 		const remaining = 4;
 
-		const search = agentSearch(fakeWorkflowStep(), 1, remaining);
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: remaining,
+			today: "2026-08-30",
+		});
 		await search(
 			planFor("seed stage fintech"),
 			{ query: "seed stage fintech" },
@@ -135,7 +151,12 @@ describe("the company agent run asks for more candidates than the caller wants",
 		const { started } = stubAgentCompanyFetch();
 		const remaining = config.limits.maxCompaniesPerRequest;
 
-		const search = agentSearch(fakeWorkflowStep(), 1, remaining);
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: remaining,
+			today: "2026-08-30",
+		});
 		await search(
 			planFor("every mid-market SaaS company"),
 			{ query: "every mid-market SaaS company" },
@@ -155,7 +176,12 @@ describe("the company agent run asks for more candidates than the caller wants",
 	it("tells the agent the headcount band the filter would otherwise reject on", async () => {
 		const { started } = stubAgentCompanyFetch();
 
-		const search = agentSearch(fakeWorkflowStep(), 1, 1);
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: 1,
+			today: "2026-08-30",
+		});
 		await search(
 			planFor("B2B software with an outbound team", {
 				minWorkforce: 10,

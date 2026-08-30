@@ -2,7 +2,12 @@ import { Hono } from "hono";
 import type { ApiEnv } from "@/http/auth";
 import { requireApiKey } from "@/http/auth";
 import { domainsScopeId, resolveIcpId, startJob } from "@/http/jobs";
-import { getRunCompanies, getRunPeople, getRunStatus } from "@/http/runs";
+import {
+	getRunCompanies,
+	getRunPeople,
+	getRunRounds,
+	getRunStatus,
+} from "@/http/runs";
 import {
 	companiesFindSchema,
 	enrichSchema,
@@ -82,6 +87,7 @@ export function createApiRoutes(): Hono<ApiEnv> {
 	api.get("/runs/:runId", getRunStatus);
 	api.get("/runs/:runId/companies", getRunCompanies);
 	api.get("/runs/:runId/people", getRunPeople);
+	api.get("/runs/:runId/rounds", getRunRounds);
 
 	return api;
 }

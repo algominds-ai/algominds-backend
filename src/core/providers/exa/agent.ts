@@ -6,6 +6,10 @@ import type {
 	ExaSearchRequest,
 	ExaSearchResult,
 } from "@/core/providers/exa/search";
+import {
+	CompanyRecordSchema,
+	nullableString,
+} from "@/core/providers/exa/search";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
@@ -57,16 +61,28 @@ const ExaAgentCostSchema = z.object({
 	phoneNumbers: z.number().nullish(),
 });
 
-const ExaAgentCompanySchema = z.object({
-	name: z.string().nullish(),
-	website: z.string().nullish(),
-	description: z.string().nullish(),
-	foundedYear: z.number().nullish(),
-	workforceTotal: z.number().nullish(),
-	city: z.string().nullish(),
-	country: z.string().nullish(),
-	revenueAnnual: z.number().nullish(),
-	fundingTotal: z.number().nullish(),
+/** A LinkedIn company page, which is `/company/<name>`, never the `/in/<name>` of a person. */
+export const LINKEDIN_COMPANY_URL_PATTERN =
+	"^(https?://)?([a-z]{2,3}\\.)?linkedin\\.com/company/[^\\s/?#]+/?$";
+
+const linkedinCompanyUrl = z
+	.string()
+	.nullish()
+	.transform((value) =>
+		value && new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i").test(value)
+			? value
+			: null,
+	);
+
+/** The shared company record plus the fields only the agent can give: the company's own site, its LinkedIn page, and the page that proves the signal. */
+export const ExaAgentCompanySchema = CompanyRecordSchema.extend({
+	website: nullableString,
+	linkedinUrl: linkedinCompanyUrl,
+	signal: nullableString,
+	evidenceUrl: nullableString,
+	evidenceDate: nullableString,
+	evidenceQuote: nullableString,
+	evidencePublisher: nullableString,
 });
 
 /** One company as Exa's agent reports it, matching the `outputSchema` a caller sent to `startAgentRun`. */

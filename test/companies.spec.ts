@@ -33,7 +33,7 @@ import type {
 	SearchPlan,
 	SynthesizeInput,
 } from "../src/core/synthesize";
-import { finalStatus } from "../src/workflows/find-companies";
+import { finalStatus, reportRound } from "../src/workflows/find-companies";
 
 const icp: IcpDoc = {
 	description:
@@ -82,13 +82,19 @@ function entitylessResult(id: number): ExaResult {
 function testOptions(
 	overrides: Partial<FindCompaniesOptions> = {},
 ): FindCompaniesOptions {
-	return { icpId: "icp-1", env: testEnv, ...overrides };
+	return { icpId: "icp-1", env: testEnv, today: "2026-08-30", ...overrides };
 }
 
 function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
+		recency: null,
+		recencyDays: null,
+		source: "exa-search",
+		type: "fast",
+		agentEffort: "low",
+		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -129,6 +135,12 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 			plan: {
 				query: `${input.icp.description} round-${inputs.length}`,
 				angle: `angle-${inputs.length}`,
+				recency: null,
+				recencyDays: null,
+				source: "exa-search",
+				type: "fast",
+				agentEffort: "low",
+				additionalQueries: [],
 				userLocation: null,
 				countries: [],
 				minWorkforce: null,
@@ -487,6 +499,9 @@ describe("findCompanies — capturing the vendor payload", () => {
 			id: "https://exa.ai/library/organization/noscore.com",
 			url: "https://noscore.com/",
 			title: "Company noscore.com",
+			signal: null,
+			quote: null,
+			publisher: null,
 			publishedDate: null,
 			score: null,
 		});
@@ -506,8 +521,11 @@ describe("findCompanies — capturing the vendor payload", () => {
 		});
 
 		expect(Object.keys(result.companies[0] ?? {}).sort()).toEqual([
+			"description",
 			"domain",
 			"evidenceDate",
+			"evidencePublisher",
+			"evidenceQuote",
 			"evidenceUrl",
 			"linkedinUrl",
 			"name",
@@ -521,6 +539,7 @@ describe("findCompanies — captures across sources", () => {
 		const agentCompany: ExaAgentCompany = {
 			name: "Agent Co",
 			website: "https://agentco.com",
+			linkedinUrl: null,
 			description: "found by the agent",
 			foundedYear: 2020,
 			workforceTotal: 12,
@@ -528,6 +547,11 @@ describe("findCompanies — captures across sources", () => {
 			country: "United States",
 			revenueAnnual: null,
 			fundingTotal: null,
+			signal: "opened a platform engineering role",
+			evidenceUrl: "https://jobs.example.com/agent-co/platform",
+			evidenceDate: "2026-08-12",
+			evidenceQuote: "Agent Co is hiring a Platform Engineer.",
+			evidencePublisher: "Agent Co Careers",
 		};
 		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
 		const { search } = scriptedSearch([agentSearchResult.results]);
@@ -546,6 +570,7 @@ describe("findCompanies — captures across sources", () => {
 		expect(capture ? Object.keys(capture).sort() : []).toEqual([
 			"entity",
 			"result",
+			"source",
 		]);
 		expect(capture ? Object.keys(capture.entity).sort() : []).toEqual(
 			Object.keys(entity()).sort(),
@@ -553,7 +578,10 @@ describe("findCompanies — captures across sources", () => {
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
 			"id",
 			"publishedDate",
+			"publisher",
+			"quote",
 			"score",
+			"signal",
 			"title",
 			"url",
 		]);
@@ -561,24 +589,33 @@ describe("findCompanies — captures across sources", () => {
 });
 
 describe("toCompanyData", () => {
-	it("names the provider that produced the capture", () => {
-		const capture: CompanyCapture = {
+	function captureFrom(source: string): CompanyCapture {
+		return {
 			entity: entity(),
 			result: {
 				id: "https://exa.ai/library/organization/example",
 				url: "https://example.com/",
 				title: "Example",
+				signal: null,
+				quote: null,
+				publisher: null,
 				publishedDate: null,
 				score: null,
 			},
+			source,
 		};
+	}
 
-		expect(toCompanyData(capture, "exa-search")).toEqual({
+	it("names the source the round chose, so two sources in one run stay apart", () => {
+		const searched = captureFrom("exa-search");
+		const agented = captureFrom("exa-agent");
+
+		expect(toCompanyData(searched)).toEqual({
 			provider: "exa-search",
-			entity: capture.entity,
-			result: capture.result,
+			entity: searched.entity,
+			result: searched.result,
 		});
-		expect(toCompanyData(capture, "exa-agent").provider).toBe("exa-agent");
+		expect(toCompanyData(agented).provider).toBe("exa-agent");
 	});
 });
 
@@ -1025,6 +1062,51 @@ describe("what one round hands the next when the judge never saw every candidate
 	});
 });
 
+/** What a round report looks like for one plan, so a workflow test states the plan once. */
+function reportFor(
+	plan: SearchPlan,
+	round: number,
+	found: number,
+	rejected: { filter: number; gate: number; judge: number } = {
+		filter: 0,
+		gate: 0,
+		judge: 0,
+	},
+) {
+	return {
+		round,
+		angle: plan.angle,
+		query: plan.query,
+		recency: plan.recency,
+		recencyDays: null,
+		source: plan.source,
+		type: plan.type,
+		agentEffort: plan.agentEffort,
+		additionalQueries: plan.additionalQueries,
+		found,
+		rejected,
+	};
+}
+
+type StepMocker = {
+	mockStepResult: (
+		reference: { name: string },
+		result: unknown,
+	) => Promise<unknown>;
+};
+
+/** The side effects both workflow tests stand in for: opening the run, banking each round, saving the rows, closing the run. */
+async function mockRunSideEffects(
+	m: StepMocker,
+	instanceId: string,
+): Promise<void> {
+	await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+	await m.mockStepResult({ name: "round_1-spend" }, {});
+	await m.mockStepResult({ name: "round_2-spend" }, {});
+	await m.mockStepResult({ name: "save-companies" }, {});
+	await m.mockStepResult({ name: "close-run" }, {});
+}
+
 describe("FindCompaniesWorkflow: the summary output", () => {
 	it("returns a bounded summary that does not grow with the number of companies found", async () => {
 		const instanceId = "summary-size-test";
@@ -1040,6 +1122,9 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				domain,
 				linkedinUrl: null,
 				evidenceUrl: `https://${domain}`,
+				evidenceQuote: null,
+				evidencePublisher: null,
+				description: null,
 				signal: null,
 				evidenceDate: null,
 			}));
@@ -1052,9 +1137,13 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							id: null,
 							url: `https://${domain}/`,
 							title: domain,
+							signal: null,
+							quote: null,
+							publisher: null,
 							publishedDate: null,
 							score: null,
 						},
+						source: "exa-search",
 					},
 				]),
 			);
@@ -1080,6 +1169,8 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				);
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
 				await m.mockStepResult({ name: "round_1" }, roundResult);
+				await m.mockStepResult({ name: "round_1-spend" }, {});
+				await m.mockStepResult({ name: "round_2-spend" }, {});
 				await m.mockStepResult({ name: "save-companies" }, {});
 				await m.mockStepResult({ name: "close-run" }, {});
 			});
@@ -1098,13 +1189,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				status: "complete",
 				costDollars: 0.05,
 				roundReports: [
-					{
-						round: 1,
-						angle: plan.angle,
-						query: plan.query,
-						found: count,
-						rejected: { filter: 0, gate: 0, judge: 0 },
-					},
+					reportFor(plan, 1, count, { filter: 0, gate: 0, judge: 0 }),
 				],
 			});
 		} finally {
@@ -1128,6 +1213,9 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					domain,
 					linkedinUrl: null,
 					evidenceUrl: `https://${domain}`,
+					evidenceQuote: null,
+					evidencePublisher: null,
+					description: null,
 					signal: null,
 					evidenceDate: null,
 				}),
@@ -1155,6 +1243,8 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				);
 				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
 				await m.mockStepResult({ name: "round_1" }, roundOne);
+				await m.mockStepResult({ name: "round_1-spend" }, {});
+				await m.mockStepResult({ name: "round_2-spend" }, {});
 				await m.mockStepResult({ name: "save-companies" }, {});
 				await m.mockStepResult({ name: "close-run" }, {});
 			});
@@ -1172,13 +1262,11 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 				status: "capped",
 				costDollars: overTheCeiling,
 				roundReports: [
-					{
-						round: 1,
-						angle: plan.angle,
-						query: plan.query,
-						found: companies.length,
-						rejected: { filter: 0, gate: 0, judge: 0 },
-					},
+					reportFor(plan, 1, companies.length, {
+						filter: 0,
+						gate: 0,
+						judge: 0,
+					}),
 				],
 			});
 		} finally {
@@ -1198,5 +1286,36 @@ describe("the status the workflow reports for the whole run", () => {
 
 	it("reports complete once the run saved as many companies as requested", () => {
 		expect(finalStatus(5, 5, "empty")).toBe("complete");
+	});
+});
+
+describe("a round reports the freshness it demanded", () => {
+	function resultWith(plan: SearchPlan): FindCompaniesResult {
+		return {
+			companies: [],
+			requested: 1,
+			found: 0,
+			rounds: 1,
+			status: "short",
+			costDollars: 0,
+			rejects: [],
+			searches: [plan],
+			captures: {},
+			seenDomains: [],
+			feedback: [],
+		};
+	}
+
+	it("shows the window the plan asked for, and null when it asked for none", () => {
+		const withWindow = reportRound(
+			1,
+			resultWith(testPlan({ recency: "A role posted in the last 30 days." })),
+		);
+		const without = reportRound(1, resultWith(testPlan()));
+
+		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
+		expect(without.recency).toBeNull();
+		expect(withWindow.source).toBe("exa-search");
+		expect(withWindow.type).toBe("fast");
 	});
 });
