@@ -1,3 +1,4 @@
+import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { createAuth, startOnboarding } from "../src/auth";
@@ -81,9 +82,10 @@ describe("an organization that names a domain begins onboarding", () => {
 		).resolves.toBeUndefined();
 	});
 
-	it("is wired into the auth instance, not only exported beside it", async () => {
+	it("reaches the real workflow binding, not only a recording stand-in", async () => {
 		const auth = createAuth(testEnv);
 		const label = `hooked-${crypto.randomUUID()}`;
+		const domain = `hooked-${crypto.randomUUID()}.example`;
 		const signedUp = await auth.api.signUpEmail({
 			body: {
 				name: label,
@@ -91,23 +93,38 @@ describe("an organization that names a domain begins onboarding", () => {
 				password: "correct-horse-battery-staple",
 			},
 		});
-
 		const organization = await auth.api.createOrganization({
-			body: {
-				name: label,
-				slug: label,
-				domain: "form3.tech",
-				userId: signedUp.user.id,
-			},
+			body: { name: label, slug: label, userId: signedUp.user.id },
 		});
+		const organizationId = String(organization?.id);
+		const runId = buildRunId(
+			"onboarding",
+			await domainsScopeId([domain], organizationId),
+		);
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			runId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "check-spend" }, {});
+				await m.mockStepResult(
+					{ name: "build-icp" },
+					{
+						description: "a mocked ideal customer profile",
+						seller: { domain, customers: [], competitorTest: "none" },
+						costDollars: 0,
+					},
+				);
+				await m.mockStepResult({ name: "save-icp" }, "mocked-icp-id");
+			});
 
-		const scopeId = await domainsScopeId(
-			["form3.tech"],
-			String(organization?.id),
-		);
-		const handle = await testEnv.ONBOARD_ICP.get(
-			buildRunId("onboarding", scopeId),
-		);
-		expect(handle.id).toBe(buildRunId("onboarding", scopeId));
+			await startOnboarding(testEnv, { id: organizationId, domain });
+
+			const handle = await testEnv.ONBOARD_ICP.get(runId);
+			expect(handle.id).toBe(runId);
+		} finally {
+			await instance.dispose();
+		}
 	});
 });
