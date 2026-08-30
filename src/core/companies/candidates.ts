@@ -7,6 +7,7 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
+import type { IcpDoc } from "@/core/synthesize";
 import { acceptsAdditionalQueries, type SearchPlan } from "@/core/synthesize";
 
 const {
@@ -54,6 +55,16 @@ const MAX_EXCLUDED_DOMAINS = 1200;
  * anyway, so naming it up front spends the result slot on a new one instead.
  * Capped at the most Exa accepts.
  */
+/** The domains a run excludes before it starts: the caller's list plus the seller's own site, which is never a prospect. */
+export function seedExcludedDomains(
+	caller: readonly string[],
+	seller: IcpDoc["seller"],
+): Set<string> {
+	const seeded = new Set(caller.map(normalizeDomain));
+	if (seller) seeded.add(normalizeDomain(seller.domain));
+	return seeded;
+}
+
 export function excludedDomains(
 	caller: readonly string[],
 	seen: ReadonlySet<string>,

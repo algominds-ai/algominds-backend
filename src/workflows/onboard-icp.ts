@@ -30,6 +30,7 @@ export const ONBOARD_STEPS = {
 	readSeller: "read-seller",
 	bankSearch: "bank-search",
 	writeProfile: "write-profile",
+	bankProfile: "bank-profile",
 	saveIcp: "save-icp",
 } as const;
 
@@ -52,18 +53,60 @@ type ReadSellerStep = { pages: SellerPage[]; costDollars: number };
 
 /** The profile plus its cost as plain data. See `docs/solutions/onboarding-run-accounting.md`. */
 type BuiltIcp = {
-	description: string;
+	description: string | null;
 	seller: IcpSeller;
 	wroteProfile: boolean;
 	costDollars: number;
 };
+
+type BuyProfileInput = {
+	env: Env;
+	step: WorkflowStep;
+	runId: string;
+	domain: string;
+	note: string | null;
+	alreadySpent: number;
+};
+
+/** Buys the seller's pages and then the profile, banking each purchase before the next, and returns the profile with everything the run has spent. */
+async function buyProfile(input: BuyProfileInput): Promise<BuiltIcp> {
+	const { env, step, runId, domain, note, alreadySpent } = input;
+	const read: ReadSellerStep = await step.do(
+		ONBOARD_STEPS.readSeller,
+		config.stepConfig.paidCall,
+		async () => {
+			const result = await readSellerPages(env, domain);
+			return { pages: result.pages, costDollars: result.ledger.total() };
+		},
+	);
+	await step.do(ONBOARD_STEPS.bankSearch, config.stepConfig.databaseCall, () =>
+		recordRunSpend(env, runId, alreadySpent + read.costDollars),
+	);
+
+	const written = await step.do(
+		ONBOARD_STEPS.writeProfile,
+		config.stepConfig.paidCall,
+		() =>
+			writeSellerProfile(env, domain, read.pages, note).then((result) => ({
+				description: result.description,
+				seller: result.seller,
+				wroteProfile: result.wroteProfile,
+				costDollars: result.ledger.total(),
+			})),
+	);
+	const costDollars = alreadySpent + read.costDollars + written.costDollars;
+	await step.do(ONBOARD_STEPS.bankProfile, config.stepConfig.databaseCall, () =>
+		recordRunSpend(env, runId, costDollars),
+	);
+	return { ...written, costDollars };
+}
 
 type PersistIcpInput = {
 	env: Env;
 	runId: string;
 	organizationId: string;
 	domain: string;
-	built: BuiltIcp;
+	built: BuiltIcp & { description: string };
 };
 
 /** Writes the profile, points the already-open run at it, and closes the run with what it spent. Returns the new profile's id. */
@@ -121,48 +164,21 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		const read: ReadSellerStep = await step.do(
-			ONBOARD_STEPS.readSeller,
-			config.stepConfig.paidCall,
-			async () => {
-				const result = await readSellerPages(this.env, domain);
-				return { pages: result.pages, costDollars: result.ledger.total() };
-			},
-		);
-		await step.do(
-			ONBOARD_STEPS.bankSearch,
-			config.stepConfig.databaseCall,
-			() =>
-				recordRunSpend(
-					this.env,
-					runId,
-					alreadySpent.alreadySpent + read.costDollars,
-				),
-		);
+		const written = await buyProfile({
+			env: this.env,
+			step,
+			runId,
+			domain,
+			note: payload.note ?? null,
+			alreadySpent: alreadySpent.alreadySpent,
+		});
 
-		const written = await step.do(
-			ONBOARD_STEPS.writeProfile,
-			config.stepConfig.paidCall,
-			() =>
-				writeSellerProfile(
-					this.env,
-					domain,
-					read.pages,
-					payload.note ?? null,
-				).then((result) => ({
-					description: result.description,
-					seller: result.seller,
-					wroteProfile: result.wroteProfile,
-					costDollars: result.ledger.total(),
-				})),
-		);
-		const built: BuiltIcp = {
-			description: written.description,
-			seller: written.seller,
-			wroteProfile: written.wroteProfile,
-			costDollars:
-				alreadySpent.alreadySpent + read.costDollars + written.costDollars,
-		};
+		const description = written.description;
+		if (description === null) {
+			throw new NonRetryableError(
+				`onboardIcp: no profile written and no note given for ${domain}`,
+			);
+		}
 
 		const icpId = await step.do(
 			ONBOARD_STEPS.saveIcp,
@@ -173,14 +189,14 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 					runId,
 					organizationId: payload.organizationId,
 					domain,
-					built,
+					built: { ...written, description },
 				}),
 		);
 
 		return {
 			icpId,
-			costDollars: built.costDollars,
-			wroteProfile: built.wroteProfile,
+			costDollars: written.costDollars,
+			wroteProfile: written.wroteProfile,
 		};
 	}
 }

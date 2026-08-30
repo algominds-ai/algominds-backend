@@ -11,7 +11,10 @@ import type {
 } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
-import { toCompanyData } from "@/core/companies/candidates";
+import {
+	seedExcludedDomains,
+	toCompanyData,
+} from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import {
 	appendEvidence,
@@ -119,8 +122,9 @@ async function runFindCompaniesRounds(
 	const today = await step.do("today", config.stepConfig.databaseCall, () =>
 		Promise.resolve(new Date().toISOString().slice(0, 10)),
 	);
-	const accumulatedDomains = new Set(
-		(payload.excludeDomains ?? []).map(normalizeDomain),
+	const accumulatedDomains = seedExcludedDomains(
+		payload.excludeDomains ?? [],
+		icp.seller,
 	);
 	let companies: CompanyRow[] = [];
 	let rejects: FindCompaniesReject[] = [];

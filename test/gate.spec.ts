@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { staleRejectReason } from "../src/core/companies/candidates";
+import {
+	seedExcludedDomains,
+	staleRejectReason,
+} from "../src/core/companies/candidates";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 
@@ -168,5 +171,24 @@ describe("a date the code cannot read is not a date it can trust", () => {
 		expect(staleRejectReason(null, 30, TODAY)).toBeNull();
 		expect(staleRejectReason("2026-08-20", 30, TODAY)).toBeNull();
 		expect(staleRejectReason("2025-08-20", 30, TODAY)).toContain("days old");
+	});
+});
+
+describe("a run never prospects for the seller it prospects on behalf of", () => {
+	const seller = {
+		domain: "https://www.form3.tech/about",
+		customers: ["Klarna"],
+		competitorTest: "A competitor sells payment infrastructure to banks.",
+	};
+
+	it("excludes the seller's own site from the first round, whichever source it uses", () => {
+		expect([...seedExcludedDomains(["acme.com"], seller)].sort()).toEqual([
+			"acme.com",
+			"form3.tech",
+		]);
+	});
+
+	it("excludes only the caller's list when the profile names no seller", () => {
+		expect([...seedExcludedDomains(["acme.com"], null)]).toEqual(["acme.com"]);
 	});
 });

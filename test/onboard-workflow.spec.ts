@@ -356,13 +356,21 @@ describe("OnboardIcpWorkflow: the daily spend ceiling", () => {
 		);
 		try {
 			await instance.modify(async (m) => {
-				await m.mockStepError(
+				await m.mockStepResult(
 					{ name: ONBOARD_STEPS.readSeller },
-					new NonRetryableError("the ceiling should have refused this run"),
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.01,
+					},
 				);
-				await m.mockStepError(
+				await m.mockStepResult(
 					{ name: ONBOARD_STEPS.writeProfile },
-					new NonRetryableError("the ceiling should have refused this run"),
+					{
+						description: "a profile the ceiling should have prevented",
+						seller: mockedSeller(domain),
+						wroteProfile: true,
+						costDollars: 0.02,
+					},
 				);
 			});
 
@@ -542,6 +550,57 @@ describe("OnboardIcpWorkflow: a second attempt after a failed one", () => {
 			);
 		} finally {
 			await second.dispose();
+			await deleteIcpAndRun(runId);
+		}
+	});
+});
+
+describe("OnboardIcpWorkflow: a run that buys a model call and gets no profile", () => {
+	it("banks what the model cost before failing the run", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`onboard-noprofile-${crypto.randomUUID()}.internal`,
+			"onboard-noprofile",
+		);
+		const runId = `onboarding_noprofile-${crypto.randomUUID()}`;
+		const domain = `noprofile-${crypto.randomUUID()}.example`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			runId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.readSeller },
+					{
+						pages: [{ url: `https://${domain}/`, text: "" }],
+						costDollars: 0.01,
+					},
+				);
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.writeProfile },
+					{
+						description: null,
+						seller: mockedSeller(domain),
+						wroteProfile: false,
+						costDollars: 0.02,
+					},
+				);
+			});
+
+			await testEnv.ONBOARD_ICP.create({
+				id: runId,
+				params: { domain, note: null, organizationId: org.id },
+			});
+			await instance.waitForStatus("errored");
+
+			expect((await findRun(testEnv, runId))?.costDollars).toBeCloseTo(0.03, 5);
+			expect(await organizationSpendToday(testEnv, org.id)).toBeCloseTo(
+				0.03,
+				5,
+			);
+		} finally {
+			await instance.dispose();
 			await deleteIcpAndRun(runId);
 		}
 	});

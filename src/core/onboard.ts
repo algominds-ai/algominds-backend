@@ -31,6 +31,11 @@ export type BuildIcpResult = {
 	ledger: CostLedger;
 };
 
+/** What one attempt produced. `description` is null when neither the model nor a note gave one, and the caller owns what that means. */
+export type SellerProfile = Omit<BuildIcpResult, "description"> & {
+	description: string | null;
+};
+
 function sellerAngles(domain: string): string[] {
 	return [
 		`what ${domain} sells and the problem its product solves`,
@@ -121,16 +126,12 @@ function fallbackSeller(domain: string): IcpSeller {
 	};
 }
 
-/** The seller's own note as the description, or throws when there is no note to use. */
+/** The seller's own note as the description, or null when there is no note to use. */
 function fallbackResult(
 	note: string | null,
 	domain: string,
-): { description: string; seller: IcpSeller } {
-	const written = note?.trim();
-	if (written) return { description: written, seller: fallbackSeller(domain) };
-	throw new NonRetryableError(
-		`onboard: no profile written and no note given for domain ${domain}`,
-	);
+): { description: string | null; seller: IcpSeller } {
+	return { description: note?.trim() || null, seller: fallbackSeller(domain) };
 }
 
 function toSeller(domain: string, output: OnboardModelOutput): IcpSeller {
@@ -169,7 +170,7 @@ export async function writeSellerProfile(
 	domain: string,
 	pages: readonly SellerPage[],
 	note: string | null,
-): Promise<BuildIcpResult> {
+): Promise<SellerProfile> {
 	const input = BuildIcpRequestSchema.parse({ domain, note });
 	const ledger = new CostLedger();
 	if (pages.length === 0) {
@@ -221,5 +222,10 @@ export async function buildIcp(
 	);
 	for (const entry of written.ledger.toJSON().entries)
 		read.ledger.reported(entry.provider, entry.op, entry.dollars);
-	return { ...written, ledger: read.ledger };
+	if (written.description === null) {
+		throw new NonRetryableError(
+			`onboard: no profile written and no note given for domain ${input.domain}`,
+		);
+	}
+	return { ...written, description: written.description, ledger: read.ledger };
 }
