@@ -26,6 +26,7 @@ export type OnboardIcpPayload = z.infer<typeof OnboardIcpPayloadSchema>;
 export type OnboardIcpSummary = {
 	icpId: string;
 	costDollars: number;
+	wroteProfile: boolean;
 };
 
 /** `domain` as a public hostname, or a `NonRetryableError`. Both entry paths cross this, so it is the one place the refusal belongs. */
@@ -43,6 +44,7 @@ type ReadSellerStep = { pages: SellerPage[]; costDollars: number };
 type BuiltIcp = {
 	description: string;
 	seller: IcpSeller;
+	wroteProfile: boolean;
 	costDollars: number;
 };
 
@@ -126,12 +128,14 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 				).then((result) => ({
 					description: result.description,
 					seller: result.seller,
+					wroteProfile: result.wroteProfile,
 					costDollars: result.ledger.total(),
 				})),
 		);
 		const built: BuiltIcp = {
 			description: written.description,
 			seller: written.seller,
+			wroteProfile: written.wroteProfile,
 			costDollars: read.costDollars + written.costDollars,
 		};
 
@@ -148,6 +152,10 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 				}),
 		);
 
-		return { icpId, costDollars: built.costDollars };
+		return {
+			icpId,
+			costDollars: built.costDollars,
+			wroteProfile: built.wroteProfile,
+		};
 	}
 }

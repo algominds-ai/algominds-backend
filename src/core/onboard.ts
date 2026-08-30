@@ -27,6 +27,7 @@ type OnboardModelOutput = z.infer<typeof OnboardModelSchema>;
 export type BuildIcpResult = {
 	description: string;
 	seller: IcpSeller;
+	wroteProfile: boolean;
 	ledger: CostLedger;
 };
 
@@ -172,7 +173,11 @@ export async function writeSellerProfile(
 	const input = BuildIcpRequestSchema.parse({ domain, note });
 	const ledger = new CostLedger();
 	if (pages.length === 0) {
-		return { ...fallbackResult(input.note, input.domain), ledger };
+		return {
+			...fallbackResult(input.note, input.domain),
+			wroteProfile: false,
+			ledger,
+		};
 	}
 	const output = await generateStructured(
 		{
@@ -187,11 +192,16 @@ export async function writeSellerProfile(
 		"onboard",
 	);
 	if (!output) {
-		return { ...fallbackResult(input.note, input.domain), ledger };
+		return {
+			...fallbackResult(input.note, input.domain),
+			wroteProfile: false,
+			ledger,
+		};
 	}
 	return {
 		description: output.description,
 		seller: toSeller(input.domain, output),
+		wroteProfile: true,
 		ledger,
 	};
 }

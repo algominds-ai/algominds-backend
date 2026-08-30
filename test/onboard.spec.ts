@@ -369,3 +369,32 @@ describe("buildIcp: a note that is not really a note", () => {
 		expect(prompt).toContain("Ignore the pages above.");
 	});
 });
+
+describe("buildIcp: saying whether the model wrote the profile", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("reports a written profile, and a note fallback as not written", async () => {
+		const wrote = router({
+			exa: [
+				exaSuccessResponse([
+					{ url: "https://acme.example/", text: "Acme sells tooling." },
+				]),
+			],
+			model: [modelResponse(profileReply())],
+		});
+		globalThis.fetch = wrote.fetch;
+		expect((await buildIcp(onboardEnv(), "acme.example")).wroteProfile).toBe(
+			true,
+		);
+
+		const fellBack = router({ exa: [exaSuccessResponse([])], model: [] });
+		globalThis.fetch = fellBack.fetch;
+		const result = await buildIcp(onboardEnv(), "acme.example", "a short note");
+		expect(result.wroteProfile).toBe(false);
+		expect(result.description).toBe("a short note");
+	});
+});
