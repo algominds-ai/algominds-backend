@@ -750,11 +750,11 @@ describe("evidence outside the window the profile asks for is refused in code", 
 		expect(outcomeFor("2026-08-19", 365).rows).toHaveLength(1);
 	});
 
-	it("refuses a page carrying no date when the profile asks for something recent", () => {
+	it("sends an undated page to the judge, which knows whether that kind of page needs a date", () => {
 		const outcome = outcomeFor(null, 90);
 
-		expect(outcome.rows).toHaveLength(0);
-		expect(outcome.rejects[0]?.reason).toBe("no date on the evidence page");
+		expect(outcome.rows).toHaveLength(1);
+		expect(outcome.rejects).toHaveLength(0);
 	});
 
 	it("keeps an undated page when the profile asks for nothing recent", () => {

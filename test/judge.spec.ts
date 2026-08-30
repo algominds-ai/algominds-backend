@@ -345,6 +345,19 @@ describe("the judge is told the window it must hold rows to", () => {
 		);
 	});
 
+	it("tells the judge that an undated page can still prove a live signal", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, "A role posted in the last 30 days.");
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("job advertisement still open");
+		expect(sent).toContain("proves nothing without a date");
+	});
+
 	it("tells the judge to weigh the page, not only the profile", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),

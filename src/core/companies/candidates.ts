@@ -281,21 +281,21 @@ export type FilterOutcome = {
 
 /** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
 /**
- * Why a dated page cannot prove a signal the profile wants fresh: it is older
- * than the window, or it carries no date at all. Null when the profile asks
- * for nothing recent, or when the page is inside the window.
+ * Why a dated page is too old to prove a signal the profile wants fresh. Only
+ * arithmetic lives here: a page carrying no date reaches the judge instead,
+ * because whether it still proves anything depends on what the page is, and a
+ * live job advertisement is current whether or not it prints a date.
  */
 export function staleRejectReason(
 	evidenceDate: string | null,
 	recencyDays: number | null,
 	today: string,
 ): string | null {
-	if (recencyDays === null) return null;
-	if (evidenceDate === null) return "no date on the evidence page";
+	if (recencyDays === null || evidenceDate === null) return null;
 	const age = Math.round(
 		(Date.parse(today) - Date.parse(evidenceDate)) / 86_400_000,
 	);
-	if (Number.isNaN(age)) return "no date on the evidence page";
+	if (Number.isNaN(age)) return null;
 	return age > recencyDays
 		? `evidence is ${age} days old, older than the ${recencyDays} the profile allows`
 		: null;

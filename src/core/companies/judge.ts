@@ -37,9 +37,13 @@ const JUDGE_INSTRUCTIONS = [
 	"named organisation counts even when that organisation is not the company, so a news",
 	"publication, a job board the company plainly uses, and a status provider are all",
 	"credible records.",
-	"When a freshness window is given, refuse a row whose `evidenceDate` falls outside it,",
-	"and refuse a row carrying no `evidenceDate`, because neither shows that the signal",
-	"happened inside the window.",
+	"A row whose `evidenceDate` falls outside the freshness window never reaches you, so",
+	"every date you see is inside it. A row carrying no `evidenceDate` does reach you, and",
+	"whether it still proves the signal depends on what the page is. A page that is only",
+	"true while it is published, such as a job advertisement still open or a status page",
+	"reporting a live incident, proves the signal now even with no date printed on it. A",
+	"page that records something that happened, such as a news article, an announcement or",
+	"a postmortem, proves nothing without a date, because you cannot tell when it happened.",
 ].join(" ");
 
 function judgePrompt(
