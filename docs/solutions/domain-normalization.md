@@ -38,3 +38,18 @@ grounding-domain comparison that reuses it, so the two cannot drift apart.
 
 `test/db.spec.ts` runs `normalizeDomain` against scheme/case/port/path variations and asserts
 the `www.`-only limit directly.
+
+## `publicDomain`, when a domain will be crawled
+
+`normalizeDomain` answers "what is the canonical form of this host". It says
+nothing about whether the host is worth reaching: `localhost` and an address
+literal both normalize happily.
+
+`publicDomain` in the same file wraps it and returns null for a host with no
+dot or an all-numeric one. Use it wherever a caller-supplied domain leads to a
+paid crawl or a stored profile — the onboarding endpoint, the onboarding
+workflow, and the signup hook all read it. Use plain `normalizeDomain` for
+comparison and storage, where any host that parses is fine.
+
+The split matters because the two questions have different answers: a domain
+can be perfectly normalizable and still name nothing anyone can fetch.

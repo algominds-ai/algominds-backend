@@ -57,3 +57,12 @@ gone.
 Every paid call sits in its own step for a related reason. The poll loop
 sleeps, a sleep replays `run()` from the start, and a paid call outside a step
 would be paid again on every wake.
+
+## Where the loop lives now
+
+The poll loop described above was extracted to `pollAgentRun` in
+`src/workflows/agent-poll.ts`. The logic is unchanged: one durable step per
+attempt, a durable sleep between them so a replay reads the cache instead of
+re-polling, and `applyCostEntries` to fold each attempt's reported cost back
+into the caller's ledger. Callers pass a step-name prefix so two runs in one
+workflow cannot collide.
