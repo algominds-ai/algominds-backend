@@ -114,6 +114,34 @@ export function agentRecentDomains(
 		);
 }
 
+/**
+ * Wraps the plain Exa search in its own durable step, so a later failure in
+ * the same round replays the results it already paid for instead of buying
+ * them again.
+ */
+/** Wraps the judge in its own durable step, for the same replay-safety reason as `agentSynthesize`. */
+function steppedJudge(
+	step: WorkflowStep,
+	round: number,
+): FindCompaniesDeps["judge"] {
+	return async (icp, rows, env, recency) => {
+		const cached = await step.do(
+			`round_${round}-judge`,
+			config.stepConfig.paidCall,
+			async () => {
+				const result = await judge(icp, rows, env, recency);
+				return {
+					verdicts: result.verdicts,
+					costEntries: result.ledger.toJSON().entries,
+				};
+			},
+		);
+		const ledger = new CostLedger();
+		applyCostEntries(cached.costEntries, ledger);
+		return { verdicts: cached.verdicts, ledger };
+	};
+}
+
 /** Builds every dependency one round runs on, sending the round to the agent when its plan chose one and to a single Exa search when it did not. */
 export type RoundDepsInput = {
 	accumulatedDomains: ReadonlySet<string>;
@@ -140,6 +168,6 @@ export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 				? viaAgent(plan, req, env, ledger)
 				: search(req, env, ledger),
 		gate,
-		judge,
+		judge: steppedJudge(step, round),
 	};
 }

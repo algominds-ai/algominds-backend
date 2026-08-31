@@ -12,40 +12,34 @@ verification table independently confirmed every earlier fix on this branch as
 
 ## Open, and blocking a deploy until decided
 
-**1. Paid spend is banked only after a whole round or batch succeeds, in three
-capabilities.** `find-companies`, `find-people` and `enrich` wrap several
-billable calls in one `step.do` and record spend only when the whole callback
-returns. A judge call that fails after a search succeeded re-runs the callback
-and re-buys the search; a people batch where one parallel search throws banks
-neither the plan nor the successful one. Onboarding was fixed to check-point at
-each billable boundary; these three were not.
+**1. Paid spend is banked only after a whole round or batch succeeds, partly
+fixed.** The judge now runs in its own durable step, so a transient judge
+failure retries alone instead of re-running the round and re-buying the search
+it already paid for. That was the common case and it cost one wrapper beside
+the one `agentSynthesize` already used.
 
-The fix is the shape onboarding already uses: one `step.do` per independently
-billable unit, returning its result plus its cost, then `recordRunSpend` for the
-cumulative total. It changes the step topology of three workflows and their
-retry semantics, so it is a deliberate piece of work, not a patch.
+The plain Exa search is still inside the composite round step. Putting it in
+its own step means carrying `ExaSearchResult` through `step.do`, and its
+recursive `Json` field defeats the step's own generic — the same wall that made
+`agentSearch` build its result outside the step. Closing it needs a narrower
+result type at that seam, not a wrapper.
 
-**2. The daily ceiling never reserves.** `assertUnderDailyCeiling` reads
-historical spend and compares. Two runs can both read $49.95, both pass, and
-both buy. One run can pass at $49.95 and then spend a dollar. Pre-existing in
-all four capabilities, now more reachable because onboarding is the cheapest
-surface to fire repeatedly.
+`find-people` and `enrich` are untouched: their paid work is one step per batch,
+and a partial failure inside a batch still loses and re-buys the calls that
+succeeded. Fixing those means a step per subject and per company, which is a
+step-count decision, not a patch.
 
-The fix is a transaction that locks the organization and day, sums actual plus
-reserved, and inserts the run with a reservation before returning — then
-reconciles as each unit banks. That needs a reservation column and a decision
-about per-capability maximums.
+**2. The daily ceiling never reserves. Not fixed, and not fixable lazily.**
+`assertUnderDailyCeiling` reads and compares; two runs can both read $49.95 and
+both buy. Making the check atomic needs either raw SQL in the insert or a
+transaction with a per-organization lock, and both fight the narrow structural
+connection types this layer uses for test injection: `RunOpenConnection` is an
+insert plus a select, so `.transaction` and `.execute` would have to be added to
+it and to every injected fake.
 
-**3. Anyone can mint fresh budgets.** One account can create unlimited
-organizations, and each one starts paid onboarding under its own zero-spend
-ceiling. Named in the plan's own Open Questions and confirmed reachable by three
-reviewers.
-
-Better Auth has native controls this project simply does not set:
-`organizationLimit` and `allowUserToCreateOrganization` on the organization
-plugin. Those, plus an edge rate limit on sign-up and `/organization/create`,
-plus a global spend fuse, are the shape of the answer. Per-user limits alone do
-not stop many-account abuse, so the fuse matters.
+Shrinking the window by folding the check into the open-run step would churn
+four workflows and their mocks while still not closing the race. It would read
+as a fix and not be one. This needs the reservation design, deliberately.
 
 ## Open, smaller
 

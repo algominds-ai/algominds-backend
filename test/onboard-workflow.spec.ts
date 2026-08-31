@@ -7,6 +7,7 @@ import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
 import { db } from "../src/core/db/client";
+import { saveOnboardedIcp } from "../src/core/db/icp";
 import { organizationForSlug } from "../src/core/db/organizations";
 import {
 	closeRun,
@@ -608,5 +609,43 @@ describe("OnboardIcpWorkflow: a run that buys a model call and gets no profile",
 			await instance.dispose();
 			await deleteIcpAndRun(runId);
 		}
+	});
+});
+
+describe("saveOnboardedIcp", () => {
+	it("writes the profile and closes its run in one call", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`save-onboarded-${crypto.randomUUID()}.internal`,
+			"save-onboarded",
+		);
+		const runId = `onboarding_save-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: runId,
+			organizationId: org.id,
+			capability: "onboarding",
+			status: "running",
+		});
+
+		const icpId = await saveOnboardedIcp(testEnv, {
+			runId,
+			domain: "acme.example",
+			organizationId: org.id,
+			description: "a stored profile",
+			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
+			costDollars: 0.05,
+		});
+
+		const stored = await loadIcp(testEnv, icpId);
+		expect(stored?.doc).toEqual({
+			description: "a stored profile",
+			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
+		});
+
+		const closed = await findRun(testEnv, runId);
+		expect(closed?.icpId).toBe(icpId);
+		expect(closed?.status).toBe("complete");
+		expect(closed?.costDollars).toBeCloseTo(0.05, 5);
+		expect(closed?.finishedAt).not.toBeNull();
 	});
 });

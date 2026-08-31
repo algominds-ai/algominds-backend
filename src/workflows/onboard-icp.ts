@@ -5,10 +5,9 @@ import { z } from "zod";
 import { config } from "@/config";
 import {
 	assertUnderDailyCeiling,
-	closeRun,
-	createIcp,
 	openRun,
 	recordRunSpend,
+	saveOnboardedIcp,
 } from "@/core/db/queries";
 import { publicDomain } from "@/core/db/schema";
 import type { SellerPage } from "@/core/onboard";
@@ -109,21 +108,17 @@ type PersistIcpInput = {
 	built: BuiltIcp & { description: string };
 };
 
-/** Writes the profile, points the already-open run at it, and closes the run with what it spent. Returns the new profile's id. */
+/** Writes the profile and closes the run against it in one transaction. Returns the new profile's id. */
 async function persistIcp(input: PersistIcpInput): Promise<string> {
 	const { env, runId, organizationId, domain, built } = input;
-	const row = await createIcp(env, {
+	return saveOnboardedIcp(env, {
+		runId,
 		domain,
 		organizationId,
 		description: built.description,
 		seller: built.seller,
-	});
-	await closeRun(env, runId, {
-		status: "complete",
 		costDollars: built.costDollars,
-		icpId: row.id,
 	});
-	return row.id;
 }
 
 /**
