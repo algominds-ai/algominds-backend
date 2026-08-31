@@ -48,13 +48,28 @@ function agentCompanySchema(plan: SearchPlan) {
 	});
 }
 
-function agentQuery(plan: SearchPlan, count: number): string {
+/** The plan's freshness demand as the two dates it means, or null when the profile asked for nothing recent. */
+function provenWindow(plan: SearchPlan, today: string): string | null {
+	if (plan.recencyDays === null) return null;
+	const start = new Date(Date.parse(today) - plan.recencyDays * 86_400_000)
+		.toISOString()
+		.slice(0, 10);
+	return [
+		`The page proving the signal must carry a publication date from ${start}`,
+		`through ${today} inclusive. A page dated outside that range, or a page`,
+		"carrying no date, disqualifies the company, so find a different company",
+		"instead.",
+	].join(" ");
+}
+
+function agentQuery(plan: SearchPlan, count: number, today: string): string {
 	const constraints = planConstraints(plan);
 	const parts = [
 		plan.query,
 		`Return exactly ${count} distinct companies.`,
 		constraints,
 		plan.recency,
+		provenWindow(plan, today),
 	];
 	return parts.filter((part) => part !== null && part !== "").join(" ");
 }
@@ -135,7 +150,7 @@ export function buildAgentRunRequest(
 	seller: IcpSeller | null,
 ): ExaAgentRunRequest {
 	return {
-		query: agentQuery(plan, count),
+		query: agentQuery(plan, count, today),
 		systemPrompt: agentSystemPrompt(today, seller),
 		effort: plan.agentEffort,
 		dataSources: [{ provider: "fiber" }],
