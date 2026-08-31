@@ -1,4 +1,5 @@
 import { apiKey } from "@better-auth/api-key";
+import { openAPI } from "better-auth/plugins";
 import { organization } from "better-auth/plugins/organization";
 import { config } from "@/config";
 
@@ -30,6 +31,7 @@ export function buildPlugins(
 				},
 			},
 		}),
+		openAPI(),
 		apiKey([
 			{
 				configId: ORGANIZATION_KEY_CONFIG_ID,
