@@ -400,3 +400,30 @@ describe("the agent is given the effort that keeps evidence freshest", () => {
 		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
 	});
 });
+
+describe("a profile that lists dated events is asking for something recent", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	function everyMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("tells the model those events are what recency is for, and no longer claims an undated page is refused", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("those events are what `recency` is");
+		expect(sent).toContain("sends the round to a source that holds no events");
+		expect(sent).not.toContain("refuses one carrying no date");
+	});
+});

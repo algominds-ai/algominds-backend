@@ -400,3 +400,27 @@ describe("the kind of page a row came from is a label, not something the judge w
 		expect(sent).not.toContain("vendor-case-study");
 	});
 });
+
+describe("a row from a source that produces no quote is judged on the record", () => {
+	function everyMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("never refuses a row merely for carrying no quote and no publisher", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, null);
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("never refuse it for their absence");
+		expect(sent).not.toContain(
+			"Every row carries the page its signal came from",
+		);
+	});
+});
