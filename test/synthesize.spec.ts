@@ -109,6 +109,8 @@ type PlanShape = {
 	countries: string[];
 	minWorkforce: number | null;
 	maxWorkforce: number | null;
+	eventWindowDays: number | null;
+	recencyDays: number | null;
 };
 
 function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
@@ -425,5 +427,33 @@ describe("a profile that lists dated events is asking for something recent", () 
 		expect(sent).toContain("those events are what `recency` is");
 		expect(sent).toContain("sends the round to a source that holds no events");
 		expect(sent).not.toContain("refuses one carrying no date");
+	});
+
+	it("asks how old the event may be and how old its proof may be as two separate questions", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain(
+			"`eventWindowDays` is how far back the profile allows",
+		);
+		expect(sent).toContain("still show that this situation is live");
+		expect(sent).toContain("may be a year while `recencyDays` is a few");
+	});
+
+	it("keeps a wide event window and a narrow proof window apart in the plan", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				planReply({ eventWindowDays: 365, recencyDays: 30 }),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await runSynthesize();
+
+		expect(result.plan.eventWindowDays).toBe(365);
+		expect(result.plan.recencyDays).toBe(30);
 	});
 });

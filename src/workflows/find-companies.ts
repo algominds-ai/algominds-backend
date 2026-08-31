@@ -263,6 +263,7 @@ export type RoundReport = {
 	angle: string;
 	query: string;
 	recency: string | null;
+	eventWindowDays: number | null;
 	recencyDays: number | null;
 	source: string;
 	type: string;
@@ -285,6 +286,7 @@ export function reportRound(
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
 		recency: plan?.recency ?? null,
+		eventWindowDays: plan?.eventWindowDays ?? null,
 		recencyDays: plan?.recencyDays ?? null,
 		source: plan?.source ?? "",
 		type: plan?.type ?? "",

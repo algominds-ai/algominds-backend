@@ -38,6 +38,7 @@ export type SearchPlan = {
 	query: string;
 	angle: string;
 	recency: string | null;
+	eventWindowDays: number | null;
 	recencyDays: number | null;
 	source: (typeof SEARCH_SOURCES)[number];
 	type: (typeof SEARCH_TYPES)[number];
@@ -59,6 +60,7 @@ const SearchPlanModelSchema = z.object({
 	query: z.string(),
 	angle: z.string(),
 	recency: z.string().nullish(),
+	eventWindowDays: z.number().int().positive().nullish(),
 	recencyDays: z.number().int().positive().nullish(),
 	source: z.enum(SEARCH_SOURCES).nullish(),
 	type: z.enum(SEARCH_TYPES).nullish(),
@@ -126,14 +128,19 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"evidence with a median age of thirty two days against `low`'s fifty three, both fully",
 	"inside the window the profile asked for, at indistinguishable cost. Raise it above",
 	"`medium` only when an earlier round on this run came back short of the count.",
-	"`recencyDays` is how old the page proving the signal may be and still show that the",
-	"situation is live and worth acting on today. Answer that for the angle this round",
-	"targets, never for the profile as a whole and never as the widest window the profile",
-	"allows: a page proving a hiring wave stops meaning anything long before the acquisition",
-	"that caused it leaves the profile's own window. The code refuses a page older than",
-	"this. A page carrying no date still",
-	"reaches the judge, which decides whether it proves the signal anyway, so a window costs",
-	"you nothing in undated pages. Leave `recencyDays` null only when `recency` is null.",
+	"`eventWindowDays` is how far back the profile allows the event itself to have happened,",
+	"counted in days. `recencyDays` answers a different question: how old may the page",
+	"proving it be, and still show that this situation is live and worth acting on today?",
+	"Answer it for the angle this round targets, not for the profile as a whole.",
+	"A page that proves a situation is still live is almost always days or weeks old, not",
+	"months. An announcement from January does not show that January's event is still being",
+	"worked on today; a page published this month describing that work does. Ask what page",
+	"you would want to read before making the call today, and how old it could be before you",
+	"would stop trusting it. `eventWindowDays` may be a year while `recencyDays` is a few",
+	"weeks, and that is the normal case rather than a contradiction. The code refuses a page",
+	"older than `recencyDays`. A page carrying no date still reaches the judge, which decides",
+	"whether it proves the signal anyway, so a window costs you nothing in undated pages.",
+	"Leave both null only when `recency` is null.",
 	"`recency` carries the freshness the profile demands, written as its own sentences that",
 	"name each event and the window it must fall inside, for example a platform engineering",
 	"role posted in the last thirty days, or a postmortem published in the last ninety days.",
@@ -181,6 +188,7 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 		query: icp.description,
 		angle: "the profile as written",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
@@ -249,6 +257,7 @@ function toPlan(output: SearchPlanModel): SearchPlan {
 		query: output.query,
 		angle: output.angle,
 		recency: output.recency ?? null,
+		eventWindowDays: output.eventWindowDays ?? null,
 		recencyDays: output.recencyDays ?? null,
 		source: output.source ?? "exa-search",
 		type,

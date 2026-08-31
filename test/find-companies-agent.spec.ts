@@ -17,6 +17,7 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
