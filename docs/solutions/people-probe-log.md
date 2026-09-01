@@ -1149,3 +1149,19 @@ EVIDENCE HOSTS: most confirmations cite the company's own about/leadership page,
    check as a second opinion. First-party or press confirmation stands alone.
    Code's only job: read the closed-set label and apply that rule. No string matching.
 HOOK QUALITY of the agent's hook_quote vs the free read: pending AGENTVERIFY's labelling pass.
+
+## 34. Agent hook quality (HOOK2, $0.0005) and the closed answer on Exa agent verification
+Of the 12 people whose FREE hook was weak, the agent's hook_quote was a specific_event for
+3 (25%), role_statement 5, generic 2, none 2. BrightData converted 7 of 38 (18%) on the same
+kind of person. Both are TOP-UPS, neither a default second pass. Agent hooks that landed are
+real: "With Eric stepping in to lead more than 250 people here at Harbor..."; Seccl's CRO
+quoted in an article; a podcast naming Shannon Scott's role at Airwallex.
+EVIDENCE HOSTS behind the agent's 23 confirmations: first-party 17, press 1, aggregator 5.
+
+CLOSED: the Exa agent at effort minimal REPLACES the verification stage. Same cost as the
+two-source rule ($0.012 vs $0.014), one call, better real-person confirmation (10/12 vs
+8/12), zero wrong confirms on the same six controls, first-party evidence for most
+confirmations, a hook and a verbatim quote in the same structured reply. The user's
+"no deterministic steps" preference is met: the only code is one rule on the agent's own
+closed-set evidence_kind label. Slower (~20 s vs ~3 s), which a Workflow step absorbs.
+Method doc, pipeline and architecture diagrams updated and committed (0591d31).
