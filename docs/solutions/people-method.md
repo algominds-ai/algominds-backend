@@ -53,20 +53,37 @@ planner.
 Apollo's surnames are obfuscated and never resolved to a person another provider confirmed;
 it is a lead source. One Exa agent run cost $0.225 for four people already in the roster.
 
-## Verification: two sources, and the honest unknown
+## Verification: one Exa agent run, and the honest unknown
 
-A person is verified only when Exa's structured people index shows an open-ended role at the
-company and a model reading the open web confirms the claim. The two are independent of each
-other; only the web read is independent of LinkedIn.
+Two verifiers were measured on the same 18-case control set: 12 real people across both
+verticals, 3 who had left the company, 2 real people attached to the wrong employer, and 1
+invented person.
 
-93 judged positives checked, at most six per company: 68 verified, 7 contradicted, 18
-unknown. Every company has at least one. Cost $0.011 per person checked. Earlier, on a
-control set, the same rule confirmed 8 of 12 real people and 0 of 6 controls, catching a
-departed employee that the web alone had confirmed.
+| verifier | real confirmed | controls wrongly confirmed | evidence | cost | time |
+|---|---|---|---|---|---|
+| Exa people index AND open-web model read | 8 of 12 | 0 of 6 | web pages found by search | $0.014 | ~3 s |
+| Exa agent, effort minimal, structured output | 10 of 12 | 0 of 6 | 17 of 23 confirmations on the company's own site | $0.012 | ~20 s |
 
-The web read returns an outreach hook in the same call. 30 of the 68 verified buyers came
-with a specific event (a hire, a launch, a quote, a role change); 37 carry a date inside 180
-days. BrightData's collected profile, run only on the 38 without one, added 7 more for $0.095.
+The agent contradicted the invented person outright, both wrong-employer cases, and one
+departed employee; it left the other two departed employees unknown. It confirmed two Seccl
+executives the people index does not hold, by finding `seccl.tech/about`. It searches for
+first-party evidence rather than being confined to a domain, which is why a domain-restricted
+search confirmed 2 of the same 12 and the agent confirmed 10. Effort `low` gave identical
+verdicts at $0.035.
+
+The guard it needs: five of its 23 confirmations cited data aggregators, which are derived
+from LinkedIn and are not independent. The output schema therefore carries `evidence_kind`
+as a closed set — first party, press, aggregator, LinkedIn — assigned by the agent. A
+confirmation resting only on aggregator or LinkedIn evidence gets the people index as a
+second opinion; a first-party or press confirmation stands alone. Code reads the label and
+applies that one rule. Nothing else in verification is deterministic.
+
+On the full run the two-source rule checked 93 judged positives, at most six per company:
+68 verified, 7 contradicted, 18 unknown, every company with at least one, $0.011 per person.
+Its web read returned an outreach hook in the same call: 30 of the 68 came with a specific
+event, 37 dated inside 180 days. BrightData's collected profile, run only on the 38 without
+one, added 7 more for $0.095. The agent returns a hook and an evidence quote in the same
+structured reply.
 
 ## The judge, and what it can and cannot say
 
@@ -90,7 +107,7 @@ reference of 5, both selector arms scored zero at precision 1.0. That is the cap
 | 2 retrieve | the eight senior bands, one call each; at a small MSP with no senior HR owner, add the manager band keyworded for HR and recruiting | Clay | Exa people search per persona | quota |
 | 3 dedupe | canonical LinkedIn URL, then name key | code | — | 0 |
 | 4 select | at most six candidate ids plus a closed-set basis; the model never emits a title; an empty result is a valid result | model with the buyer criteria | — | $0.02 |
-| 5 verify | structured index and open-web read must both confirm; disagreement or silence is unknown and is excluded | Exa, model | none; unknown stays unknown | $0.011 |
+| 5 verify | one Exa agent run, effort minimal, structured output with `evidence_kind`; aggregator-only confirmation gets the people index as a second opinion; silence is unknown and is excluded | Exa agent | people index + web read | $0.012 |
 | 6 context | keep the hook the verifier read; append as evidence | free | BrightData row on demand | $0.0025 |
 
 No Apollo, no Exa agent, no second round, no LLM planner in the default path. A twenty-

@@ -27,7 +27,7 @@ flowchart LR
         C2["roster.ts<br/>seniorRoster(identifier, env)<br/>8 bands, + manager band rule<br/>→ Candidate[]"]:::code
         C3["dedupe.ts<br/>canonUrl · nameKey<br/>→ Candidate[] with stable id, seenBy[]"]:::code
         C4["select.ts<br/>pickBuyers(icp, intent, candidates, env)<br/>model → ids + basis<br/>code copies name/title/url by id"]:::model
-        C5["verify.ts<br/>verifyPerson(p, env)<br/>index ∧ web → verified | contradicted | unknown<br/>+ hook {quote,url,date}"]:::model
+        C5["verify.ts<br/>verifyPerson(p, env)<br/>Exa agent, effort minimal, structured output<br/>{verdict, evidence_url, evidence_kind, quote, hook}<br/>aggregator-only → people index second opinion<br/>→ verified | contradicted | unknown"]:::model
         C6["rows.ts<br/>toNewPerson · evidenceRowsFor"]:::code
     end
 

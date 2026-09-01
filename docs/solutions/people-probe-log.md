@@ -1106,3 +1106,46 @@ ANSWER TO THE USER'S QUESTION: run the free tier by default for every verified b
 already inside verify()); call BrightData only as a targeted top-up for the ~56% without a
 specific hook, expecting ~1 in 5 to convert. Not a default second pass. Store what arrives
 as append-only evidence; deep enrichment (podcasts, talks) stays a separate on-demand step.
+
+## 32. USER QUESTION: why not replace the open-web read with an Exa agent? (23:05)
+HONEST STATE: the Exa agent was measured for RETRIEVAL only (Cyber Salus, effort low,
+$0.225, 4 people already in the roster). It was NEVER measured for VERIFICATION, which is a
+different, bounded job the agent may do well and returns structured output. The design chose
+search + model read on COST ($0.014, ~3 s per person), not on quality. Quality untested.
+TEST RUNNING (agent AGENTVERIFY, cap $2.00): 30 fixed cases — the 18-case control set the
+current verifier was validated on (12 real + 3 departed + 2 wrong-employer + 1 invented) plus
+12 verified people with a weak free hook. Structured schema {verdict, evidence_url,
+evidence_quote, evidence_date, hook_quote, confidence}. Efforts minimal vs low on the first
+6, then the cheaper if verdicts match. Measures: control rejection FIRST (a wrong CONFIRM on
+the invented person or a wrong-employer case is disqualifying), agreement with the
+two-source verdict, hook quality vs the free read, cost and seconds per call, failure modes.
+Verdict options pre-stated: replacement for both sources / for the web half / top-up for
+unknowns only. Decision by measured cost per person and control safety, not preference.
+
+## 33. EXA AGENT AS VERIFIER — measured, and it changes the verification stage
+36 runs (30 cases; the first 6 at both efforts), $0.57, 0 errors, 0 schema violations.
+CONTROLS, the disqualifying test: ZERO wrong confirms.
+  invented person        CONTRADICTED high (both efforts)   cites harborit.com/about
+  wrong employer x2      CONTRADICTED (both)                one cites harborit.com's acquisition page
+  departed x3            CONTRADICTED 1 · UNKNOWN 2        the two UNKNOWNs are the ones the
+                                                            web read alone had wrongly CONFIRMED
+REAL 12 (the two-source control set): CONFIRMED 10, UNKNOWN 2 (Lorin Fisher, Autumn Coffee).
+  Two-source managed 8/12. The agent confirmed Mitul Sudra and Alex Henderson at Seccl, whom
+  Exa's people index does not hold, by FINDING seccl.tech/about. It searches for first-party
+  evidence instead of being restricted to a domain -- which is why method A got 2/12 and the
+  agent gets 10/12 on the same people.
+VERIFIED 12 (two-source verified, weak free hook): CONFIRMED 10, UNKNOWN 2. Agrees 10/12.
+COST: effort minimal $0.012/call ~20 s · effort low $0.035/call ~18 s. Verdicts identical on
+  the 6 run at both. Current two-source: $0.014, ~3 s. SAME MONEY, ONE CALL, NO DETERMINISTIC
+  HALF -- the user's stated preference, now measured rather than assumed.
+EVIDENCE HOSTS: most confirmations cite the company's own about/leadership page, its blog, a
+  press release or reputable press. A minority cite LinkedIn-derived aggregators (aeroleads,
+  datanyze, signalhire, village.ai, exa.ai/library). Those are NOT independent of LinkedIn.
+=> VERIFICATION STAGE, revised: one Exa agent run at effort minimal with the structured
+   schema {verdict, evidence_url, evidence_quote, evidence_date, hook_quote, evidence_kind,
+   confidence}. Add evidence_kind to the schema as a closed set (first_party | press |
+   aggregator | linkedin) so the AGENT labels its own evidence; a confirmation resting only on
+   aggregator/linkedin evidence is "confirmed, LinkedIn-derived" and gets the people-index
+   check as a second opinion. First-party or press confirmation stands alone.
+   Code's only job: read the closed-set label and apply that rule. No string matching.
+HOOK QUALITY of the agent's hook_quote vs the free read: pending AGENTVERIFY's labelling pass.
