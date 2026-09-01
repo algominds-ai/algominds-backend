@@ -11,10 +11,11 @@ import {
 import {
 	companiesFindSchema,
 	enrichSchema,
+	onboardIcpSchema,
 	peopleFindSchema,
 } from "@/http/schemas";
 
-/** The bearer-protected job API: three start routes plus one status route. */
+/** The bearer-protected job API: four routes that start a capability, and the routes that read a run back. */
 export function createApiRoutes(): Hono<ApiEnv> {
 	const api = new Hono<ApiEnv>();
 	api.use("*", requireApiKey);
@@ -80,6 +81,21 @@ export function createApiRoutes(): Hono<ApiEnv> {
 				scopeId: body.runId,
 				sourceRunId: body.runId,
 				params: body,
+			}),
+		}),
+	);
+
+	api.post("/icp/onboard", (c) =>
+		startJob(c, onboardIcpSchema, {
+			capability: "onboarding",
+			workflow: c.env.ONBOARD_ICP,
+			toJob: async (body, _env, organizationId) => ({
+				scopeId: await domainsScopeId([body.domain], organizationId),
+				params: {
+					domain: body.domain,
+					note: body.note ?? null,
+					organizationId,
+				},
 			}),
 		}),
 	);

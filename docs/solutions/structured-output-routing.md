@@ -37,3 +37,26 @@ second flag reaches OpenRouter unchanged.
 Send one `chat/completions` request to the gateway with a strict `json_schema`
 `response_format` and no `provider` field. If it hangs, the routing flag is
 still doing real work.
+
+## The same failure came back through `sort: "latency"`
+
+Measured 2026-08-31 against `dynamic/brain-reasoning`, one strict `json_schema`
+body sent nine times:
+
+| routing sent | provider OpenRouter chose | replies that parsed as JSON |
+|---|---|---|
+| `require_parameters: true, sort: "latency"` | Azure | 0 of 3 |
+| `require_parameters: true` | Claude Platform on AWS | 6 of 6 |
+
+Azure accepts `response_format: json_schema` and then ignores it. It answered
+in Markdown, starting `# Ondato — Company Profile`. `require_parameters` does
+not exclude it, because the parameter is accepted. `sort: "latency"` is what
+puts Azure first.
+
+The cost is silent. `Output.object` refuses the reply, `generateStructured`
+returns `null` after two paid attempts, and every caller falls back: onboarding
+stores the caller's note as the profile, `synthesize` queries with the profile
+text, and `judge` keeps every row. One onboarding run spent $0.127 this way and
+reported `complete`.
+
+`sort` is removed. Latency is not worth a reply the schema cannot read.

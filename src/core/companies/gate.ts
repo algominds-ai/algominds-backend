@@ -12,6 +12,8 @@ const FIELD_NAMES = [
 	"evidenceUrl",
 	"evidenceQuote",
 	"evidencePublisher",
+	"evidenceKind",
+	"industry",
 	"description",
 	"signal",
 	"evidenceDate",

@@ -1,14 +1,11 @@
 # algo-backend
 
-Algominds GTM engine. Three capabilities that turn an ICP document into verified, enriched
-decision makers: **find companies**, **find people**, **enrich people**.
+Algominds GTM engine. Four capabilities. **Onboarding** reads a seller's own site and
+writes the ideal customer profile the rest search from; **find companies**, **find people**
+and **enrich people** turn that profile into verified, enriched decision makers.
 
 Cloudflare Workers + Workflows · Hono · Zod · Drizzle · Postgres (PlanetScale via Hyperdrive)
 · `ai@7` through Cloudflare AI Gateway.
-
-**The spec is `docs/plans/2026-08-27-001-feature-gtm-engine-core-apis-plan.md`.** Requirements,
-vendor contracts, and decisions live there, not here. Read it before changing behaviour. Do not
-copy its content into this file.
 
 ## Commands
 
@@ -34,6 +31,10 @@ src/core/        plain async functions. no HTTP. no Workflows. no env globals.
 src/core/providers/   one file per provider + the waterfall + the MCP adapter
 src/workflows/   one WorkflowEntrypoint per capability. calls src/core/.
 src/routes.ts    Hono. a route only starts a Workflow and returns a run id.
+
+docs/solutions/  documented solutions to past problems, one file per topic.
+                 relevant when implementing or debugging in an area one covers.
+CONCEPTS.md      shared domain vocabulary. read when orienting to the codebase.
 ```
 
 `src/core/` never imports from `src/routes.ts` or `src/workflows/`. The arrow points one way.

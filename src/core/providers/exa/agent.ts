@@ -83,6 +83,7 @@ export const ExaAgentCompanySchema = CompanyRecordSchema.extend({
 	evidenceDate: nullableString,
 	evidenceQuote: nullableString,
 	evidencePublisher: nullableString,
+	evidenceKind: nullableString,
 });
 
 /** One company as Exa's agent reports it, matching the `outputSchema` a caller sent to `startAgentRun`. */

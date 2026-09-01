@@ -41,8 +41,15 @@ const ExaSearchRequestSchema = z.object({
 	systemPrompt: z.string().optional(),
 	contents: z
 		.object({
-			text: z.boolean().optional(),
+			text: z
+				.union([
+					z.boolean(),
+					z.object({ maxCharacters: z.number().int().positive() }),
+				])
+				.optional(),
 			summary: z.object({ schema: JsonValueSchema.optional() }).optional(),
+			maxAgeHours: z.number().nonnegative().optional(),
+			livecrawlTimeout: z.number().int().positive().optional(),
 		})
 		.optional(),
 });
@@ -112,6 +119,7 @@ const nullableNumber = z
 export const CompanyRecordSchema = z.object({
 	name: nullableString,
 	description: nullableString,
+	industry: nullableString,
 	foundedYear: nullableNumber,
 	workforceTotal: nullableNumber,
 	city: nullableString,
@@ -215,6 +223,7 @@ export type ExaResult = {
 	evidenceUrl?: string;
 	evidenceQuote?: string;
 	evidencePublisher?: string;
+	evidenceKind?: string;
 	linkedinUrl?: string;
 	summary: Json | null;
 	company: CompanyEntity | null;
@@ -260,6 +269,7 @@ function toCompanyEntity(entities: readonly Entity[]): CompanyEntity | null {
 	return {
 		name: p.name ?? null,
 		description: p.description ?? null,
+		industry: null,
 		foundedYear: p.foundedYear ?? null,
 		workforceTotal: p.workforce?.total ?? null,
 		city: p.headquarters?.city ?? null,

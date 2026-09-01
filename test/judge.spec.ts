@@ -26,6 +26,8 @@ function row(name: string, domain: string): CompanyRow {
 		evidenceUrl: `https://${domain}/careers`,
 		evidenceQuote: null,
 		evidencePublisher: null,
+		evidenceKind: null,
+		industry: null,
 		description: null,
 		signal: "hiring a founding engineer",
 		evidenceDate: "2026-08-20",
@@ -345,6 +347,19 @@ describe("the judge is told the window it must hold rows to", () => {
 		);
 	});
 
+	it("tells the judge that an undated page can still prove a live signal", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, "A role posted in the last 30 days.");
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("job advertisement still open");
+		expect(sent).toContain("proves nothing without a date");
+	});
+
 	it("tells the judge to weigh the page, not only the profile", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
@@ -356,5 +371,56 @@ describe("the judge is told the window it must hold rows to", () => {
 		const sent = userMessage({ body: gateway.calls[0]?.body });
 		expect(sent).toContain("evidenceQuote");
 		expect(sent).toContain("names no publisher");
+	});
+});
+
+describe("the kind of page a row came from is a label, not something the judge weighs", () => {
+	function userMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("serialises every other field of the row and leaves the kind out", async () => {
+		const labelled: CompanyRow[] = [
+			{ ...row("Acme", "acme.com"), evidenceKind: "vendor-case-study" },
+		];
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(labelled))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, labelled, env, null);
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("acme.com");
+		expect(sent).toContain("hiring a founding engineer");
+		expect(sent).not.toContain("evidenceKind");
+		expect(sent).not.toContain("vendor-case-study");
+	});
+});
+
+describe("a row from a source that produces no quote is judged on the record", () => {
+	function everyMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("never refuses a row merely for carrying no quote and no publisher", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(icp, rows, env, null);
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("never refuse it for their absence");
+		expect(sent).not.toContain(
+			"Every row carries the page its signal came from",
+		);
 	});
 });

@@ -44,6 +44,7 @@ function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
 	return {
 		name: "Example",
 		description: "a small software company",
+		industry: null,
 		foundedYear: 2021,
 		workforceTotal: 8,
 		city: "San Francisco",
@@ -90,6 +91,7 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		query: "fintech companies",
 		angle: "angle-1",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
@@ -136,6 +138,7 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 				query: `${input.icp.description} round-${inputs.length}`,
 				angle: `angle-${inputs.length}`,
 				recency: null,
+				eventWindowDays: null,
 				recencyDays: null,
 				source: "exa-search",
 				type: "fast",
@@ -502,6 +505,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			signal: null,
 			quote: null,
 			publisher: null,
+			kind: null,
 			publishedDate: null,
 			score: null,
 		});
@@ -524,9 +528,11 @@ describe("findCompanies — capturing the vendor payload", () => {
 			"description",
 			"domain",
 			"evidenceDate",
+			"evidenceKind",
 			"evidencePublisher",
 			"evidenceQuote",
 			"evidenceUrl",
+			"industry",
 			"linkedinUrl",
 			"name",
 			"signal",
@@ -541,6 +547,7 @@ describe("findCompanies — captures across sources", () => {
 			website: "https://agentco.com",
 			linkedinUrl: null,
 			description: "found by the agent",
+			industry: null,
 			foundedYear: 2020,
 			workforceTotal: 12,
 			city: "Austin",
@@ -552,6 +559,7 @@ describe("findCompanies — captures across sources", () => {
 			evidenceDate: "2026-08-12",
 			evidenceQuote: "Agent Co is hiring a Platform Engineer.",
 			evidencePublisher: "Agent Co Careers",
+			evidenceKind: null,
 		};
 		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
 		const { search } = scriptedSearch([agentSearchResult.results]);
@@ -577,6 +585,7 @@ describe("findCompanies — captures across sources", () => {
 		);
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
 			"id",
+			"kind",
 			"publishedDate",
 			"publisher",
 			"quote",
@@ -599,6 +608,7 @@ describe("toCompanyData", () => {
 				signal: null,
 				quote: null,
 				publisher: null,
+				kind: null,
 				publishedDate: null,
 				score: null,
 			},
@@ -1001,6 +1011,32 @@ describe("a round the vendor answers with nothing", () => {
 });
 
 describe("a round the filter refuses outright", () => {
+	it("tells the next round how old the pages the last one kept really were", async () => {
+		const { search } = scriptedSearch([
+			[
+				{ ...goodResult("alpha.com"), publishedDate: "2026-08-25" },
+				{ ...goodResult("beta.com"), publishedDate: "2026-08-20" },
+			],
+			[],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize({
+			recency: "lately",
+			recencyDays: 180,
+		});
+
+		await findCompanies(icp, 10, testOptions(), {
+			recentDomains: recordingRecentDomains().recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const sent = inputs[1]?.feedback.join(" ") ?? "";
+		expect(sent).toContain("no older than 180 days");
+		expect(sent).toContain("5, 10 days old");
+	});
+
 	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
 		const { search } = scriptedSearch([
 			[
@@ -1078,6 +1114,7 @@ function reportFor(
 		angle: plan.angle,
 		query: plan.query,
 		recency: plan.recency,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: plan.source,
 		type: plan.type,
@@ -1086,25 +1123,6 @@ function reportFor(
 		found,
 		rejected,
 	};
-}
-
-type StepMocker = {
-	mockStepResult: (
-		reference: { name: string },
-		result: unknown,
-	) => Promise<unknown>;
-};
-
-/** The side effects both workflow tests stand in for: opening the run, banking each round, saving the rows, closing the run. */
-async function mockRunSideEffects(
-	m: StepMocker,
-	instanceId: string,
-): Promise<void> {
-	await m.mockStepResult({ name: "open-run" }, { id: instanceId });
-	await m.mockStepResult({ name: "round_1-spend" }, {});
-	await m.mockStepResult({ name: "round_2-spend" }, {});
-	await m.mockStepResult({ name: "save-companies" }, {});
-	await m.mockStepResult({ name: "close-run" }, {});
 }
 
 describe("FindCompaniesWorkflow: the summary output", () => {
@@ -1124,6 +1142,8 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 				evidenceUrl: `https://${domain}`,
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
+				industry: null,
 				description: null,
 				signal: null,
 				evidenceDate: null,
@@ -1140,6 +1160,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							signal: null,
 							quote: null,
 							publisher: null,
+							kind: null,
 							publishedDate: null,
 							score: null,
 						},
@@ -1167,7 +1188,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "round_1" }, roundResult);
 				await m.mockStepResult({ name: "round_1-spend" }, {});
 				await m.mockStepResult({ name: "round_2-spend" }, {});
@@ -1215,6 +1236,8 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					evidenceUrl: `https://${domain}`,
 					evidenceQuote: null,
 					evidencePublisher: null,
+					evidenceKind: null,
+					industry: null,
 					description: null,
 					signal: null,
 					evidenceDate: null,
@@ -1241,7 +1264,7 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 					{ name: "load-icp" },
 					{ doc: icp, organizationId: "org-1" },
 				);
-				await m.mockStepResult({ name: "open-run" }, { id: instanceId });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "round_1" }, roundOne);
 				await m.mockStepResult({ name: "round_1-spend" }, {});
 				await m.mockStepResult({ name: "round_2-spend" }, {});
@@ -1317,5 +1340,31 @@ describe("a round reports the freshness it demanded", () => {
 		expect(without.recency).toBeNull();
 		expect(withWindow.source).toBe("exa-search");
 		expect(withWindow.type).toBe("fast");
+	});
+});
+
+describe("the sort of page a company was proved by survives onto the saved row", () => {
+	it("carries the kind onto the row and onto the capture beside it", async () => {
+		const proved: ExaResult = {
+			...goodResult("displaced.com"),
+			evidenceUrl: "https://vendor.example/customers/displaced",
+			evidenceKind: "vendor-case-study",
+		};
+		const { search } = scriptedSearch([[proved]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies[0]?.evidenceKind).toBe("vendor-case-study");
+		expect(result.captures["displaced.com"]?.result.kind).toBe(
+			"vendor-case-study",
+		);
 	});
 });

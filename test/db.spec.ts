@@ -17,6 +17,7 @@ import type {
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
 	IcpConnection,
+	IcpInsertConnection,
 	Organization,
 	OrganizationConnection,
 	OrganizationSpendConnection,
@@ -30,6 +31,7 @@ import {
 	appendEvidence,
 	closeRun,
 	companiesForRun,
+	createIcp,
 	cutoffDate,
 	deletePerson,
 	latestEvidence,
@@ -54,6 +56,7 @@ import type {
 	Icp,
 	NewCompany,
 	NewEvidence,
+	NewIcp,
 	NewPerson,
 	NewRound,
 	NewRun,
@@ -67,6 +70,7 @@ import {
 	person,
 	run,
 } from "../src/core/db/schema";
+import type { IcpSeller } from "../src/core/synthesize";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
 	return {
@@ -161,6 +165,7 @@ function knownCompanyRow(domain: string): Company {
 		domain,
 		name: "Acme",
 		linkedinUrl: null,
+		industry: null,
 		data: null,
 		runId: "run-1",
 		foundAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -280,6 +285,77 @@ describe("loadIcp", () => {
 
 		expect(recordedMode).toBe("cached");
 		expect(result).toEqual(row);
+	});
+});
+
+describe("createIcp", () => {
+	const env = fakeEnv("postgres://cached", "postgres://direct");
+	const storedRow: Icp = {
+		id: "icp-1",
+		organizationId: "org-1",
+		domain: "acme.com",
+		doc: null,
+		createdAt: new Date("2026-01-01T00:00:00.000Z"),
+	};
+
+	it("writes the whole document, description and seller block alike", async () => {
+		const seller: IcpSeller = {
+			domain: "acme.com",
+			customers: ["Acme Corp"],
+			competitorTest: "A competitor sells the same tooling to other vendors.",
+		};
+		let insertedDoc: unknown;
+		const buildDb: DbFactory<IcpInsertConnection> = () => ({
+			insert: () => ({
+				values: (row: NewIcp | NewIcp[]) => {
+					insertedDoc = Array.isArray(row) ? row[0]?.doc : row.doc;
+					return { returning: () => Promise.resolve([storedRow]) };
+				},
+			}),
+		});
+
+		await createIcp(
+			env,
+			{
+				domain: "acme.com",
+				organizationId: "org-1",
+				description: "an ideal customer profile",
+				seller,
+			},
+			buildDb,
+		);
+
+		expect(insertedDoc).toEqual({
+			description: "an ideal customer profile",
+			seller,
+		});
+	});
+
+	it("writes a null seller when the caller gives none, matching the prompt-only onboarding path", async () => {
+		let insertedDoc: unknown;
+		const buildDb: DbFactory<IcpInsertConnection> = () => ({
+			insert: () => ({
+				values: (row: NewIcp | NewIcp[]) => {
+					insertedDoc = Array.isArray(row) ? row[0]?.doc : row.doc;
+					return { returning: () => Promise.resolve([storedRow]) };
+				},
+			}),
+		});
+
+		await createIcp(
+			env,
+			{
+				domain: "acme.com",
+				organizationId: "org-1",
+				description: "an ideal customer profile",
+			},
+			buildDb,
+		);
+
+		expect(insertedDoc).toEqual({
+			description: "an ideal customer profile",
+			seller: null,
+		});
 	});
 });
 
@@ -547,6 +623,7 @@ describe("openRun", () => {
 		};
 		const storedRun: Run = {
 			...newRun,
+			icpId: newRun.icpId ?? null,
 			costDollars: 0,
 			startedAt: new Date("2026-08-27T00:00:00.000Z"),
 			finishedAt: null,
@@ -585,6 +662,7 @@ describe("openRun", () => {
 		};
 		const storedRun: Run = {
 			...newRun,
+			icpId: newRun.icpId ?? null,
 			costDollars: 0,
 			startedAt: new Date("2026-08-27T00:00:00.000Z"),
 			finishedAt: null,
@@ -776,6 +854,7 @@ function companyRow(id: string): Company {
 		domain: `${id}.com`,
 		name: id,
 		linkedinUrl: null,
+		industry: null,
 		data: null,
 		runId: "run-1",
 		foundAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -927,12 +1006,12 @@ function recordingPersonPageDb(
 function testRun(fields: {
 	id: string;
 	capability: string;
-	icpId?: string;
+	icpId?: string | null;
 }): Run {
 	return {
 		id: fields.id,
 		organizationId: "org-1",
-		icpId: fields.icpId ?? "icp-1",
+		icpId: fields.icpId === undefined ? "icp-1" : fields.icpId,
 		capability: fields.capability,
 		status: "complete",
 		costDollars: 0,
@@ -1031,6 +1110,36 @@ describe("peoplePage scopes by what the run covers", () => {
 		);
 
 		expect(spy.condition).toEqual(eq(company.runId, "companies_x"));
+	});
+
+	it("hands back an empty page for an onboarding run, which covers no companies", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		const page = await peoplePage(
+			env,
+			testRun({ id: "onboarding_x", capability: "onboarding", icpId: null }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page).toEqual({ rows: [], nextCursor: null });
+		expect(spy.condition).toBeUndefined();
+	});
+
+	it("refuses a people run that names no profile rather than reading every person", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const buildDb = recordingPersonPageDb([], {});
+
+		await expect(
+			peoplePage(
+				env,
+				testRun({ id: "people_x", capability: "people", icpId: null }),
+				{ limit: 5, cursor: undefined },
+				buildDb,
+			),
+		).rejects.toThrow("names no profile");
 	});
 });
 

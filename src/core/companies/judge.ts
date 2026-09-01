@@ -30,16 +30,23 @@ const JUDGE_INSTRUCTIONS = [
 	"Return one verdict per row, in the same order, each carrying the row index and a keep",
 	"decision. Give a short reason only when you refuse a row. Omit the reason when you keep",
 	"a row.",
-	"Every row carries the page its signal came from: `evidenceUrl`, `evidenceQuote` copied",
-	"word for word from that page, and `evidencePublisher` as the page names itself. Refuse",
-	"a row whose page records nothing about the company it names, which is a quote about a",
-	"different company, or a page that names no publisher at all. A page published by a",
-	"named organisation counts even when that organisation is not the company, so a news",
-	"publication, a job board the company plainly uses, and a status provider are all",
-	"credible records.",
-	"When a freshness window is given, refuse a row whose `evidenceDate` falls outside it,",
-	"and refuse a row carrying no `evidenceDate`, because neither shows that the signal",
-	"happened inside the window.",
+	"A row may carry the page its signal came from: `evidenceUrl`, `evidenceQuote` copied",
+	"word for word from that page, and `evidencePublisher` as the page names itself. When a",
+	"row carries them, weigh them: refuse a row whose page records nothing about the company",
+	"it names, whose quote is about a different company, or whose page names no publisher at",
+	"all. A page published by a named organisation counts even when that organisation is not",
+	"the company, so a news publication, a job board the company plainly uses, and a status",
+	"provider are all credible records.",
+	"A row carrying no quote and no publisher came from a source that does not produce them,",
+	"because the profile asked for no recent event. Judge it on the profile and the",
+	"company's own record, and never refuse it for their absence.",
+	"A row whose `evidenceDate` falls outside the freshness window never reaches you, so",
+	"every date you see is inside it. A row carrying no `evidenceDate` does reach you, and",
+	"whether it still proves the signal depends on what the page is. A page that is only",
+	"true while it is published, such as a job advertisement still open or a status page",
+	"reporting a live incident, proves the signal now even with no date printed on it. A",
+	"page that records something that happened, such as a news article, an announcement or",
+	"a postmortem, proves nothing without a date, because you cannot tell when it happened.",
 ].join(" ");
 
 function judgePrompt(
@@ -49,7 +56,10 @@ function judgePrompt(
 ): string {
 	const criteria = [`Ideal customer profile:`, icp.description];
 	if (recency !== null) criteria.push("Freshness window:", recency);
-	const numbered = rows.map((row, index) => `${index}: ${JSON.stringify(row)}`);
+	const numbered = rows.map((row, index) => {
+		const { evidenceKind: _kind, ...judged } = row;
+		return `${index}: ${JSON.stringify(judged)}`;
+	});
 	return [...criteria, "Rows:", ...numbered].join("\n");
 }
 

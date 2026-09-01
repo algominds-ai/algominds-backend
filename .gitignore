@@ -9,3 +9,7 @@ node_modules/
 dist/
 .DS_Store
 *.log
+
+# only docs/solutions is tracked; plans, review findings and reports stay local
+docs/*
+!docs/solutions/

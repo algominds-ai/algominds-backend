@@ -14,6 +14,7 @@ export function workflowForCapability(
 	if (capability === "companies") return env.FIND_COMPANIES;
 	if (capability === "people") return env.FIND_PEOPLE;
 	if (capability === "enrich") return env.ENRICH;
+	if (capability === "onboarding") return env.ONBOARD_ICP;
 	return undefined;
 }
 
@@ -41,6 +42,8 @@ const InstanceStatusSchema = z.object({
 			searched: z.number().nullish(),
 			peopleFound: z.number().nullish(),
 			capped: z.boolean().nullish(),
+			icpId: z.string().nullish(),
+			wroteProfile: z.boolean().nullish(),
 			status: z.string().nullish(),
 			roundReports: z.array(z.unknown()).nullish(),
 		})

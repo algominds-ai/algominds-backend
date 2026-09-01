@@ -18,7 +18,9 @@ the probe wins.
 | `additionalQueries` | 1-10 strings | Deep search types only. |
 | `systemPrompt` | string | Source preference, novelty, and duplication guidance. |
 | `outputSchema` | JSON Schema | Synthesized output. Adds about 2 seconds. |
-| `contents` | object | `text`, `highlights`, `summary`, `extras`, `subpages`, `maxAgeHours`. |
+| `contents` | object | `text`, `highlights`, `summary`, `extras`, `subpages`, `maxAgeHours`, `livecrawlTimeout`. |
+| `contents.text` | boolean or `{ maxCharacters }` | The object form caps the text returned per page. |
+| `contents.livecrawlTimeout` | milliseconds | How long a live crawl may take per page. Paired with `maxAgeHours: 0`. |
 | `moderation`, `compliance`, `stream` | | |
 
 ## Parameters that do not exist
@@ -471,3 +473,7 @@ company's own domain after normalisation.
 Both date filters are rejected outright by the entity categories, so the
 question of their format does not arise on the company or people paths. The
 `SearchPlan` the synthesizer produces carries no date for this reason.
+
+Freshness is still demanded, just never as a vendor filter. The plan carries it
+as two day counts the code enforces itself, and the agent query states the
+shorter of them in words. See `two-windows-in-one-number.md`.

@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+	seedExcludedDomains,
+	staleRejectReason,
+} from "../src/core/companies/candidates";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 
@@ -10,6 +14,8 @@ function companyRow(overrides: Partial<CompanyRow> = {}): CompanyRow {
 		evidenceUrl: "https://acme.com/",
 		evidenceQuote: null,
 		evidencePublisher: null,
+		evidenceKind: null,
+		industry: null,
 		description: null,
 		signal: null,
 		evidenceDate: null,
@@ -152,5 +158,37 @@ describe("gate — a profile page is not the company's own site", () => {
 		const result = gate(rows, [{}], { seenDomains: new Set() });
 
 		expect(result.kept).toEqual(rows);
+	});
+});
+
+describe("a date the code cannot read is not a date it can trust", () => {
+	const TODAY = "2026-08-30";
+
+	it("rejects an unparseable date, passes a missing one to the judge, and does the arithmetic otherwise", () => {
+		expect(staleRejectReason("not-a-date", 30, TODAY)).toBe(
+			"the evidence date is not a date",
+		);
+		expect(staleRejectReason(null, 30, TODAY)).toBeNull();
+		expect(staleRejectReason("2026-08-20", 30, TODAY)).toBeNull();
+		expect(staleRejectReason("2025-08-20", 30, TODAY)).toContain("days old");
+	});
+});
+
+describe("a run never prospects for the seller it prospects on behalf of", () => {
+	const seller = {
+		domain: "https://www.form3.tech/about",
+		customers: ["Klarna"],
+		competitorTest: "A competitor sells payment infrastructure to banks.",
+	};
+
+	it("excludes the seller's own site from the first round, whichever source it uses", () => {
+		expect([...seedExcludedDomains(["acme.com"], seller)].sort()).toEqual([
+			"acme.com",
+			"form3.tech",
+		]);
+	});
+
+	it("excludes only the caller's list when the profile names no seller", () => {
+		expect([...seedExcludedDomains(["acme.com"], null)]).toEqual(["acme.com"]);
 	});
 });

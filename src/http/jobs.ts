@@ -1,6 +1,5 @@
 import type { Context } from "hono";
 import type { z } from "zod";
-import { config } from "@/config";
 import {
 	createIcp,
 	findRun,
@@ -10,7 +9,7 @@ import {
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
-const CAPABILITIES = ["companies", "people", "enrich"] as const;
+const CAPABILITIES = ["companies", "people", "enrich", "onboarding"] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
 export function todayUtc(now: Date): string {
@@ -80,16 +79,34 @@ export type JobConfig<Body> = {
 	toJob: (body: Body, env: Env, organizationId: string) => Promise<Job | null>;
 };
 
-/** Whether an instance already exists for `runId`, per the Workflows engine itself. */
+/** The part of a Workflow binding this file reads: one instance, and whether it is still going. */
+type RunLookup = {
+	get: (id: string) => Promise<{ status: () => Promise<{ status: string }> }>;
+};
+
+const FAILED_STATUSES: ReadonlySet<string> = new Set(["errored", "terminated"]);
+
+/**
+ * Whether a run under `runId` is still worth waiting on. A finished or running
+ * instance blocks a second start; one that failed does not, because the engine
+ * accepts its id again and the caller would otherwise wait for the day to roll.
+ * A status that cannot be read counts as blocking, so an unreadable instance
+ * never causes a second paid run.
+ */
 export async function instanceExists(
-	workflow: Workflow<unknown>,
+	workflow: RunLookup,
 	runId: string,
 ): Promise<boolean> {
+	let handle: Awaited<ReturnType<RunLookup["get"]>>;
 	try {
-		await workflow.get(runId);
-		return true;
+		handle = await workflow.get(runId);
 	} catch {
 		return false;
+	}
+	try {
+		return !FAILED_STATUSES.has(String((await handle.status()).status));
+	} catch {
+		return true;
 	}
 }
 
@@ -113,13 +130,19 @@ export async function startJob<Body>(
 		}
 	}
 	const runId = buildRunId(config.capability, job.scopeId);
-	if (await instanceExists(config.workflow, runId)) {
+	const existingResponse = async () => {
 		const existing = await findRun(c.env, runId);
 		return c.json(
 			{ runId, icpId: existing?.icpId ?? job.icpId, status: "existing" },
 			200,
 		);
+	};
+	if (await instanceExists(config.workflow, runId)) return existingResponse();
+	try {
+		await config.workflow.createBatch([{ id: runId, params: job.params }]);
+	} catch (error) {
+		if (!(await instanceExists(config.workflow, runId))) throw error;
+		return existingResponse();
 	}
-	await config.workflow.createBatch([{ id: runId, params: job.params }]);
 	return c.json({ runId, icpId: job.icpId, status: "started" }, 202);
 }

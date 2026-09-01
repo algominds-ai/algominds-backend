@@ -43,7 +43,12 @@
 			"name": "find-people",
 			"class_name": "FindPeopleWorkflow"
 		},
-		{ "binding": "ENRICH", "name": "enrich", "class_name": "EnrichWorkflow" }
+		{ "binding": "ENRICH", "name": "enrich", "class_name": "EnrichWorkflow" },
+		{
+			"binding": "ONBOARD_ICP",
+			"name": "onboard-icp",
+			"class_name": "OnboardIcpWorkflow"
+		}
 	],
 
 	// Non-secret configuration. Real values live in .env for local dev.

@@ -4,6 +4,7 @@ import type { Hono } from "hono";
 import {
 	companiesFindSchema,
 	enrichSchema,
+	onboardIcpSchema,
 	pageQuerySchema,
 	peopleFindSchema,
 } from "@/http/schemas";
@@ -128,8 +129,8 @@ const unauthorizedEntry = jsonResponse(
 	"No valid API key was presented.",
 );
 
-/** The shared envelope for the three start routes: new, existing, bad body, unknown reference, unauthorized. */
-function startRouteResponses(unknownReferenceDescription: string) {
+/** The shared envelope for a start route: new, existing, bad body, unauthorized, and a 404 only for a route that names something the caller must already own. */
+function startRouteResponses(unknownReferenceDescription?: string) {
 	return {
 		202: jsonResponse(startedResponse, "A new run started."),
 		200: jsonResponse(
@@ -140,7 +141,9 @@ function startRouteResponses(unknownReferenceDescription: string) {
 			issuesResponse,
 			"The request body failed schema validation.",
 		),
-		404: jsonResponse(errorResponse, unknownReferenceDescription),
+		...(unknownReferenceDescription
+			? { 404: jsonResponse(errorResponse, unknownReferenceDescription) }
+			: {}),
 		401: unauthorizedEntry,
 	};
 }
@@ -234,6 +237,30 @@ const enrichRoute = createRoute({
 	responses: startRouteResponses("The referenced source run is unknown."),
 });
 
+const onboardIcpRoute = createRoute({
+	method: "post",
+	path: "/icp/onboard",
+	tags: ["icp"],
+	security: SECURITY,
+	request: {
+		body: jsonBodyWithExamples(onboardIcpSchema, {
+			"onboard from a domain": {
+				summary: "Reads the seller's own site and writes its profile.",
+				value: { domain: "acme.example" },
+			},
+			"onboard with added context": {
+				summary:
+					"Adds a note the model reads for context, never as an instruction.",
+				value: {
+					domain: "acme.example",
+					note: "Our best account is Globex, grew from 5 to 40 seats.",
+				},
+			},
+		}),
+	},
+	responses: startRouteResponses(),
+});
+
 const runStatusRoute = createRoute({
 	method: "get",
 	path: "/runs/{runId}",
@@ -276,13 +303,31 @@ const runPeopleRoute = createRoute({
 	),
 });
 
+const runRoundsRoute = createRoute({
+	method: "get",
+	path: "/runs/{runId}/rounds",
+	tags: ["runs"],
+	security: SECURITY,
+	request: { params: runIdParams },
+	responses: {
+		200: jsonResponse(
+			z.object({ rows: z.array(z.unknown()) }).openapi("RunRounds"),
+			"Every round the run recorded: the plan it chose, what it kept, and why it refused the rest.",
+		),
+		404: jsonResponse(errorResponse, UNKNOWN_RUN),
+		401: unauthorizedEntry,
+	},
+});
+
 const ROUTES = [
 	findCompaniesRoute,
 	findPeopleRoute,
 	enrichRoute,
+	onboardIcpRoute,
 	runStatusRoute,
 	runCompaniesRoute,
 	runPeopleRoute,
+	runRoundsRoute,
 ];
 
 /**

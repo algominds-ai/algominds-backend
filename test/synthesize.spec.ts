@@ -109,6 +109,8 @@ type PlanShape = {
 	countries: string[];
 	minWorkforce: number | null;
 	maxWorkforce: number | null;
+	eventWindowDays: number | null;
+	recencyDays: number | null;
 };
 
 function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
@@ -119,6 +121,8 @@ function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
 		countries: ["United States"],
 		minWorkforce: null,
 		maxWorkforce: 20,
+		eventWindowDays: null,
+		recencyDays: null,
 		...overrides,
 	});
 }
@@ -182,6 +186,8 @@ describe("synthesize: gateway wiring", () => {
 					{
 						query: "q",
 						angle: "a",
+						eventWindowDays: null,
+						recencyDays: null,
 						userLocation: null,
 						countries: [],
 						minWorkforce: null,
@@ -224,6 +230,8 @@ describe("synthesize: cost recording without a cost field", () => {
 						content: JSON.stringify({
 							query: "q",
 							angle: "a",
+							eventWindowDays: null,
+							recencyDays: null,
 							userLocation: null,
 							countries: [],
 							minWorkforce: null,
@@ -355,5 +363,118 @@ describe("synthesize: prompt drift and retries", () => {
 		expect(result.plan.query).toBe(icp.description);
 		expect(result.plan.maxWorkforce).toBeNull();
 		expect(result.plan.countries).toEqual([]);
+	});
+});
+
+describe("the agent is given the effort that keeps evidence freshest", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	function everyMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("names medium as the default and no longer tells the model to choose low", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("Choose `medium`");
+		expect(sent).not.toContain("Choose `low`");
+	});
+
+	it("fills medium when the model leaves the field out", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+
+	it("carries medium on the template the second failure falls back to", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse({ content: "", finishReason: "length" }),
+			chatCompletionResponse({ content: "", finishReason: "length" }),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+});
+
+describe("a profile that lists dated events is asking for something recent", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	function everyMessage(call: { body: unknown }): string {
+		const parsed = z
+			.object({ messages: z.array(z.object({ content: z.string() })) })
+			.parse(call.body);
+		return parsed.messages.map((message) => message.content).join("\n");
+	}
+
+	it("tells the model those events are what recency is for, and no longer claims an undated page is refused", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("those events are what `recency` is");
+		expect(sent).toContain("sends the round to a source that holds no events");
+		expect(sent).not.toContain("refuses one carrying no date");
+	});
+
+	it("describes what each source can answer and leaves the choice to the model", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("It holds no pages, no events and no dates");
+		expect(sent).toContain(
+			"Choose the one that can answer the round you are writing",
+		);
+		expect(sent).not.toContain("whenever you set `recency`");
+		expect(sent).not.toContain("a breach, a licence or a funding round");
+	});
+
+	it("asks how old the event may be and how old its proof may be as two separate questions", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain(
+			"`eventWindowDays` is how far back the profile allows",
+		);
+		expect(sent).toContain("still show that this situation is live");
+		expect(sent).toContain("may be a year while `recencyDays` is a few");
+	});
+
+	it("keeps a wide event window and a narrow proof window apart in the plan", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				planReply({ eventWindowDays: 365, recencyDays: 30 }),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await runSynthesize();
+
+		expect(result.plan.eventWindowDays).toBe(365);
+		expect(result.plan.recencyDays).toBe(30);
 	});
 });

@@ -4,7 +4,6 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
 import type {
-	FindCompaniesDeps,
 	FindCompaniesOptions,
 	FindCompaniesReject,
 	FindCompaniesResult,
@@ -12,33 +11,29 @@ import type {
 } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
-import { toCompanyData } from "@/core/companies/candidates";
+import {
+	seedExcludedDomains,
+	toCompanyData,
+} from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
-import { gate } from "@/core/companies/gate";
-import { judge } from "@/core/companies/judge";
+import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
 import {
 	appendEvidence,
+	assertUnderDailyCeiling,
 	closeRun,
 	loadIcp,
 	openRun,
-	organizationSpendToday,
 	recordRunSpend,
 	saveCompanies,
 	saveRound,
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
-import { search } from "@/core/providers/exa/search";
-import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
-import {
-	agentRecentDomains,
-	agentSearch,
-	agentSynthesize,
-} from "@/workflows/find-companies-agent";
+import { roundDeps } from "@/workflows/find-companies-agent";
 
 const MAX_ROUNDS = config.companies.maxRounds;
-const EVIDENCE_SOURCE = "exa";
 /** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
 const STORED_REJECTS_PER_ROUND = 120;
 
@@ -49,33 +44,6 @@ const FindCompaniesPayloadSchema = z.object({
 });
 
 type FindCompaniesPayload = z.infer<typeof FindCompaniesPayloadSchema>;
-
-type RoundDepsInput = {
-	accumulatedDomains: ReadonlySet<string>;
-	step: WorkflowStep;
-	round: number;
-	remaining: number;
-	today: string;
-};
-
-function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
-	const { accumulatedDomains, step, round, remaining, today } = input;
-	const lookupRecentDomains = agentRecentDomains(step, round);
-	const viaAgent = agentSearch({ step, round, remaining, today });
-	return {
-		recentDomains: async (env, icpId, days) => {
-			const known = await lookupRecentDomains(env, icpId, days);
-			return [...known, ...accumulatedDomains];
-		},
-		synthesize: agentSynthesize(step, round),
-		search: (plan, req, env, ledger) =>
-			plan.source === "exa-agent"
-				? viaAgent(plan, req, env, ledger)
-				: search(req, env, ledger),
-		gate,
-		judge,
-	};
-}
 
 /** A run that saved a company was never empty, whatever its last round reported. */
 export function finalStatus(
@@ -118,6 +86,24 @@ async function persistRound(input: PersistRoundInput): Promise<void> {
 	);
 }
 
+/** The options one round runs under, carrying the angles and reject reasons the rounds before it produced. */
+function roundOptions(
+	payload: FindCompaniesPayload,
+	env: Env,
+	today: string,
+	history: { pastAngles: readonly string[]; feedback: readonly string[] },
+): FindCompaniesOptions {
+	return {
+		icpId: payload.icpId,
+		env,
+		today,
+		maxRounds: 1,
+		pastAngles: history.pastAngles,
+		feedback: history.feedback,
+		excludeDomains: payload.excludeDomains ?? [],
+	};
+}
+
 /**
  * Runs up to three rounds, each in its own `step.do` for durability, and
  * merges their plain results into one `FindCompaniesResult`.
@@ -128,6 +114,7 @@ async function runFindCompaniesRounds(
 		payload: FindCompaniesPayload;
 		icp: IcpDoc;
 		runId: string;
+		alreadySpent: number;
 	},
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
@@ -135,12 +122,13 @@ async function runFindCompaniesRounds(
 	const today = await step.do("today", config.stepConfig.databaseCall, () =>
 		Promise.resolve(new Date().toISOString().slice(0, 10)),
 	);
-	const accumulatedDomains = new Set(
-		(payload.excludeDomains ?? []).map(normalizeDomain),
+	const accumulatedDomains = seedExcludedDomains(
+		payload.excludeDomains ?? [],
+		icp.seller,
 	);
 	let companies: CompanyRow[] = [];
 	let rejects: FindCompaniesReject[] = [];
-	let costDollars = 0;
+	let costDollars = target.alreadySpent;
 	let rounds = 0;
 	const searches: FindCompaniesResult["searches"] = [];
 	const captures: Record<string, CompanyCapture> = {};
@@ -155,21 +143,14 @@ async function runFindCompaniesRounds(
 		round++
 	) {
 		const remaining = payload.count - companies.length;
-		const opts: FindCompaniesOptions = {
-			icpId: payload.icpId,
-			env,
-			today,
-			maxRounds: 1,
-			pastAngles,
-			feedback,
-			excludeDomains: payload.excludeDomains ?? [],
-		};
+		const opts = roundOptions(payload, env, today, { pastAngles, feedback });
 		const deps = roundDeps({
 			accumulatedDomains,
 			step,
 			round,
 			remaining,
 			today,
+			seller: icp.seller,
 		});
 		const stepResult = await step.do(
 			`round_${round}`,
@@ -221,54 +202,6 @@ async function runFindCompaniesRounds(
 	};
 }
 
-function toNewCompany(
-	row: CompanyRow,
-	icpId: string,
-	runId: string,
-	capture: CompanyCapture | undefined,
-): NewCompany | null {
-	if (row.name === null || row.domain === null || capture === undefined)
-		return null;
-	return {
-		icpId,
-		domain: row.domain,
-		name: row.name,
-		linkedinUrl: row.linkedinUrl,
-		data: toCompanyData(capture),
-		runId,
-	};
-}
-
-function matchRow(
-	rows: readonly CompanyRow[],
-	saved: Company,
-): CompanyRow | undefined {
-	return rows.find(
-		(row) =>
-			row.domain !== null && normalizeDomain(row.domain) === saved.domain,
-	);
-}
-
-function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
-	const fields: Array<[string, string | null]> = [
-		["name", row.name],
-		["domain", row.domain],
-		["linkedinUrl", row.linkedinUrl],
-		["evidenceUrl", row.evidenceUrl],
-		["signal", row.signal],
-		["evidenceDate", row.evidenceDate],
-	];
-	return fields
-		.filter((entry): entry is [string, string] => entry[1] !== null)
-		.map(([kind, value]) => ({
-			subjectType: "company",
-			subjectId: saved.id,
-			kind,
-			value,
-			source: EVIDENCE_SOURCE,
-		}));
-}
-
 /**
  * What the workflow reports back: counts, status, spend, the search plans,
  * and rejects. The row arrays and the vendor capture stay in Postgres, read
@@ -281,6 +214,7 @@ export type RoundReport = {
 	angle: string;
 	query: string;
 	recency: string | null;
+	eventWindowDays: number | null;
 	recencyDays: number | null;
 	source: string;
 	type: string;
@@ -303,6 +237,7 @@ export function reportRound(
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
 		recency: plan?.recency ?? null,
+		eventWindowDays: plan?.eventWindowDays ?? null,
 		recencyDays: plan?.recencyDays ?? null,
 		source: plan?.source ?? "",
 		type: plan?.type ?? "",
@@ -393,24 +328,30 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			const spent = await organizationSpendToday(this.env, organizationId);
-			if (spent >= config.spend.perAccountDailyDollars) {
-				throw new NonRetryableError(
-					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
-				);
-			}
-			return openRun(this.env, {
-				id: event.instanceId,
-				organizationId,
-				icpId: payload.icpId,
-				capability: "companies",
-				status: "running",
-			});
-		});
+		const alreadySpent = await step.do(
+			"open-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				await assertUnderDailyCeiling(this.env, organizationId);
+				const row = await openRun(this.env, {
+					id: event.instanceId,
+					organizationId,
+					icpId: payload.icpId,
+					capability: "companies",
+					status: "running",
+				});
+				return { alreadySpent: row.costDollars };
+			},
+		);
 
 		const result = await runFindCompaniesRounds(
-			{ env: this.env, payload, icp, runId: event.instanceId },
+			{
+				env: this.env,
+				payload,
+				icp,
+				runId: event.instanceId,
+				alreadySpent: alreadySpent.alreadySpent,
+			},
 			step,
 		);
 

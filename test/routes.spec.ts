@@ -14,7 +14,9 @@ import {
 } from "../src/core/db/queries";
 import { company, icp as icpTable, person, run } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
+import { buildRunId, domainsScopeId, instanceExists } from "../src/http/jobs";
 import app from "../src/index";
+import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 
 const BASE = "https://algo.test";
 const authedEnv: Env = testEnv;
@@ -217,7 +219,7 @@ async function expectEnrichResolvesSubjects(
 				{ name: "load-source-run" },
 				{ organizationId: "org-1", icpId: "icp-1" },
 			);
-			await m.mockStepResult({ name: "open-run" }, { id: runId });
+			await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 			await m.mockStepResult({ name: "close-run" }, { id: runId });
 			await m.mockStepResult({ name: "resolve-subjects" }, subjects);
 			await m.mockStepResult(
@@ -745,7 +747,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 });
 
 describe("OpenAPI document and Swagger UI", () => {
-	it("answers the OpenAPI document with no API key, naming all six paths", async () => {
+	it("answers the OpenAPI document with no API key, naming all eight paths", async () => {
 		const response = await publicCall("/openapi.json");
 		const body: { paths?: { [path: string]: unknown } } = await response.json();
 
@@ -754,10 +756,12 @@ describe("OpenAPI document and Swagger UI", () => {
 			[
 				"/companies/find",
 				"/enrich",
+				"/icp/onboard",
 				"/people/find",
 				"/runs/{runId}",
 				"/runs/{runId}/companies",
 				"/runs/{runId}/people",
+				"/runs/{runId}/rounds",
 			].sort(),
 		);
 	});
@@ -765,5 +769,78 @@ describe("OpenAPI document and Swagger UI", () => {
 	it("answers the Swagger UI page with no API key", async () => {
 		const response = await publicCall("/docs");
 		expect(response.status).toBe(200);
+	});
+});
+
+describe("a run whose state cannot be read is treated as still going", () => {
+	function fakeWorkflow(status: () => Promise<{ status: string }>) {
+		return {
+			get: async () => ({ status }),
+			create: async () => ({ id: "x" }),
+			createBatch: async () => [],
+			deleteBatch: async () => undefined,
+		};
+	}
+
+	it("blocks a second start when the status cannot be read, and frees a terminated one", async () => {
+		const unreadable = fakeWorkflow(async () => {
+			throw new Error("the control plane is unreachable");
+		});
+		const terminated = fakeWorkflow(async () => ({ status: "terminated" }));
+		const running = fakeWorkflow(async () => ({ status: "running" }));
+
+		expect(await instanceExists(unreadable, "run-1")).toBe(true);
+		expect(await instanceExists(terminated, "run-1")).toBe(false);
+		expect(await instanceExists(running, "run-1")).toBe(true);
+	});
+});
+
+describe("two callers racing to start the same run", () => {
+	it("answers both without an error, naming the same run", async () => {
+		const domain = `race-${crypto.randomUUID()}.example`;
+		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const runId = buildRunId("onboarding", scopeId);
+		const instance = await introspectWorkflowInstance(
+			testEnv.ONBOARD_ICP,
+			runId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: ONBOARD_STEPS.checkSpend }, {});
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.openRun },
+					{ alreadySpent: 0 },
+				);
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.readSeller },
+					{ pages: [], costDollars: 0 },
+				);
+				await m.mockStepResult({ name: ONBOARD_STEPS.bankSearch }, {});
+				await m.mockStepResult(
+					{ name: ONBOARD_STEPS.writeProfile },
+					{
+						description: "a mocked profile",
+						seller: { domain, customers: [], competitorTest: "none" },
+						wroteProfile: true,
+						costDollars: 0,
+					},
+				);
+				await m.mockStepResult({ name: ONBOARD_STEPS.bankProfile }, {});
+				await m.mockStepResult({ name: ONBOARD_STEPS.saveIcp }, "mocked-icp");
+			});
+
+			const both = await Promise.all([
+				authedCall("/icp/onboard", postInit({ domain }, TOKEN)),
+				authedCall("/icp/onboard", postInit({ domain }, TOKEN)),
+			]);
+
+			const bodies = await Promise.all(
+				both.map((r) => r.json<{ runId?: string }>()),
+			);
+			for (const response of both) expect(response.status).toBeLessThan(300);
+			expect(bodies.map((b) => b.runId)).toEqual([runId, runId]);
+		} finally {
+			await instance.dispose();
+		}
 	});
 });

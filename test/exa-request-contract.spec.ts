@@ -15,6 +15,7 @@ function planFor(query: string): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
@@ -140,6 +141,7 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		query: "fintech companies at seed stage with a small team",
 		angle: "founder-led vertical software",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
@@ -226,6 +228,7 @@ describe("agent run request stays inside the measured Exa /agent/runs schema", (
 			planFor("small US software teams"),
 			10,
 			"2026-08-30",
+			null,
 		);
 
 		const parsed = MeasuredAgentRunRequestSchema.safeParse(request);
@@ -353,7 +356,12 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		await startAgentRun(
-			buildAgentRunRequest(planFor("ten fintech companies"), 10, "2026-08-30"),
+			buildAgentRunRequest(
+				planFor("ten fintech companies"),
+				10,
+				"2026-08-30",
+				null,
+			),
 			exaEnv(),
 		);
 
@@ -443,6 +451,7 @@ describe("the plan chooses how hard the agent works", () => {
 			samplePlan({ agentEffort: "high" }),
 			5,
 			"2026-08-30",
+			null,
 		);
 
 		expect(request.effort).toBe("high");

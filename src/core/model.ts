@@ -14,14 +14,13 @@ const PROVIDER_NAME = "aigw";
 
 /**
  * `supportsStructuredOutputs` makes the SDK send the real JSON schema
- * instead of a bare `json_object`, `require_parameters` makes OpenRouter
- * pick a provider that honours it, and `sort` keeps it from picking a
- * provider that honours it two minutes later. See
+ * instead of a bare `json_object`, and `require_parameters` makes OpenRouter
+ * pick a provider that honours it. See
  * `docs/solutions/structured-output-routing.md`.
  */
 const STRUCTURED_ROUTING = {
 	[PROVIDER_NAME]: {
-		provider: { require_parameters: true, sort: "latency" },
+		provider: { require_parameters: true },
 	},
 };
 

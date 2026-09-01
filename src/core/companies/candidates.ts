@@ -7,6 +7,7 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
+import type { IcpDoc } from "@/core/synthesize";
 import { acceptsAdditionalQueries, type SearchPlan } from "@/core/synthesize";
 
 const {
@@ -28,6 +29,7 @@ export type CompanyMatch = {
 	signal: string | null;
 	quote: string | null;
 	publisher: string | null;
+	kind: string | null;
 	publishedDate: string | null;
 	score: number | null;
 };
@@ -53,6 +55,16 @@ const MAX_EXCLUDED_DOMAINS = 1200;
  * anyway, so naming it up front spends the result slot on a new one instead.
  * Capped at the most Exa accepts.
  */
+/** The domains a run excludes before it starts: the caller's list plus the seller's own site, which is never a prospect. */
+export function seedExcludedDomains(
+	caller: readonly string[],
+	seller: IcpDoc["seller"],
+): Set<string> {
+	const seeded = new Set(caller.map(normalizeDomain));
+	if (seller) seeded.add(normalizeDomain(seller.domain));
+	return seeded;
+}
+
 export function excludedDomains(
 	caller: readonly string[],
 	seen: ReadonlySet<string>,
@@ -89,6 +101,7 @@ export function buildSearchRequest(
 
 function describeCompany(entity: CompanyEntity): string {
 	const facts: string[] = [];
+	if (entity.industry !== null) facts.push(entity.industry);
 	if (entity.workforceTotal !== null)
 		facts.push(`headcount ${entity.workforceTotal}`);
 	if (entity.country !== null)
@@ -115,6 +128,8 @@ function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 		evidenceUrl: evidenceUrlOf(result),
 		evidenceQuote: result.evidenceQuote ?? null,
 		evidencePublisher: result.evidencePublisher ?? null,
+		evidenceKind: result.evidenceKind ?? null,
+		industry: entity.industry,
 		description: describeCompany(entity) || null,
 		signal: result.signal ?? null,
 		evidenceDate: result.publishedDate ?? null,
@@ -135,6 +150,7 @@ function toCompanyMatch(result: ExaResult): CompanyMatch {
 		signal: result.signal ?? null,
 		quote: result.evidenceQuote ?? null,
 		publisher: result.evidencePublisher ?? null,
+		kind: result.evidenceKind ?? null,
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
 	};
@@ -281,21 +297,21 @@ export type FilterOutcome = {
 
 /** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
 /**
- * Why a dated page cannot prove a signal the profile wants fresh: it is older
- * than the window, or it carries no date at all. Null when the profile asks
- * for nothing recent, or when the page is inside the window.
+ * Why a dated page is too old to prove a signal the profile wants fresh. Only
+ * arithmetic lives here: a page carrying no date reaches the judge instead,
+ * because whether it still proves anything depends on what the page is, and a
+ * live job advertisement is current whether or not it prints a date.
  */
 export function staleRejectReason(
 	evidenceDate: string | null,
 	recencyDays: number | null,
 	today: string,
 ): string | null {
-	if (recencyDays === null) return null;
-	if (evidenceDate === null) return "no date on the evidence page";
+	if (recencyDays === null || evidenceDate === null) return null;
 	const age = Math.round(
 		(Date.parse(today) - Date.parse(evidenceDate)) / 86_400_000,
 	);
-	if (Number.isNaN(age)) return "no date on the evidence page";
+	if (Number.isNaN(age)) return "the evidence date is not a date";
 	return age > recencyDays
 		? `evidence is ${age} days old, older than the ${recencyDays} the profile allows`
 		: null;

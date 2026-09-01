@@ -7,10 +7,10 @@ import { toBatches } from "@/core/batches";
 import { knownPeopleDomains } from "@/core/db/known-people";
 import {
 	appendEvidence,
+	assertUnderDailyCeiling,
 	closeRun,
 	loadIcp,
 	openRun,
-	organizationSpendToday,
 	recordRunSpend,
 	savePeople,
 } from "@/core/db/queries";
@@ -323,21 +323,21 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		);
 		const organizationId = payload.organizationId;
 
-		await step.do("open-run", config.stepConfig.databaseCall, async () => {
-			const spent = await organizationSpendToday(this.env, organizationId);
-			if (spent >= config.spend.perAccountDailyDollars) {
-				throw new NonRetryableError(
-					`daily ceiling reached for this account: ${spent} of ${config.spend.perAccountDailyDollars} dollars`,
-				);
-			}
-			return openRun(this.env, {
-				id: event.instanceId,
-				organizationId,
-				icpId: target.icpId,
-				capability: "people",
-				status: "running",
-			});
-		});
+		const alreadySpent = await step.do(
+			"open-run",
+			config.stepConfig.databaseCall,
+			async () => {
+				await assertUnderDailyCeiling(this.env, organizationId);
+				const row = await openRun(this.env, {
+					id: event.instanceId,
+					organizationId,
+					icpId: target.icpId,
+					capability: "people",
+					status: "running",
+				});
+				return { alreadySpent: row.costDollars };
+			},
+		);
 
 		const known = await step.do(
 			"known-people",
@@ -361,12 +361,13 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		const opts: FindPeopleOptions = { icp, env: this.env, plan: resolved };
 		const run = await runBatches(toBatches(scoped, BATCH_SIZE), opts, step, {
 			id: event.instanceId,
-			spentAlready: resolved.costDollars,
+			spentAlready: alreadySpent.alreadySpent + resolved.costDollars,
 		});
 		const merged = mergeResults(run.batches, skipped);
 		const result: FindPeopleWorkflowResult = {
 			...merged,
-			costDollars: merged.costDollars + resolved.costDollars,
+			costDollars:
+				alreadySpent.alreadySpent + merged.costDollars + resolved.costDollars,
 			unknownDomains: target.unknownDomains,
 			knownDomains: filtered.skipped,
 			capped: run.capped,

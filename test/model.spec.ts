@@ -173,13 +173,13 @@ describe("model: the request body the SDK sends", () => {
 		);
 	});
 
-	it("asks for the fastest provider, so one slow provider cannot stall a round", async () => {
+	it("never asks for the fastest provider, because that one accepts the schema and ignores it", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
 		globalThis.fetch = gateway.fetch;
 
 		await callWorkerModel(new CostLedger());
 
-		expect(capturedBody(gateway.calls[0]).provider?.sort).toBe("latency");
+		expect(capturedBody(gateway.calls[0]).provider?.sort).toBeUndefined();
 	});
 
 	it("targets the worker route for the lighter model", async () => {

@@ -22,12 +22,14 @@ import type {
 import {
 	company,
 	evidence,
-	icp,
+	type icp,
 	normalizeDomain,
 	person,
 	round,
 	type run,
 } from "@/core/db/schema";
+import type { IcpDoc, IcpSeller } from "@/core/synthesize";
+import { IcpDocSchema } from "@/core/synthesize";
 
 export type Organization = typeof organization.$inferSelect;
 export type NewOrganization = typeof organization.$inferInsert;
@@ -186,25 +188,6 @@ export function cutoffDate(days: number, now: Date = new Date()): Date {
 	return new Date(now.getTime() - days * MS_PER_DAY);
 }
 
-export async function loadIcp(
-	env: DbEnv,
-	icpId: string,
-	buildDb: DbFactory<IcpConnection> = db,
-): Promise<Icp | undefined> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select()
-		.from(icp)
-		.where(eq(icp.id, icpId))
-		.limit(1);
-	return rows[0];
-}
-
-export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
-	description: string;
-};
-
-/** Stores a free-text ideal customer profile and returns the stored row. */
 export type OrganizationSelectConnection = SelectAllWhereConnection<
 	typeof organization,
 	Organization
@@ -224,24 +207,7 @@ export async function organizationDomain(
 	return rows[0]?.domain ?? null;
 }
 
-export async function createIcp(
-	env: DbEnv,
-	input: NewIcpInput,
-	buildDb: DbFactory<IcpInsertConnection> = db,
-): Promise<Icp> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.insert(icp)
-		.values({
-			domain: input.domain,
-			organizationId: input.organizationId,
-			doc: { description: input.description },
-		})
-		.returning();
-	const row = rows[0];
-	if (!row) throw new Error("createIcp: insert returned no row");
-	return row;
-}
+/** Writes the profile and closes its run in one transaction, so a failure between them cannot leave a profile no run points at. Returns the new profile's id. */
 
 /** The id, domain, name, and saved Exa organization id of every company found in run `runId`. */
 export async function companiesForRun(
@@ -407,6 +373,13 @@ export async function deletePerson(
 }
 
 export {
+	createIcp,
+	loadIcp,
+	type NewIcpInput,
+	saveOnboardedIcp,
+} from "@/core/db/icp";
+export {
+	assertUnderDailyCeiling,
 	closeRun,
 	findRun,
 	openRun,

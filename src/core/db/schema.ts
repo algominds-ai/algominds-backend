@@ -35,9 +35,7 @@ export const run = pgTable(
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id),
-		icpId: uuid("icp_id")
-			.notNull()
-			.references(() => icp.id),
+		icpId: uuid("icp_id").references(() => icp.id),
 		capability: text("capability").notNull(),
 		status: text("status").notNull(),
 		costDollars: real("cost_dollars").notNull().default(0),
@@ -87,6 +85,7 @@ export const company = pgTable(
 		domain: text("domain").notNull(),
 		name: text("name").notNull(),
 		linkedinUrl: text("linkedin_url"),
+		industry: text("industry"),
 		data: jsonb("data"),
 		runId: text("run_id")
 			.notNull()
@@ -170,4 +169,17 @@ export function normalizeDomain(input: string): string {
 	const url = new URL(input.includes("://") ? input : `https://${input}`);
 	const host = url.hostname.toLowerCase();
 	return host.startsWith("www.") ? host.slice(4) : host;
+}
+
+const IPV4_HOST = /^\d+(\.\d+)*$/;
+
+/** `input` normalized, or null when it names no public host. */
+export function publicDomain(input: string): string | null {
+	let host: string;
+	try {
+		host = normalizeDomain(input);
+	} catch {
+		return null;
+	}
+	return host.includes(".") && !IPV4_HOST.test(host) ? host : null;
 }

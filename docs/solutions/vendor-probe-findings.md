@@ -6,80 +6,13 @@ documentation, the live result is authoritative. Total probe spend: about $0.09 
 
 ## Exa
 
-### `/search` replaces the Agent API for both capabilities
+The Exa findings from this probe are superseded. `exa-search-contract.md` is the
+authoritative record: it was probed later and it explicitly corrects several
+claims made here, including that `/search` replaces the Agent API, the relative
+cost of an agent run, and what an unknown `category` does.
 
-| | Agent API | `/search` |
-|---|---|---|
-| Latency | ~20 s at `minimal` | 1–4.5 s |
-| Cost, 3 people | $0.012 | $0.010 |
-| Hard filters | none | dates, domains, category, includeText |
-| Result | identical | identical |
-
-One `/search` call does search, page fetch, and structured extraction together.
-
-### People, one call
-
-```
-category: "linkedin profile", type: "keyword",
-contents.summary.schema: { fullName, currentTitle, currentCompany, location }
-```
-
-Returns, for 3 results at $0.010 in 4.5 s:
-
-```
-{"fullName":"Max Freeman","currentTitle":"SVP of Sales","currentCompany":"Ramp",...}
-{"fullName":"Elliot Silverstein","currentTitle":"VP of Sales (Current)","currentCompany":"Ramp"}
-{"fullName":"Kyle Bastien","currentTitle":"Director, Revenue Enablement","currentCompany":"Ramp"}
-```
-
-`currentCompany` is the employment signal. No separate verification call is needed.
-
-With `contents.text` the same call returns the full profile body: headline, location,
-connection count, About, and an Experience section.
-
-### Companies, two shapes
-
-`category: "company"` is semantic-only. The API rejects date filters explicitly:
-
-> The company category does not support the following filters: startPublishedDate.
-> These categories use dedicated indices that only support semantic search.
-
-So there are two distinct searches:
-
-- **ICP shape** — `category: "company"` plus a summary schema. Returned ZeroSettle (YC W26,
-  Pre-Seed, SF), Copperlane, Cranston AI, Sava, Anchor. $0.012 for 5.
-- **Timely signal** — no category, plus `startPublishedDate`. Returned String
-  "We're hiring a Founding GTM Lead" (2026-08-10) and SkillDock (2026-08-13). $0.012 for 5.
-
-`startPublishedDate` removes stale evidence at the source rather than in the gate.
-
-### Grounding is per row, not per field
-
-Documentation shows `structured.companies[0].sourceUrl`. The API returns:
-
-```
-field: "structured.companies[0]"   confidence: "high"     citations: 2
-field: "structured.companies[1]"   confidence: "medium"   citations: 2
-```
-
-`confidence` is populated and usable. A per-field path matches nothing.
-
-### A URL field need not share a domain with its citations
-
-Row 0 was Ripple with `sourceUrl` on linkedin.com while its citations were `aba.com` and
-another unrelated host. A strict domain match between a field value and its citations
-rejects legitimate rows.
-
-### Summaries echo the query when they find nothing
-
-Two company rows returned `signal` equal to the query string verbatim. A field whose value
-matches the query text is a fabrication, and the gate must reject it.
-
-### Costs and behaviour
-
-`minimal` effort Agent run: $0.012, all in `search` (3 searches), `agentCompute: 0`.
-`/search`: $0.007 for 2–5 results, $0.022 for 25. Summary adds ~$0.001 per result.
-An unknown `category` returns an empty result set at zero cost, with no error.
+Read `exa-search-contract.md` for anything about Exa. The sections below cover
+the other vendors and still stand.
 
 ## Apollo
 

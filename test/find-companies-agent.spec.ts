@@ -17,6 +17,7 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
@@ -47,7 +48,7 @@ function jsonResponse(body: unknown): Response {
 	});
 }
 
-type StartedRun = { query: string; minItems: number };
+type StartedRun = { query: string; systemPrompt: string; minItems: number };
 
 function stubAgentCompanyFetch(): { started: StartedRun[] } {
 	const started: StartedRun[] = [];
@@ -56,6 +57,7 @@ function stubAgentCompanyFetch(): { started: StartedRun[] } {
 			const body = JSON.parse(String(init.body));
 			started.push({
 				query: String(body.query),
+				systemPrompt: String(body.systemPrompt),
 				minItems: Number(body.outputSchema?.properties?.companies?.minItems),
 			});
 			return jsonResponse({ id: `run-${started.length}`, status: "running" });
@@ -110,6 +112,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: remaining,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("small US software teams"),
@@ -120,7 +123,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 
 		const wanted = remaining * config.companies.judgeCandidateMultiple;
 		expect(started).toHaveLength(1);
-		expect(started[0]?.minItems).toBe(wanted);
+		expect(started[0]?.minItems).toBe(1);
 		expect(started[0]?.query).toContain(`${wanted} distinct companies`);
 	});
 
@@ -133,6 +136,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: remaining,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("seed stage fintech"),
@@ -141,9 +145,9 @@ describe("the company agent run asks for more candidates than the caller wants",
 			new CostLedger(),
 		);
 
-		expect(started[0]?.minItems).toBeGreaterThan(remaining);
-		expect(started[0]?.minItems).toBe(
-			remaining * config.companies.judgeCandidateMultiple,
+		expect(started[0]?.minItems).toBe(1);
+		expect(started[0]?.query).toContain(
+			`${remaining * config.companies.judgeCandidateMultiple} distinct companies`,
 		);
 	});
 
@@ -156,6 +160,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: remaining,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("every mid-market SaaS company"),
@@ -164,12 +169,12 @@ describe("the company agent run asks for more candidates than the caller wants",
 			new CostLedger(),
 		);
 
-		expect(started[0]?.minItems).toBe(config.companies.resultsPerRound);
-		expect(started[0]?.minItems).toBeLessThan(
-			remaining * config.companies.judgeCandidateMultiple,
-		);
+		expect(started[0]?.minItems).toBe(1);
 		expect(started[0]?.query).toContain(
 			`${config.companies.resultsPerRound} distinct companies`,
+		);
+		expect(started[0]?.query).not.toContain(
+			`${remaining * config.companies.judgeCandidateMultiple} distinct`,
 		);
 	});
 
@@ -181,6 +186,7 @@ describe("the company agent run asks for more candidates than the caller wants",
 			round: 1,
 			remaining: 1,
 			today: "2026-08-30",
+			seller: null,
 		});
 		await search(
 			planFor("B2B software with an outbound team", {
@@ -195,5 +201,32 @@ describe("the company agent run asks for more candidates than the caller wants",
 
 		expect(started[0]?.query).toContain("headcount between 10 and 300");
 		expect(started[0]?.query).toContain("United States");
+	});
+});
+
+describe("the round tells the agent which seller it prospects for", () => {
+	it("carries the profile's seller into the started run", async () => {
+		const { started } = stubAgentCompanyFetch();
+
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: 1,
+			today: "2026-08-30",
+			seller: {
+				domain: "form3.tech",
+				customers: ["Klarna"],
+				competitorTest: "A competitor sells payment infrastructure to banks.",
+			},
+		});
+		await search(
+			planFor("large European platform teams"),
+			{ query: "large European platform teams" },
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(started[0]?.systemPrompt).toContain("form3.tech");
+		expect(started[0]?.systemPrompt).toContain("Klarna");
 	});
 });

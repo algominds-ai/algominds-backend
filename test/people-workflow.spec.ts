@@ -104,7 +104,7 @@ describe("FindPeopleWorkflow: runId", () => {
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "people-batch-1" }, batchOne);
@@ -159,7 +159,7 @@ describe("FindPeopleWorkflow: an empty run", () => {
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "save-people" }, {});
 			});
@@ -231,7 +231,7 @@ describe("FindPeopleWorkflow: domains and errors", () => {
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "save-people" }, {});
@@ -328,7 +328,7 @@ describe("FindPeopleWorkflow: skipping companies with already-known people", () 
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, [known.domain]);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, theOnlyMockedBatch);
 				await m.mockStepResult({ name: "save-people" }, {});
@@ -430,7 +430,7 @@ describe("FindPeopleWorkflow: the summary output", () => {
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "save-people" }, {});
@@ -500,7 +500,7 @@ describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "save-people" }, {});
@@ -569,7 +569,7 @@ describe("FindPeopleWorkflow: a batch that crosses the ceiling", () => {
 					},
 				);
 				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { id: "x" });
+				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
 				await m.mockStepResult({ name: "close-run" }, { id: "x" });
 				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
 				await m.mockStepResult({ name: "save-people" }, {});

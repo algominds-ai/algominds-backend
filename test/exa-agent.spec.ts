@@ -24,6 +24,7 @@ function planFor(query: string): SearchPlan {
 		query,
 		angle: "angle-1",
 		recency: null,
+		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
 		type: "fast",
@@ -98,6 +99,7 @@ describe("agent run start request shape", () => {
 			planFor("seed stage fintech"),
 			10,
 			"2026-08-30",
+			null,
 		);
 
 		await startAgentRun(req, exaEnv());
@@ -108,14 +110,40 @@ describe("agent run start request shape", () => {
 		expect(body.query).toContain("10");
 		expect(body.effort).toBe("low");
 		expect(body.dataSources).toEqual([{ provider: "fiber" }]);
-		expect(body.outputSchema.properties.companies.minItems).toBe(10);
+		expect(body.outputSchema.properties.companies.minItems).toBe(1);
+	});
+
+	it("tells the agent the same window the filter refuses on", async () => {
+		const plan = planFor("seed stage fintech");
+		plan.recency = "a funding round announced lately";
+		plan.recencyDays = 45;
+
+		const req = buildAgentRunRequest(plan, 10, "2026-09-01", null);
+
+		expect(req.query).toContain("published in the last 45 days");
+	});
+
+	it("asks for no window when the profile asked for nothing recent", async () => {
+		const req = buildAgentRunRequest(
+			planFor("seed stage fintech"),
+			10,
+			"2026-09-01",
+			null,
+		);
+
+		expect(req.query).not.toContain("published in the last");
 	});
 
 	it("returns the started run's id", async () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
 		const result = await startAgentRun(
-			buildAgentRunRequest(planFor("seed stage fintech"), 5, "2026-08-30"),
+			buildAgentRunRequest(
+				planFor("seed stage fintech"),
+				5,
+				"2026-08-30",
+				null,
+			),
 			exaEnv(),
 		);
 
@@ -131,7 +159,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30", null),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -144,7 +172,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30", null),
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
@@ -157,7 +185,7 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30"),
+				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30", null),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -287,6 +315,7 @@ describe("agent run to CompanyEntity mapping", () => {
 		expect(result.results[0]?.company).toEqual({
 			name: "Acme",
 			description: null,
+			industry: null,
 			foundedYear: null,
 			workforceTotal: null,
 			city: null,
@@ -353,6 +382,7 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 			{ ...plan, recency: "A role posted in the last 30 days." },
 			count,
 			"2026-08-30",
+			null,
 		);
 		const parsed = JSON.parse(JSON.stringify(req.outputSchema));
 		return parsed.properties.companies.items;
@@ -381,6 +411,7 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 			planFor("payment platforms"),
 			5,
 			"2026-08-30",
+			null,
 		);
 
 		expect(req.systemPrompt).toContain("2026-08-30");
@@ -395,11 +426,13 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 			},
 			5,
 			"2026-08-30",
+			null,
 		);
 		const without = buildAgentRunRequest(
 			planFor("payment platforms"),
 			5,
 			"2026-08-30",
+			null,
 		);
 
 		expect(withWindow.query).toContain("last 30 days");
@@ -415,6 +448,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -426,6 +460,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				evidenceDate: "2026-08-12",
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
 			},
 		]);
 
@@ -445,6 +480,7 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: 470,
 				city: null,
@@ -456,12 +492,14 @@ describe("an agent company becomes a row whose domain is the company, not the ev
 				evidenceDate: "2026-08-12",
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
 			},
 		]);
 
 		expect(results[0]?.company).toEqual({
 			name: "Kastle",
 			description: null,
+			industry: null,
 			foundedYear: null,
 			workforceTotal: 470,
 			city: null,
@@ -480,6 +518,7 @@ describe("the agent's evidence reaches the row the judge reads", () => {
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: "a security company",
+				industry: null,
 				foundedYear: null,
 				workforceTotal: 470,
 				city: null,
@@ -491,6 +530,7 @@ describe("the agent's evidence reaches the row the judge reads", () => {
 				evidenceDate: "2026-08-12",
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
 			},
 		]);
 		return filterEntities(results, planFor("security companies"), "2026-08-30")
@@ -528,6 +568,7 @@ describe("what is stored keeps the evidence, not just the company", () => {
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: "a security company",
+				industry: null,
 				foundedYear: null,
 				workforceTotal: 470,
 				city: null,
@@ -539,6 +580,7 @@ describe("what is stored keeps the evidence, not just the company", () => {
 				evidenceDate: "2026-08-12",
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
 			},
 		]);
 		const { captures } = filterEntities(
@@ -558,7 +600,7 @@ describe("what is stored keeps the evidence, not just the company", () => {
 
 describe("a signal is only demanded when the profile asks for something recent", () => {
 	function itemsFor(plan: SearchPlan) {
-		const req = buildAgentRunRequest(plan, 5, "2026-08-30");
+		const req = buildAgentRunRequest(plan, 5, "2026-08-30", null);
 		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
 			.items;
 	}
@@ -599,6 +641,7 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 				website: "https://kastle.com",
 				linkedinUrl: linkedinUrl || null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -610,6 +653,7 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 				evidenceDate: null,
 				evidenceQuote: null,
 				evidencePublisher: null,
+				evidenceKind: null,
 			},
 		]);
 		return filterEntities(results, planFor("security companies"), "2026-08-30")
@@ -640,6 +684,7 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 			{ ...planFor("payment platforms"), recency },
 			5,
 			"2026-08-30",
+			null,
 		);
 		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
 			.items;
@@ -664,6 +709,7 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 			planFor("payment platforms"),
 			5,
 			"2026-08-30",
+			null,
 		);
 
 		expect(req.systemPrompt).toContain("copied word for word");
@@ -677,6 +723,7 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 				website: "https://kastle.com",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -688,6 +735,7 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 				evidenceDate: "2026-08-12",
 				evidenceQuote: "Kastle is hiring a Head of Sales in San Francisco.",
 				evidencePublisher: "Kastle Careers",
+				evidenceKind: null,
 			},
 		]);
 		const outcome = filterEntities(
@@ -717,6 +765,7 @@ describe("evidence outside the window the profile asks for is refused in code", 
 				website: "https://kadmos.io",
 				linkedinUrl: null,
 				description: null,
+				industry: null,
 				foundedYear: null,
 				workforceTotal: null,
 				city: null,
@@ -729,6 +778,7 @@ describe("evidence outside the window the profile asks for is refused in code", 
 				evidenceQuote:
 					"Kadmos granted FCA Electronic Money Institution authorisation",
 				evidencePublisher: "Kadmos",
+				evidenceKind: null,
 			},
 		]);
 		return filterEntities(
@@ -750,14 +800,189 @@ describe("evidence outside the window the profile asks for is refused in code", 
 		expect(outcomeFor("2026-08-19", 365).rows).toHaveLength(1);
 	});
 
-	it("refuses a page carrying no date when the profile asks for something recent", () => {
+	it("sends an undated page to the judge, which knows whether that kind of page needs a date", () => {
 		const outcome = outcomeFor(null, 90);
 
-		expect(outcome.rows).toHaveLength(0);
-		expect(outcome.rejects[0]?.reason).toBe("no date on the evidence page");
+		expect(outcome.rows).toHaveLength(1);
+		expect(outcome.rejects).toHaveLength(0);
 	});
 
 	it("keeps an undated page when the profile asks for nothing recent", () => {
 		expect(outcomeFor(null, null).rows).toHaveLength(1);
+	});
+});
+
+describe("a thin round comes back thin, never empty", () => {
+	it("never sets a floor the agent can fail, because a failed schema discards everything it found", () => {
+		const req = buildAgentRunRequest(
+			planFor("payment platforms"),
+			30,
+			"2026-08-30",
+			null,
+		);
+		const schema = JSON.parse(JSON.stringify(req.outputSchema));
+
+		expect(schema.properties.companies.minItems).toBe(1);
+		expect(req.query).toContain("30 distinct companies");
+	});
+});
+
+describe("the industry the agent reports reaches the row and the stored company", () => {
+	it("carries the industry through, and describes the company with it", () => {
+		const { results } = toExaSearchResult("req-1", [
+			{
+				name: "Zealhire",
+				website: "https://zealhire.com",
+				linkedinUrl: "https://linkedin.com/company/zealhire",
+				description: null,
+				industry: "IT staffing and recruitment",
+				foundedYear: null,
+				workforceTotal: 40,
+				city: null,
+				country: "United States",
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted for a India based recruiter on US shift",
+				evidenceUrl: "https://linkedin.com/posts/zealhire_hiring",
+				evidenceDate: "2026-08-03",
+				evidenceQuote: "Shift: Night Shift (US EST Timings)",
+				evidencePublisher: "Zealhire",
+				evidenceKind: null,
+			},
+		]);
+		const outcome = filterEntities(
+			results,
+			planFor("staffing agencies"),
+			"2026-08-30",
+		);
+
+		expect(outcome.rows[0]?.industry).toBe("IT staffing and recruitment");
+		expect(outcome.rows[0]?.description).toContain(
+			"IT staffing and recruitment",
+		);
+		expect(outcome.captures["zealhire.com"]?.entity.industry).toBe(
+			"IT staffing and recruitment",
+		);
+	});
+
+	it("asks the agent for the market it sells into", () => {
+		const req = buildAgentRunRequest(
+			planFor("staffing agencies"),
+			5,
+			"2026-08-30",
+			null,
+		);
+
+		expect(req.systemPrompt).toContain("`industry`");
+	});
+});
+
+describe("the agent is told who it prospects for", () => {
+	const seller = {
+		domain: "form3.tech",
+		customers: ["Klarna", "N26"],
+		competitorTest:
+			"A competitor sells payment infrastructure to banks and fintechs.",
+	};
+
+	function promptFor(sellerBlock: typeof seller | null): string | undefined {
+		return buildAgentRunRequest(
+			planFor("payment platforms"),
+			5,
+			"2026-08-30",
+			sellerBlock,
+		).systemPrompt;
+	}
+
+	it("names the seller, every customer it already won, and the competitor test", () => {
+		const prompt = promptFor(seller);
+
+		expect(prompt).toContain("form3.tech");
+		expect(prompt).toContain("Klarna");
+		expect(prompt).toContain("N26");
+		expect(prompt).toContain(seller.competitorTest);
+	});
+
+	it("says nothing about a seller when the profile carries none", () => {
+		const prompt = promptFor(null);
+
+		expect(prompt).not.toContain("form3.tech");
+		expect(prompt).not.toContain("prospecting for");
+		expect(prompt).not.toContain("already buy from it");
+	});
+
+	it("leaves out the customer sentence when the list is empty", () => {
+		const prompt = promptFor({ ...seller, customers: [] });
+
+		expect(prompt).not.toContain("already buy from it");
+		expect(prompt).toContain(seller.competitorTest);
+	});
+});
+
+describe("a LinkedIn post proves an event, a member profile does not", () => {
+	it("admits the post and bars the member profile", () => {
+		const prompt = buildAgentRunRequest(
+			planFor("payment platforms"),
+			5,
+			"2026-08-30",
+			null,
+		).systemPrompt;
+
+		expect(prompt).toContain("LinkedIn post");
+		expect(prompt).toContain("linkedin.com/in");
+		expect(prompt).toContain("never evidence");
+	});
+});
+
+describe("a row says what sort of page proved it", () => {
+	function itemsFor(recency: string | null) {
+		const req = buildAgentRunRequest(
+			{ ...planFor("payment platforms"), recency },
+			5,
+			"2026-08-30",
+			null,
+		);
+		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
+			.items;
+	}
+
+	it("demands the kind when the profile asks for something recent", () => {
+		const items = itemsFor("A role posted in the last 30 days.");
+
+		expect(items.required).toContain("evidenceKind");
+		expect(items.properties.evidenceKind.enum).toContain("vendor-case-study");
+		expect(items.properties.evidenceKind.enum).toContain("job-posting");
+	});
+
+	it("asks for no kind when the profile wants nothing recent", () => {
+		const items = itemsFor(null);
+
+		expect(items.required).not.toContain("evidenceKind");
+	});
+
+	it("carries the kind onto the row the search returns", () => {
+		const result = toExaSearchResult("run-kind", [
+			{
+				name: "Kadmos",
+				website: "https://kadmos.io",
+				linkedinUrl: null,
+				description: null,
+				industry: null,
+				foundedYear: null,
+				workforceTotal: null,
+				city: null,
+				country: null,
+				revenueAnnual: null,
+				fundingTotal: null,
+				signal: "posted a platform engineering role",
+				evidenceUrl: "https://kadmos.io/careers/1",
+				evidenceDate: "2026-08-12",
+				evidenceQuote: null,
+				evidencePublisher: null,
+				evidenceKind: "job-posting",
+			},
+		]);
+
+		expect(result.results[0]?.evidenceKind).toBe("job-posting");
 	});
 });
