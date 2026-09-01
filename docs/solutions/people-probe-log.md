@@ -982,9 +982,12 @@ CONTEXT-DEPENDENT POSITIVES: only 5 exist in the fixture (advisor asked for 10) 
 company is under the ~100-employee founder carve-out (smallest is Arq at ~160-230). Reported
 as a gap, not manufactured.
 MoonPay: 24 of 80 ids came back malformed on one call -- a real coverage hole, flagged.
-GATE'S 83 "BEYOND CLAY" CANDIDATES, judged: 0 POSITIVE among the 67 at Airwallex and Ramp.
-  4 POSITIVE total (Centre Technologies, Harbor IT -- the sole HR/recruiting managers),
-  3 verified. THAT IS THE LLM GATE'S ENTIRE MARGINAL CONTRIBUTION over Clay-senior: three
+GATE'S 83 "BEYOND CLAY" CANDIDATES: only 44 were labelled before JUDGE's budget ran out
+  (Ramp 29, MoonPay 5, Discord 3, Harbor IT 3, Centre 2, Polymarket 1, Relay 1); AIRWALLEX'S
+  38 AND ARQ'S 1 WERE NEVER JUDGED. Of the 44: 0 POSITIVE at Ramp; 4 POSITIVE total (Centre
+  Technologies, Harbor IT -- the sole HR/recruiting managers), 3 verified.
+  CORRECTION 22:55: an earlier line here said "0 positive among the 67 at Airwallex and
+  Ramp". Airwallex was not labelled. Retracted. THAT IS THE LLM GATE'S ENTIRE MARGINAL CONTRIBUTION over Clay-senior: three
   verified buyers across twenty companies, all in one slice (manager band, HR function, small
   MSP). It is real and it is narrow.
 VERIFICATION STOPPED at 5 of 20 companies: JUDGE ran its own script with the old $2.80 cap
@@ -1065,3 +1068,27 @@ SECCL   (a) Head of Risk · Chief Risk Officer · CPO · CTO · Head of Launch �
 SPOT-LABEL SHEET generated: x/SPOT-LABEL-SHEET.md, 58 shuffled rows mixing verified buyers
 with judged hard negatives, for the user to mark Y/N/?. Any 20 rows is the only real ground
 truth in the experiment.
+
+## 30. CODEX FINAL REVIEW (x/CODEX-REVIEW-2.md) — accepted, it sharpens the claims
+1 CIRCULARITY. Arm (b) receives the rubric and is judged by a model implementing the same
+  rubric. 0.95 = rubric-conditioned selector agreement with a rubric-conditioned judge.
+  Two-source verification confirms identity/employer/title, NOT buyer fit.
+  DEFENSIBLE CLAIM: "on this fixture, explicit buyer criteria eliminated most disagreement
+  with the experiment's buyer rubric at zero incremental retrieval cost." It does NOT yet
+  establish 0.95 real-buyer precision. The separating check is blinded client labelling --
+  the spot-label sheet already delivered.
+2 RETRIEVAL. "No retrieval benefit was demonstrated; effects of practical size remain
+  uncertain." Not "adds nothing" -- equivalence was not tested (would need ~40 paired
+  companies). Operationally no evidence justifies shipping an LLM gate: equal recall,
+  zero round-2 recovery, avoidable provider cost. KEEP one deterministic fallback: Clay's
+  keyworded manager band for small MSPs whose senior roster has no HR/recruiting owner
+  (3 verified buyers at 2 companies). No LLM planner, no broad "growth" keywords.
+  On the 11 companies where recall-vs-R can discriminate (judged positives <= 6):
+  GATE better 1, Clay better 0, ties 10; both 1.00 at 9 of 11.
+3 RECALL 0.70 = macro-average of |picks ∩ R| / |R| where R is the verified subset of at
+  most 6 judge-positives from Clay's senior bands. NOT recall of all real buyers. Ntiva
+  (26 positives, R=5, both arms recall 0 at precision 1.0) is a cap artefact.
+4 PRODUCTION METHOD (codex, 10 lines) recorded in people-method.md.
+  NEXT MEASUREMENT before the engine changes: blinded client-labelled selector precision.
+  PASS: intent arm >= 90% precision, >= 20-point lift over raw ICP, ZERO intent-
+  contradicting picks.
