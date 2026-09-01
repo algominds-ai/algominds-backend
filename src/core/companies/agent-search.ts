@@ -48,6 +48,16 @@ function agentCompanySchema(plan: SearchPlan) {
 	});
 }
 
+/** The same window the filter refuses on, said to the agent, so it stops paying for candidates the filter will drop. */
+function provenWindow(plan: SearchPlan): string | null {
+	if (plan.recencyDays === null) return null;
+	return [
+		`The page proving the signal must have been published in the last`,
+		`${plan.recencyDays} days. An older page, or a page carrying no date,`,
+		"disqualifies the company, so find a different company instead.",
+	].join(" ");
+}
+
 function agentQuery(plan: SearchPlan, count: number): string {
 	const constraints = planConstraints(plan);
 	const parts = [
@@ -55,6 +65,7 @@ function agentQuery(plan: SearchPlan, count: number): string {
 		`Return exactly ${count} distinct companies.`,
 		constraints,
 		plan.recency,
+		provenWindow(plan),
 	];
 	return parts.filter((part) => part !== null && part !== "").join(" ");
 }

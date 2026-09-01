@@ -113,6 +113,27 @@ describe("agent run start request shape", () => {
 		expect(body.outputSchema.properties.companies.minItems).toBe(1);
 	});
 
+	it("tells the agent the same window the filter refuses on", async () => {
+		const plan = planFor("seed stage fintech");
+		plan.recency = "a funding round announced lately";
+		plan.recencyDays = 45;
+
+		const req = buildAgentRunRequest(plan, 10, "2026-09-01", null);
+
+		expect(req.query).toContain("published in the last 45 days");
+	});
+
+	it("asks for no window when the profile asked for nothing recent", async () => {
+		const req = buildAgentRunRequest(
+			planFor("seed stage fintech"),
+			10,
+			"2026-09-01",
+			null,
+		);
+
+		expect(req.query).not.toContain("published in the last");
+	});
+
 	it("returns the started run's id", async () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
