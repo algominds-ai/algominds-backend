@@ -1042,3 +1042,26 @@ RETRIEVAL POLICY -- selector fixed to (b)
 
 VERIFICATION: 93 checked, 68 verified (73%), 7 contradicted, 18 unknown. Every company >=1.
 TOTAL COST $5.34 including building and validating the judge.
+
+## 29. THE ONDATO PICK LISTS — same roster, same model, same ids, one input differs
+RAMP   (a) raw ICP:  Head of Compliance and Financial Crime · Global Head of Financial Crimes ·
+                     Head of Compliance Operations · Head of Compliance & MLRO · Head of Risk ·
+                     Head of Fraud Management                       -> 6 of 6 HARD NEGATIVES
+       (b) +intent:  CPO · Director of Product Management · Head of Strategic Growth ·
+                     Senior Director Product Management · Co-founder, Growth -> 5 of 5 POSITIVE
+KRAKEN (a) Chief Compliance Officer x3 · COO/Head of Bizops · Director Global AML/CFT · ...
+       (b) Head of Product Management · Senior Director of Product · Product Director Payments ·
+           Head of Growth · Global Director & Head of Growth · Derivatives Product Director
+AIRWALLEX (a) Senior Director Reg Compliance · 2x Associate Director Regulatory · Director
+              Compliance & MLRO · Associate Director Global FCC · Chief Product Officer
+          (b) Chief Product Officer · Product Director Ecosystem · Senior Director PM · Head of
+              Product Strategy · Global Head of Growth · Head of New Payment Flow
+DISCORD (a) VP Trust & Safety · Global Head of Product Policy · Senior Director Product Law ·
+            Director Public Policy · Director Product · Chief Legal Officer
+        (b) Director of Product Management · Senior Director PM · Director Product · Sr Dir Product
+SECCL   (a) Head of Risk · Chief Risk Officer · CPO · CTO · Head of Launch · Director of Ops
+        (b) Chief Product Officer · Growth Director · Growth Director
+=> This is the 74%-vs-1% failure reproduced exactly and then removed by ONE input.
+SPOT-LABEL SHEET generated: x/SPOT-LABEL-SHEET.md, 58 shuffled rows mixing verified buyers
+with judged hard negatives, for the user to mark Y/N/?. Any 20 rows is the only real ground
+truth in the experiment.
