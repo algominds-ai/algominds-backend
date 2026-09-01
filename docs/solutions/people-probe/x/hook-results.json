@@ -1,0 +1,45 @@
+{
+  "verifiedTotal": 68,
+  "bySeller": { "aris": 32, "ondato": 36 },
+  "partA_freeHookQuality": {
+    "overall": { "specific_event": 30, "role_statement": 14, "generic": 24, "none": 0 },
+    "bySeller": {
+      "aris": { "specific_event": 12, "role_statement": 8, "generic": 12, "none": 0 },
+      "ondato": { "specific_event": 18, "role_statement": 6, "generic": 12, "none": 0 }
+    },
+    "hookDateFreshness": {
+      "withinLast180Days": 37,
+      "hookPresentNoDate": 6,
+      "noHookAtAll": 0,
+      "total": 68
+    },
+    "dollars": 0.0301395,
+    "examples_specific_event": [
+      { "name": "Dan Kim", "company": "Airwallex", "seller": "ondato", "quote": "I'm joining Airwallex to connect programmable money and AI agents to the infrastructure that makes them work for global businesses." },
+      { "name": "Zach Garman", "company": "Arq", "seller": "ondato", "quote": "A huge day and a new era - ARQ is here" },
+      { "name": "Adam Zadikoff", "company": "Kraken", "seller": "ondato", "quote": "I'm hiring some eng talent to build some new mobile products." },
+      { "name": "Syed Sibgatul Ahsan", "company": "MoonPay", "seller": "ondato", "quote": "I'm happy to share that I'm starting a new position as Director, Product Operations at MoonPay!" },
+      { "name": "Cindy (Xinqi) Zhao", "company": "Airwallex", "seller": "ondato", "quote": "Thrilled to partner with Google Cloud to help define the future of agent payments in the AI-powered world" }
+    ]
+  },
+  "partB_brightdata": {
+    "poolSize": 38,
+    "poolSelection": "all 68 verified minus the 30 already specific_event on the free hook, spread across both sellers and 19 of 20 companies",
+    "found": 30,
+    "notFound": 8,
+    "foundWithActivity": 21,
+    "foundNoActivity": 9,
+    "postTopicOfNewest": { "on_topic_for_icp": 7, "company_news": 6, "personal": 5, "none": 3, "notClassified_noActivity": 17 },
+    "addedUsableOnTopicNotAlreadyHeld": 7,
+    "dollars": { "brightdataCalls": 0.075, "classifyLlm": 0.0004383, "total": 0.0754383 }
+  },
+  "partC_theAnswer": {
+    "freeTierUsableShare": "30/68 = 44.1%",
+    "brightdataAddedShare": "7/68 targeted pool = 10.3% of all verified buyers gained a usable on-topic hook they did not already have (7/38 = 18.4% of the pool it was run on)",
+    "combinedUsableShare": "37/68 = 54.4%",
+    "costPerUsablePerson_freeOnly": 0.001,
+    "costPerUsablePerson_freePlusBrightdata": 0.00285,
+    "totalSpent": 0.1055778,
+    "recommendation": "Run free tier by default for every verified buyer, zero marginal provider cost, already inside verify(). Call BrightData only for the ~56% left with role_statement/generic/none, and expect it to convert about 1 in 5 of those into a usable on-topic hook at $0.0025-plus-cents each; the other 4 in 5 either have no LinkedIn activity or post off-topic content, so BrightData is a targeted top-up, not a default second pass."
+  }
+}

@@ -1092,3 +1092,17 @@ truth in the experiment.
   NEXT MEASUREMENT before the engine changes: blinded client-labelled selector precision.
   PASS: intent arm >= 90% precision, >= 20-point lift over raw ICP, ZERO intent-
   contradicting picks.
+
+## 31. HOOK — context accumulation measured (x/HOOK/results.json, $0.126)
+FREE TIER (from the verification pass, $0.03 for all 68): specific_event 30 · role_statement
+14 · generic 24 · none 0. 37 of 68 hooks dated within 180 days. Examples: "I'm joining
+Airwallex to connect programmable money and AI agents..." (Dan Kim); "A huge day and a new
+era - ARQ is here" (Zach Garman, CPO); "I'm hiring some eng talent to build some new mobile
+products" (Adam Zadikoff, Kraken).
+BRIGHTDATA on the 38 without a specific hook, serialised, $0.095: found 30, with activity
+21, newest post on-topic 7, company news 6, personal 5. ADDED 7 usable hooks -> combined
+37/68 = 54%. Cost per usable person: free-only $0.001, free+BrightData $0.0029.
+ANSWER TO THE USER'S QUESTION: run the free tier by default for every verified buyer (it is
+already inside verify()); call BrightData only as a targeted top-up for the ~56% without a
+specific hook, expecting ~1 in 5 to convert. Not a default second pass. Store what arrives
+as append-only evidence; deep enrichment (podcasts, talks) stays a separate on-demand step.
