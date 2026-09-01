@@ -3,16 +3,19 @@ import { CostLedger } from "@/core/cost";
 import { generateStructured, reasoningModel } from "@/core/model";
 import type { ExaSearchRequest } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
+import { sellerAngles } from "@/core/seller-angles";
 import type { IcpSeller } from "@/core/synthesize";
 
 export const NOTE_MAX_LENGTH = 2000;
+/** A note only becomes the profile when the model writes nothing, and every later search runs from it, so it has to be long enough to describe a buyer. One run once stored a 39 character profile this way. */
+export const NOTE_MIN_LENGTH = 120;
 const SELLER_PAGE_LIMIT = 25;
 const SELLER_PAGE_CHAR_LIMIT = 4000;
 const SELLER_LIVECRAWL_TIMEOUT_MS = 12000;
 
 const BuildIcpRequestSchema = z.object({
 	domain: z.string().min(1),
-	note: z.string().max(NOTE_MAX_LENGTH).nullable(),
+	note: z.string().min(NOTE_MIN_LENGTH).max(NOTE_MAX_LENGTH).nullable(),
 });
 
 const OnboardModelSchema = z.object({
@@ -30,21 +33,6 @@ export type SellerProfile = {
 	wroteProfile: boolean;
 	ledger: CostLedger;
 };
-
-function sellerAngles(domain: string): string[] {
-	return [
-		`what ${domain} sells and the problem its product solves`,
-		`${domain} customers, case studies and customer stories naming real companies`,
-		`${domain} testimonials and quotes from named customers`,
-		`who ${domain} is built for: the segments, company sizes and industries it names`,
-		`${domain} pricing and plans, and which kind of customer each plan is for`,
-		`${domain} product pages and what each product does`,
-		`${domain} about page, founding story and mission`,
-		`${domain} integrations and the systems its customers already run`,
-		`${domain} competitors and how it says it differs from them`,
-		`${domain} newsroom and announcements about customers or markets`,
-	];
-}
 
 function sellerSearchRequest(domain: string): ExaSearchRequest {
 	return {

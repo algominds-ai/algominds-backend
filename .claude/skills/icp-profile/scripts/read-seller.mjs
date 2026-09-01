@@ -3,6 +3,7 @@
 // One deep Exa search with ten query variations and a live crawl.
 // Usage: bun scripts/read-seller.mjs <domain> [maxPages]
 import { readFileSync } from "node:fs";
+import { sellerAngles } from "@/core/seller-angles";
 
 const DOMAIN = process.argv[2];
 const MAX = Number(process.argv[3] ?? 25);
@@ -39,18 +40,7 @@ if (!env.EXA_API_KEY) {
 	process.exit(1);
 }
 
-const ANGLES = [
-	`what ${DOMAIN} sells and the problem its product solves`,
-	`${DOMAIN} customers, case studies and customer stories naming real companies`,
-	`${DOMAIN} testimonials and quotes from named customers`,
-	`who ${DOMAIN} is built for: the segments, company sizes and industries it names`,
-	`${DOMAIN} pricing and plans, and which kind of customer each plan is for`,
-	`${DOMAIN} product pages and what each product does`,
-	`${DOMAIN} about page, founding story and mission`,
-	`${DOMAIN} integrations and the systems its customers already run`,
-	`${DOMAIN} competitors and how it says it differs from them`,
-	`${DOMAIN} newsroom and announcements about customers or markets`,
-];
+const ANGLES = sellerAngles(DOMAIN);
 
 const res = await fetch("https://api.exa.ai/search", {
 	method: "POST",
