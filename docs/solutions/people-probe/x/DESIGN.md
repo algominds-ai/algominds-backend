@@ -160,3 +160,10 @@ CHANGE TO THE PROBE:
   HOOK (phase 4) now measures: of the verified buyers, share with a dated open-web mention
   captured FREE by verification; share with a usable BrightData post and its age; cost per
   person with at least one hook. That is the measured answer to "gather during vs later".
+
+# BUDGET AMENDMENT (22:15). JUDGE cap raised $2.80 -> $5.00 from the reserve.
+Reason: labelling Airwallex (275), Kraken (166) and Discord (157) under MODEL_STRONG cost
+$1.68 and the agent correctly stopped to preserve its verify reserve. The 16 unlabelled
+companies include all ten small Aris rosters (~180 candidates total). Remaining order is
+smallest-first so the cheap, verification-friendly vertical completes before the expensive
+one. Planned total now ~$8.20 of $10.

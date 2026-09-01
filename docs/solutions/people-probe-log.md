@@ -923,3 +923,51 @@ JUDGE was told to HOLD its verify pass during the repair and then cleared. No co
 LESSON: a closed-set JSON reply from a reasoning model needs token headroom; an empty
 reply must be distinguishable from a genuine UNKNOWN.
 CONFIRMED: exa-web with text contents bills $0.007, same as without.
+
+## 23. JUDGE stopped on budget, not on failure (22:15)
+Labelling the big Ondato rosters with the strong model is the dominant cost: Airwallex,
+Kraken, Discord, Arq = $1.68. JUDGE reserved for verify and stopped, leaving 16 companies
+unlabelled including all ten cheap Aris ones. Cap raised to $5.00; order smallest-first.
+FINDING, judge instability: the same Airwallex roster labelled twice on identical input
+gave 10 vs 9 POSITIVE and 4 vs 8 INFLUENCER; Discord 11 vs 15 INFLUENCER. Single-run labels
+carry roughly that much noise. The locked gate (0/76 FP) is not affected, but per-company
+recall against R should be read with this in mind.
+GATE and JUDGE both idled 13-30 min waiting on notifications that had fired. Nudged. The
+pattern is consistent: agents that put work behind a background task and then wait.
+
+## 24. The judge solves the Ondato intent problem at the instrument level (22:20)
+Titles judged POSITIVE at Kraken (25 of 166): Director of Organic Growth, Head of Growth -
+Consumer, Head of Growth derivatives, Head of Regional Growth, Product Director Payments,
+Director of Product Management - Onchain, Head of Institutional Product ...
+Airwallex (9 of 275): VP Product Risk & Onboarding, Chief Product Officer, Global Head of
+Growth, Head of Growth DACH, VP Product Developer Ecosystem ...
+Discord (5 of 157): Senior Director of Product, Director of Product Management ...
+Arq (3 of 15): Head of Growth, Co-Founder and CPO, VP Product & AI Ops.
+ZERO compliance, AML, KYC, risk-function or legal people labelled POSITIVE at any of the
+four. COOs at >100-person companies -> INFLUENCER (rubric). Engineering directors ->
+INFLUENCER/wrong_function (rubric). Kraken's 25 is EMERGENT: a large exchange has that many
+product-line growth heads. Not inflation.
+=> With the client's intent written into the rubric, the validated judge picks the growth
+   side. The open question ABL answers: does the SELECTOR given only the raw ICP do the
+   same, or drift to compliance as the old pipeline did (74% vs 1%)?
+
+## 25. GATE (LLM front-gate retrieval) — measured, 20/20, $0.82 (x/GATE-report.md)
+PLANNER BEHAVIOUR: 0 rejected filter values anywhere. It almost never called Apollo or Exa
+in round 1: it treated Clay's free senior universe as covering those slices and paid only
+for the MANAGER band, keyworded HR/recruiting/onboarding. Cost-aware fan-out worked.
+=> The gate's marginal value over Clay-senior is concentrated in ONE slice: the sole HR /
+   recruiting manager at a small MSP (Micah Ralph, Harbor IT; Lisa Ramirez, Centre), a real
+   buyer under the Aris rubric that a senior-only roster misses. 83 new candidates total,
+   almost all at Airwallex (38) and Ramp (29) from the manager band; small MSPs 0-3.
+ROUND 2: fired at 7/20 on one deterministic trigger (manager-band Clay returned 0 rows).
+   Marginal recovered: 0 at all seven. Where it pivoted to Apollo by department it got
+   12-25 rows each, but Apollo surnames are obfuscated and no other provider landed on the
+   same person, so none resolved. APOLLO IS A LEAD SOURCE, NOT A PEOPLE SOURCE.
+EXA AGENT: one call at Cyber Salus, effort low, billed $0.225 (7.5x the ~$0.03 estimate)
+   for 4 candidates already in U. Zero marginal value. REMOVE from the method.
+KEYWORD AMBIGUITY: "growth" at Airwallex returned ~20 sales/marketing "growth" titles, not
+   onboarding-product owners. Keywords bias retrieval; the judge must still decide.
+IDENTITY: Harbor IT domain->0 then LinkedIn->rows; Evergreen resolved by domain, no
+   conflict. No confident-wrong and no confident-empty roster.
+PROCESS: an orphaned background test process burned $0.37 before GATE caught it; disclosed
+   and included in the $0.82. Second time today an agent lost money to backgrounding.
