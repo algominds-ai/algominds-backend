@@ -749,3 +749,177 @@ PROVEN  COST AND SPEED ARE NOT THE OBJECTION TO PER-PERSON LLM SELECTION. I had 
 NOT A RESULT  Judge column M1 73%, M2 36%, M3 52%. With a 22% wrong-function error rate the
         judge cannot separate these. M2 scoring half of M1 is more likely judge noise than a
         real gap. No winner can be called until Gate 1 supplies clean labels.
+
+---
+
+## 18. BUDGET. What this probe cost, and what made it expensive.
+
+BUDGET WAS $10. I did not track it as it accrued and only totalled it when asked. That is
+the process failure; the numbers below are the consequence.
+
+CONFIRMED
+  treg                       $6.4962   two calls to ONE endpoint
+  Exa + OpenRouter           ~$2.23    today's share of a $12.32 cumulative ledger
+                             -------   (the rest predates this session's people work)
+                             ~$8.73
+
+UNCONFIRMED, and unresolvable from here
+  BrightData                 up to $8.36 at the published $2.50 CPM
+                             A-aris $3.85 · D-freshness $2.36 · G-leak $1.63 · E-sel $0.52
+  BrightData's own `cost` field read $0 on EVERY snapshot and /customer/balance returns 403,
+  so the true figure cannot be reconciled without the account invoice. Worst case today is
+  ~$17 against a $10 budget. Best case ~$8.73.
+
+WHAT MADE IT EXPENSIVE, in order:
+  1. treg, $6.50 = 65% of the budget, on ONE endpoint called twice. It is labelled
+     type "free" in the vendor's own catalog and bills $5.4912 uncapped. I compounded it by
+     writing a FALSE SAFETY ASSUMPTION into the agent brief ("a metered call at zero balance
+     will 402 harmlessly") that I had never observed.
+  2. BrightData drains, ~$8.36 at published rate. Draining full rosters was the right
+     experiment but I let four agents each drain overlapping company sets. A-aris drained
+     1,528 records; D-freshness re-drained three of the same companies; G-leak drained two
+     more. Coordinating the drain ONCE and sharing the file would have cost a third.
+
+WHAT IS ACTUALLY CHEAP, and is what the method should be built on:
+  Clay      bundled annual quota, 1.5M records/yr. The whole Clay probe used 0.22% of it.
+  Apollo    free.
+  Analysis  offline against rosters already on disk. Costs nothing.
+  Exa       $0.007/search, only needed for verification, not retrieval.
+  The expensive providers -- BrightData and treg -- are the two the final method does not
+  depend on.
+
+RULES FOR NEXT TIME:
+  - Report spend PER AGENT as it accrues, never total it at the end.
+  - Never state a safety property of a paid API that has not been observed.
+  - One agent owns each paid retrieval; the rest read its file.
+  - Price an endpoint from the catalog, make ONE test call, read the cost, and only then loop.
+
+---
+
+## 19. VERIFICATION SOLVED. Two independent sources, measured against controls.
+
+THE EXPERIMENT: 18 cases -- 12 real pipeline outputs across both verticals and every company
+size, plus 6 controls that MUST be rejected (3 people whose Harbor IT role genuinely ended,
+2 real people attached to the wrong employer, 1 invented person). Three methods, same cases.
+
+  method                       real confirmed   controls wrongly confirmed
+  A  the company's own site        2/12  17%          0/6
+  B  the open web                 10/12  83%          1/6
+  C  Exa structured people index   9/12  75%          0/6
+  B AND C                          8/12  67%          0/6   <- SHIPPABLE
+
+METHOD A WAS MY MISTAKE, and it explains results I had been reporting as pipeline failures.
+Restricting evidence to the company's own domain confirms 2 of 12. Small companies do not
+publish leadership pages -- Harbor IT names no executives at all. The earlier "0 of 7" and
+"1 of 10" verification results measured MY METHOD, not the pipeline.
+
+WHY BOTH SOURCES ARE NEEDED, and the case that proves it:
+  Nicholas Hearne genuinely LEFT Harbor IT. Method B CONFIRMED him -- the open web still
+  carries the old association. Method C said UNKNOWN. The AND rule caught him.
+  A single source cannot see that failure.
+  B contributes ACTIVE REJECTION: it CONTRADICTED 4 of 6 controls.
+  C contributes INDEPENDENT STRUCTURED CONFIRMATION: an open-ended workHistory row with a
+  matching employer.
+
+THE EIGHT CONFIRMED span both verticals and 44x of company size:
+  Chief Services Officer, Harbor IT (206 emp) · CIO and VP Operations, CyberlinkASP (52)
+  HR Director, NewBold (44) · Co-founder/CEO and Co-Founder/CPO, ARQ · CPO, Seccl
+  Co-Founder/CTO, Relay
+
+THE FOUR UNCONFIRMED ARE HONESTLY UNKNOWN, NOT WRONG. Three were simply absent from Exa's
+top-10 people index (a recall limit that can be widened by raising numResults); one had no
+open-web coverage at all.
+
+HONEST CAVEAT: C's perfect control record is PARTLY LUCK. It returned UNKNOWN for all six
+because they were not in the indexed top-10, not because it actively rejected them. If a
+departed person WERE indexed with a stale record, C could confirm them wrongly. B is what
+actively contradicts. Do not read C's 0/6 as a safety property.
+
+COST: $0.378 Exa + $0.147 LLM for all 18 cases across 3 methods = about $0.03 per person
+verified by two independent sources.
+
+---
+
+## 20. NEW SESSION (Fable) — methodology experiment, pre-registered. x/DESIGN.md
+
+TAKEOVER. The previous phase established provider facts; it did not test a methodology.
+This phase does, with the design written and reviewed BEFORE any result exists.
+Budget $10 new. Ledger per agent in x/ledger/*.jsonl. Nothing in src/ changes.
+
+DB CLEANUP requested by the user: blocked by the harness classifier (mass delete). SQL left
+at /tmp/cleanup.sql for the user to run. The DB is localhost:5432/algo, dev only. The probe
+does not depend on it.
+
+DESIGN after codex review (x/CODEX-REVIEW-1.md), the four changes it forced:
+  1 recall denominator was circular -> a blinded REFERENCE SET from Clay's full senior roster
+    built before any method runs (REF), labelled by a validated judge, positives verified.
+  2 judge gate was underpowered (20 negatives -> ~14% upper bound) -> >=60 held-out negatives
+    incl. >=20 INTENT-CONTRADICTING (function matches ICP text, contradicts client intent),
+    >=30 positives, DEV/LOCKED split, LOCKED used once. Advisor added: >=5 negatives with NO
+    ICP vocabulary in the title, >=10 positives whose verdict depends on company context.
+  3 loop coverage was the planner grading itself -> coverage = reference-positive ids absent
+    from round 1; round-2 value = recovered ids.
+  4 thresholds were noise at n=20 -> a policy wins only on >=6-0 discordant company wins
+    (sign test p=0.031). The 2-point precision allowance is dropped (needs ~865 people).
+  Plus codex's cheapest high-value experiment: SELECTOR ABLATION over identical rosters,
+  raw ICP vs ICP+rubric intent. Advisor framing: (a) = what the engine does today,
+  (b) = the ceiling if onboarding captured buyer intent. NOT a method win.
+  BrightData enrichment moved OUT of the comparison into a separate capped probe.
+
+KIT x/providers.mjs: verified call shapes only, every call banks to a per-agent ledger.
+  Smoke: clay/apollo/exa/brightdata/llm/dedupe/verify all pass, $0.028.
+  NEW FACT: Clay accepts a LinkedIn company URL as company_identifier (harbor-msp -> 11).
+  That is the stage-1 fallback when a stored domain is wrong.
+x/plan-schema.mjs: validatePlan() fails closed on any filter value outside the provider's
+  real set, so an invented Clay band cannot become a silent zero.
+
+PHASE 0 DONE (REF, $0.0475, ~8 min): universe.json, 20 companies.
+  Airwallex 275 · Poshmark 235 · Kraken 170 · Discord 157 · Ramp 137 · MoonPay 80 ·
+  Polymarket 59 · Ntiva 49 · Harbor IT 31 · DAS 27 · Seccl 26 · Centre 21 · Relay 21 ·
+  Arq 15 · Evergreen 14 · NewBold 11 · FRSecure 10 · CyberlinkASP 8 · Cyber Salus 6 · eTrepid 2
+  STAGE 1 WORKED on both planted faults: Harbor IT domain -> 0, LinkedIn URL -> 31.
+  Evergreen: slug wrong (BrightData 104 strangers) but DOMAIN resolves to the real company,
+  a PE roll-up (Alpine Investors, "Co-Founder and M&A Partner"). Kraken: slug -> BD 0,
+  domain -> Clay 170. Domain-first with LinkedIn fallback is the resolution order.
+PHASE 1 RUNNING (JUDGE): 93 controls confirmed by a second model, 21 excluded as ambiguous.
+PHASE 3 RUNNING (GATE): LLM-planned fan-out, retrieval only, cap $3.
+
+ATTRIBUTION FIX: a commit went in with an AI co-author trailer from the harness default;
+the user's CLAUDE.md forbids it. Amended. Zero trailers in the last three commits.
+
+## 21. JUDGE GATE PASSED — the instrument is valid (locked split, used once)
+  negatives 76, FALSE POSITIVES 0, rule-of-three upper bound 3.9%   (target <= 5%)
+  positives 24, TP 22, recall 92%                                     (target >= 85%)
+  intent_contradicting: 36 negatives, 0 judged POSITIVE, 0 INFLUENCER
+    -> the class the old judge failed at 22% is now rejected 36/36.
+  departed 5/5 rejected · too_junior 15/15 · wrong_function 18 NEG + 2 NOT_APPLICABLE
+  misses: "HR Manager at Harbor Networks" -> not_at_company (sibling brand; defensible),
+          "Senior Director of Product Design" @ Discord -> wrong_function (design is not
+          product ownership; the control was borderline). judge errors 0.
+  Cost to build and validate: ~$0.80.
+
+GATE (retrieval policy) DONE: all 20 companies, planner rejected values 0.
+  NEW candidates beyond Clay's universe: 83 total. Airwallex 38, Ramp 29, MoonPay 5,
+  Discord 3, Harbor IT 3, Centre 2, Arq/Polymarket/Relay 1, all ten small MSPs 0.
+  ROUND 2 ran at 7 companies (observable gaps): marginal 0 at all seven.
+  Cost $0.82 for 20 companies. Cyber Salus $0.357 (an exa-agent run at a 21-person firm).
+  PENDING: JUDGE labels the 83 to see whether "beyond Clay" means buyers or noise.
+ABL spawned (selector ablation, raw ICP vs ICP+rubric, same rosters, same ids).
+
+## 22. Context accumulation decision + a regression I caused and caught (21:50-22:05)
+DECISION (user asked): two tiers. During finding, keep what providers already return as
+append-only evidence rows (tenure start, dated work history, the open-web pages the verifier
+already fetches). Deep context (BrightData posts, Exa agent podcasts/talks) is the separate
+enrich endpoint that already exists, per verified buyer, capped. Context RANKS and
+personalises; it never decides eligibility. Recorded as DESIGN.md REVISION 2.
+CHANGE: verify.mjs web read now returns {verdict, hook_quote, hook_url, hook_date} in the
+same call. Zero extra provider cost.
+REGRESSION: after the change, a person previously CONFIRMED came back UNKNOWN. Cause:
+maxTokens 300 on a reasoning model -> the model spent the budget thinking and returned EMPTY
+text -> parsed as UNKNOWN. Fix: maxTokens 1500; empty reply flagged `empty:true`. Re-tested
+3/3 verified (strong) and verified on the fast model with hook "ZAG Technical Services has
+joined Harbor IT" -- an acquisition, exactly the signal the user described, captured free.
+JUDGE was told to HOLD its verify pass during the repair and then cleared. No corrupted data.
+LESSON: a closed-set JSON reply from a reasoning model needs token headroom; an empty
+reply must be distinguishable from a genuine UNKNOWN.
+CONFIRMED: exa-web with text contents bills $0.007, same as without.

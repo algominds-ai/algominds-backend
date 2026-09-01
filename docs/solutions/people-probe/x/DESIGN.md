@@ -135,3 +135,28 @@ PHASE 5  USER SPOT-LABEL SHEET. Top 3 per company for 5 Ondato + 5 Aris. The onl
   ground truth. Produced at the end, blinded to method.
 
 COST CONTROL: every agent books model tokens too (llm() banks usage.cost). Caps hold.
+
+# REVISION 2 — context accumulation (user question, 21:50)
+
+PRINCIPLE. Find-companies keeps the SIGNAL because it is what makes the outreach relevant.
+For a person the equivalent is the recent thing that makes the message land: a post about
+the problem, a new role, a talk, a hiring post they wrote. Context RANKS and PERSONALISES;
+it never decides eligibility. The judge decides who; context decides what to say and whom
+first.
+
+TWO TIERS, split by cost and freshness, not preference:
+  DURING FINDING, free, already paid for -> store as append-only evidence rows
+    (subjectType person; kinds: tenure_start, prior_role, location, web_mention{url,quote,
+    date}, verification{source,verdict}). Sources: Clay start date, Exa dated workHistory,
+    the open-web pages the verifier ALREADY FETCHES (today read once and discarded).
+  ENRICH, per verified buyer, separate endpoint (src/core/enrich already exists) ->
+    BrightData row (activity posts, about, certifications, row age) $0.0025; Exa agent with
+    media providers for podcasts/talks ~$0.03-0.10. On demand, capped, only after
+    verification and judge.
+
+CHANGE TO THE PROBE:
+  verify.mjs web read returns {verdict, hook_quote, hook_url, hook_date} in the SAME call.
+  Closed shape. Zero extra provider cost. Stored per person in results.
+  HOOK (phase 4) now measures: of the verified buyers, share with a dated open-web mention
+  captured FREE by verification; share with a usable BrightData post and its age; cost per
+  person with at least one hook. That is the measured answer to "gather during vs later".
