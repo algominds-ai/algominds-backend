@@ -75,8 +75,10 @@ The guard it needs: five of its 23 confirmations cited data aggregators, which a
 from LinkedIn and are not independent. The output schema therefore carries `evidence_kind`
 as a closed set — first party, press, aggregator, LinkedIn — assigned by the agent. A
 confirmation resting only on aggregator or LinkedIn evidence gets the people index as a
-second opinion; a first-party or press confirmation stands alone. Code reads the label and
-applies that one rule. Nothing else in verification is deterministic.
+second opinion; a first-party or press confirmation stands alone. Two of 36 runs cited an
+`evidence_url` that did not contain the quote, so the quote must be found on the cited page
+before the URL is stored; if it is not, the verdict stands and the URL is dropped. Code reads
+the label and checks the quote is on the page. Nothing else in verification is deterministic.
 
 On the full run the two-source rule checked 93 judged positives, at most six per company:
 68 verified, 7 contradicted, 18 unknown, every company with at least one, $0.011 per person.

@@ -1165,3 +1165,13 @@ confirmations, a hook and a verbatim quote in the same structured reply. The use
 "no deterministic steps" preference is met: the only code is one rule on the agent's own
 closed-set evidence_kind label. Slower (~20 s vs ~3 s), which a Workflow step absorbs.
 Method doc, pipeline and architecture diagrams updated and committed (0591d31).
+
+## 35. AGENTVERIFY's independent report agrees; one new guard
+Independent write-up matches my read: 0/6 controls wrongly confirmed, 20/24 agreement with
+the two-source verdict (the 4 disagreements: first-party evidence the index missed, or the
+agent more cautious than an old thin confirmation), $0.012 at minimal, identical verdicts at
+low. NEW: 2 of 36 runs cited an evidence_url that did not contain the quote -- the quote came
+from another page. GUARD, before a URL reaches a person: the evidence_quote must be findable
+on the cited page (a verbatim quote is either on the page or it is not -- that is a field
+check, not a judgment); if not, ask the agent for the page the quote came from, else drop
+the URL and keep the verdict as "confirmed, evidence page unresolved".
