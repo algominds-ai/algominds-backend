@@ -112,7 +112,7 @@ reference of 5, both selector arms scored zero at precision 1.0. That is the cap
 | 5 verify | one Exa agent run, effort minimal, structured output with `evidence_kind`; aggregator-only confirmation gets the people index as a second opinion; silence is unknown and is excluded | Exa agent | people index + web read | $0.012 |
 | 6 context | keep the hook the verifier read; append as evidence | free | BrightData row on demand | $0.0025 |
 
-No Apollo, no Exa agent, no second round, no LLM planner in the default path. A twenty-
+No Apollo, no Exa agent for retrieval, no second round, no LLM planner in the default path. A twenty-
 company run costs about one dollar.
 
 ## Four ways to get a confident empty answer, each with its guard
