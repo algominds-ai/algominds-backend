@@ -1175,3 +1175,16 @@ from another page. GUARD, before a URL reaches a person: the evidence_quote must
 on the cited page (a verbatim quote is either on the page or it is not -- that is a field
 check, not a judgment); if not, ask the agent for the page the quote came from, else drop
 the URL and keep the verdict as "confirmed, evidence page unresolved".
+
+## 36. Flexibility and coupling (user question, 23:40)
+Bands are a PARAMETER of the buyer: 14 exist in Clay; the 8 senior ones were this fixture's
+setting. Interns as a target -> junior bands + whoever hires them + a rubric naming interns.
+Stage 2 contract: identifier in, Candidate{name,title,company,url,since} out; provider is an
+object literal; three implementations measured (Clay best; Exa people search; leadsforge via
+treg). No stage reads a provider field after the row mapper. Verification: Exa agent, with
+the two-source rule as fallback. Honest limit: Clay is the only source measured to give a
+COMPLETE roster cheaply; the cost story rests on it today.
+Edge cases MET: wrong domain, wrong slug, PE holding co with sibling brands, Spanish-language
+evidence, moved title, 10-person company. NOT met: >5,000-person company where a band could
+exceed the 499 cap (partition by location, shown at Airwallex).
+RESULTS.md per-company table being built by a sub-agent from files on disk, no network.

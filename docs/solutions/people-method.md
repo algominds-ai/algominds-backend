@@ -115,6 +115,31 @@ reference of 5, both selector arms scored zero at precision 1.0. That is the cap
 No Apollo, no Exa agent for retrieval, no second round, no LLM planner in the default path. A twenty-
 company run costs about one dollar.
 
+## What is a parameter and what is a provider
+
+Seniority bands are a parameter of the buyer, not a constant of the method. Clay exposes
+fourteen bands, founder through intern and unknown; the eight senior ones were the setting
+for these two buyers. Stage 0 captures who buys, stage 2 maps that to bands, and the rubric
+names the positives. A seller placing interns retrieves the junior bands plus whoever hires
+them. The manager-band rule at small MSPs is this mechanism already varying bands by
+company.
+
+After the row mapper no stage reads a provider-specific field. Stage 2's contract is an
+identifier in and `Candidate { name, title, company, url, since }` out; a provider is an
+object literal, so replacing one touches one file. Three implementations of that contract
+were measured: Clay, complete rosters on an annual quota; Exa people search, 13 to 14 per
+company at $0.007 per query; and leadsforge through treg, free, 8 of 8 known seniors at one
+company. Verification has the Exa agent with the two-source rule as its fallback. Clay is
+the only source measured to give a complete roster cheaply, and the method's cost rests on
+that today.
+
+Edge cases the run met, not imagined: a wrong stored domain, caught at stage 1; a wrong
+stored slug, caught; a private-equity holding company with sibling brands, one verified and
+four honestly unknown; a Latin-American company whose evidence was in Spanish, confirmed
+through Forbes Argentina; a person whose title had moved since the roster, held back; a
+ten-person company, one buyer. Not yet met: a company over about five thousand people where
+one band could pass the 499-row cap, which partitioning by location handled at Airwallex.
+
 ## Four ways to get a confident empty answer, each with its guard
 
 A wrong stored slug returned zero rows. A wrong-identity slug returned 104 real strangers
