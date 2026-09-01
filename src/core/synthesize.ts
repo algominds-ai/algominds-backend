@@ -165,6 +165,10 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"somewhere else. Companies refused as not being a company at all mean the query read like",
 	"a topic rather than an organisation. Write the next query so the same reason cannot",
 	"apply again.",
+	"That report also says what the round's freshness demand bought: the window it asked",
+	"for, and how old the pages it kept really were. Pages far fresher than the window",
+	"allowed mean this market publishes faster than you assumed, so ask for less. A round",
+	"that kept nothing means evidence that fresh is scarce here, so ask for more.",
 ].join(" ");
 
 function synthesizePrompt(input: SynthesizeInput): string {
@@ -179,7 +183,7 @@ function synthesizePrompt(input: SynthesizeInput): string {
 		for (const angle of pastAngles) lines.push(`- ${angle}`);
 	}
 	if (feedback.length > 0) {
-		lines.push("Reasons the previous round's companies were rejected:");
+		lines.push("What the previous round did, and why it refused things:");
 		for (const reason of feedback) lines.push(`- ${reason}`);
 	}
 	return lines.join("\n");

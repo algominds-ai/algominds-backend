@@ -1011,6 +1011,32 @@ describe("a round the vendor answers with nothing", () => {
 });
 
 describe("a round the filter refuses outright", () => {
+	it("tells the next round how old the pages the last one kept really were", async () => {
+		const { search } = scriptedSearch([
+			[
+				{ ...goodResult("alpha.com"), publishedDate: "2026-08-25" },
+				{ ...goodResult("beta.com"), publishedDate: "2026-08-20" },
+			],
+			[],
+		]);
+		const { synthesize, inputs } = scriptedSynthesize({
+			recency: "lately",
+			recencyDays: 180,
+		});
+
+		await findCompanies(icp, 10, testOptions(), {
+			recentDomains: recordingRecentDomains().recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const sent = inputs[1]?.feedback.join(" ") ?? "";
+		expect(sent).toContain("no older than 180 days");
+		expect(sent).toContain("5, 10 days old");
+	});
+
 	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
 		const { search } = scriptedSearch([
 			[
