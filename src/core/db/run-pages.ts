@@ -71,6 +71,7 @@ export async function peoplePage(
 ): Promise<{ rows: Person[]; nextCursor: string | null }> {
 	const connection = buildDb(env, "cached");
 	const scope = companyScopeForRun(run);
+	if (scope === null) return { rows: [], nextCursor: null };
 	const condition = page.cursor
 		? and(scope, gt(person.id, page.cursor))
 		: scope;

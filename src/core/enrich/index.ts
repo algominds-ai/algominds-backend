@@ -164,6 +164,11 @@ export async function subjectsForRun(
 	const run = await findRun(env, runId, deps.findRun);
 	if (!run) throw new NonRetryableError(`subjectsForRun: unknown run ${runId}`);
 	const condition = companyScopeForRun(run);
+	if (condition === null) {
+		throw new NonRetryableError(
+			`subjectsForRun: run ${runId} covers no companies to enrich`,
+		);
+	}
 	const hasCompanies = await companiesExistFor(
 		env,
 		condition,

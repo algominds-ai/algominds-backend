@@ -1006,12 +1006,12 @@ function recordingPersonPageDb(
 function testRun(fields: {
 	id: string;
 	capability: string;
-	icpId?: string;
+	icpId?: string | null;
 }): Run {
 	return {
 		id: fields.id,
 		organizationId: "org-1",
-		icpId: fields.icpId ?? "icp-1",
+		icpId: fields.icpId === undefined ? "icp-1" : fields.icpId,
 		capability: fields.capability,
 		status: "complete",
 		costDollars: 0,
@@ -1110,6 +1110,36 @@ describe("peoplePage scopes by what the run covers", () => {
 		);
 
 		expect(spy.condition).toEqual(eq(company.runId, "companies_x"));
+	});
+
+	it("hands back an empty page for an onboarding run, which covers no companies", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const spy: { condition?: unknown } = {};
+		const buildDb = recordingPersonPageDb([], spy);
+
+		const page = await peoplePage(
+			env,
+			testRun({ id: "onboarding_x", capability: "onboarding", icpId: null }),
+			{ limit: 5, cursor: undefined },
+			buildDb,
+		);
+
+		expect(page).toEqual({ rows: [], nextCursor: null });
+		expect(spy.condition).toBeUndefined();
+	});
+
+	it("refuses a people run that names no profile rather than reading every person", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const buildDb = recordingPersonPageDb([], {});
+
+		await expect(
+			peoplePage(
+				env,
+				testRun({ id: "people_x", capability: "people", icpId: null }),
+				{ limit: 5, cursor: undefined },
+				buildDb,
+			),
+		).rejects.toThrow("names no profile");
 	});
 });
 
