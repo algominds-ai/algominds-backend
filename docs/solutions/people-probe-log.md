@@ -971,3 +971,32 @@ IDENTITY: Harbor IT domain->0 then LinkedIn->rows; Evergreen resolved by domain,
    conflict. No confident-wrong and no confident-empty roster.
 PROCESS: an orphaned background test process burned $0.37 before GATE caught it; disclosed
    and included in the $0.82. Second time today an agent lost money to backgrounding.
+
+## 26. JUDGE done: labels for all 20, gate re-locked and held, verification incomplete
+GATE RE-RUN after the advisor's harder controls were added (composition changed, so DEV ->
+LOCKED once more): 76 negatives 0 FP (upper 3.9%), incl. 7 VOCAB-FREE intent-contradicting
+negatives, 0 FP; positives 100% recall on the new LOCKED. The repair cycle changed the
+CONTROL POOL (removed ambiguous compound titles), not the judge prompt. DEV recall 78.6% ->
+93.8% after cleaning controls.
+CONTEXT-DEPENDENT POSITIVES: only 5 exist in the fixture (advisor asked for 10) -- no Ondato
+company is under the ~100-employee founder carve-out (smallest is Arq at ~160-230). Reported
+as a gap, not manufactured.
+MoonPay: 24 of 80 ids came back malformed on one call -- a real coverage hole, flagged.
+GATE'S 83 "BEYOND CLAY" CANDIDATES, judged: 0 POSITIVE among the 67 at Airwallex and Ramp.
+  4 POSITIVE total (Centre Technologies, Harbor IT -- the sole HR/recruiting managers),
+  3 verified. THAT IS THE LLM GATE'S ENTIRE MARGINAL CONTRIBUTION over Clay-senior: three
+  verified buyers across twenty companies, all in one slice (manager band, HR function, small
+  MSP). It is real and it is narrow.
+VERIFICATION STOPPED at 5 of 20 companies: JUDGE ran its own script with the old $2.80 cap
+(never picked up the $5.00 raise) and a DUPLICATE BACKGROUND PROCESS re-ran three companies,
+wasting ~$0.15-0.20. Third agent today to lose money to backgrounding. 21 verify calls:
+15 verified, 2 contradicted, 4 unknown. Spot-check 7/7 agreement fast vs strong. exa-web
+32/32 rows at exactly $0.007.
+=> I am filling the remaining 15 companies myself: verify-fill.mjs, one sequential process,
+   ledger JUDGE2, cap $1.50, positives ordered by seniority band, 6 per company as
+   pre-registered. R is therefore CAPPED AT 6 per company by design; recall-vs-R is fair to
+   selectors that pick at most 6.
+EXAMPLE of the two-source rule holding: Rahul Kumar, "US Growth Lead" at Airwallex -- web
+CONFIRMED with hook "joined Airwallex as Senior Partnerships Manager", index UNKNOWN ->
+status unknown. The hook itself shows the title has moved. One source alone would have
+shipped a wrong title.
