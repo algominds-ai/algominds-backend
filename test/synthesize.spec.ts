@@ -435,16 +435,19 @@ describe("a profile that lists dated events is asking for something recent", () 
 		expect(sent).not.toContain("refuses one carrying no date");
 	});
 
-	it("routes on whether the round wants an event proved, never on whether the page must be fresh", async () => {
+	it("describes what each source can answer and leaves the choice to the model", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
 		await runSynthesize();
 
 		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("whether or not you demand that the page be");
-		expect(sent).toContain("names no event at all");
-		expect(sent).not.toContain("choose `exa-agent` whenever you set `recency`");
+		expect(sent).toContain("It holds no pages, no events and no dates");
+		expect(sent).toContain(
+			"Choose the one that can answer the round you are writing",
+		);
+		expect(sent).not.toContain("whenever you set `recency`");
+		expect(sent).not.toContain("a breach, a licence or a funding round");
 	});
 
 	it("asks how old the event may be and how old its proof may be as two separate questions", async () => {
