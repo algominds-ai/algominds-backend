@@ -71,18 +71,29 @@ ${icpText}
 These are the people employed at one target company, each with an id and their real job title.
 ${roster.map(c=>`${c.id}\t${c.title}`).join("\n")}
 
-Return the ids of the people who would own the budget or the decision for this purchase.
+Return the people who would own the budget or the decision for this purchase.
 Mere involvement is not enough. Judge the role as it functions in this company, not by
 keywords in the title. If nobody qualifies, return nothing.
-Output ONLY ids, one per line. No titles, no names, no other text.` }] }),
+
+Output one JSON object per line and nothing else:
+{"id":<number>,"basis":"explicit_persona_match"}   the profile names this persona directly
+{"id":<number>,"basis":"inferred_workflow_owner"}  the profile describes a workflow and this
+                                                   person owns it, without naming the role` }] }),
   });
   const j = await r.json();
   meter.llmDollars += j?.usage?.cost ?? 0;
-  const ids = new Set((j?.choices?.[0]?.message?.content ?? "").split(/[^0-9]+/).filter(Boolean).map(Number));
-  const picked = people.filter((_, i) => ids.has(i));
-  const unknown = [...ids].filter(i => i < 0 || i >= people.length);
+  const BASIS = ["explicit_persona_match", "inferred_workflow_owner"];
+  const chosen = new Map();
+  let unknownIds = 0;
+  for (const line of (j?.choices?.[0]?.message?.content ?? "").split("\n")) {
+    let row;
+    try { row = JSON.parse(line.trim()); } catch { continue; }
+    if (!Number.isInteger(row.id) || row.id < 0 || row.id >= people.length) { unknownIds++; continue; }
+    chosen.set(row.id, BASIS.includes(row.basis) ? row.basis : "unrecognised");
+  }
+  const picked = people.map((p, i) => ({ ...p, basis: chosen.get(i) })).filter((_, i) => chosen.has(i));
   note("select", `${roster.length} candidates`, picked.length);
-  return { picked, observedTitles:new Set(people.map(p=>p.title)).size, unknownIds:unknown.length };
+  return { picked, observedTitles:new Set(people.map(p=>p.title)).size, unknownIds };
 }
 
 /** Stage 4. Fetches the company's own pages, then asks the model to read them, because deciding whether a page confirms employment is comprehension rather than string matching. */

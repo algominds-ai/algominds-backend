@@ -662,3 +662,90 @@ THE PATTERN THAT MAKES THIS SAFE, and it is codex's ID design generalised:
    are these two records the same person).
    The LLM never returns free text that code then parses for meaning -- it returns an ID or
    a label from a closed set, and code does the rest.
+
+---
+
+## 16. CODEX ANSWERS on the three open design questions (CODEX-ANSWERS.md)
+
+Q1 GATE 0 -- REJECTED, and the reasoning corrects me.
+   I proposed a Gate 0: "can a synthesizer infer the buyer from an account definition alone?"
+   Codex: "It would measure whether a model can guess an unstated buyer, not whether the
+   guess is correct." You cannot score an inference without knowing the right answer.
+   INSTEAD: the client's stated intent ("growth side, not compliance side") becomes part of
+   the CLIENT-INTENT RUBRIC/FIXTURE. Gate 1 then needs client-labelled GROWTH POSITIVES and
+   COMPLIANCE NEGATIVES. If both selectors return compliance people they fail on PRECISION,
+   which is the detection I was trying to build a separate gate for.
+   Raw-versus-stored agreement alone is NOT the pass condition.
+
+Q2 THRESHOLDS CONTAMINATED BY MY BUYER REGEX -- these must be re-derived:
+     Gate 2  >=12 additional buyers across 24 companies
+     Gate 2  >=1 additional buyer at >=6 companies
+     Gate 2  round-two >=6 across 24
+     Gate 2  the 0.5-per-company small-company override
+     Gate 2  the size-based no-loop default
+   Re-derive from a SEPARATE DEVELOPMENT SAMPLE's blinded, human-adjudicated A-versus-B
+   buyer delta using an explicit client buyer rubric -- never source agreement, never regex
+   matches -- then FREEZE them before the 36-company evaluation.
+   These bars were chosen independently and STAND: >=90% marginal precision, bootstrap lower
+   bound above zero, <=2-point overall precision loss, the structural zero-error rules.
+   Gate 1, 3 and 4 thresholds were NOT derived from the regex figures. But any regex-created
+   LABELS or CONTROLS inside them must be replaced.
+
+Q3 PER-PERSON REASONS -- YES, as a CLOSED-SET label in the SAME call:
+     {"id":"candidate_123","basis":"explicit_persona_match"}
+     {"id":"candidate_456","basis":"inferred_workflow_owner"}
+   No free text. No separate explanation call -- that only produces post-hoc rationalisation.
+   Log `basis` for DIAGNOSIS ONLY. NEVER parse it to decide eligibility, ranking, or the
+   returned title.
+   This is what makes the hard case auditable: it distinguishes "the profile told it to pick
+   compliance" from "it failed to infer the buyer", which look identical in the output and
+   need opposite fixes.
+
+BLOCKER, and it is a genuine dependency on the client, not something I can measure my way
+around: Gate 1 needs a CLIENT-LABELLED FIXTURE -- real people at real companies, labelled by
+the client as buyers or non-buyers under their own rubric. Without those labels there is no
+ground truth for intent, and every alternative I have (provider agreement, a regex, a judge
+with a 22% wrong-function error) is exactly the kind of self-referential measurement this
+whole session has been poisoned by.
+
+---
+
+## 17. EMERGENT COUNT — PROVEN across a 44x headcount range
+
+9 Aris companies, offline from bd-aris.json, corrected currentTitleAt, no network calls.
+Evergreen excluded (identity trap). All 9 companies x 3 methods x judge ran in UNDER 3
+MINUTES, M3 costing $0.0163 total.
+
+  company              headcount  titled   M1   M2   M3
+  etrepid                     10       5    0    1    0
+  cyber-salus                 21       5    1    2    2
+  newboldtech                 44      17    2    2    3
+  cyberlinkasp                52      20    2    5    4
+  frsecure                   109      46    7   16    2
+  harbor-msp                 206      53    5    9   13
+  das-health                 248      81    2    5   11
+  centre-technologies        288     107    4   13   19
+  ntiva-inc-                 445     191   10   21   41
+
+PROVEN  NO METHOD PADS. None converges on a fixed number. All track company size, from 0-2
+        selected at a 10-person company to 10-41 at a 445-person one. This is the client's
+        core requirement -- "if a company only has two people in that department, return
+        two" -- and it now holds across a 44x headcount range.
+
+DIAGNOSTIC, the three shapes differ and the difference is informative:
+  M1 deterministic  flat ~1-2% of headcount at EVERY size above 40. A fixed rule finds a
+                    constant FRACTION, which is its own insensitivity -- it cannot notice
+                    that one company has an unusually deep bench and another does not.
+  M3 per-person     share GROWS with size, 2% at 206-248 employees up to 9% at 445. The
+                    opposite of padding, but could be over-inclusion at scale rather than
+                    better recall. UNRESOLVED without clean labels.
+  M2 title-list     erratic, 35% of the titled pool at one company and 6% at another, no
+                    size relationship. The noisiest of the three.
+
+PROVEN  COST AND SPEED ARE NOT THE OBJECTION TO PER-PERSON LLM SELECTION. I had assumed M3
+        was too slow and dear to ship. Measured: under 3 minutes for all 9 companies and
+        $0.0163. That assumption was mine and it was unmeasured.
+
+NOT A RESULT  Judge column M1 73%, M2 36%, M3 52%. With a 22% wrong-function error rate the
+        judge cannot separate these. M2 scoring half of M1 is more likely judge noise than a
+        real gap. No winner can be called until Gate 1 supplies clean labels.

@@ -18,9 +18,9 @@ for (const [name, domain] of targets) {
   const bands = Object.entries(perBand).map(([b,v])=>`${b}:${v.error?"ERR":v.count}${v.capped?"*":""}`).join(" ");
   console.log(`   STAGE2 retrieve       ${people.length} distinct senior people   [${bands}]`);
 
-  const { picked, observedTitles, chosenTitles } = await select(icpText, people);
-  console.log(`   STAGE3 select         ${picked.length} buyers from ${observedTitles} observed titles`);
-  console.log(`          titles chosen: ${chosenTitles.slice(0,6).join(" | ")}`);
+  const { picked, observedTitles, unknownIds } = await select(icpText, people);
+  console.log(`   STAGE3 select         ${picked.length} buyers from ${observedTitles} observed titles (unknown ids: ${unknownIds})`);
+  console.log(`          basis: ${JSON.stringify(picked.reduce((a,p)=>({...a,[p.basis]:(a[p.basis]??0)+1}),{}))}`);
 
   const checked = [];
   for (const p of picked.slice(0,8)) checked.push({ ...p, ...(await verifyFirstParty(p, domain)) });
