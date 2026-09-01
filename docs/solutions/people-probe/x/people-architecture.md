@@ -27,8 +27,8 @@ flowchart LR
         C2["roster.ts<br/>seniorRoster(identifier, env)<br/>8 bands, + manager band rule<br/>→ Candidate[]"]:::code
         C3["dedupe.ts<br/>canonUrl · nameKey<br/>→ Candidate[] with stable id, seenBy[]"]:::code
         C4["select.ts<br/>pickBuyers(icp, intent, candidates, env)<br/>model → ids + basis<br/>code copies name/title/url by id"]:::model
-        C5["verify.ts<br/>verifyPerson(p, env)<br/>Exa agent, effort minimal, structured output<br/>{verdict, evidence_url, evidence_kind, quote, hook}<br/>aggregator-only → people index second opinion<br/>→ verified | contradicted | unknown"]:::model
-        C6["rows.ts<br/>toNewPerson · evidenceRowsFor"]:::code
+        C5["verify.ts<br/>verifyPerson(p, env)<br/>Exa agent, effort minimal, structured output<br/>{verdict, evidence_url, evidence_kind, quote}<br/>aggregator-only → people index second opinion<br/>→ verified | contradicted | unknown"]:::model
+        C6["rows.ts<br/>toNewPerson · evidenceRowsFor<br/>raw provider replies stored unshaped"]:::code
     end
 
     subgraph PROV["src/core/providers — one object literal each"]
@@ -46,7 +46,7 @@ flowchart LR
         D2[("run · round")]:::store
         D3[("company<br/>domain · linkedinUrl")]:::store
         D4[("person<br/>name · title · linkedinUrl · data.basis")]:::store
-        D5[("evidence — append only<br/>kind: verdict_index · verdict_web ·<br/>hook · tenure · identity_how")]:::store
+        D5[("evidence — append only<br/>verdicts · evidence urls · quotes ·<br/>raw provider replies · identity_how")]:::store
     end
 
     D1 --> W0
@@ -63,7 +63,7 @@ flowchart LR
     C5 --- P2
     C5 --- P3
     C5 --- P5
-    C6 -.->|"weak hook, on demand"| P4
+    C6 -.->|"context API, later"| P4
     C6 --> D4
     C6 --> D5
     W9 --> D2
@@ -121,11 +121,11 @@ sequenceDiagram
                 VE->>EX: /search people "title at company" → workHistory
                 VE->>EX: /search web "name title company" + text
                 EX-->>VE: pages
-                VE->>M: pages + claim → { verdict, hook }
+                VE->>M: pages + claim → { verdict, evidence }
             end
             alt index CONFIRMED ∧ web CONFIRMED
-                VE-->>WF: verified + hook
-                WF->>DB: insert person · evidence(verdict_index, verdict_web, hook, tenure)
+                VE-->>WF: verified
+                WF->>DB: insert person · evidence(verdict, evidence_url, quote, raw provider replies)
             else any CONTRADICTED
                 VE-->>WF: contradicted
                 WF->>DB: evidence only (status contradicted)
