@@ -22,7 +22,7 @@ flowchart TD
         S1 -->|resolved| S2 --> S3 --> S4 --> S5 -->|verified| S6
     end
 
-    S6 --> P["PERSIST<br/>person: name, title, linkedinUrl, basis<br/>evidence (append-only): verdicts, hook, tenure, sources"]
+    S6 --> P["PERSIST<br/>person: name, title, linkedinUrl, basis<br/>evidence (append-only): verdicts, evidence urls, quotes, raw provider replies"]
     S1 -.->|unresolved| E["company marked<br/>identity unresolved"]
     S5 -.->|unknown / contradicted| X["not shipped<br/>kept as evidence"]
 

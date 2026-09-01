@@ -35,9 +35,10 @@ flowchart LR
         direction TB
         P1["clay<br/>search/filters-mode + run<br/>company_identifier · seniority bands"]:::prov
         P2["exa/search<br/>category: people → workHistory"]:::prov
-        P3["exa/search<br/>web + text contents"]:::prov
+        P3["exa/search<br/>web + text contents<br/>fallback verifier only"]:::prov
         P4["brightdata<br/>datasets/search by linkedin_id<br/>on demand only"]:::prov
         P5["model.ts<br/>AI Gateway · require_parameters<br/>cf-aig-skip-cache · closed-set JSON"]:::model
+        P6["exa/agent<br/>agent/runs · effort minimal<br/>structured output schema"]:::prov
     end
 
     subgraph DB["Postgres via Hyperdrive"]
@@ -60,9 +61,8 @@ flowchart LR
     C2 --- P1
     C2 -.->|"fallback"| P2
     C4 --- P5
-    C5 --- P2
-    C5 --- P3
-    C5 --- P5
+    C5 --- P6
+    C5 -.->|"aggregator-only"| P2
     C6 -.->|"context API, later"| P4
     C6 --> D4
     C6 --> D5
@@ -115,18 +115,17 @@ sequenceDiagram
         WF->>SE: pickBuyers(icp, buyer, candidates)
         SE->>M: roster rows (id, title, band) + icp + buyer → JSON picks [{id, basis}]
         M-->>SE: ids only · unknown ids dropped · empty allowed
-        loop each pick, ≤ 6 (two steps: index, web)
+        loop each pick, ≤ 6 (one step per agent run)
             WF->>VE: verifyPerson(name, title, company)
-            par independent
-                VE->>EX: /search people "title at company" → workHistory
-                VE->>EX: /search web "name title company" + text
-                EX-->>VE: pages
-                VE->>M: pages + claim → { verdict, evidence }
+            VE->>EX: /agent/runs effort minimal, schema { verdict, evidence_url, evidence_quote, evidence_kind, confidence }
+            EX-->>VE: structured reply (~20 s, $0.012)
+            opt evidence_kind is aggregator or linkedin
+                VE->>EX: /search people "title at company" → workHistory (second opinion)
             end
-            alt index CONFIRMED ∧ web CONFIRMED
+            alt CONFIRMED on first-party or press evidence, or CONFIRMED and index agrees
                 VE-->>WF: verified
-                WF->>DB: insert person · evidence(verdict, evidence_url, quote, raw provider replies)
-            else any CONTRADICTED
+                WF->>DB: insert person · evidence(verdict, evidence_url, quote, raw agent reply)
+            else CONTRADICTED
                 VE-->>WF: contradicted
                 WF->>DB: evidence only (status contradicted)
             else
@@ -147,13 +146,13 @@ sequenceDiagram
 | roster → dedupe | `Candidate { name, title, company, url, since, src }[]` | Clay row mapper |
 | dedupe → select | `Candidate { id, ..., seenBy[] }[]` with stable ids | `canonUrl` then `nameKey` |
 | select → verify | `Pick { id, basis }[]` ≤ 6, ids resolved to records by code | Zod on the model reply; unknown ids counted and dropped |
-| verify → persist | `{ status, index, web, hook }` with `status ∈ verified \| contradicted \| unknown` | both sources must say CONFIRMED |
+| verify → persist | `{ status, verdict, evidence_url, evidence_quote, evidence_kind, confidence }` with `status ∈ verified \| contradicted \| unknown` | the agent's closed-set reply; aggregator-only needs the index to agree; the quote must be on the page |
 | persist → DB | `person` row only when `verified`; `evidence` rows always | append-only invariant |
 
 ## 4 · What is deliberately not in the default path
 
 - **Apollo** — surnames obfuscated, never resolved to a person another source confirmed.
-- **Exa agent** — $0.225 for four people already in the roster.
+- **Exa agent for retrieval** — $0.225 for four people already in the roster. It is the verifier, not a retriever.
 - **Any second round or planner** — recovered nothing at all seven companies where it fired.
 - **BrightData rosters** — paid per row, a third of rows unusable, hangs under load.
 - **String matching for meaning** — no regex decides a buyer, no word overlap confirms a page.
