@@ -2,7 +2,34 @@ import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { buildIcp } from "../src/core/onboard";
+import { readSellerPages, writeSellerProfile } from "../src/core/onboard";
+
+async function buildIcp(
+	env: Env,
+	domain: string,
+	note?: string | null,
+): Promise<{
+	description: string;
+	seller: Awaited<ReturnType<typeof writeSellerProfile>>["seller"];
+	wroteProfile: boolean;
+	ledger: Awaited<ReturnType<typeof readSellerPages>>["ledger"];
+}> {
+	const read = await readSellerPages(env, domain);
+	const written = await writeSellerProfile(
+		env,
+		domain,
+		read.pages,
+		note ?? null,
+	);
+	for (const entry of written.ledger.toJSON().entries)
+		read.ledger.reported(entry.provider, entry.op, entry.dollars);
+	if (written.description === null) {
+		throw new NonRetryableError(
+			`onboard: no profile written and no note given for domain ${domain}`,
+		);
+	}
+	return { ...written, description: written.description, ledger: read.ledger };
+}
 
 function onboardEnv(): Env {
 	return {

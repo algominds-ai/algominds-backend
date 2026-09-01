@@ -30,25 +30,34 @@ export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 	seller?: IcpSeller | null;
 };
 
-export async function saveOnboardedIcp(
-	env: DbEnv,
-	input: NewIcpInput & { runId: string; costDollars: number },
-): Promise<string> {
+/** Inserts the profile and returns the stored row, on whichever connection the caller is already inside. */
+async function insertIcp(
+	connection: IcpInsertConnection,
+	input: NewIcpInput,
+): Promise<Icp> {
 	const doc: IcpDoc = IcpDocSchema.parse({
 		description: input.description,
 		seller: input.seller ?? null,
 	});
+	const rows = await connection
+		.insert(icp)
+		.values({
+			domain: input.domain,
+			organizationId: input.organizationId,
+			doc,
+		})
+		.returning();
+	const row = rows[0];
+	if (!row) throw new Error("insertIcp: insert returned no row");
+	return row;
+}
+
+export async function saveOnboardedIcp(
+	env: DbEnv,
+	input: NewIcpInput & { runId: string; costDollars: number },
+): Promise<string> {
 	return db(env, "cached").transaction(async (tx) => {
-		const rows = await tx
-			.insert(icp)
-			.values({
-				domain: input.domain,
-				organizationId: input.organizationId,
-				doc,
-			})
-			.returning();
-		const row = rows[0];
-		if (!row) throw new Error("saveOnboardedIcp: insert returned no row");
+		const row = await insertIcp(tx, input);
 		await tx
 			.update(run)
 			.set({
@@ -68,20 +77,5 @@ export async function createIcp(
 	input: NewIcpInput,
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
-	const connection = buildDb(env, "cached");
-	const doc: IcpDoc = IcpDocSchema.parse({
-		description: input.description,
-		seller: input.seller ?? null,
-	});
-	const rows = await connection
-		.insert(icp)
-		.values({
-			domain: input.domain,
-			organizationId: input.organizationId,
-			doc,
-		})
-		.returning();
-	const row = rows[0];
-	if (!row) throw new Error("createIcp: insert returned no row");
-	return row;
+	return insertIcp(buildDb(env, "cached"), input);
 }

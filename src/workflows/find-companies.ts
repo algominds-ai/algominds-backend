@@ -16,6 +16,7 @@ import {
 	toCompanyData,
 } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
 import {
 	appendEvidence,
 	assertUnderDailyCeiling,
@@ -33,7 +34,6 @@ import { IcpDocSchema } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";
 
 const MAX_ROUNDS = config.companies.maxRounds;
-const EVIDENCE_SOURCE = "exa";
 /** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
 const STORED_REJECTS_PER_ROUND = 120;
 
@@ -200,55 +200,6 @@ async function runFindCompaniesRounds(
 		feedback,
 		roundReports,
 	};
-}
-
-function toNewCompany(
-	row: CompanyRow,
-	icpId: string,
-	runId: string,
-	capture: CompanyCapture | undefined,
-): NewCompany | null {
-	if (row.name === null || row.domain === null || capture === undefined)
-		return null;
-	return {
-		icpId,
-		domain: row.domain,
-		name: row.name,
-		linkedinUrl: row.linkedinUrl,
-		industry: row.industry,
-		data: toCompanyData(capture),
-		runId,
-	};
-}
-
-function matchRow(
-	rows: readonly CompanyRow[],
-	saved: Company,
-): CompanyRow | undefined {
-	return rows.find(
-		(row) =>
-			row.domain !== null && normalizeDomain(row.domain) === saved.domain,
-	);
-}
-
-function evidenceRowsFor(saved: Company, row: CompanyRow): NewEvidence[] {
-	const fields: Array<[string, string | null]> = [
-		["name", row.name],
-		["domain", row.domain],
-		["linkedinUrl", row.linkedinUrl],
-		["evidenceUrl", row.evidenceUrl],
-		["signal", row.signal],
-		["evidenceDate", row.evidenceDate],
-	];
-	return fields
-		.filter((entry): entry is [string, string] => entry[1] !== null)
-		.map(([kind, value]) => ({
-			subjectType: "company",
-			subjectId: saved.id,
-			kind,
-			value,
-			source: EVIDENCE_SOURCE,
-		}));
 }
 
 /**

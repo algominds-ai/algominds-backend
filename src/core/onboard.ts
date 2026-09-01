@@ -24,16 +24,12 @@ const OnboardModelSchema = z.object({
 
 type OnboardModelOutput = z.infer<typeof OnboardModelSchema>;
 
-export type BuildIcpResult = {
-	description: string;
+/** What one attempt produced. `description` is null when neither the model nor a note gave one, and the caller owns what that means. */
+export type SellerProfile = {
+	description: string | null;
 	seller: IcpSeller;
 	wroteProfile: boolean;
 	ledger: CostLedger;
-};
-
-/** What one attempt produced. `description` is null when neither the model nor a note gave one, and the caller owns what that means. */
-export type SellerProfile = Omit<BuildIcpResult, "description"> & {
-	description: string | null;
 };
 
 function sellerAngles(domain: string): string[] {
@@ -142,12 +138,7 @@ function toSeller(domain: string, output: OnboardModelOutput): IcpSeller {
 	};
 }
 
-/**
- * Reads a seller's own site with one deep Exa search and turns it into an
- * ideal customer profile description plus the seller block `synthesize`
- * needs. Falls back to the caller's note when there are no pages or the model
- * returns nothing twice, and throws when there is no note to fall back to.
- */
+/** The seller's own pages and what reading them cost. */
 export type SellerPages = { pages: SellerPage[]; ledger: CostLedger };
 
 /** Reads the seller's own site with one deep search, and what that search cost. */
@@ -205,27 +196,4 @@ export async function writeSellerProfile(
 		wroteProfile: true,
 		ledger,
 	};
-}
-
-export async function buildIcp(
-	env: Env,
-	domain: string,
-	note?: string | null,
-): Promise<BuildIcpResult> {
-	const input = BuildIcpRequestSchema.parse({ domain, note: note ?? null });
-	const read = await readSellerPages(env, input.domain);
-	const written = await writeSellerProfile(
-		env,
-		input.domain,
-		read.pages,
-		input.note,
-	);
-	for (const entry of written.ledger.toJSON().entries)
-		read.ledger.reported(entry.provider, entry.op, entry.dollars);
-	if (written.description === null) {
-		throw new NonRetryableError(
-			`onboard: no profile written and no note given for domain ${input.domain}`,
-		);
-	}
-	return { ...written, description: written.description, ledger: read.ledger };
 }
