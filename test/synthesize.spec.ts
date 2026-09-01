@@ -121,6 +121,8 @@ function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
 		countries: ["United States"],
 		minWorkforce: null,
 		maxWorkforce: 20,
+		eventWindowDays: null,
+		recencyDays: null,
 		...overrides,
 	});
 }
@@ -184,6 +186,8 @@ describe("synthesize: gateway wiring", () => {
 					{
 						query: "q",
 						angle: "a",
+						eventWindowDays: null,
+						recencyDays: null,
 						userLocation: null,
 						countries: [],
 						minWorkforce: null,
@@ -226,6 +230,8 @@ describe("synthesize: cost recording without a cost field", () => {
 						content: JSON.stringify({
 							query: "q",
 							angle: "a",
+							eventWindowDays: null,
+							recencyDays: null,
 							userLocation: null,
 							countries: [],
 							minWorkforce: null,
@@ -427,6 +433,18 @@ describe("a profile that lists dated events is asking for something recent", () 
 		expect(sent).toContain("those events are what `recency` is");
 		expect(sent).toContain("sends the round to a source that holds no events");
 		expect(sent).not.toContain("refuses one carrying no date");
+	});
+
+	it("routes on whether the round wants an event proved, never on whether the page must be fresh", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("whether or not you demand that the page be");
+		expect(sent).toContain("names no event at all");
+		expect(sent).not.toContain("choose `exa-agent` whenever you set `recency`");
 	});
 
 	it("asks how old the event may be and how old its proof may be as two separate questions", async () => {
