@@ -76,6 +76,17 @@ The recent event that makes a company worth reaching now — a role posted, a st
 published, an outage written up. A Profile that asks for no Signal is asking about
 lasting shape instead.
 
+### Event window
+How far back a Signal's event may have happened and still qualify. A Profile states
+it, often differently for each Signal it names.
+
+### Proof window
+How old the Evidence may be and still show the situation is live today. It answers a
+different question from the Event window and is usually far shorter: a licence granted
+eleven months ago is still inside a twelve-month Event window, while only a page from
+this month shows anyone is still acting on it. The Round refuses Evidence older than
+this, and reports to the next Round what its window actually bought.
+
 ## Vendors
 
 ### Waterfall

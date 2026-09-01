@@ -473,3 +473,7 @@ company's own domain after normalisation.
 Both date filters are rejected outright by the entity categories, so the
 question of their format does not arise on the company or people paths. The
 `SearchPlan` the synthesizer produces carries no date for this reason.
+
+Freshness is still demanded, just never as a vendor filter. The plan carries it
+as two day counts the code enforces itself, and the agent query states the
+shorter of them in words. See `two-windows-in-one-number.md`.
