@@ -82,10 +82,11 @@ the label and checks the quote is on the page. Nothing else in verification is d
 
 On the full run the two-source rule checked 93 judged positives, at most six per company:
 68 verified, 7 contradicted, 18 unknown, every company with at least one, $0.011 per person.
-Its web read returned an outreach hook in the same call: 30 of the 68 came with a specific
-event, 37 dated inside 180 days. BrightData's collected profile, run only on the 38 without
-one, added 7 more for $0.095. The agent returns a hook and an evidence quote in the same
-structured reply.
+Measured for the context API, not for this pipeline: the verifier's page read yielded a
+specific-event opener for 30 of the 68 at no extra cost, 37 dated inside 180 days, and
+BrightData's collected profile added 7 more on the 38 without one for $0.095. Context is not this pipeline's job. The finding API returns the right people; every
+provider reply is stored raw as evidence, and a separate context API reads it later. The
+hook measurements above are that API's design input, not a stage here.
 
 ## The judge, and what it can and cannot say
 
@@ -109,8 +110,8 @@ reference of 5, both selector arms scored zero at precision 1.0. That is the cap
 | 2 retrieve | the eight senior bands, one call each; at a small MSP with no senior HR owner, add the manager band keyworded for HR and recruiting | Clay | Exa people search per persona | quota |
 | 3 dedupe | canonical LinkedIn URL, then name key | code | — | 0 |
 | 4 select | at most six candidate ids plus a closed-set basis; the model never emits a title; an empty result is a valid result | model with the buyer criteria | — | $0.02 |
-| 5 verify | one Exa agent run, effort minimal, structured output with `evidence_kind`; aggregator-only confirmation gets the people index as a second opinion; silence is unknown and is excluded | Exa agent | people index + web read | $0.012 |
-| 6 context | keep the hook the verifier read; append as evidence | free | BrightData row on demand | $0.0025 |
+| 5 verify | one Exa agent run, effort minimal, structured output: verdict, evidence url, verbatim quote, `evidence_kind`, confidence; aggregator-only confirmation gets the people index as a second opinion; silence is unknown and is excluded | Exa agent | people index + web read | $0.012 |
+| 6 store | write the person, and every provider's raw reply as append-only evidence, unshaped | code | — | 0 |
 
 No Apollo, no Exa agent for retrieval, no second round, no LLM planner in the default path. A twenty-
 company run costs about one dollar.

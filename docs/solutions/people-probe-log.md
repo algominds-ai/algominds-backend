@@ -1188,3 +1188,12 @@ Edge cases MET: wrong domain, wrong slug, PE holding co with sibling brands, Spa
 evidence, moved title, 10-person company. NOT met: >5,000-person company where a band could
 exceed the 499 cap (partition by location, shown at Airwallex).
 RESULTS.md per-company table being built by a sub-agent from files on disk, no network.
+
+## 37. DECISION (user): context is a separate API. Find-people returns people, stores raw.
+The hook was never a step -- one field in the verifier's reply. Dropped anyway: a clean
+contract beats a free field. Verification keeps {verdict, evidence_url, evidence_quote,
+evidence_kind, confidence} because the quote PROVES the verdict. Stage 6 is now STORE: the
+person plus every provider's raw reply as append-only evidence, unshaped. The context API
+reads it later. The judge stays out of production: it was the instrument, not a stage.
+The HOOK numbers (44% free opener, BrightData +1 in 5) become the context API's design
+input. No money or time in this pipeline goes to context.
