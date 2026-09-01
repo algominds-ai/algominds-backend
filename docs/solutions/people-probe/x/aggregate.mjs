@@ -41,7 +41,7 @@ for (const c of universe?.companies ?? []) {
     seller: c.seller, company: c.company, band: sizeBand(hc), headcount: hc, U: c.candidates.length,
     judgedPos: (r?.judged ?? []).filter(isPos).length, R: (r?.R ?? []).length,
     verified: ver.filter((v) => v.status === "verified").length, contradicted: ver.filter((v) => v.status === "contradicted").length,
-    unknown: ver.filter((v) => v.status === "unknown").length, hooks: ver.filter((v) => v.hook?.quote).length,
+    unknown: ver.filter((v) => v.status === "unknown").length, hooks: ver.filter((v) => v.status === "verified" && v.hook?.quote).length,
     ablA: a ? score(c.company, a.arms?.a?.picks ?? a.a?.picks ?? []) : null,
     ablB: a ? score(c.company, a.arms?.b?.picks ?? a.b?.picks ?? []) : null,
     gate: g ? { ...score(c.company, (g.selected ?? []).filter((p) => p.id != null)), new: g.round1?.new ?? g.new ?? 0, r2: g.round2?.ran ?? false, marginal: g.round2?.marginal ?? 0, dollars: g.dollars ?? 0 } : null,

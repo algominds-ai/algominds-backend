@@ -1000,3 +1000,45 @@ EXAMPLE of the two-source rule holding: Rahul Kumar, "US Growth Lead" at Airwall
 CONFIRMED with hook "joined Airwallex as Senior Partnerships Manager", index UNKNOWN ->
 status unknown. The hook itself shows the title has moved. One source alone would have
 shipped a wrong title.
+
+## 27. VERIFICATION COMPLETE, all 20 companies (fill: one sequential process, $1.03)
+  checked 93 judged positives (<=6 per company, pre-registered)
+  VERIFIED 68 · contradicted 7 · unknown 18   -> 73% of judged positives verified by two
+  independent sources; 7.5% actively contradicted; 19% honestly unknown.
+  Every company has R >= 1. Ondato's ten: 36 verified growth/product people (the case
+  that scored 1% against intent before). Aris's ten: 32.
+  Per company R: Airwallex 4 · Arq 2 · Discord 4 · Kraken 4 · MoonPay 5 · Polymarket 4 ·
+  Poshmark 3 · Ramp 5 · Relay 2 · Seccl 3 · Centre 4 · Cyber Salus 3 · CyberlinkASP 2 ·
+  DAS 4 · Evergreen 1 (PE holding co, 4 unknown) · FRSecure 3 · Harbor IT 5 · NewBold 4 ·
+  Ntiva 5 · eTrepid 1.
+  100% of verified buyers carry a free web hook from the verification pass (a CONFIRMED
+  verdict implies the page named them, so a quote exists; QUALITY is what HOOK measures).
+  Cost of verification: $1.03 / 93 = $0.011 per person checked, $0.015 per verified buyer.
+
+## 28. THE RESULT (aggregate.mjs over ref/reference.json, ABL/results.json, GATE/results.json)
+
+SELECTOR ABLATION -- identical rosters, model, candidate ids, cap 6; ONLY the input differs
+                             precision   hard-neg rate   recall vs R
+  (a) raw stored ICP            0.47         0.28            0.51
+  (b) ICP + buyer intent        0.95         0.00            0.70
+  paired by company: b>a 18, a>b 0, ties 2, two-sided sign p<0.001. SEPARATED (>=6-0).
+  by size band, raw-ICP precision: <50 0.69 · 50-499 0.54 · 500+ 0.16
+=> THE DOMINANT FAILURE IS SELECTION UNDER A PROFILE THAT DOES NOT NAME THE BUYER. Given the
+   stored ICP alone, 28% of picks are intent-contradicting hard negatives (compliance people
+   at Ondato) and at 2,000-person companies precision is 16%. With buyer intent captured,
+   95% precision and zero hard negatives. Retrieval was never the problem.
+   (a) = what the engine does today. (b) = the ceiling if onboarding captured buyer intent.
+   THE FIX IS AT ONBOARDING, and it costs nothing at retrieval.
+
+RETRIEVAL POLICY -- selector fixed to (b)
+                             precision   recall vs R   beyond Clay    round-2 marginal
+  Clay senior bands             0.95        0.70          --              --
+  LLM front-gate fan-out        1.00        0.71       83 -> 3 verified   0 at all 7
+  paired recall 4-4 (p=1.0), precision 4-0 (p=0.125): NOT SEPARABLE at n=20.
+=> The LLM gate does not beat a free Clay roster plus a good selector. The per-company loop
+   recovered nothing. The gate's one real contribution is the MANAGER band keyworded HR /
+   recruiting at small MSPs (3 verified buyers across 20 companies). Apollo is a lead
+   source; the Exa agent is not worth its cost for people.
+
+VERIFICATION: 93 checked, 68 verified (73%), 7 contradicted, 18 unknown. Every company >=1.
+TOTAL COST $5.34 including building and validating the judge.
