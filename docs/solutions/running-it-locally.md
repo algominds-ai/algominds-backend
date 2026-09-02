@@ -5,9 +5,11 @@ the deployed path needs two things that are not provisioned yet.
 
 ## Secrets — done
 
-`default_secrets_store` (`5ad6bd7de0494762a21914ec40d3e4da`) holds all five:
+`default_secrets_store` (`5ad6bd7de0494762a21914ec40d3e4da`) holds six:
 `exa-api-key`, `apollo-api-key`, `findymail-api-key`, `cf-aig-token`,
-`api-bearer-token`. They exist both remotely and in the local store.
+`api-bearer-token`, `clay-api-key`. The first five exist both remotely and in
+the local store; `clay-api-key` exists in the local store only until the first
+deploy creates it remotely with the command in `wrangler.jsonc`.
 
 **But the Vitest pool cannot see them.** Its Miniflare instance persists to a
 different directory than the Wrangler CLI, and `secretsStoreSecrets` only accepts

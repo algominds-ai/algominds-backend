@@ -94,3 +94,21 @@ An ordered chain of providers tried until one answers. A provider that simply ha
 answer returns nothing so the next one runs; only a genuinely retryable failure
 throws. A direct dependency has no next provider, so it throws instead of returning
 nothing — the two fail differently on purpose.
+
+## Finding people
+
+### Buyer
+The person inside a qualified company who owns the budget or the decision for the
+Seller's product. A Profile captures the Buyer separately from the account it describes:
+the workflow they own, their role in the decision, who is excluded, and how that changes
+with company size. A Profile with no captured Buyer answers from its description alone.
+*Avoid:* decision maker, persona
+
+### Target
+What a find-people request says about who to find, when the caller knows: a list of
+titles, or one sentence. A Target outranks the Profile's Buyer for that request.
+
+### Roster mode
+What find-people returns when nothing says who buys: the company's senior people with
+their real current titles, nobody selected and nobody verified, at quota cost only. It is
+the honest bottom of the Buyer ladder, never a guess.
