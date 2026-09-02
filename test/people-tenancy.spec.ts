@@ -10,7 +10,7 @@ import {
 	createIcp,
 	openRun,
 	saveCompanies,
-	savePeople,
+	upsertPeople,
 } from "../src/core/db/queries";
 import { company, icp as icpTable, person, run } from "../src/core/db/schema";
 import { domainsScopeId } from "../src/http/jobs";
@@ -107,7 +107,7 @@ describe("companiesForDomains: tenancy", () => {
 	});
 });
 
-describe("savePeople: tenancy", () => {
+describe("upsertPeople: tenancy", () => {
 	it("keeps a row for each organization that finds the same linkedin url, and dedupes it within one organization", async () => {
 		const linkedinUrl = `https://linkedin.com/in/shared-${crypto.randomUUID()}`;
 		const orgA = await seedOrgWithCompany(
@@ -120,7 +120,7 @@ describe("savePeople: tenancy", () => {
 		);
 
 		try {
-			const savedA = await savePeople(testEnv, [
+			const savedA = await upsertPeople(testEnv, [
 				{
 					organizationId: orgA.organizationId,
 					companyId: orgA.companyId,
@@ -128,7 +128,7 @@ describe("savePeople: tenancy", () => {
 					name: "Same Person",
 				},
 			]);
-			const savedB = await savePeople(testEnv, [
+			const savedB = await upsertPeople(testEnv, [
 				{
 					organizationId: orgB.organizationId,
 					companyId: orgB.companyId,
@@ -136,7 +136,7 @@ describe("savePeople: tenancy", () => {
 					name: "Same Person",
 				},
 			]);
-			const savedAAgain = await savePeople(testEnv, [
+			const savedAAgain = await upsertPeople(testEnv, [
 				{
 					organizationId: orgA.organizationId,
 					companyId: orgA.companyId,
@@ -147,7 +147,7 @@ describe("savePeople: tenancy", () => {
 
 			expect(savedA).toHaveLength(1);
 			expect(savedB).toHaveLength(1);
-			expect(savedAAgain).toHaveLength(0);
+			expect(savedAAgain).toHaveLength(1);
 
 			const stored = await db(testEnv, "direct")
 				.select()

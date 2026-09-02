@@ -21,7 +21,6 @@ import type {
 	Organization,
 	OrganizationConnection,
 	OrganizationSpendConnection,
-	PersonInsertConnection,
 	RoundInsertConnection,
 	RunOpenConnection,
 	RunUpdateConnection,
@@ -43,7 +42,6 @@ import {
 	recentDomains,
 	recordRunSpend,
 	saveCompanies,
-	savePeople,
 	saveRound,
 	saveRunCompanies,
 	startOfUtcDay,
@@ -63,7 +61,6 @@ import type {
 	NewCompany,
 	NewEvidence,
 	NewIcp,
-	NewPerson,
 	NewRound,
 	NewRun,
 	Person,
@@ -353,44 +350,6 @@ describe("saveCompanies", () => {
 
 		expect(result).toEqual([]);
 		expect(called).toBe(false);
-	});
-});
-
-describe("savePeople", () => {
-	it("targets organization plus linkedin_url for dedupe, never name plus company", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		let conflictTarget: IndexColumn | IndexColumn[] | undefined;
-		const rows: NewPerson[] = [
-			{
-				organizationId: "org-1",
-				companyId: "company-1",
-				linkedinUrl: "https://linkedin.com/in/x",
-			},
-		];
-		const storedPerson: Person = {
-			id: "person-1",
-			organizationId: "org-1",
-			companyId: "company-1",
-			linkedinUrl: "https://linkedin.com/in/x",
-			name: null,
-			title: null,
-			data: null,
-		};
-		const buildDb: DbFactory<PersonInsertConnection> = () => ({
-			insert: () => ({
-				values: () => ({
-					onConflictDoNothing: (config) => {
-						conflictTarget = config?.target;
-						return { returning: () => Promise.resolve([storedPerson]) };
-					},
-				}),
-			}),
-		});
-
-		const result = await savePeople(env, rows, buildDb);
-
-		expect(conflictTarget).toEqual([person.organizationId, person.linkedinUrl]);
-		expect(result).toEqual([storedPerson]);
 	});
 });
 
@@ -1531,7 +1490,7 @@ async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFi
 			buyerSource: "none",
 		},
 	]);
-	await savePeople(testEnv, [
+	await upsertPeople(testEnv, [
 		{
 			organizationId: orgA.id,
 			companyId: companyA1.id,

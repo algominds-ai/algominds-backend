@@ -10,7 +10,7 @@ import {
 	createIcp,
 	openRun,
 	saveCompanies,
-	savePeople,
+	upsertPeople,
 } from "../src/core/db/queries";
 import { company, icp as icpTable, person, run } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
@@ -709,7 +709,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 			if (!companyIdA || !companyIdB)
 				throw new Error("seed produced no company");
 
-			await savePeople(testEnv, [
+			await upsertPeople(testEnv, [
 				{
 					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdA,
@@ -718,7 +718,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 					title: "VP of Sales",
 				},
 			]);
-			await savePeople(testEnv, [
+			await upsertPeople(testEnv, [
 				{
 					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdB,

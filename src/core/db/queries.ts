@@ -266,24 +266,6 @@ export async function saveCompanies(
 		.returning();
 }
 
-export async function savePeople(
-	env: DbEnv,
-	rows: NewPerson[],
-	buildDb: DbFactory<PersonInsertConnection> = db,
-): Promise<Person[]> {
-	if (rows.length === 0) {
-		return [];
-	}
-	const connection = buildDb(env, "cached");
-	return connection
-		.insert(person)
-		.values(rows)
-		.onConflictDoNothing({
-			target: [person.organizationId, person.linkedinUrl],
-		})
-		.returning();
-}
-
 export async function appendEvidence(
 	env: DbEnv,
 	rows: NewEvidence[],

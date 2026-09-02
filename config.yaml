@@ -11,17 +11,12 @@ limits:
   # How many companies a people run searches when the caller gives no
   # maxCompanies. The caller's own number always wins over this.
   defaultMaxCompaniesPerPeopleRun: 100
-  # Each company in a people run is its own paid search, so this one bounds
-  # real spend rather than just effort. Matches maxCompaniesPerRequest: one
-  # companies run can never hold more companies than that, so no people run
-  # needs to search wider than one full run.
-  # Structural bound only: a companies run can hold at most maxCompaniesPerRequest
-  # companies, so a people run over it cannot exceed that either. The spend
-  # ceiling is the tighter limit in practice. Measured at about $0.010 per
-  # company, 300 companies is roughly $3.00 against a $2.00 per-run ceiling, so
-  # a run this large stops on spend and reports capped. That is money winning
-  # over count, which is the intended order.
-  maxCompaniesPerPeopleRun: 300
+  # Each company in a people run is its own bounded step budget: one pick is at
+  # most 28 steps (a start, up to 24 polls, an index, an agree, a quote), six
+  # picks 168, and one company 175 with its seven fixed steps. Workflows
+  # declares a 25,000 step ceiling on FIND_PEOPLE, so this is the largest
+  # company count that arithmetic clears in every mode, roster included.
+  maxCompaniesPerPeopleRun: 100
   # The most rows GET /runs/{runId}/companies and GET /runs/{runId}/people
   # return in one page. A caller's own limit wins up to this; beyond it the
   # request is clamped and the response reports the limit actually used, so

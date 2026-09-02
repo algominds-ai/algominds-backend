@@ -41,7 +41,8 @@
 		{
 			"binding": "FIND_PEOPLE",
 			"name": "find-people",
-			"class_name": "FindPeopleWorkflow"
+			"class_name": "FindPeopleWorkflow",
+			"limits": { "steps": 25000 }
 		},
 		{ "binding": "ENRICH", "name": "enrich", "class_name": "EnrichWorkflow" },
 		{

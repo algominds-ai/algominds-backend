@@ -7,9 +7,21 @@ export type IdentityInput = {
 };
 
 export type IdentityResult =
-	| { how: "domain"; identifier: string; name: string | null; raw: string[] }
-	| { how: "linkedin"; identifier: string; name: string | null; raw: string[] }
-	| { how: "unresolved"; raw: string[] };
+	| {
+			how: "domain";
+			identifier: string;
+			name: string | null;
+			raw: string[];
+			quotaUsed: number;
+	  }
+	| {
+			how: "linkedin";
+			identifier: string;
+			name: string | null;
+			raw: string[];
+			quotaUsed: number;
+	  }
+	| { how: "unresolved"; raw: string[]; quotaUsed: number };
 
 /**
  * Resolves a company's Clay identity: the `c-suite` band by domain, then by a
@@ -32,10 +44,15 @@ export async function resolveIdentity(
 			identifier: input.domain,
 			name: byDomain.rows[0]?.company ?? null,
 			raw: byDomain.raw,
+			quotaUsed: byDomain.quotaUsed,
 		};
 	}
 	if (!input.linkedinUrl) {
-		return { how: "unresolved", raw: byDomain.raw };
+		return {
+			how: "unresolved",
+			raw: byDomain.raw,
+			quotaUsed: byDomain.quotaUsed,
+		};
 	}
 	const byLinkedin = await claySearch(
 		env,
@@ -43,13 +60,15 @@ export async function resolveIdentity(
 		ledger,
 	);
 	const raw = [...byDomain.raw, ...byLinkedin.raw];
+	const quotaUsed = byDomain.quotaUsed + byLinkedin.quotaUsed;
 	if (byLinkedin.rows.length > 0) {
 		return {
 			how: "linkedin",
 			identifier: input.linkedinUrl,
 			name: byLinkedin.rows[0]?.company ?? null,
 			raw,
+			quotaUsed,
 		};
 	}
-	return { how: "unresolved", raw };
+	return { how: "unresolved", raw, quotaUsed };
 }

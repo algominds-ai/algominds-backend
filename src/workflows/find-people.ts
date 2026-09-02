@@ -9,53 +9,31 @@ import {
 	loadIcp,
 	openRun,
 } from "@/core/db/queries";
+import type { ResolvedBuyer } from "@/core/people/buyer";
+import { resolveBuyer } from "@/core/people/buyer";
+import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
+import { runCompanies } from "@/workflows/find-people-company";
+import type { TargetCompany } from "@/workflows/find-people-target";
 import { loadTargetCompanies } from "@/workflows/find-people-target";
 
-const SENIOR_BANDS = [
-	"founder",
-	"owner",
-	"board-member",
-	"partner",
-	"c-suite",
-	"vp",
-	"director",
-	"head",
-] as const;
-
-const BAND_VALUES = [
-	...SENIOR_BANDS,
-	"manager",
-	"senior",
-	"mid-level",
-	"entry",
-	"intern",
-	"unknown",
-] as const;
-
-const BuyerSchema = z.object({
-	mode: z.enum(["roster", "profile", "target"]),
-	buyerSource: z.enum(["target", "captured", "description", "none"]),
-	rubric: z.string().nullable(),
-	bands: z.array(z.enum(BAND_VALUES)),
-	keywordBands: z.array(
-		z.object({ band: z.enum(BAND_VALUES), keywords: z.array(z.string()) }),
-	),
-});
-
-type Buyer = z.infer<typeof BuyerSchema>;
-
 const maxCompaniesField = z.number().int().positive().optional();
+const targetField = z
+	.union([z.array(z.string().min(1)).min(1), z.string().min(1)])
+	.optional();
 
 const FindPeoplePayloadSchema = z.union([
 	z.object({
 		runId: z.string().min(1),
 		maxCompanies: maxCompaniesField,
+		target: targetField,
 		organizationId: z.string().min(1),
 	}),
 	z.object({
 		domains: z.array(z.string().min(1)).min(1),
 		maxCompanies: maxCompaniesField,
+		target: targetField,
+		icpId: z.uuid().optional(),
 		organizationId: z.string().min(1),
 	}),
 ]);
@@ -69,18 +47,38 @@ export type FindPeopleSummary = {
 	costDollars: number;
 	unknownDomains: string[];
 	capped: boolean;
-	mode: Buyer["mode"];
-	buyerSource: Buyer["buyerSource"];
+	mode: ResolvedBuyer["mode"];
+	buyerSource: ResolvedBuyer["buyerSource"];
 };
 
-function resolveBuyer(): Buyer {
-	return BuyerSchema.parse({
-		mode: "roster",
-		buyerSource: "none",
-		rubric: null,
-		bands: SENIOR_BANDS,
-		keywordBands: [],
-	});
+async function loadProfile(
+	env: Env,
+	icpId: string | null,
+	organizationId: string,
+): Promise<IcpDoc | null> {
+	if (icpId === null) return null;
+	const icpRow = await loadIcp(env, icpId);
+	if (!icpRow) {
+		throw new NonRetryableError(`findPeople: unknown icp ${icpId}`);
+	}
+	if (icpRow.organizationId !== organizationId) {
+		throw new NonRetryableError(
+			`findPeople: icp ${icpId} does not belong to organization ${organizationId}`,
+		);
+	}
+	return IcpDocSchema.parse(icpRow.doc);
+}
+
+/** Clamps a target company list to the caller's own `maxCompanies` and the single account-wide `limits.maxCompaniesPerPeopleRun` ceiling, whichever is smaller. */
+export function clampCompanies(
+	companies: readonly TargetCompany[],
+	maxCompanies: number | undefined,
+): TargetCompany[] {
+	const limit = Math.min(
+		maxCompanies ?? config.limits.defaultMaxCompaniesPerPeopleRun,
+		config.limits.maxCompaniesPerPeopleRun,
+	);
+	return companies.slice(0, limit);
 }
 
 export class FindPeopleWorkflow extends WorkflowEntrypoint<
@@ -100,24 +98,16 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			() => loadTargetCompanies(this.env, payload),
 		);
 
-		await step.do("load-profile", config.stepConfig.databaseCall, async () => {
-			if (target.icpId === null) return { doc: null };
-			const icpRow = await loadIcp(this.env, target.icpId);
-			if (!icpRow) {
-				throw new NonRetryableError(`findPeople: unknown icp ${target.icpId}`);
-			}
-			if (icpRow.organizationId !== organizationId) {
-				throw new NonRetryableError(
-					`findPeople: icp ${target.icpId} does not belong to organization ${organizationId}`,
-				);
-			}
-			return { doc: IcpDocSchema.parse(icpRow.doc) };
-		});
+		const profile = await step.do(
+			"load-profile",
+			config.stepConfig.databaseCall,
+			() => loadProfile(this.env, target.icpId, organizationId),
+		);
 
 		const buyer = await step.do(
 			"resolve-buyer",
 			config.stepConfig.databaseCall,
-			async () => resolveBuyer(),
+			async () => resolveBuyer({ target: payload.target ?? null, profile }),
 		);
 
 		const opened = await step.do(
@@ -136,23 +126,34 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		for (const _company of target.companies) {
-		}
+		const companies = clampCompanies(target.companies, payload.maxCompanies);
+		const loop = await runCompanies(
+			{
+				env: this.env,
+				step,
+				runId: event.instanceId,
+				organizationId,
+				buyer,
+				profile,
+			},
+			companies,
+			opened.alreadySpent,
+		);
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
 				status: "complete",
-				costDollars: opened.alreadySpent,
+				costDollars: loop.costDollars,
 			}),
 		);
 
 		return {
-			companiesSearched: 0,
-			peopleVerified: 0,
-			peopleRoster: 0,
-			costDollars: opened.alreadySpent,
-			unknownDomains: target.unknownDomains,
-			capped: false,
+			companiesSearched: loop.companiesSearched,
+			peopleVerified: loop.peopleVerified,
+			peopleRoster: loop.peopleRoster,
+			costDollars: loop.costDollars,
+			unknownDomains: loop.unknownDomains,
+			capped: loop.capped,
 			mode: buyer.mode,
 			buyerSource: buyer.buyerSource,
 		};
