@@ -65,6 +65,22 @@ export async function domainsScopeId(
 	return `dom-${hex.slice(0, 12)}`;
 }
 
+/** What an onboarding request names: a domain, and the note when one was given. */
+export type OnboardScopeInput = { domain: string; note?: string | undefined };
+
+/**
+ * A scope for one onboarding request: the domain and the note together, so a
+ * different note is a new run and a repeat of the same note the same day is
+ * not. The endpoint and the automatic onboarding started at signup call this
+ * with the same shape for a bare domain, so the two never double-charge.
+ */
+export async function onboardScopeId(
+	body: OnboardScopeInput,
+	organizationId: string,
+): Promise<string> {
+	return domainsScopeId([JSON.stringify(body)], organizationId);
+}
+
 /** `sourceRunId` names a run this job reads, which the caller must own. */
 export type Job = {
 	scopeId: string;

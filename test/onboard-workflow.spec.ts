@@ -21,7 +21,7 @@ import { icp as icpTable, run } from "../src/core/db/schema";
 import { NOTE_MAX_LENGTH } from "../src/core/onboard";
 import type { IcpBuyer, IcpSeller } from "../src/core/synthesize";
 import { SENIOR_BANDS } from "../src/core/synthesize";
-import { buildRunId, domainsScopeId } from "../src/http/jobs";
+import { buildRunId, onboardScopeId } from "../src/http/jobs";
 import app from "../src/index";
 import { ONBOARD_STEPS, publicHostname } from "../src/workflows/onboard-icp";
 
@@ -147,7 +147,7 @@ describe("POST /icp/onboard: validation", () => {
 describe("POST /icp/onboard: starts a workflow without waiting for the profile", () => {
 	it("returns 202 with a runId built from the domain scope, well under the profile's own latency", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -205,7 +205,7 @@ describe("POST /icp/onboard: starts a workflow without waiting for the profile",
 describe("POST /icp/onboard: a same-day repeat", () => {
 	it("does not create a second icp or run row for the same organization and domain", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -470,7 +470,7 @@ describe("OnboardIcpWorkflow: a run that dies after buying something", () => {
 describe("POST /icp/onboard: after a run has failed", () => {
 	it("lets the caller retry the same day rather than waiting for it to roll over", async () => {
 		const domain = `retry-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,

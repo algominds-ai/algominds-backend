@@ -1,6 +1,6 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { z } from "zod";
 import { createAuth } from "../src/auth";
@@ -23,8 +23,13 @@ import {
 	runCompany,
 } from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
-import { buildRunId, domainsScopeId, instanceExists } from "../src/http/jobs";
-import { peopleFindSchema } from "../src/http/schemas";
+import {
+	buildRunId,
+	domainsScopeId,
+	instanceExists,
+	onboardScopeId,
+} from "../src/http/jobs";
+import { onboardIcpSchema, peopleFindSchema } from "../src/http/schemas";
 import app from "../src/index";
 import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 
@@ -1176,7 +1181,7 @@ describe("a run whose state cannot be read is treated as still going", () => {
 describe("two callers racing to start the same run", () => {
 	it("answers both without an error, naming the same run", async () => {
 		const domain = `race-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -1221,4 +1226,170 @@ describe("two callers racing to start the same run", () => {
 			await instance.dispose();
 		}
 	});
+});
+
+async function expectedOnboardRunId(
+	rawBody: z.input<typeof onboardIcpSchema>,
+): Promise<string> {
+	const parsed = onboardIcpSchema.parse(rawBody);
+	const scopeId = await onboardScopeId(parsed, CALLER_ORGANIZATION_ID);
+	return buildRunId("onboarding", scopeId);
+}
+
+function sellerNote(label: string): string {
+	return `${label}-${"x".repeat(140)}`;
+}
+
+async function mockOnboardSuccess(
+	instance: Awaited<ReturnType<typeof introspectWorkflowInstance>>,
+	domain: string,
+	description: string,
+): Promise<void> {
+	await instance.modify(async (m) => {
+		await m.mockStepResult(
+			{ name: ONBOARD_STEPS.readSeller },
+			{ pages: [{ url: `https://${domain}/`, text: "" }], costDollars: 0.01 },
+		);
+		await m.mockStepResult(
+			{ name: ONBOARD_STEPS.writeProfile },
+			{
+				description,
+				seller: { domain, customers: [], competitorTest: "none" },
+				buyer: null,
+				wroteProfile: true,
+				costDollars: 0.01,
+			},
+		);
+	});
+}
+
+async function cleanupOnboardRuns(
+	runIds: readonly string[],
+	domain: string,
+): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		for (const runId of runIds) {
+			await connection.delete(run).where(eq(run.id, runId));
+		}
+		await connection
+			.delete(icpTable)
+			.where(
+				and(
+					eq(icpTable.organizationId, CALLER_ORGANIZATION_ID),
+					eq(icpTable.domain, domain),
+				),
+			);
+	});
+}
+
+async function expectDifferentNoteStartsNewRun(): Promise<void> {
+	const domain = `onboard-notediff-${crypto.randomUUID()}.example`;
+	const noteA = sellerNote("note-a");
+	const noteB = sellerNote("note-b");
+	const runIdA = await expectedOnboardRunId({ domain, note: noteA });
+	const runIdB = await expectedOnboardRunId({ domain, note: noteB });
+	expect(runIdA).not.toBe(runIdB);
+
+	const instanceA = await introspectWorkflowInstance(
+		testEnv.ONBOARD_ICP,
+		runIdA,
+	);
+	const instanceB = await introspectWorkflowInstance(
+		testEnv.ONBOARD_ICP,
+		runIdB,
+	);
+	try {
+		await mockOnboardSuccess(
+			instanceA,
+			domain,
+			"a profile written from note a",
+		);
+		await mockOnboardSuccess(
+			instanceB,
+			domain,
+			"a profile written from note b",
+		);
+
+		const first = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note: noteA }, TOKEN),
+		);
+		const firstBody: { runId?: string; status?: string } = await first.json();
+		const second = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note: noteB }, TOKEN),
+		);
+		const secondBody: { runId?: string; status?: string } = await second.json();
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(firstBody.runId).toBe(runIdA);
+		expect(second.status).toBe(202);
+		expect(secondBody.status).toBe("started");
+		expect(secondBody.runId).toBe(runIdB);
+		expect(secondBody.runId).not.toBe(firstBody.runId);
+
+		await instanceA.waitForStatus("complete");
+		await instanceB.waitForStatus("complete");
+
+		const rowA = await waitForRunVisible(runIdA);
+		const rowB = await waitForRunVisible(runIdB);
+		expect(rowA.status).toBe(200);
+		expect(rowB.status).toBe(200);
+	} finally {
+		await instanceA.dispose();
+		await instanceB.dispose();
+		await cleanupOnboardRuns([runIdA, runIdB], domain);
+	}
+}
+
+async function expectIdenticalRequestReturnsExisting(): Promise<void> {
+	const domain = `onboard-identical-${crypto.randomUUID()}.example`;
+	const note = sellerNote("identical-note");
+	const runId = await expectedOnboardRunId({ domain, note });
+
+	const instance = await introspectWorkflowInstance(testEnv.ONBOARD_ICP, runId);
+	try {
+		await mockOnboardSuccess(instance, domain, "a profile written once");
+
+		const first = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note }, TOKEN),
+		);
+		const firstBody: { runId?: string; status?: string } = await first.json();
+		await instance.waitForStatus("complete");
+
+		const second = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note }, TOKEN),
+		);
+		const secondBody: { runId?: string; status?: string } = await second.json();
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(firstBody.runId).toBe(runId);
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(runId);
+
+		const icpRows = await withConnection(testEnv, "direct", db, (connection) =>
+			connection.select().from(icpTable).where(eq(icpTable.domain, domain)),
+		);
+		expect(icpRows).toHaveLength(1);
+	} finally {
+		await instance.dispose();
+		await cleanupOnboardRuns([runId], domain);
+	}
+}
+
+describe("POST /icp/onboard: the job scope hashes the whole request", () => {
+	it(
+		"starts a new run when a second onboarding request carries a different note the same day",
+		expectDifferentNoteStartsNewRun,
+	);
+
+	it(
+		"returns the existing run for a byte-identical onboarding request the same day",
+		expectIdenticalRequestReturnsExisting,
+	);
 });

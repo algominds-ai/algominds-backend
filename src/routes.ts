@@ -3,7 +3,12 @@ import type { z } from "zod";
 import type { ApiEnv } from "@/http/auth";
 import { requireApiKey } from "@/http/auth";
 import type { Job } from "@/http/jobs";
-import { domainsScopeId, resolveIcpId, startJob } from "@/http/jobs";
+import {
+	domainsScopeId,
+	onboardScopeId,
+	resolveIcpId,
+	startJob,
+} from "@/http/jobs";
 import {
 	getRunCompanies,
 	getRunPeople,
@@ -121,7 +126,7 @@ export function createApiRoutes(): Hono<ApiEnv> {
 			capability: "onboarding",
 			workflow: c.env.ONBOARD_ICP,
 			toJob: async (body, _env, organizationId) => ({
-				scopeId: await domainsScopeId([body.domain], organizationId),
+				scopeId: await onboardScopeId(body, organizationId),
 				params: {
 					domain: body.domain,
 					note: body.note ?? null,
