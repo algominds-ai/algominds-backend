@@ -4,7 +4,6 @@ import { CostLedger } from "../src/core/cost";
 import { getAgentRun, startAgentRun } from "../src/core/providers/exa/agent";
 import { search } from "../src/core/providers/exa/search";
 import agentRun from "./fixtures/exa-agent-run-completed.json";
-import agentPerson from "./fixtures/exa-agent-run-person.json";
 import searchCompany from "./fixtures/exa-search-company.json";
 import searchPeople from "./fixtures/exa-search-people.json";
 
@@ -260,12 +259,5 @@ describe("the parser against a real /agent/runs response", () => {
 		await getAgentRun(agentRun.id, env, ledger);
 
 		expect(ledger.total()).toBeGreaterThan(0);
-	});
-
-	it("carries a real person run's cited source through", () => {
-		const people = agentPerson.output.structured.people;
-
-		expect(people[0]?.email).toContain("@");
-		expect(people[0]?.source).toContain("http");
 	});
 });

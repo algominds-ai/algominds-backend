@@ -1,7 +1,6 @@
 # Local development only. Never commit .dev.vars.
 # Production values live in Secrets Store bindings (see wrangler.jsonc).
 EXA_API_KEY=
-APOLLO_API_KEY=
 BRIGHTDATA_TOKEN=
 AI_GATEWAY_TOKEN=
 API_BEARER_TOKEN=

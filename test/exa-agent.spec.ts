@@ -9,7 +9,6 @@ import { filterEntities } from "../src/core/companies/candidates";
 import { CostLedger } from "../src/core/cost";
 import {
 	ExaAgentCompanySchema,
-	getAgentPeopleRun,
 	getAgentRun,
 	startAgentRun,
 } from "../src/core/providers/exa/agent";
@@ -189,53 +188,6 @@ describe("agent run error mapping", () => {
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
-	});
-});
-
-describe("agent people run linkedin url shape check", () => {
-	function peopleRunBody(linkedinUrl: string | null) {
-		return {
-			id: "run-people",
-			status: "completed",
-			output: {
-				structured: {
-					people: [{ name: "A Person", linkedinUrl }],
-				},
-			},
-			costDollars: { total: 0.01 },
-		};
-	}
-
-	it("nulls a linkedinUrl that is not a linkedin.com profile url", async () => {
-		stubFetch(jsonResponse(200, peopleRunBody("https://example.com/fake")));
-
-		const run = await getAgentPeopleRun(
-			"run-people",
-			exaEnv(),
-			new CostLedger(),
-		);
-
-		expect(run.status).toBe("completed");
-		if (run.status !== "completed") return;
-		expect(run.people[0]?.linkedinUrl).toBeNull();
-	});
-
-	it("keeps a linkedinUrl that is a real linkedin.com profile url", async () => {
-		stubFetch(
-			jsonResponse(200, peopleRunBody("https://www.linkedin.com/in/a-person")),
-		);
-
-		const run = await getAgentPeopleRun(
-			"run-people",
-			exaEnv(),
-			new CostLedger(),
-		);
-
-		expect(run.status).toBe("completed");
-		if (run.status !== "completed") return;
-		expect(run.people[0]?.linkedinUrl).toBe(
-			"https://www.linkedin.com/in/a-person",
-		);
 	});
 });
 

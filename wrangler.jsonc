@@ -69,11 +69,6 @@
 			"secret_name": "exa-api-key"
 		},
 		{
-			"binding": "APOLLO_API_KEY",
-			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
-			"secret_name": "apollo-api-key"
-		},
-		{
 			"binding": "FINDYMAIL_API_KEY",
 			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "findymail-api-key"

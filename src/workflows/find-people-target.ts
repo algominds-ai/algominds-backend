@@ -2,11 +2,16 @@ import { NonRetryableError } from "cloudflare:workflows";
 import type { CompanyDomainMatch } from "@/core/db/company-domains";
 import { companiesForDomains } from "@/core/db/company-domains";
 import { companiesForRun, findRun } from "@/core/db/queries";
-import type { PeopleCompany } from "@/core/people";
+import type { Company } from "@/core/db/schema";
 import type { FindPeoplePayload } from "@/workflows/find-people";
 
+export type TargetCompany = Pick<
+	Company,
+	"id" | "domain" | "name" | "linkedinUrl" | "icpId"
+>;
+
 export type TargetCompanies = {
-	companies: PeopleCompany[];
+	companies: TargetCompany[];
 	icpId: string;
 	unknownDomains: string[];
 };
@@ -20,11 +25,22 @@ async function targetByRun(
 	if (!runRow || runRow.organizationId !== organizationId) {
 		throw new NonRetryableError(`findPeople: unknown run ${runId}`);
 	}
-	if (runRow.icpId === null) {
+	const icpId = runRow.icpId;
+	if (icpId === null) {
 		throw new NonRetryableError(`findPeople: run ${runId} produced no profile`);
 	}
 	const companies = await companiesForRun(env, runId);
-	return { companies, icpId: runRow.icpId, unknownDomains: [] };
+	return {
+		companies: companies.map((row) => ({
+			id: row.id,
+			domain: row.domain,
+			name: row.name,
+			linkedinUrl: null,
+			icpId,
+		})),
+		icpId,
+		unknownDomains: [],
+	};
 }
 
 /**
@@ -48,11 +64,12 @@ export function companiesOfOneProfile(
 			.map((row) => [row.domain, row]),
 	);
 	return {
-		companies: [...byDomain.values()].map(({ id, domain, name, exaId }) => ({
+		companies: [...byDomain.values()].map(({ id, domain, name }) => ({
 			id,
 			domain,
 			name,
-			exaId,
+			linkedinUrl: null,
+			icpId,
 		})),
 		icpId,
 		unknownDomains: domains.filter((domain) => !byDomain.has(domain)),

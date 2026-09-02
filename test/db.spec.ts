@@ -5,8 +5,6 @@ import { describe, expect, it } from "vitest";
 import { organization } from "../src/core/db/auth-schema";
 import type { DbEnv, DbMode } from "../src/core/db/client";
 import { db } from "../src/core/db/client";
-import type { KnownPeopleConnection } from "../src/core/db/known-people";
-import { knownPeopleDomains } from "../src/core/db/known-people";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {
 	CompanyInsertConnection,
@@ -155,104 +153,6 @@ describe("recentDomains", () => {
 
 		expect(recordedMode).toBe("direct");
 		expect(result).toEqual(["acme.com", "beta.com"]);
-	});
-});
-
-function knownCompanyRow(domain: string): Company {
-	return {
-		id: "company-1",
-		icpId: "icp-1",
-		domain,
-		name: "Acme",
-		linkedinUrl: null,
-		industry: null,
-		data: null,
-		runId: "run-1",
-		foundAt: new Date("2026-01-01T00:00:00.000Z"),
-	};
-}
-
-describe("knownPeopleDomains", () => {
-	it("reads through the direct binding, never cached", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		let recordedMode: DbMode | undefined;
-		const rows = [{ company: knownCompanyRow("acme.com") }];
-
-		const buildDb: DbFactory<KnownPeopleConnection> = (_env, mode) => {
-			recordedMode = mode;
-			return {
-				select: () => ({
-					from: () => ({
-						innerJoin: () => ({
-							innerJoin: () => ({
-								innerJoin: () => ({
-									where: () => Promise.resolve(rows),
-								}),
-							}),
-						}),
-					}),
-				}),
-			};
-		};
-
-		const result = await knownPeopleDomains(
-			env,
-			"org-1",
-			{ days: 90 },
-			buildDb,
-		);
-
-		expect(recordedMode).toBe("direct");
-		expect(result).toEqual(["acme.com"]);
-	});
-
-	it("joins company to run to person to evidence, and scopes to the organization, the person's evidence, and the window", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const now = new Date("2026-08-27T00:00:00.000Z");
-		let firstJoin: unknown;
-		let secondJoin: unknown;
-		let thirdJoin: unknown;
-		let recordedCondition: unknown;
-
-		const buildDb: DbFactory<KnownPeopleConnection> = () => ({
-			select: () => ({
-				from: () => ({
-					innerJoin: (_runTable, condition) => {
-						firstJoin = condition;
-						return {
-							innerJoin: (_personTable, condition2) => {
-								secondJoin = condition2;
-								return {
-									innerJoin: (_evidenceTable, condition3) => {
-										thirdJoin = condition3;
-										return {
-											where: (condition4: unknown) => {
-												recordedCondition = condition4;
-												return Promise.resolve([]);
-											},
-										};
-									},
-								};
-							},
-						};
-					},
-				}),
-			}),
-		});
-
-		await knownPeopleDomains(env, "org-1", { days: 90, now }, buildDb);
-
-		expect(firstJoin).toEqual(eq(company.runId, run.id));
-		expect(secondJoin).toEqual(eq(person.companyId, company.id));
-		expect(thirdJoin).toEqual(eq(evidence.subjectId, person.id));
-		expect(recordedCondition).toEqual(
-			and(
-				eq(run.organizationId, "org-1"),
-				eq(evidence.subjectType, "person"),
-				eq(evidence.kind, "fullName"),
-				gte(evidence.seenAt, cutoffDate(90, now)),
-			),
-		);
 	});
 });
 

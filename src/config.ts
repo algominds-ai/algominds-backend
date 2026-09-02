@@ -26,11 +26,6 @@ export const config = {
 		exaAgentMaxPollAttempts: 60,
 	},
 	people: {
-		seenPeopleWindowDays: 90,
-		resultsPerCompany: 25,
-		batchSize: 5,
-		peopleSource: "exa-search",
-		exaAgentEffort: "low",
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 24,
 	},

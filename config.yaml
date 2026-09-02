@@ -75,27 +75,6 @@ companies:
   exaAgentMaxPollAttempts: 60
 
 people:
-  # A company whose people were already found inside this window is not
-  # searched again. Companies have the same guard on their own domains
-  # (companies.seenDomainsWindowDays); people had none, so a repeat run paid a
-  # vendor search for someone already stored — the unique constraint on
-  # linkedin_url only discarded the duplicate row after the search was paid for.
-  seenPeopleWindowDays: 90
-  # People asked of Exa for one company. Every result is checked against the
-  # company's own Exa organization id, and a search for a title at a company
-  # name also returns people whose own name resembles it, so this is the pool
-  # the check draws from rather than the number of people expected. Measured
-  # across three companies: three results yielded five verified people for
-  # $0.007 a company, twenty five yielded fourteen for $0.022.
-  resultsPerCompany: 25
-  batchSize: 5
-  # Which vendor supplies raw people candidates before the Apollo coverage
-  # pass. exa-search is one fast, cheap /search call per company. exa-agent
-  # trades speed and cost for evidenced rows via Exa's /agent/runs, polled to
-  # completion, once per company in the batch.
-  peopleSource: exa-search
-  # Effort Exa's agent spends per run when peopleSource is exa-agent.
-  exaAgentEffort: low
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
   # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls

@@ -4,8 +4,6 @@ import { z } from "zod";
 import { buildAgentRunRequest } from "../src/core/companies/agent-search";
 import { buildSearchRequest } from "../src/core/companies/candidates";
 import { CostLedger } from "../src/core/cost";
-import type { PeopleCompany } from "../src/core/people/candidates";
-import { buildPersonSearchRequest } from "../src/core/people/candidates";
 import { startAgentRun } from "../src/core/providers/exa/agent";
 import { search } from "../src/core/providers/exa/search";
 import type { SearchPlan } from "../src/core/synthesize";
@@ -103,18 +101,6 @@ const MeasuredSearchRequestSchema = z
 	})
 	.strict();
 
-/**
- * The same measured shape, minus the category enum. The person path sends a
- * category value outside the measured set, a known gap left for separate
- * work; every other field still has to conform.
- */
-const SearchFieldsAndTypeSchema = z
-	.object({
-		...SEARCH_FIELDS_WITHOUT_CATEGORY,
-		category: z.string().optional(),
-	})
-	.strict();
-
 /** The `/agent/runs` request body, measured the same way as the `/search` one above. */
 const MeasuredAgentRunRequestSchema = z
 	.object({
@@ -161,10 +147,6 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	};
 }
 
-function samplePeopleCompany(): PeopleCompany {
-	return { id: "company-1", domain: "acme.example", name: "Acme", exaId: null };
-}
-
 describe("company search request stays inside the measured Exa /search schema", () => {
 	it("emits only fields and enum values the measured schema allows", () => {
 		const request = buildSearchRequest(samplePlan());
@@ -199,26 +181,6 @@ describe("the search query carries the plan's bounds", () => {
 		expect(request.query).toBe(
 			"fintech companies at seed stage with a small team",
 		);
-	});
-});
-
-describe("person search request stays inside the measured Exa /search schema, aside from category", () => {
-	it("emits only fields and enum values the measured schema allows", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["Chief Executive Officer"],
-			userLocation: null,
-		});
-
-		expect(SearchFieldsAndTypeSchema.safeParse(request).success).toBe(true);
-	});
-
-	it("sends a category value from the measured enum", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["Chief Executive Officer"],
-			userLocation: null,
-		});
-
-		expect(MeasuredSearchRequestSchema.safeParse(request).success).toBe(true);
 	});
 });
 
@@ -368,50 +330,6 @@ describe("what reaches the network matches what the builder produced", () => {
 		expect(
 			MeasuredAgentRunRequestSchema.safeParse(postedBody(stub.init)).success,
 		).toBe(true);
-	});
-});
-
-describe("the people request carries only filters the people category accepts", () => {
-	it("sends the country the model wrote, uppercased", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			userLocation: "US",
-		});
-
-		expect(request.userLocation).toBe("US");
-		expect(request.category).toBe("people");
-	});
-
-	it("omits the country entirely when the model named none", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			userLocation: null,
-		});
-
-		expect("userLocation" in request).toBe(false);
-	});
-
-	it("never sends a filter the people category rejects", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			userLocation: "US",
-		});
-
-		expect("excludeDomains" in request).toBe(false);
-		expect("startPublishedDate" in request).toBe(false);
-		expect("endPublishedDate" in request).toBe(false);
-	});
-
-	it("quotes the company name, which is what stops a person of the same name matching", () => {
-		const company = samplePeopleCompany();
-		const request = buildPersonSearchRequest(company, {
-			titles: ["VP of Sales", "Head of Growth"],
-			userLocation: null,
-		});
-
-		expect(request.query).toBe(
-			`VP of Sales, Head of Growth at "${company.name}"`,
-		);
 	});
 });
 
