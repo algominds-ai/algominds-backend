@@ -46,6 +46,7 @@ import {
 	saveRound,
 	saveRunCompanies,
 	startOfUtcDay,
+	upsertPeople,
 } from "../src/core/db/queries";
 import type {
 	CompanyPageConnection,
@@ -76,6 +77,7 @@ import {
 	run,
 	runCompany,
 } from "../src/core/db/schema";
+import { rawEvidenceRow } from "../src/core/people/rows";
 import type { IcpSeller } from "../src/core/synthesize";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
@@ -1565,5 +1567,312 @@ describe("a round records why it refused, not only how many", () => {
 				stage: "judge",
 			},
 		]);
+	});
+});
+
+type UpsertPeopleFixture = {
+	org: Organization;
+	runId: string;
+	companyA: Company;
+	companyB: Company;
+	linkedinUrl: string;
+};
+
+async function seedUpsertPeopleFixture(
+	label: string,
+): Promise<UpsertPeopleFixture> {
+	const org = await seedOrganization(label);
+	const runId = `people_${label}-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: runId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	const [companyA, companyB] = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: org.id,
+			domain: `${label}-a-${crypto.randomUUID()}.com`,
+			name: "Old Employer",
+			runId,
+		},
+		{
+			icpId: null,
+			organizationId: org.id,
+			domain: `${label}-b-${crypto.randomUUID()}.com`,
+			name: "New Employer",
+			runId,
+		},
+	]);
+	if (!companyA || !companyB) {
+		throw new Error("seed failed to save a company");
+	}
+	return {
+		org,
+		runId,
+		companyA,
+		companyB,
+		linkedinUrl: `https://linkedin.com/in/upsert-${crypto.randomUUID()}`,
+	};
+}
+
+async function cleanupUpsertPeopleFixture(
+	fixture: UpsertPeopleFixture,
+): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(person)
+		.where(eq(person.organizationId, fixture.org.id));
+	await connection
+		.delete(company)
+		.where(inArray(company.id, [fixture.companyA.id, fixture.companyB.id]));
+	await connection.delete(run).where(eq(run.id, fixture.runId));
+	await cleanupOrganizations([fixture.org.id]);
+}
+
+describe("upsertPeople", () => {
+	it("moves a verified person to the verified employer", async () => {
+		const fixture = await seedUpsertPeopleFixture("upsert-move");
+
+		try {
+			await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: fixture.linkedinUrl,
+					name: "Jordan Blake",
+					title: "Manager",
+					data: {
+						status: "roster",
+						basis: null,
+						seenBy: ["clay"],
+						since: null,
+						location: null,
+					},
+				},
+			]);
+
+			const result = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyB.id,
+					linkedinUrl: fixture.linkedinUrl,
+					name: "Jordan Blake",
+					title: "VP Revenue",
+					data: {
+						status: "verified",
+						basis: "champion",
+						seenBy: ["clay", "exa"],
+						since: "2026-01",
+						location: "Austin, TX",
+					},
+				},
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.companyId).toBe(fixture.companyB.id);
+			expect(result[0]?.title).toBe("VP Revenue");
+			expect(result[0]?.data).toEqual({
+				status: "verified",
+				basis: "champion",
+				seenBy: ["clay", "exa"],
+				since: "2026-01",
+				location: "Austin, TX",
+			});
+		} finally {
+			await cleanupUpsertPeopleFixture(fixture);
+		}
+	});
+
+	it("does not replace a verified person with roster data", async () => {
+		const fixture = await seedUpsertPeopleFixture("upsert-keep");
+
+		try {
+			await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: fixture.linkedinUrl,
+					name: "Riley Chen",
+					title: "VP Revenue",
+					data: {
+						status: "verified",
+						basis: "champion",
+						seenBy: ["clay"],
+						since: "2025-06",
+						location: null,
+					},
+				},
+			]);
+
+			const result = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyB.id,
+					linkedinUrl: fixture.linkedinUrl,
+					name: "Riley Chen",
+					title: "Someone Else",
+					data: {
+						status: "roster",
+						basis: null,
+						seenBy: ["clay"],
+						since: null,
+						location: null,
+					},
+				},
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.companyId).toBe(fixture.companyA.id);
+			expect(result[0]?.title).toBe("VP Revenue");
+			expect(result[0]?.data).toEqual({
+				status: "verified",
+				basis: "champion",
+				seenBy: ["clay"],
+				since: "2025-06",
+				location: null,
+			});
+		} finally {
+			await cleanupUpsertPeopleFixture(fixture);
+		}
+	});
+});
+
+type RunCompanyEvidenceFixture = {
+	org: Organization;
+	runId: string;
+	runCompanyId: string;
+};
+
+async function seedRunCompanyEvidenceFixture(
+	label: string,
+): Promise<RunCompanyEvidenceFixture> {
+	const org = await seedOrganization(label);
+	const runId = `people_${label}-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: runId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	const domain = `${label}-${crypto.randomUUID()}.com`;
+	const [runCompanyRow] = await saveRunCompanies(testEnv, [
+		{
+			runId,
+			domain,
+			companyId: null,
+			identity: "domain",
+			mode: "profile",
+			buyerSource: "captured",
+		},
+	]);
+	if (!runCompanyRow) {
+		throw new Error("seed failed to save a run_company row");
+	}
+	return { org, runId, runCompanyId: runCompanyRow.id };
+}
+
+async function cleanupRunCompanyEvidenceFixture(
+	fixture: RunCompanyEvidenceFixture,
+): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(evidence)
+		.where(eq(evidence.subjectId, fixture.runCompanyId));
+	await connection
+		.delete(runCompany)
+		.where(eq(runCompany.runId, fixture.runId));
+	await connection.delete(run).where(eq(run.id, fixture.runId));
+	await cleanupOrganizations([fixture.org.id]);
+}
+
+describe("rawEvidenceRow: stored on the requested-domain row", () => {
+	it("attaches parsed replies to the requested-domain row", async () => {
+		const fixture = await seedRunCompanyEvidenceFixture("evidence-attach");
+		const identityBody = '{"search_id":"abc-123"}';
+		const selectorBody = { picks: [{ id: 0, basis: "champion" }] };
+		const verdictBody = {
+			verdict: "CONTRADICTED",
+			evidence_url: null,
+			evidence_quote: null,
+			evidence_kind: null,
+			confidence: 0.4,
+		};
+
+		try {
+			await appendEvidence(testEnv, [
+				rawEvidenceRow(
+					fixture.runCompanyId,
+					"identity-create",
+					"clay",
+					identityBody,
+				),
+				rawEvidenceRow(
+					fixture.runCompanyId,
+					"select",
+					"workerModel",
+					selectorBody,
+				),
+				rawEvidenceRow(
+					fixture.runCompanyId,
+					"verify-1-poll-1",
+					"exa",
+					verdictBody,
+				),
+			]);
+
+			const rows = await db(testEnv, "direct")
+				.select()
+				.from(evidence)
+				.where(eq(evidence.subjectId, fixture.runCompanyId));
+
+			expect(rows).toHaveLength(3);
+			for (const row of rows) {
+				expect(row.subjectType).toBe("run_company");
+				expect(row.subjectId).toBe(fixture.runCompanyId);
+			}
+			const identityRow = rows.find((row) => row.kind === "identity-create");
+			expect(identityRow?.value).toBe(identityBody);
+			const selectorRow = rows.find((row) => row.kind === "select");
+			expect(selectorRow ? JSON.parse(selectorRow.value) : null).toEqual(
+				selectorBody,
+			);
+			const verdictRow = rows.find((row) => row.kind === "verify-1-poll-1");
+			expect(verdictRow ? JSON.parse(verdictRow.value) : null).toEqual(
+				verdictBody,
+			);
+		} finally {
+			await cleanupRunCompanyEvidenceFixture(fixture);
+		}
+	});
+
+	it("accepts duplicate evidence from a retried write", async () => {
+		const fixture = await seedRunCompanyEvidenceFixture("evidence-duplicate");
+		const body = { verdict: "UNKNOWN" };
+
+		try {
+			const row = rawEvidenceRow(
+				fixture.runCompanyId,
+				"verify-1-poll-1",
+				"exa",
+				body,
+			);
+			await appendEvidence(testEnv, [row]);
+			await appendEvidence(testEnv, [row]);
+
+			const rows = await db(testEnv, "direct")
+				.select()
+				.from(evidence)
+				.where(eq(evidence.subjectId, fixture.runCompanyId));
+
+			expect(rows).toHaveLength(2);
+			expect(rows[0]?.value).toBe(JSON.stringify(body));
+			expect(rows[1]?.value).toBe(JSON.stringify(body));
+		} finally {
+			await cleanupRunCompanyEvidenceFixture(fixture);
+		}
 	});
 });

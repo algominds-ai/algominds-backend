@@ -339,6 +339,12 @@ export {
 	saveOnboardedIcp,
 } from "@/core/db/icp";
 export {
+	type PersonReadConnection,
+	type PersonUpdateConnection,
+	type PersonUpsertConnection,
+	upsertPeople,
+} from "@/core/db/people";
+export {
 	type CompanyCreateConnection,
 	type CompanyOfRun,
 	type CompanyRunConnection,
