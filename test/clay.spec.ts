@@ -1,6 +1,6 @@
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CostLedger } from "../src/core/cost";
 import { claySearch } from "../src/core/providers/clay";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
@@ -23,10 +23,13 @@ function isCreateCall(input: unknown): boolean {
 
 type SequenceStep = { response: Response } | { throwTimeout: true };
 
-function stubClaySequence(steps: SequenceStep[]): { runCalls: number } {
-	const calls = { runCalls: 0 };
+type ClayCalls = { runCalls: number; inits: (RequestInit | undefined)[] };
+
+function stubClaySequence(steps: SequenceStep[]): ClayCalls {
+	const calls: ClayCalls = { runCalls: 0, inits: [] };
 	let step = 0;
-	globalThis.fetch = async (input) => {
+	globalThis.fetch = async (input, init) => {
+		calls.inits.push(init);
 		const current = steps[step] ?? steps[steps.length - 1];
 		step += 1;
 		if (!isCreateCall(input)) calls.runCalls += 1;
@@ -47,17 +50,32 @@ afterEach(() => {
 
 describe("Clay's two-call search contract", () => {
 	it("uses Clay's two-call search contract", async () => {
-		stubClaySequence([
+		const calls = stubClaySequence([
 			{ response: jsonResponse(200, { search_id: "search-abc" }) },
 			{ response: jsonResponse(200, searchPage) },
 		]);
+		const ledger = new CostLedger();
+		const meterSpy = vi.spyOn(ledger, "metered");
 
 		const result = await claySearch(
 			clayEnv(),
-			{ identifier: "harborit.com" },
-			new CostLedger(),
+			{ identifier: "harborit.com", bands: ["c-suite"], keywords: ["revenue"] },
+			ledger,
 		);
 
+		const createHeaders = new Headers(calls.inits[0]?.headers);
+		expect(createHeaders.get("clay-api-key")).toBe("test-clay-key");
+		expect(JSON.parse(String(calls.inits[0]?.body))).toEqual({
+			source_type: "people",
+			filters: {
+				company_identifier: ["harborit.com"],
+				job_title_seniority_levels_v2: ["c-suite"],
+				job_title_keywords: ["revenue"],
+			},
+		});
+		expect(JSON.parse(String(calls.inits[1]?.body))).toEqual({ limit: 500 });
+		expect(result.quotaUsed).toBe(2);
+		expect(meterSpy).toHaveBeenCalledWith("clay", "search", 2, "records");
 		expect(result.rows).toEqual([
 			{
 				name: "Priya Raman",

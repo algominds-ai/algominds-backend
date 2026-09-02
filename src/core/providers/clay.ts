@@ -116,7 +116,7 @@ async function postClay(
 	path: string,
 	body: unknown,
 	ctx: ClayFetchContext,
-): Promise<{ status: number; text: string }> {
+): Promise<string> {
 	let response: Response;
 	try {
 		response = await fetch(`${CLAY_BASE_URL}${path}`, {
@@ -139,7 +139,12 @@ async function postClay(
 			`Clay request to ${path} failed: status ${response.status}`,
 		);
 	}
-	return { status: response.status, text: await response.text() };
+	if (!response.ok) {
+		throw new NonRetryableError(
+			`Clay request to ${path} failed: status ${response.status}`,
+		);
+	}
+	return response.text();
 }
 
 function parseJson(text: string, whatFailed: string): unknown {
@@ -158,7 +163,7 @@ async function createSearch(
 		source_type: "people",
 		filters: buildFilters(input),
 	};
-	const { text } = await postClay("/search/filters-mode", request, ctx);
+	const text = await postClay("/search/filters-mode", request, ctx);
 	const parsed = ClaySearchCreateResponseSchema.safeParse(
 		parseJson(text, "create response"),
 	);
@@ -174,7 +179,7 @@ async function runPage(
 	searchId: string,
 	ctx: ClayFetchContext,
 ): Promise<{ page: z.infer<typeof ClaySearchRunResponseSchema>; raw: string }> {
-	const { text } = await postClay(
+	const text = await postClay(
 		`/search/filters-mode/${searchId}/run`,
 		{ limit: CLAY_RUN_LIMIT },
 		ctx,
