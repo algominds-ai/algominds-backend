@@ -106,10 +106,13 @@ describe("FindPeopleWorkflow: no legacy people entry points", () => {
 		]);
 		expect(Object.keys(exaAgent).sort()).toEqual([
 			"ExaAgentCompanySchema",
+			"ExaAgentVerdictSchema",
 			"LINKEDIN_COMPANY_URL_PATTERN",
 			"agentLinkedinUrl",
+			"buildVerdictRunRequest",
 			"getAgentRun",
 			"getAgentRunOutput",
+			"getAgentVerdictRun",
 			"startAgentRun",
 		]);
 		expect(Object.keys(providers).sort()).toEqual([

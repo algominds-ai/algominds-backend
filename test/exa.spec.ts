@@ -195,6 +195,18 @@ describe("search cost reporting", () => {
 	});
 });
 
+describe("search under a hung connection", () => {
+	it("times out shared calls as unknown", async () => {
+		globalThis.fetch = async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		};
+
+		await expect(
+			search({ query: "GTM leads" }, exaEnv(), new CostLedger()),
+		).rejects.toThrow(RetryableProviderError);
+	});
+});
+
 describe("search summary parsing", () => {
 	it("yields a null summary for a result whose summary is not valid JSON, without failing the call", async () => {
 		stubFetch(

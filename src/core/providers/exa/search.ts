@@ -1,6 +1,7 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
+import { EXA_FETCH_TIMEOUT_MS } from "@/core/providers/exa/timeout";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
@@ -376,11 +377,20 @@ export async function search(
 	const validated = ExaSearchRequestSchema.parse(req);
 	rejectEntityIndexFilters(validated);
 	const apiKey = await env.EXA_API_KEY.get();
-	const response = await fetch("https://api.exa.ai/search", {
-		method: "POST",
-		headers: { "x-api-key": apiKey, "content-type": "application/json" },
-		body: JSON.stringify(validated),
-	});
+	let response: Response;
+	try {
+		response = await fetch("https://api.exa.ai/search", {
+			method: "POST",
+			headers: { "x-api-key": apiKey, "content-type": "application/json" },
+			body: JSON.stringify(validated),
+			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
+		});
+	} catch (error) {
+		if (error instanceof DOMException && error.name === "TimeoutError") {
+			throw new RetryableProviderError("Exa search request timed out");
+		}
+		throw error;
+	}
 	const body = await readJson(response);
 	if (!response.ok) throwForStatus(response.status, body);
 	const parsed = parseResponse(body);

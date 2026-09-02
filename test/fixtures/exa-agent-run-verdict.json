@@ -1,0 +1,58 @@
+{
+	"id": "agent_run_verdict_f01a2b3c4d5e",
+	"object": "agent_run",
+	"status": "completed",
+	"stopReason": "schema_satisfied",
+	"createdAt": "2026-09-01T00:00:00.000Z",
+	"completedAt": "2026-09-01T00:00:18.000Z",
+	"request": {
+		"query": "Does Jane Doe currently hold the title \"VP of Sales\" at Acme Inc (acme.com)?",
+		"outputSchema": {
+			"type": "object",
+			"required": [
+				"verdict",
+				"evidence_url",
+				"evidence_quote",
+				"evidence_kind",
+				"confidence"
+			],
+			"properties": {
+				"verdict": {
+					"type": "string",
+					"enum": ["CONFIRMED", "CONTRADICTED", "UNKNOWN"]
+				},
+				"evidence_url": { "type": ["string", "null"] },
+				"evidence_quote": { "type": ["string", "null"] },
+				"evidence_kind": {
+					"type": ["string", "null"],
+					"enum": ["first_party", "press", "aggregator", "linkedin", null]
+				},
+				"confidence": { "type": ["number", "null"] }
+			}
+		},
+		"effort": "minimal"
+	},
+	"output": {
+		"text": "Confirmed on the company's own site.",
+		"structured": {
+			"verdict": "CONFIRMED",
+			"evidence_url": "https://acme.com/team/jane-doe",
+			"evidence_quote": "Jane Doe is Acme's VP of Sales.",
+			"evidence_kind": "first_party",
+			"confidence": 0.92
+		}
+	},
+	"usage": {
+		"agentComputeUnits": 0.05,
+		"searches": 2,
+		"emails": 0,
+		"phoneNumbers": 0
+	},
+	"costDollars": {
+		"total": 0.012,
+		"agentCompute": 0.009,
+		"search": 0.003,
+		"emails": 0,
+		"phoneNumbers": 0
+	}
+}
