@@ -271,6 +271,37 @@ describe("buildIcp: the buyer block", () => {
 		).not.toThrow();
 	});
 
+	it("stores a rubric longer than the old 4,000-character bound", async () => {
+		const longRubric =
+			"The positives own the budget for this purchase. ".repeat(90);
+		expect(longRubric.length).toBeGreaterThan(4000);
+		const buyer = {
+			rubric: longRubric,
+			bands: [...SENIOR_BANDS],
+			keywordBands: [{ band: "manager", keywords: ["revenue operations"] }],
+		};
+		const gateway = router({
+			exa: [
+				exaSuccessResponse([
+					{ url: "https://acme.example/", text: "Acme sells tooling." },
+				]),
+			],
+			model: [modelResponse(profileReply({ buyer }))],
+		});
+		globalThis.fetch = gateway.fetch;
+
+		const result = await buildIcp(onboardEnv(), "acme.example");
+
+		expect(result.buyer?.rubric).toBe(longRubric);
+		expect(() =>
+			IcpDocSchema.parse({
+				description: result.description,
+				seller: result.seller,
+				buyer: result.buyer,
+			}),
+		).not.toThrow();
+	});
+
 	it("keeps the buyer absent when onboarding cannot write one", async () => {
 		const gateway = router({
 			exa: [

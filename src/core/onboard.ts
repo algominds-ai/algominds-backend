@@ -21,9 +21,9 @@ const BuildIcpRequestSchema = z.object({
 
 const OnboardModelSchema = z.object({
 	description: z.string(),
-	customers: z.array(z.string().max(120)).max(40),
-	competitorTest: z.string().max(600),
-	buyer: IcpBuyerSchema.nullish(),
+	customers: z.array(z.string()),
+	competitorTest: z.string(),
+	buyer: IcpBuyerSchema.nullable(),
 });
 
 type OnboardModelOutput = z.infer<typeof OnboardModelSchema>;

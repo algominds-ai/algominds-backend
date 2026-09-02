@@ -39,16 +39,14 @@ export const SENIOR_BANDS: readonly (typeof CLAY_BANDS)[number][] =
 export const BandSchema = z.enum(CLAY_BANDS);
 
 export const IcpBuyerSchema = z.object({
-	rubric: z.string().min(1).max(4000),
-	bands: z.array(BandSchema).min(1).max(14),
-	keywordBands: z
-		.array(
-			z.object({
-				band: BandSchema,
-				keywords: z.array(z.string().min(1).max(40)).min(1).max(8),
-			}),
-		)
-		.max(14),
+	rubric: z.string(),
+	bands: z.array(BandSchema),
+	keywordBands: z.array(
+		z.object({
+			band: BandSchema,
+			keywords: z.array(z.string()),
+		}),
+	),
 });
 
 export type IcpBuyer = z.infer<typeof IcpBuyerSchema>;
@@ -99,23 +97,23 @@ export type SearchPlan = {
 const SearchPlanModelSchema = z.object({
 	query: z.string(),
 	angle: z.string(),
-	recency: z.string().nullish(),
+	recency: z.string().nullable(),
 	eventWindowDays: z.number().int().positive().nullable(),
 	recencyDays: z.number().int().positive().nullable(),
-	source: z.enum(SEARCH_SOURCES).nullish(),
-	type: z.enum(SEARCH_TYPES).nullish(),
-	agentEffort: z.enum(AGENT_EFFORTS).nullish(),
-	additionalQueries: z.array(z.string()).nullish(),
+	source: z.enum(SEARCH_SOURCES).nullable(),
+	type: z.enum(SEARCH_TYPES).nullable(),
+	agentEffort: z.enum(AGENT_EFFORTS).nullable(),
+	additionalQueries: z.array(z.string()).nullable(),
 	userLocation: z.string().nullable(),
 	countries: z.array(z.string()),
 	minWorkforce: z.number().nullable(),
 	maxWorkforce: z.number().nullable(),
-	minFoundedYear: z.number().nullish(),
-	maxFoundedYear: z.number().nullish(),
-	minRevenueAnnual: z.number().nullish(),
-	maxRevenueAnnual: z.number().nullish(),
-	minFundingTotal: z.number().nullish(),
-	maxFundingTotal: z.number().nullish(),
+	minFoundedYear: z.number().nullable(),
+	maxFoundedYear: z.number().nullable(),
+	minRevenueAnnual: z.number().nullable(),
+	maxRevenueAnnual: z.number().nullable(),
+	minFundingTotal: z.number().nullable(),
+	maxFundingTotal: z.number().nullable(),
 });
 
 export type SynthesizeResult = {
