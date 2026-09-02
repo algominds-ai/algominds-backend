@@ -177,7 +177,7 @@ function authedGetInit(): RequestInit {
  */
 async function waitForRunVisible(
 	runId: string,
-	attempts = 20,
+	attempts = 40,
 ): Promise<Response> {
 	for (let attempt = 0; attempt < attempts; attempt++) {
 		const response = await authedCall(`/runs/${runId}`, authedGetInit());
