@@ -19,7 +19,8 @@ import {
 import { organizationSpendToday } from "../src/core/db/runs";
 import { icp as icpTable, run } from "../src/core/db/schema";
 import { NOTE_MAX_LENGTH } from "../src/core/onboard";
-import type { IcpSeller } from "../src/core/synthesize";
+import type { IcpBuyer, IcpSeller } from "../src/core/synthesize";
+import { SENIOR_BANDS } from "../src/core/synthesize";
 import { buildRunId, domainsScopeId } from "../src/http/jobs";
 import app from "../src/index";
 import { ONBOARD_STEPS, publicHostname } from "../src/workflows/onboard-icp";
@@ -86,6 +87,15 @@ function authedGetInit(): RequestInit {
 
 function mockedSeller(domain: string): IcpSeller {
 	return { domain, customers: ["Acme Corp"], competitorTest: "test" };
+}
+
+function mockedBuyer(): IcpBuyer {
+	return {
+		rubric:
+			"The positives own the budget for this purchase; influencers scope it without owning spend; a senior title with no budget authority is a hard negative here.",
+		bands: [...SENIOR_BANDS],
+		keywordBands: [{ band: "manager", keywords: ["revenue operations"] }],
+	};
 }
 
 async function deleteIcpAndRun(runId: string): Promise<void> {
@@ -253,10 +263,11 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 });
 
 describe("OnboardIcpWorkflow: persisting the profile", () => {
-	it("writes one icp row carrying the description and seller block, and a run row GET /runs/:runId resolves", async () => {
+	it("writes one icp row carrying the description, seller block, and buyer block, and a run row GET /runs/:runId resolves", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
 		const instanceId = `onboarding_persist-${crypto.randomUUID()}`;
 		const seller = mockedSeller(domain);
+		const buyer = mockedBuyer();
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
 			instanceId,
@@ -275,6 +286,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 					{
 						description: "a four paragraph ideal customer profile",
 						seller,
+						buyer,
 						wroteProfile: true,
 						costDollars: 0.02,
 					},
@@ -311,6 +323,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 			expect(icpRow.doc).toEqual({
 				description: "a four paragraph ideal customer profile",
 				seller,
+				buyer,
 			});
 
 			const statusResponse = await authedCall(
@@ -640,6 +653,7 @@ describe("saveOnboardedIcp", () => {
 		expect(stored?.doc).toEqual({
 			description: "a stored profile",
 			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
+			buyer: null,
 		});
 
 		const closed = await findRun(testEnv, runId);
