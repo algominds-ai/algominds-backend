@@ -1,7 +1,6 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
-import { encodeAgentOutputSchema } from "@/core/providers/exa/output-schema";
 import {
 	CompanyRecordSchema,
 	nullableString,
@@ -339,9 +338,11 @@ function verdictQuery(input: VerdictRunInput): string {
 	].join(" ");
 }
 
-const VERDICT_OUTPUT_SCHEMA = encodeAgentOutputSchema(
-	z.json().parse(z.toJSONSchema(ExaAgentVerdictSchema, { io: "input" })),
+const { $schema: _verdictSchema, ...verdictSchema } = z.toJSONSchema(
+	ExaAgentVerdictSchema,
+	{ io: "input" },
 );
+const VERDICT_OUTPUT_SCHEMA = z.json().parse(verdictSchema);
 
 /**
  * Builds one Exa agent run request asking whether `name` currently holds

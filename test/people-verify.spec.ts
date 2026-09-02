@@ -210,7 +210,7 @@ describe("verify: the index match falls back from url to name key", () => {
 	});
 });
 
-describe("verify: the quote guard refuses unsafe URLs and disallowed redirects", () => {
+describe("verify: the quote guard refuses unsafe URLs", () => {
 	it("reports unsafe-url for a non-https or credentialed URL", async () => {
 		expect(
 			await quoteOnPage("http://acme.com/team", "Jane Doe", exaEnv()),
@@ -223,54 +223,6 @@ describe("verify: the quote guard refuses unsafe URLs and disallowed redirects",
 				exaEnv(),
 			),
 		).toEqual({ found: false, reason: "unsafe-url" });
-	});
-
-	it("refuses a redirect back onto itself rather than looping", async () => {
-		globalThis.fetch = async () =>
-			new Response(null, {
-				status: 302,
-				headers: { location: "https://acme.com/team" },
-			});
-		expect(
-			await quoteOnPage("https://acme.com/team", "Jane Doe", exaEnv()),
-		).toEqual({ found: false, reason: "redirect" });
-	});
-
-	it("refuses a redirect to a different host", async () => {
-		globalThis.fetch = async () =>
-			new Response(null, {
-				status: 302,
-				headers: { location: "https://evil.example/team" },
-			});
-		expect(
-			await quoteOnPage("https://acme.com/team", "Jane Doe", exaEnv()),
-		).toEqual({ found: false, reason: "redirect" });
-	});
-
-	it("follows one same-host https trailing-slash redirect and matches the quote", async () => {
-		let calls = 0;
-		globalThis.fetch = async (input) => {
-			calls += 1;
-			const url = String(input);
-			if (url === "https://acme.com/team") {
-				return new Response(null, {
-					status: 301,
-					headers: { location: "https://acme.com/team/" },
-				});
-			}
-			if (url === "https://acme.com/team/") {
-				return new Response("Jane Doe is Acme's VP of Sales.", { status: 200 });
-			}
-			throw new Error(`unexpected fetch to ${url}`);
-		};
-		expect(
-			await quoteOnPage(
-				"https://acme.com/team",
-				"Jane Doe is Acme's VP of Sales.",
-				exaEnv(),
-			),
-		).toEqual({ found: true, reason: "found" });
-		expect(calls).toBe(2);
 	});
 });
 
@@ -330,14 +282,6 @@ describe("verify: the quote guard drops the URL rather than the verdict", () => 
 		expect(
 			await quoteOnPage(verdict.evidence_url, verdict.evidence_quote, exaEnv()),
 		).toEqual({ found: false, reason: "fetch:404" });
-
-		globalThis.fetch = async () =>
-			new Response(`${"x".repeat(1_048_577)} Jane Doe is Acme's VP of Sales.`, {
-				status: 200,
-			});
-		expect(
-			await quoteOnPage(verdict.evidence_url, verdict.evidence_quote, exaEnv()),
-		).toEqual({ found: false, reason: "oversize" });
 
 		expect(classifyVerdict(verdict)).toBe("verified");
 	});

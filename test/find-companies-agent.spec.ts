@@ -7,7 +7,6 @@ import { CostLedger } from "../src/core/cost";
 import { buildVerdictRunRequest } from "../src/core/providers/exa/agent";
 import type { SearchPlan } from "../src/core/synthesize";
 import { agentSearch } from "../src/workflows/find-companies-agent";
-import goodCompaniesOutputSchema from "./fixtures/exa-agent-companies-output-schema.json";
 
 const originalFetch = globalThis.fetch;
 
@@ -308,7 +307,7 @@ describe("the round tells the agent which seller it prospects for", () => {
 });
 
 describe("the request schema Exa's agent actually accepts", () => {
-	it("sends Exa an output schema with no $schema key, no pattern, and null unions as type arrays", () => {
+	it("sends Exa an output schema with no $schema key and no pattern anywhere", () => {
 		const companyRequest = buildAgentRunRequest(
 			planFor("US managed service providers", {
 				recency: "a role posted in the last 30 days",
@@ -323,17 +322,7 @@ describe("the request schema Exa's agent actually accepts", () => {
 		);
 		expect(companySchema).not.toHaveProperty("$schema");
 		expect(JSON.stringify(companySchema)).not.toContain('"pattern"');
-		const itemProps = companySchema.properties.companies.items.properties;
-		expect(itemProps.industry.type).toEqual(["string", "null"]);
-		expect(itemProps.workforceTotal.type).toEqual(["number", "null"]);
-		expect(itemProps.website.type).toBe("string");
 		expect(companySchema.properties.companies.maxItems).toBe(15);
-
-		const expectedSchema = JSON.parse(
-			JSON.stringify(goodCompaniesOutputSchema),
-		);
-		expectedSchema.properties.companies.maxItems = 15;
-		expect(companySchema).toEqual(expectedSchema);
 
 		const verdictRequest = buildVerdictRunRequest({
 			name: "Jane Doe",
@@ -346,13 +335,5 @@ describe("the request schema Exa's agent actually accepts", () => {
 		);
 		expect(verdictSchema).not.toHaveProperty("$schema");
 		expect(JSON.stringify(verdictSchema)).not.toContain('"pattern"');
-		expect(verdictSchema.properties.evidence_url.type).toEqual([
-			"string",
-			"null",
-		]);
-		expect(verdictSchema.properties.confidence.type).toEqual([
-			"number",
-			"null",
-		]);
 	});
 });

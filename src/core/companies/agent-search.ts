@@ -4,17 +4,10 @@ import type {
 	ExaAgentCompany,
 	ExaAgentRunRequest,
 } from "@/core/providers/exa/agent";
-import {
-	ExaAgentCompanySchema,
-	LINKEDIN_COMPANY_URL_PATTERN,
-} from "@/core/providers/exa/agent";
-import { encodeAgentOutputSchema } from "@/core/providers/exa/output-schema";
+import { ExaAgentCompanySchema } from "@/core/providers/exa/agent";
 import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import { CompanyRecordSchema } from "@/core/providers/exa/search";
 import type { IcpSeller, SearchPlan } from "@/core/synthesize";
-
-const NOT_A_DIRECTORY_HOST =
-	"^(?!(https?://)?(www\\.)?(linkedin|twitter|x|facebook|instagram|youtube|tiktok|medium|substack|github|crunchbase|pitchbook|tracxn|bloomberg|wellfound|angel|ycombinator|producthunt|glassdoor|indeed)\\.)";
 
 const EVIDENCE_KINDS = [
 	"company-announcement",
@@ -27,10 +20,16 @@ const EVIDENCE_KINDS = [
 	"other",
 ] as const;
 
+/**
+ * Plain string fields, deliberately with no `.regex()`: Exa's agent measurably
+ * rejected a schema whose JSON Schema carried a `pattern`. The directory-host
+ * and LinkedIn-company checks the pattern used to make still run, just later —
+ * `linkedinCompanyUrl` on receipt, and the gate's own domain check.
+ */
 const AgentCompanyRequestSchema = ExaAgentCompanySchema.extend({
 	name: z.string(),
-	website: z.string().regex(new RegExp(NOT_A_DIRECTORY_HOST)),
-	linkedinUrl: z.string().regex(new RegExp(LINKEDIN_COMPANY_URL_PATTERN, "i")),
+	website: z.string(),
+	linkedinUrl: z.string(),
 });
 
 /**
@@ -153,21 +152,18 @@ export function buildAgentRunRequest(
 	today: string,
 	seller: IcpSeller | null,
 ): ExaAgentRunRequest {
+	const { $schema: _schema, ...outputSchema } = z.toJSONSchema(
+		z.object({
+			companies: z.array(agentCompanySchema(plan)).min(1).max(count),
+		}),
+		{ io: "input" },
+	);
 	return {
 		query: agentQuery(plan, count),
 		systemPrompt: agentSystemPrompt(today, seller),
 		effort: plan.agentEffort,
 		dataSources: [{ provider: "fiber" }],
-		outputSchema: encodeAgentOutputSchema(
-			z.json().parse(
-				z.toJSONSchema(
-					z.object({
-						companies: z.array(agentCompanySchema(plan)).min(1).max(count),
-					}),
-					{ io: "input" },
-				),
-			),
-		),
+		outputSchema: z.json().parse(outputSchema),
 	};
 }
 

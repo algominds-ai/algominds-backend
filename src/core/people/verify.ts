@@ -1,22 +1,16 @@
 import { z } from "zod";
-import { config } from "@/config";
 import type { CostLedger } from "@/core/cost";
 import { generateStructured, workerModel } from "@/core/model";
 import { canonicalLinkedinUrl, nameKey } from "@/core/people/dedupe";
 import type { ExaAgentVerdict } from "@/core/providers/exa/agent";
 import type { ExaSearchResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
-import type {
+
+export type {
 	QuoteCheckOutcome,
 	QuoteCheckReason,
 } from "@/core/providers/page-quote";
-import {
-	QUOTE_MAX_BYTES,
-	quoteOnPage as quoteOnPageWithTimeout,
-} from "@/core/providers/page-quote";
-
-export type { QuoteCheckOutcome, QuoteCheckReason };
-export { QUOTE_MAX_BYTES };
+export { QUOTE_MAX_BYTES, quoteOnPage } from "@/core/providers/page-quote";
 
 export type VerdictClassification =
 	| "verified"
@@ -155,17 +149,4 @@ export async function employerOpinion(
 		"people-verify-employer",
 	);
 	return { label: reply?.employer ?? "UNKNOWN", reply };
-}
-
-/**
- * Confirms a quote appears on its evidence page, at the measured people
- * quote-fetch timeout. A thin wrapper over the shared page guard in
- * `@/core/providers/page-quote`.
- */
-export async function quoteOnPage(
-	url: string,
-	quote: string,
-	env: Env,
-): Promise<QuoteCheckOutcome> {
-	return quoteOnPageWithTimeout(url, quote, config.people.quoteFetchTimeoutMs);
 }

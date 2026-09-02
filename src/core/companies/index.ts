@@ -12,6 +12,7 @@ import {
 	groupRejectReasons,
 } from "@/core/companies/candidates";
 import {
+	applyEvidenceChecks,
 	demandsEvidenceProof,
 	toEvidenceRejects,
 	toGateRejects,
@@ -223,7 +224,8 @@ async function runRound(
 	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
 	const evidenceChecked = demandsEvidenceProof(plan)
 		? await verifyEvidenceRows(candidates)
-		: { kept: candidates, rejects: [] };
+		: { kept: candidates, rejects: [], checks: {} };
+	applyEvidenceChecks(filtered.captures, evidenceChecked.checks);
 	const judged =
 		evidenceChecked.kept.length > 0
 			? await deps.judge(ctx.icp, evidenceChecked.kept, opts.env, plan.recency)

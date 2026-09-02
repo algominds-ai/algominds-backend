@@ -32,6 +32,7 @@ export type CompanyMatch = {
 	kind: string | null;
 	publishedDate: string | null;
 	score: number | null;
+	evidenceCheck: string | null;
 };
 
 /** The vendor's own entity object, the fields that describe the match, and which source produced them. */
@@ -153,6 +154,7 @@ function toCompanyMatch(result: ExaResult): CompanyMatch {
 		kind: result.evidenceKind ?? null,
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
+		evidenceCheck: null,
 	};
 }
 

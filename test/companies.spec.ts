@@ -514,6 +514,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			kind: null,
 			publishedDate: null,
 			score: null,
+			evidenceCheck: null,
 		});
 	});
 
@@ -590,6 +591,7 @@ describe("findCompanies — captures across sources", () => {
 			Object.keys(entity()).sort(),
 		);
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
+			"evidenceCheck",
 			"id",
 			"kind",
 			"publishedDate",
@@ -617,6 +619,7 @@ describe("toCompanyData", () => {
 				kind: null,
 				publishedDate: null,
 				score: null,
+				evidenceCheck: null,
 			},
 			source,
 		};
@@ -1169,6 +1172,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							kind: null,
 							publishedDate: null,
 							score: null,
+							evidenceCheck: null,
 						},
 						source: "exa-search",
 					},
@@ -1384,7 +1388,7 @@ describe("a round that demanded proof checks its own evidence before the judge s
 		};
 	}
 
-	it("rejects a company whose evidence page does not carry its quote", async () => {
+	it("rejects a company whose evidence page truly does not exist, but keeps one whose page merely lacks the quote", async () => {
 		const good = agentRow("good.com", "Good Co is hiring now.");
 		const notFound = agentRow("missing404.com", "Missing Co is hiring now.");
 		const noQuote = agentRow("noquote.com", "No Quote Co is hiring now.");
@@ -1419,14 +1423,17 @@ describe("a round that demanded proof checks its own evidence before the judge s
 			judge: scriptedJudge([]),
 		});
 
-		expect(result.companies.map((row) => row.domain)).toEqual(["good.com"]);
-		const evidenceRejects = result.rejects.filter(
-			(reject) => reject.reason === "fetch:404" || reject.reason === "missing",
-		);
-		expect(evidenceRejects.map((reject) => reject.reason).sort()).toEqual([
-			"fetch:404",
-			"missing",
+		expect(result.companies.map((row) => row.domain).sort()).toEqual([
+			"good.com",
+			"noquote.com",
 		]);
+		expect(result.captures["good.com"]?.result.evidenceCheck).toBe("found");
+		expect(result.captures["noquote.com"]?.result.evidenceCheck).toBe(
+			"missing",
+		);
+		expect(result.rejects.some((reject) => reject.reason === "fetch:404")).toBe(
+			true,
+		);
 	});
 
 	it("rejects a company whose row carries no evidence quote at all", async () => {
