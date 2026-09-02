@@ -8,6 +8,7 @@ import {
 	ExaAgentCompanySchema,
 	LINKEDIN_COMPANY_URL_PATTERN,
 } from "@/core/providers/exa/agent";
+import { encodeAgentOutputSchema } from "@/core/providers/exa/output-schema";
 import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import { CompanyRecordSchema } from "@/core/providers/exa/search";
 import type { IcpSeller, SearchPlan } from "@/core/synthesize";
@@ -58,11 +59,18 @@ function provenWindow(plan: SearchPlan): string | null {
 	].join(" ");
 }
 
+const HONEST_COUNT_RULE = [
+	"Fewer is the right answer when fewer meet every rule below. Never invent",
+	"a company, a page, a quote, or a date: a rule you cannot satisfy for real",
+	"means fewer companies, not a fabricated one.",
+].join(" ");
+
 function agentQuery(plan: SearchPlan, count: number): string {
 	const constraints = planConstraints(plan);
 	const parts = [
 		plan.query,
-		`Return exactly ${count} distinct companies.`,
+		`Return up to ${count} distinct companies.`,
+		HONEST_COUNT_RULE,
 		constraints,
 		plan.recency,
 		provenWindow(plan),
@@ -150,12 +158,14 @@ export function buildAgentRunRequest(
 		systemPrompt: agentSystemPrompt(today, seller),
 		effort: plan.agentEffort,
 		dataSources: [{ provider: "fiber" }],
-		outputSchema: z.json().parse(
-			z.toJSONSchema(
-				z.object({
-					companies: z.array(agentCompanySchema(plan)).min(1),
-				}),
-				{ io: "input" },
+		outputSchema: encodeAgentOutputSchema(
+			z.json().parse(
+				z.toJSONSchema(
+					z.object({
+						companies: z.array(agentCompanySchema(plan)).min(1).max(count),
+					}),
+					{ io: "input" },
+				),
 			),
 		),
 	};

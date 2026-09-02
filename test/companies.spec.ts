@@ -40,6 +40,12 @@ const icp: IcpDoc = {
 		"fintech companies at seed stage in San Francisco with a small team",
 };
 
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
+
 function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
 	return {
 		name: "Example",
@@ -1366,5 +1372,112 @@ describe("the sort of page a company was proved by survives onto the saved row",
 		expect(result.captures["displaced.com"]?.result.kind).toBe(
 			"vendor-case-study",
 		);
+	});
+});
+
+describe("a round that demanded proof checks its own evidence before the judge sees it", () => {
+	function agentRow(domain: string, quote: string): ExaResult {
+		return {
+			...goodResult(domain),
+			evidenceUrl: `https://${domain}/careers`,
+			evidenceQuote: quote,
+		};
+	}
+
+	it("rejects a company whose evidence page does not carry its quote", async () => {
+		const good = agentRow("good.com", "Good Co is hiring now.");
+		const notFound = agentRow("missing404.com", "Missing Co is hiring now.");
+		const noQuote = agentRow("noquote.com", "No Quote Co is hiring now.");
+
+		globalThis.fetch = async (input) => {
+			const url = String(input);
+			if (url === "https://good.com/careers") {
+				return new Response("Good Co is hiring now.", { status: 200 });
+			}
+			if (url === "https://missing404.com/careers") {
+				return new Response("gone", { status: 404 });
+			}
+			if (url === "https://noquote.com/careers") {
+				return new Response("Nothing about hiring here.", { status: 200 });
+			}
+			throw new Error(`unexpected fetch to ${url}`);
+		};
+
+		const { search } = scriptedSearch([[good, notFound, noQuote]]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 3, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["good.com"]);
+		const evidenceRejects = result.rejects.filter(
+			(reject) => reject.reason === "fetch:404" || reject.reason === "missing",
+		);
+		expect(evidenceRejects.map((reject) => reject.reason).sort()).toEqual([
+			"fetch:404",
+			"missing",
+		]);
+	});
+
+	it("rejects a company whose row carries no evidence quote at all", async () => {
+		const noQuoteAtAll: ExaResult = {
+			...goodResult("silent.com"),
+			evidenceUrl: "https://silent.com/careers",
+		};
+		globalThis.fetch = async () => {
+			throw new Error("no fetch should run for a row with no quote to check");
+		};
+
+		const { search } = scriptedSearch([[noQuoteAtAll]]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies).toHaveLength(0);
+		expect(
+			result.rejects.some((reject) => reject.reason === "missing-required"),
+		).toBe(true);
+	});
+
+	it("never fetches a page for a round whose plan asked the agent for no proof", async () => {
+		globalThis.fetch = async () => {
+			throw new Error("no fetch should run when the plan asked for no proof");
+		};
+		const plain = goodResult("plain.com");
+
+		const { search } = scriptedSearch([[plain]]);
+		const { synthesize } = scriptedSynthesize({ source: "exa-agent" });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["plain.com"]);
 	});
 });

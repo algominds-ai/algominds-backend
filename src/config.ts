@@ -24,6 +24,7 @@ export const config = {
 		seenDomainsWindowDays: 90,
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 60,
+		evidenceFetchTimeoutMs: 15000,
 	},
 	people: {
 		exaAgentPollIntervalSeconds: 5,

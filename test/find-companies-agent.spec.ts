@@ -2,9 +2,12 @@ import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "../src/config";
+import { buildAgentRunRequest } from "../src/core/companies/agent-search";
 import { CostLedger } from "../src/core/cost";
+import { buildVerdictRunRequest } from "../src/core/providers/exa/agent";
 import type { SearchPlan } from "../src/core/synthesize";
 import { agentSearch } from "../src/workflows/find-companies-agent";
+import goodCompaniesOutputSchema from "./fixtures/exa-agent-companies-output-schema.json";
 
 const originalFetch = globalThis.fetch;
 
@@ -48,7 +51,12 @@ function jsonResponse(body: unknown): Response {
 	});
 }
 
-type StartedRun = { query: string; systemPrompt: string; minItems: number };
+type StartedRun = {
+	query: string;
+	systemPrompt: string;
+	minItems: number;
+	maxItems: number;
+};
 
 function stubAgentCompanyFetch(): { started: StartedRun[] } {
 	const started: StartedRun[] = [];
@@ -59,6 +67,7 @@ function stubAgentCompanyFetch(): { started: StartedRun[] } {
 				query: String(body.query),
 				systemPrompt: String(body.systemPrompt),
 				minItems: Number(body.outputSchema?.properties?.companies?.minItems),
+				maxItems: Number(body.outputSchema?.properties?.companies?.maxItems),
 			});
 			return jsonResponse({ id: `run-${started.length}`, status: "running" });
 		}
@@ -221,6 +230,32 @@ describe("the company agent run asks for more candidates than the caller wants",
 	});
 });
 
+describe("the company agent run asks honestly, not for an exact count", () => {
+	it("asks the agent for up to the wanted count and caps the schema", async () => {
+		const { started } = stubAgentCompanyFetch();
+		const remaining = 5;
+
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: remaining,
+			today: "2026-08-30",
+			seller: null,
+		});
+		await search(
+			planFor("US managed service providers"),
+			{ query: "US managed service providers" },
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		const wanted = remaining * config.companies.judgeCandidateMultiple;
+		expect(started[0]?.query).toContain(`Return up to ${wanted} distinct`);
+		expect(started[0]?.query).not.toContain("exactly");
+		expect(started[0]?.maxItems).toBe(wanted);
+	});
+});
+
 describe("a round whose agent finds nothing counts as an empty round, not a failure", () => {
 	it("resolves to zero results and banks the run's cost, instead of throwing", async () => {
 		stubAgentCompanyFetchReportingNull();
@@ -269,5 +304,55 @@ describe("the round tells the agent which seller it prospects for", () => {
 
 		expect(started[0]?.systemPrompt).toContain("form3.tech");
 		expect(started[0]?.systemPrompt).toContain("Klarna");
+	});
+});
+
+describe("the request schema Exa's agent actually accepts", () => {
+	it("sends Exa an output schema with no $schema key, no pattern, and null unions as type arrays", () => {
+		const companyRequest = buildAgentRunRequest(
+			planFor("US managed service providers", {
+				recency: "a role posted in the last 30 days",
+				recencyDays: 30,
+			}),
+			15,
+			"2026-09-02",
+			null,
+		);
+		const companySchema = JSON.parse(
+			JSON.stringify(companyRequest.outputSchema),
+		);
+		expect(companySchema).not.toHaveProperty("$schema");
+		expect(JSON.stringify(companySchema)).not.toContain('"pattern"');
+		const itemProps = companySchema.properties.companies.items.properties;
+		expect(itemProps.industry.type).toEqual(["string", "null"]);
+		expect(itemProps.workforceTotal.type).toEqual(["number", "null"]);
+		expect(itemProps.website.type).toBe("string");
+		expect(companySchema.properties.companies.maxItems).toBe(15);
+
+		const expectedSchema = JSON.parse(
+			JSON.stringify(goodCompaniesOutputSchema),
+		);
+		expectedSchema.properties.companies.maxItems = 15;
+		expect(companySchema).toEqual(expectedSchema);
+
+		const verdictRequest = buildVerdictRunRequest({
+			name: "Jane Doe",
+			title: "VP of Sales",
+			company: "Acme",
+			domain: "acme.com",
+		});
+		const verdictSchema = JSON.parse(
+			JSON.stringify(verdictRequest.outputSchema),
+		);
+		expect(verdictSchema).not.toHaveProperty("$schema");
+		expect(JSON.stringify(verdictSchema)).not.toContain('"pattern"');
+		expect(verdictSchema.properties.evidence_url.type).toEqual([
+			"string",
+			"null",
+		]);
+		expect(verdictSchema.properties.confidence.type).toEqual([
+			"number",
+			"null",
+		]);
 	});
 });

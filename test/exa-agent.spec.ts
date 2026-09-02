@@ -413,10 +413,10 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 		expect(items.properties.evidenceDate).toBeDefined();
 	});
 
-	it("keeps the directory-host pattern on the company site and off the evidence page", () => {
+	it("sends no pattern for the company site or the evidence page, since Exa's agent rejects a schema that carries one", () => {
 		const items = companySchema(5, planFor("payment platforms"));
 
-		expect(items.properties.website.pattern).toContain("linkedin");
+		expect(items.properties.website.pattern).toBeUndefined();
 		expect(items.properties.evidenceUrl.pattern).toBeUndefined();
 	});
 
@@ -638,10 +638,10 @@ describe("a signal is only demanded when the profile asks for something recent",
 		expect(items.required).toContain("website");
 	});
 
-	it("requires a LinkedIn company page, never a personal profile", () => {
+	it("requires a LinkedIn company page in the schema, without a pattern Exa's agent would reject", () => {
 		const items = itemsFor(planFor("payment platforms"));
 
-		expect(items.properties.linkedinUrl.pattern).toContain("company");
+		expect(items.properties.linkedinUrl.pattern).toBeUndefined();
 		expect(items.required).toContain("linkedinUrl");
 		expect(items.required).toContain("website");
 	});

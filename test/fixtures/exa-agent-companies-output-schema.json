@@ -1,0 +1,86 @@
+{
+	"type": "object",
+	"required": ["companies"],
+	"properties": {
+		"companies": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"required": [
+					"name",
+					"website",
+					"linkedinUrl",
+					"signal",
+					"evidenceUrl",
+					"evidenceQuote",
+					"evidencePublisher",
+					"evidenceKind"
+				],
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"website": {
+						"type": "string"
+					},
+					"linkedinUrl": {
+						"type": "string"
+					},
+					"industry": {
+						"type": ["string", "null"]
+					},
+					"workforceTotal": {
+						"type": ["number", "null"]
+					},
+					"foundedYear": {
+						"type": ["number", "null"]
+					},
+					"revenueAnnual": {
+						"type": ["number", "null"]
+					},
+					"fundingTotal": {
+						"type": ["number", "null"]
+					},
+					"country": {
+						"type": ["string", "null"]
+					},
+					"city": {
+						"type": ["string", "null"]
+					},
+					"description": {
+						"type": ["string", "null"]
+					},
+					"signal": {
+						"type": "string"
+					},
+					"evidenceUrl": {
+						"type": "string"
+					},
+					"evidenceDate": {
+						"type": ["string", "null"]
+					},
+					"evidenceQuote": {
+						"type": "string"
+					},
+					"evidencePublisher": {
+						"type": "string"
+					},
+					"evidenceKind": {
+						"type": "string",
+						"enum": [
+							"company-announcement",
+							"person-announcement",
+							"news-article",
+							"regulatory-filing",
+							"vendor-case-study",
+							"job-posting",
+							"status-page",
+							"other"
+						]
+					}
+				}
+			}
+		}
+	}
+}

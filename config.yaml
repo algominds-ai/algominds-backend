@@ -68,6 +68,9 @@ companies:
   # killed mid-flight, losing everything already paid for. 60 polls at 5
   # seconds is 5 minutes, which covers the constrained case.
   exaAgentMaxPollAttempts: 60
+  # Milliseconds before the evidence-quote page fetch, run on an agent round
+  # that demanded proof, is treated as timed out.
+  evidenceFetchTimeoutMs: 15000
 
 people:
   # Seconds between polls of a running exa-agent run.

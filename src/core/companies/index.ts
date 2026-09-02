@@ -11,6 +11,12 @@ import {
 	filterEntities,
 	groupRejectReasons,
 } from "@/core/companies/candidates";
+import {
+	demandsEvidenceProof,
+	toEvidenceRejects,
+	toGateRejects,
+	verifyEvidenceRows,
+} from "@/core/companies/evidence";
 import type {
 	CompanyRow,
 	GateOptions,
@@ -97,17 +103,6 @@ export type FindCompaniesResult = {
 	feedback: string[];
 };
 
-function toGateRejects(
-	rows: readonly CompanyRow[],
-	rejects: readonly Reject[],
-): FindCompaniesReject[] {
-	return rejects.map((reject) => ({
-		domain: rows[reject.index]?.domain ?? null,
-		reason: reject.reason,
-		stage: "gate",
-	}));
-}
-
 function applyVerdicts(
 	keptRows: readonly CompanyRow[],
 	verdicts: readonly Verdict[],
@@ -186,6 +181,7 @@ type RoundOutcome = {
 	filterRejects: FindCompaniesReject[];
 	rows: CompanyRow[];
 	gateRejects: Reject[];
+	evidenceRejects: FindCompaniesReject[];
 	keptRows: CompanyRow[];
 	verdicts: Verdict[];
 	unseenCount: number;
@@ -225,16 +221,20 @@ async function runRound(
 		seenDomains: ctx.seenDomains,
 	});
 	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
+	const evidenceChecked = demandsEvidenceProof(plan)
+		? await verifyEvidenceRows(candidates)
+		: { kept: candidates, rejects: [] };
 	const judged =
-		candidates.length > 0
-			? await deps.judge(ctx.icp, candidates, opts.env, plan.recency)
+		evidenceChecked.kept.length > 0
+			? await deps.judge(ctx.icp, evidenceChecked.kept, opts.env, plan.recency)
 			: { verdicts: [], ledger: new CostLedger() };
 	return {
 		plan,
 		rows: filtered.rows,
 		filterRejects: filtered.rejects,
 		gateRejects: gated.rejects,
-		keptRows: candidates,
+		evidenceRejects: toEvidenceRejects(candidates, evidenceChecked.rejects),
+		keptRows: evidenceChecked.kept,
 		verdicts: judged.verdicts,
 		unseenCount,
 		resultCount: searched.results.length,
@@ -276,7 +276,12 @@ function absorbRound(
 		outcome.verdicts,
 	);
 	return {
-		rejects: [...outcome.filterRejects, ...gateRejects, ...judgeRejects],
+		rejects: [
+			...outcome.filterRejects,
+			...gateRejects,
+			...outcome.evidenceRejects,
+			...judgeRejects,
+		],
 		accepted,
 	};
 }
