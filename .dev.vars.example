@@ -1,8 +1,6 @@
 # Local development only. Never commit .dev.vars.
 # Production values live in Secrets Store bindings (see wrangler.jsonc).
 EXA_API_KEY=
-BRIGHTDATA_TOKEN=
-AI_GATEWAY_TOKEN=
-API_BEARER_TOKEN=
-DATABASE_URL=
+FINDYMAIL_API_KEY=
+CF_AIG_TOKEN=
 CLAY_API_KEY=

@@ -1,5 +1,5 @@
 {
-  "id": "152b44b8-98fb-4c50-b22b-a2993e53f2bd",
+  "id": "013c07a8-4981-499c-9e12-c898f27e97f2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -15,11 +15,17 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "icp_id": {
           "name": "icp_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "domain": {
           "name": "domain",
@@ -35,6 +41,12 @@
         },
         "linkedin_url": {
           "name": "linkedin_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "industry": {
+          "name": "industry",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -60,6 +72,28 @@
         }
       },
       "indexes": {
+        "company_organization_domain_orphan_unique": {
+          "name": "company_organization_domain_orphan_unique",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "domain",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"company\".\"icp_id\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "company_run_idx": {
           "name": "company_run_idx",
           "columns": [
@@ -98,6 +132,19 @@
         }
       },
       "foreignKeys": {
+        "company_organization_id_organization_id_fk": {
+          "name": "company_organization_id_organization_id_fk",
+          "tableFrom": "company",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "company_icp_id_icp_id_fk": {
           "name": "company_icp_id_icp_id_fk",
           "tableFrom": "company",
@@ -548,7 +595,7 @@
           "name": "icp_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "capability": {
           "name": "capability",
@@ -636,6 +683,142 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.run_company": {
+      "name": "run_company",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "domain": {
+          "name": "domain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "identity": {
+          "name": "identity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mode": {
+          "name": "mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "buyer_source": {
+          "name": "buyer_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spend_dollars": {
+          "name": "spend_dollars",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "clay_records": {
+          "name": "clay_records",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "people_verified": {
+          "name": "people_verified",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "people_roster": {
+          "name": "people_roster",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "run_company_run_idx": {
+          "name": "run_company_run_idx",
+          "columns": [
+            {
+              "expression": "run_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "run_company_run_id_run_id_fk": {
+          "name": "run_company_run_id_run_id_fk",
+          "tableFrom": "run_company",
+          "tableTo": "run",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "run_company_company_id_company_id_fk": {
+          "name": "run_company_company_id_company_id_fk",
+          "tableFrom": "run_company",
+          "tableTo": "company",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "run_company_run_domain_unique": {
+          "name": "run_company_run_domain_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "run_id",
+            "domain"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

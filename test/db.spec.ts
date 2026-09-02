@@ -3,7 +3,6 @@ import type { SQL } from "drizzle-orm";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import migration0002 from "../drizzle/0002_company_tenancy.sql?raw";
 import { organization } from "../src/core/db/auth-schema";
 import type { Db, DbEnv, DbMode } from "../src/core/db/client";
 import { db, withConnection } from "../src/core/db/client";
@@ -28,7 +27,6 @@ import type {
 } from "../src/core/db/queries";
 import {
 	appendEvidence,
-	backfillIcpBuyer,
 	closeRun,
 	companiesForRun,
 	createCompanyRow,
@@ -76,12 +74,7 @@ import {
 	runCompany,
 } from "../src/core/db/schema";
 import { rawEvidenceRow } from "../src/core/people/rows";
-import type { IcpBuyer, IcpSeller } from "../src/core/synthesize";
-import {
-	IcpBuyerSchema,
-	IcpDocSchema,
-	SENIOR_BANDS,
-} from "../src/core/synthesize";
+import type { IcpSeller } from "../src/core/synthesize";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
 	return {
@@ -876,151 +869,6 @@ describe("createCompanyRow", () => {
 	});
 });
 
-const BACKFILL_BUYER_A: IcpBuyer = IcpBuyerSchema.parse({
-	rubric: "Domain A buyer rubric text used only by the backfill test.",
-	bands: SENIOR_BANDS,
-	keywordBands: [{ band: "manager", keywords: ["HR", "recruiting"] }],
-});
-const BACKFILL_BUYER_B: IcpBuyer = IcpBuyerSchema.parse({
-	rubric: "Domain B buyer rubric text used only by the backfill test.",
-	bands: SENIOR_BANDS,
-	keywordBands: [],
-});
-
-async function seedBackfillProfile(
-	organizationId: string,
-	domain: string,
-	buyer: IcpBuyer | null = null,
-): Promise<Icp> {
-	return createIcp(testEnv, {
-		domain,
-		organizationId,
-		description: `seed profile for ${domain}`,
-		buyer,
-	});
-}
-
-async function icpDoc(
-	connection: Db,
-	icpId: string,
-): Promise<ReturnType<typeof IcpDocSchema.parse>> {
-	const [row] = await connection
-		.select()
-		.from(icpTable)
-		.where(eq(icpTable.id, icpId));
-	return IcpDocSchema.parse(row?.doc);
-}
-
-async function cleanupIcpRows(
-	connection: Db,
-	icpIds: readonly string[],
-	organizationId: string,
-): Promise<void> {
-	await connection.delete(icpTable).where(inArray(icpTable.id, [...icpIds]));
-	await cleanupOrganizations([organizationId]);
-}
-
-describe("backfillIcpBuyer", () => {
-	it("backfills each measured rubric once", async () => {
-		const org = await seedOrganization("backfill-buyer-once");
-		const domainA = `db-spec-backfill-buyer-a-${crypto.randomUUID()}.internal`;
-		const domainB = `db-spec-backfill-buyer-b-${crypto.randomUUID()}.internal`;
-		const icpA = await seedBackfillProfile(org.id, domainA);
-		const icpB = await seedBackfillProfile(org.id, domainB);
-
-		await withConnection(testEnv, "direct", db, async (connection) => {
-			try {
-				const firstA = await backfillIcpBuyer(
-					connection,
-					domainA,
-					BACKFILL_BUYER_A,
-				);
-				const firstB = await backfillIcpBuyer(
-					connection,
-					domainB,
-					BACKFILL_BUYER_B,
-				);
-				expect(firstA).toEqual({ status: "updated" });
-				expect(firstB).toEqual({ status: "updated" });
-
-				expect((await icpDoc(connection, icpA.id)).buyer).toEqual(
-					BACKFILL_BUYER_A,
-				);
-				expect((await icpDoc(connection, icpB.id)).buyer).toEqual(
-					BACKFILL_BUYER_B,
-				);
-
-				const secondA = await backfillIcpBuyer(
-					connection,
-					domainA,
-					BACKFILL_BUYER_A,
-				);
-				const secondB = await backfillIcpBuyer(
-					connection,
-					domainB,
-					BACKFILL_BUYER_B,
-				);
-				expect(secondA).toEqual({ status: "already-set" });
-				expect(secondB).toEqual({ status: "already-set" });
-			} finally {
-				await cleanupIcpRows(connection, [icpA.id, icpB.id], org.id);
-			}
-		});
-	});
-
-	it("refuses an ambiguous profile match", async () => {
-		const org = await seedOrganization("backfill-buyer-ambiguous");
-		const domain = `db-spec-backfill-buyer-ambiguous-${crypto.randomUUID()}.internal`;
-		const missingDomain = `db-spec-backfill-buyer-missing-${crypto.randomUUID()}.internal`;
-		const icpOne = await seedBackfillProfile(org.id, domain);
-		const icpTwo = await seedBackfillProfile(org.id, domain);
-
-		await withConnection(testEnv, "direct", db, async (connection) => {
-			try {
-				const zeroMatches = await backfillIcpBuyer(
-					connection,
-					missingDomain,
-					BACKFILL_BUYER_A,
-				);
-				const twoMatches = await backfillIcpBuyer(
-					connection,
-					domain,
-					BACKFILL_BUYER_A,
-				);
-				expect(zeroMatches).toEqual({ status: "ambiguous", count: 0 });
-				expect(twoMatches).toEqual({ status: "ambiguous", count: 2 });
-
-				expect((await icpDoc(connection, icpOne.id)).buyer).toBeNull();
-				expect((await icpDoc(connection, icpTwo.id)).buyer).toBeNull();
-			} finally {
-				await cleanupIcpRows(connection, [icpOne.id, icpTwo.id], org.id);
-			}
-		});
-	});
-
-	it("preserves an existing captured buyer", async () => {
-		const org = await seedOrganization("backfill-buyer-captured");
-		const domain = `db-spec-backfill-buyer-captured-${crypto.randomUUID()}.internal`;
-		const seeded = await seedBackfillProfile(org.id, domain, BACKFILL_BUYER_A);
-
-		await withConnection(testEnv, "direct", db, async (connection) => {
-			try {
-				const result = await backfillIcpBuyer(
-					connection,
-					domain,
-					BACKFILL_BUYER_B,
-				);
-				expect(result).toEqual({ status: "already-set" });
-				expect((await icpDoc(connection, seeded.id)).buyer).toEqual(
-					BACKFILL_BUYER_A,
-				);
-			} finally {
-				await cleanupIcpRows(connection, [seeded.id], org.id);
-			}
-		});
-	});
-});
-
 function companyRow(id: string): Company {
 	return {
 		id,
@@ -1297,79 +1145,6 @@ async function cleanupOrganizations(orgIds: readonly string[]): Promise<void> {
 			.where(inArray(organization.id, [...orgIds])),
 	);
 }
-
-/**
- * The literal backfill `UPDATE` between `0002_company_tenancy.sql`'s
- * add-column and set-not-null statements, read from the file itself so this
- * test fails if a future edit loses or rewrites the statement, rather than
- * only checking a hand-retyped copy of it.
- */
-function migrationBackfillStatement(): string {
-	const statement = migration0002
-		.split("--> statement-breakpoint")
-		.map((part) => part.trim())
-		.find((part) => /^update "company"/i.test(part));
-	if (!statement) {
-		throw new Error(
-			"0002_company_tenancy.sql no longer carries the organization backfill UPDATE",
-		);
-	}
-	return statement;
-}
-
-describe("the migration's tenancy backfill", () => {
-	it("backfills company tenancy before requiring it", async () => {
-		const orgA = await seedOrganization("backfill-a");
-		const orgB = await seedOrganization("backfill-b");
-		const icpRow = await createIcp(testEnv, {
-			description: "seed icp for the tenancy backfill test",
-			domain: `db-spec-backfill-${crypto.randomUUID()}.internal`,
-			organizationId: orgA.id,
-		});
-		const runId = `companies_backfill-${crypto.randomUUID()}`;
-		await openRun(testEnv, {
-			id: runId,
-			organizationId: orgA.id,
-			icpId: icpRow.id,
-			capability: "companies",
-			status: "complete",
-		});
-		const preBackfillShapeRow = {
-			icpId: icpRow.id,
-			organizationId: orgB.id,
-			domain: `db-spec-backfill-${crypto.randomUUID()}.com`,
-			name: "Backfill Co",
-			runId,
-		};
-		const [saved] = await saveCompanies(testEnv, [preBackfillShapeRow]);
-		if (!saved) throw new Error("seed failed to save a company");
-
-		try {
-			const after = await withConnection(
-				testEnv,
-				"direct",
-				db,
-				async (connection) => {
-					await connection.execute(sql.raw(migrationBackfillStatement()));
-					return connection
-						.select()
-						.from(company)
-						.where(eq(company.id, saved.id));
-				},
-			);
-
-			expect(after[0]?.organizationId).toBe(orgA.id);
-			expect(after[0]?.icpId).toBe(icpRow.id);
-		} finally {
-			await withConnection(testEnv, "direct", db, async (connection) => {
-				await connection.delete(company).where(eq(company.id, saved.id));
-				await connection.delete(run).where(eq(run.id, runId));
-				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
-			});
-			await cleanupOrganizations([orgA.id, orgB.id]);
-		}
-	});
-});
 
 function isRunCompanyPageRow(row: CompanyPageRow): row is RunCompanyPageRow {
 	return "domain" in row && "runId" in row && "identity" in row;

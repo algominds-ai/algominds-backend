@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1788062882703,
+      "when": 1788373601083,
       "tag": "0000_baseline",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1788133398847,
-      "tag": "0001_onboarding",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1788318863398,
-      "tag": "0002_company_tenancy",
       "breakpoints": true
     }
   ]
