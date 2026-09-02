@@ -904,8 +904,8 @@ describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
 						.where(eq(evidence.subjectId, runCompanyRow.id)),
 			);
 			const agreeRow = evidenceRows.find((row) => row.kind === "verify-agree");
-			expect(agreeRow).toBeDefined();
-			expect(JSON.parse(agreeRow?.value ?? "null")).toEqual({
+			if (!agreeRow) throw new Error("expected verify-agree evidence");
+			expect(JSON.parse(agreeRow.value)).toEqual({
 				employer: "DIFFERENT",
 			});
 		} finally {

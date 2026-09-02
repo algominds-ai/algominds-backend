@@ -40,7 +40,7 @@ export function nameKey(name: string | null): string | null {
 		.split(/\s+/)
 		.filter((word) => word && !CREDENTIAL_TOKENS.has(word) && word.length > 1);
 	if (!tokens || tokens.length === 0) return null;
-	return `${tokens[0]}|${tokens[tokens.length - 1]}`;
+	return `${tokens[0]}|${tokens.at(-1)}`;
 }
 
 export type DedupeRow = Omit<Candidate, "id" | "seenBy"> & { source: string };
@@ -59,7 +59,7 @@ function preferredName(
 }
 
 function mergeInto({ existing, row, url }: MergeContext): void {
-	existing.seenBy = Array.from(new Set([...existing.seenBy, row.source]));
+	if (!existing.seenBy.includes(row.source)) existing.seenBy.push(row.source);
 	existing.title ??= row.title;
 	existing.url ??= url;
 	existing.company ??= row.company;

@@ -27,25 +27,32 @@ export async function seniorRoster(
 	const rows: DedupeRow[] = [];
 	let quotaUsed = 0;
 
-	for (const band of buyer.bands) {
-		const result = await claySearch(env, { identifier, bands: [band] }, ledger);
-		raw.push(...result.raw);
-		quotaUsed += result.quotaUsed;
-		for (const row of result.rows)
-			rows.push({ ...row, source: `clay:${band}` });
-	}
+	const slices = [
+		...buyer.bands.map((band) => ({
+			bands: [band] as const,
+			keywords: undefined,
+			source: `clay:${band}`,
+		})),
+		...buyer.keywordBands.map((entry) => ({
+			bands: [entry.band] as const,
+			keywords: entry.keywords,
+			source: `clay:${entry.band}:keywords`,
+		})),
+	];
 
-	for (const entry of buyer.keywordBands) {
+	for (const slice of slices) {
 		const result = await claySearch(
 			env,
-			{ identifier, bands: [entry.band], keywords: entry.keywords },
+			{
+				identifier,
+				bands: [...slice.bands],
+				...(slice.keywords ? { keywords: slice.keywords } : {}),
+			},
 			ledger,
 		);
 		raw.push(...result.raw);
 		quotaUsed += result.quotaUsed;
-		for (const row of result.rows) {
-			rows.push({ ...row, source: `clay:${entry.band}:keywords` });
-		}
+		for (const row of result.rows) rows.push({ ...row, source: slice.source });
 	}
 
 	return { candidates: dedupe(rows), raw, quotaUsed };

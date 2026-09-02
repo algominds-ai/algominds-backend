@@ -44,6 +44,7 @@ export async function companyScopeForRun(
 	const companyIds = rows
 		.map((row) => row.companyId)
 		.filter((id): id is string => id !== null);
+	if (companyIds.length === 0) return null;
 	return inArray(company.id, companyIds);
 }
 

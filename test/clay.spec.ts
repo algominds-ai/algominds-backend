@@ -121,7 +121,11 @@ describe("Clay paging", () => {
 		);
 
 		expect(calls.runCalls).toBe(5);
-		expect(result.rows).toHaveLength(5);
+		expect(result.rows).toEqual(
+			Array.from({ length: 5 }, () =>
+				expect.objectContaining({ name: "Someone" }),
+			),
+		);
 	});
 });
 

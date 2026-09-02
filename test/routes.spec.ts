@@ -358,10 +358,7 @@ describe("POST /companies/find", () => {
 		);
 		const firstBody: { runId: string; status?: string } = await first.json();
 		const secondBody: { runId: string; status?: string } = await second.json();
-		const statusResponse = await authedCall(
-			`/runs/${secondBody.runId}`,
-			authedGetInit(),
-		);
+		const statusResponse = await waitForRunVisible(secondBody.runId);
 		await terminateRun(firstBody.runId);
 
 		expect(first.status).toBe(202);

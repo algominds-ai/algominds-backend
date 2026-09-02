@@ -194,7 +194,7 @@ describe("key storage", () => {
 		);
 		const stored = rows[0];
 
-		expect(stored).toBeDefined();
+		expect(stored?.key).toEqual(expect.any(String));
 		expect(stored?.key).not.toBe(issued.key);
 	});
 });
