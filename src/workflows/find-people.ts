@@ -101,6 +101,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		);
 
 		await step.do("load-profile", config.stepConfig.databaseCall, async () => {
+			if (target.icpId === null) return { doc: null };
 			const icpRow = await loadIcp(this.env, target.icpId);
 			if (!icpRow) {
 				throw new NonRetryableError(`findPeople: unknown icp ${target.icpId}`);

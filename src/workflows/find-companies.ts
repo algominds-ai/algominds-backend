@@ -275,6 +275,7 @@ function summarizeFindCompanies(result: ReportedRounds): FindCompaniesSummary {
 type PersistCompaniesInput = {
 	icpId: string;
 	runId: string;
+	organizationId: string;
 	companies: readonly CompanyRow[];
 	captures: Record<string, CompanyCapture>;
 };
@@ -283,13 +284,12 @@ async function persistCompanies(
 	env: Env,
 	input: PersistCompaniesInput,
 ): Promise<void> {
-	const { icpId, runId, companies, captures } = input;
+	const { icpId, runId, organizationId, companies, captures } = input;
 	const newCompanies = companies
 		.map((row) =>
 			toNewCompany(
 				row,
-				icpId,
-				runId,
+				{ icpId, runId, organizationId },
 				row.domain ? captures[row.domain] : undefined,
 			),
 		)
@@ -359,6 +359,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			persistCompanies(this.env, {
 				icpId: payload.icpId,
 				runId: event.instanceId,
+				organizationId,
 				companies: result.companies,
 				captures: result.captures,
 			}),

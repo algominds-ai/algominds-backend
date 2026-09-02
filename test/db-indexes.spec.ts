@@ -46,4 +46,20 @@ describe("the indexes the read paths depend on exist in the real schema", () => 
 
 		expect(plan).toContain("company_run_idx");
 	});
+
+	it("reads a people run's requested domains through run_company_run_idx", async () => {
+		const plan = await queryPlan(
+			sql`select id from run_company where run_id = 'no-such-run'`,
+		);
+
+		expect(plan).toContain("run_company_run_idx");
+	});
+
+	it("finds an orphan company by organization and domain through company_organization_domain_orphan_unique", async () => {
+		const plan = await queryPlan(
+			sql`select id from company where organization_id = '00000000-0000-0000-0000-000000000000' and domain = 'no-such-domain.example' and icp_id is null`,
+		);
+
+		expect(plan).toContain("company_organization_domain_orphan_unique");
+	});
 });

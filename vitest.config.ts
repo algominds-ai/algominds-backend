@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { cloudflareTest } from "@cloudflare/vitest-plugin";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
 	plugins: [
@@ -15,5 +15,6 @@ export default defineConfig({
 	},
 	test: {
 		fileParallelism: false,
+		exclude: [...configDefaults.exclude, "**/.claude/**"],
 	},
 });

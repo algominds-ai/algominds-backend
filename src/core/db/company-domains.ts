@@ -1,30 +1,21 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, inArray } from "drizzle-orm";
-import { companyExaId } from "@/core/companies/candidates";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type { DbFactory } from "@/core/db/queries";
 import type { Company } from "@/core/db/schema";
-import { company, icp } from "@/core/db/schema";
+import { company } from "@/core/db/schema";
 
 export type CompanyDomainRow = Pick<
 	Company,
-	"id" | "domain" | "name" | "icpId" | "data"
+	"id" | "domain" | "name" | "icpId" | "linkedinUrl"
 >;
-export type CompanyDomainMatch = Pick<
-	Company,
-	"id" | "domain" | "name" | "icpId"
-> & { exaId: string | null };
+export type CompanyDomainMatch = CompanyDomainRow;
 
 export interface CompanyDomainConnection {
-	select(columns: { company: typeof company }): {
+	select(): {
 		from(table: typeof company): {
-			innerJoin(
-				table: typeof icp,
-				condition: SQL | undefined,
-			): {
-				where(condition: SQL | undefined): Promise<{ company: Company }[]>;
-			};
+			where(condition: SQL | undefined): Promise<CompanyDomainRow[]>;
 		};
 	};
 }
@@ -35,11 +26,11 @@ function toCompanyDomainMatch(row: CompanyDomainRow): CompanyDomainMatch {
 		domain: row.domain,
 		name: row.name,
 		icpId: row.icpId,
-		exaId: companyExaId(row.data),
+		linkedinUrl: row.linkedinUrl,
 	};
 }
 
-/** The id, domain, name, icp id, and saved Exa organization id of every company in `organizationId` whose domain is in `domains`. */
+/** The id, domain, name, profile id, and LinkedIn URL of every company in `organizationId` whose domain is in `domains`, profiled or not. */
 export async function companiesForDomains(
 	env: DbEnv,
 	domains: readonly string[],
@@ -51,14 +42,13 @@ export async function companiesForDomains(
 	}
 	const connection = buildDb(env, "cached");
 	const rows = await connection
-		.select({ company })
+		.select()
 		.from(company)
-		.innerJoin(icp, eq(company.icpId, icp.id))
 		.where(
 			and(
 				inArray(company.domain, [...domains]),
-				eq(icp.organizationId, organizationId),
+				eq(company.organizationId, organizationId),
 			),
 		);
-	return rows.map((row) => toCompanyDomainMatch(row.company));
+	return rows.map((row) => toCompanyDomainMatch(row));
 }

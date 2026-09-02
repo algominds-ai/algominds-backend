@@ -126,7 +126,7 @@ export async function getRunCompanies(
 	if (query instanceof Response) return query;
 	const runRow = await callersRun(c, runId);
 	if (!runRow) return c.json({ error: "unknown run" }, 404);
-	const page = await companiesPage(c.env, runId, query);
+	const page = await companiesPage(c.env, runRow, query);
 	return c.json(
 		{ rows: page.rows, nextCursor: page.nextCursor, limit: query.limit },
 		200,

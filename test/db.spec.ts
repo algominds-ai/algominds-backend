@@ -1,7 +1,9 @@
+import { env as testEnv } from "cloudflare:workers";
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, gt, gte } from "drizzle-orm";
+import { and, asc, eq, gt, gte, inArray, sql } from "drizzle-orm";
 import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
+import migration0002 from "../drizzle/0002_company_tenancy.sql?raw";
 import { organization } from "../src/core/db/auth-schema";
 import type { DbEnv, DbMode } from "../src/core/db/client";
 import { db } from "../src/core/db/client";
@@ -29,6 +31,7 @@ import {
 	appendEvidence,
 	closeRun,
 	companiesForRun,
+	createCompanyRow,
 	createIcp,
 	cutoffDate,
 	deletePerson,
@@ -41,11 +44,14 @@ import {
 	saveCompanies,
 	savePeople,
 	saveRound,
+	saveRunCompanies,
 	startOfUtcDay,
 } from "../src/core/db/queries";
 import type {
 	CompanyPageConnection,
+	CompanyPageRow,
 	PersonPageConnection,
+	RunCompanyPageRow,
 } from "../src/core/db/run-pages";
 import { companiesPage, peoplePage } from "../src/core/db/run-pages";
 import type {
@@ -64,9 +70,11 @@ import type {
 import {
 	company,
 	evidence,
+	icp as icpTable,
 	normalizeDomain,
 	person,
 	run,
+	runCompany,
 } from "../src/core/db/schema";
 import type { IcpSeller } from "../src/core/synthesize";
 
@@ -282,6 +290,7 @@ describe("saveCompanies", () => {
 			[
 				{
 					icpId: "icp-1",
+					organizationId: "org-1",
 					domain: "https://WWW.Acme.com/careers",
 					name: "Acme",
 					runId: "run-1",
@@ -308,7 +317,15 @@ describe("saveCompanies", () => {
 
 		await saveCompanies(
 			env,
-			[{ icpId: "icp-1", domain: "acme.com", name: "Acme", runId: "run-1" }],
+			[
+				{
+					icpId: "icp-1",
+					organizationId: "org-1",
+					domain: "acme.com",
+					name: "Acme",
+					runId: "run-1",
+				},
+			],
 			buildDb,
 		);
 
@@ -698,14 +715,17 @@ describe("organizationSpendToday", () => {
 });
 
 describe("companiesForRun", () => {
-	it("filters by run id and reads the saved Exa organization id off data", async () => {
+	it("filters by run id, orders by found_at then id, and reads the saved Exa organization id off data", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		let recordedCondition: unknown;
+		let recordedOrder: unknown[] = [];
 		const rows = [
 			{
 				id: "company-1",
 				domain: "acme.com",
 				name: "Acme",
+				linkedinUrl: "https://linkedin.com/company/acme",
+				icpId: "icp-1",
 				data: { provider: "exa-search", result: { id: "exa-org-1" } },
 			},
 		];
@@ -714,42 +734,181 @@ describe("companiesForRun", () => {
 				from: () => ({
 					where: (condition) => {
 						recordedCondition = condition;
-						return Promise.resolve(rows);
+						return {
+							orderBy: (...order: unknown[]) => {
+								recordedOrder = order;
+								return Promise.resolve(rows);
+							},
+						};
 					},
 				}),
 			}),
 		});
 
-		const result = await companiesForRun(env, "run-1", buildDb);
+		const result = await companiesForRun(
+			env,
+			testRun({ id: "run-1", capability: "companies" }),
+			buildDb,
+		);
 
 		expect(result).toEqual([
-			{ id: "company-1", domain: "acme.com", name: "Acme", exaId: "exa-org-1" },
+			{
+				id: "company-1",
+				domain: "acme.com",
+				name: "Acme",
+				linkedinUrl: "https://linkedin.com/company/acme",
+				icpId: "icp-1",
+				exaId: "exa-org-1",
+			},
 		]);
 		expect(recordedCondition).toEqual(eq(company.runId, "run-1"));
+		expect(recordedOrder).toEqual([company.foundAt, company.id]);
 	});
 
 	it("reports no Exa id for a company saved without one", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const rows = [
-			{ id: "company-2", domain: "agentco.com", name: "Agent Co", data: null },
+			{
+				id: "company-2",
+				domain: "agentco.com",
+				name: "Agent Co",
+				linkedinUrl: null,
+				icpId: null,
+				data: null,
+			},
 		];
 		const buildDb: DbFactory<CompanyRunConnection> = () => ({
 			select: () => ({
 				from: () => ({
-					where: () => Promise.resolve(rows),
+					where: () => ({
+						orderBy: () => Promise.resolve(rows),
+					}),
 				}),
 			}),
 		});
 
-		const result = await companiesForRun(env, "run-2", buildDb);
+		const result = await companiesForRun(
+			env,
+			testRun({ id: "run-2", capability: "companies" }),
+			buildDb,
+		);
 
 		expect(result[0]?.exaId).toBeNull();
+		expect(result[0]?.icpId).toBeNull();
+	});
+
+	it("resolves a people run's companies through its resolved run rows, not by run id", async () => {
+		const fixture = await seedProfilelessPeopleRunFixture();
+
+		try {
+			const result = await companiesForRun(testEnv, fixture.peopleRunRow);
+
+			expect(result.map((row) => row.id).sort()).toEqual(
+				[...fixture.linkedCompanyIds].sort(),
+			);
+			expect(result.map((row) => row.id)).not.toContain(
+				fixture.unlinkedCompanyId,
+			);
+		} finally {
+			await cleanupProfilelessPeopleRunFixture(fixture);
+		}
+	});
+});
+
+describe("createCompanyRow", () => {
+	it("returns no row from a conflicting insert, and re-selects the existing profiled row by organization, normalized domain and profile", async () => {
+		const org = await seedOrganization("create-row-profiled");
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for createCompanyRow",
+			domain: `db-spec-create-row-${crypto.randomUUID()}.internal`,
+			organizationId: org.id,
+		});
+		const runId = `companies_create-row-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: runId,
+			organizationId: org.id,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "complete",
+		});
+		const domain = `create-row-${crypto.randomUUID()}.com`;
+		const [existing] = await saveCompanies(testEnv, [
+			{
+				icpId: icpRow.id,
+				organizationId: org.id,
+				domain,
+				name: "Existing Co",
+				runId,
+			},
+		]);
+		if (!existing) throw new Error("seed failed to save a company");
+
+		try {
+			const found = await createCompanyRow(testEnv, {
+				icpId: icpRow.id,
+				organizationId: org.id,
+				domain: `https://WWW.${domain.toUpperCase()}/careers`,
+				name: "Concurrent Co",
+				runId,
+			});
+
+			expect(found.id).toBe(existing.id);
+			expect(found.name).toBe("Existing Co");
+		} finally {
+			const connection = db(testEnv, "direct");
+			await connection.delete(company).where(eq(company.id, existing.id));
+			await connection.delete(run).where(eq(run.id, runId));
+			await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			await cleanupOrganizations([org.id]);
+		}
+	});
+
+	it("returns no row from a conflicting insert, and re-selects the existing orphan row by organization and normalized domain", async () => {
+		const org = await seedOrganization("create-row-orphan");
+		const runId = `people_create-row-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: runId,
+			organizationId: org.id,
+			icpId: null,
+			capability: "people",
+			status: "complete",
+		});
+		const domain = `create-row-orphan-${crypto.randomUUID()}.com`;
+		const [existing] = await saveCompanies(testEnv, [
+			{
+				icpId: null,
+				organizationId: org.id,
+				domain,
+				name: "Existing Orphan",
+				runId,
+			},
+		]);
+		if (!existing) throw new Error("seed failed to save a company");
+
+		try {
+			const found = await createCompanyRow(testEnv, {
+				icpId: null,
+				organizationId: org.id,
+				domain: `https://WWW.${domain.toUpperCase()}/`,
+				name: "Concurrent Orphan",
+				runId,
+			});
+
+			expect(found.id).toBe(existing.id);
+			expect(found.name).toBe("Existing Orphan");
+		} finally {
+			const connection = db(testEnv, "direct");
+			await connection.delete(company).where(eq(company.id, existing.id));
+			await connection.delete(run).where(eq(run.id, runId));
+			await cleanupOrganizations([org.id]);
+		}
 	});
 });
 
 function companyRow(id: string): Company {
 	return {
 		id,
+		organizationId: "org-1",
 		icpId: "icp-1",
 		domain: `${id}.com`,
 		name: id,
@@ -796,7 +955,7 @@ describe("companiesPage", () => {
 
 		const page = await companiesPage(
 			env,
-			"run-1",
+			testRun({ id: "run-1", capability: "companies" }),
 			{ limit: 5, cursor: undefined },
 			buildDb,
 		);
@@ -815,7 +974,7 @@ describe("companiesPage", () => {
 
 		await companiesPage(
 			env,
-			"run-1",
+			testRun({ id: "run-1", capability: "companies" }),
 			{ limit: 5, cursor: "company-1" },
 			buildDb,
 		);
@@ -832,7 +991,7 @@ describe("companiesPage", () => {
 
 		const page = await companiesPage(
 			env,
-			"run-1",
+			testRun({ id: "run-1", capability: "companies" }),
 			{ limit: 2, cursor: undefined },
 			buildDb,
 		);
@@ -848,7 +1007,7 @@ describe("companiesPage", () => {
 
 		const page = await companiesPage(
 			env,
-			"run-1",
+			testRun({ id: "run-1", capability: "companies" }),
 			{ limit: 2, cursor: undefined },
 			buildDb,
 		);
@@ -982,22 +1141,7 @@ describe("peoplePage", () => {
 });
 
 describe("peoplePage scopes by what the run covers", () => {
-	it("reads a people run through its profile, not through a company run id it never owned", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const spy: { condition?: unknown } = {};
-		const buildDb = recordingPersonPageDb([], spy);
-
-		await peoplePage(
-			env,
-			testRun({ id: "people_x", capability: "people", icpId: "icp-7" }),
-			{ limit: 5, cursor: undefined },
-			buildDb,
-		);
-
-		expect(spy.condition).toEqual(eq(company.icpId, "icp-7"));
-	});
-
-	it("still reads a companies run through its own run id", async () => {
+	it("keeps a companies run scoped through its own company rows", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const spy: { condition?: unknown } = {};
 		const buildDb = recordingPersonPageDb([], spy);
@@ -1027,19 +1171,282 @@ describe("peoplePage scopes by what the run covers", () => {
 		expect(page).toEqual({ rows: [], nextCursor: null });
 		expect(spy.condition).toBeUndefined();
 	});
+});
 
-	it("refuses a people run that names no profile rather than reading every person", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const buildDb = recordingPersonPageDb([], {});
+async function seedOrganization(label: string): Promise<Organization> {
+	return organizationForSlug(
+		testEnv,
+		`db-spec-${label}-${crypto.randomUUID()}.internal`,
+		`db-spec-${label}`,
+	);
+}
 
-		await expect(
-			peoplePage(
-				env,
-				testRun({ id: "people_x", capability: "people", icpId: null }),
-				{ limit: 5, cursor: undefined },
-				buildDb,
-			),
-		).rejects.toThrow("names no profile");
+async function cleanupOrganizations(orgIds: readonly string[]): Promise<void> {
+	await db(testEnv, "direct")
+		.delete(organization)
+		.where(inArray(organization.id, [...orgIds]));
+}
+
+/**
+ * The literal backfill `UPDATE` between `0002_company_tenancy.sql`'s
+ * add-column and set-not-null statements, read from the file itself so this
+ * test fails if a future edit loses or rewrites the statement, rather than
+ * only checking a hand-retyped copy of it.
+ */
+function migrationBackfillStatement(): string {
+	const statement = migration0002
+		.split("--> statement-breakpoint")
+		.map((part) => part.trim())
+		.find((part) => /^update "company"/i.test(part));
+	if (!statement) {
+		throw new Error(
+			"0002_company_tenancy.sql no longer carries the organization backfill UPDATE",
+		);
+	}
+	return statement;
+}
+
+describe("the migration's tenancy backfill", () => {
+	it("backfills company tenancy before requiring it", async () => {
+		const orgA = await seedOrganization("backfill-a");
+		const orgB = await seedOrganization("backfill-b");
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for the tenancy backfill test",
+			domain: `db-spec-backfill-${crypto.randomUUID()}.internal`,
+			organizationId: orgA.id,
+		});
+		const runId = `companies_backfill-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: runId,
+			organizationId: orgA.id,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "complete",
+		});
+		const preBackfillShapeRow = {
+			icpId: icpRow.id,
+			organizationId: orgB.id,
+			domain: `db-spec-backfill-${crypto.randomUUID()}.com`,
+			name: "Backfill Co",
+			runId,
+		};
+		const [saved] = await saveCompanies(testEnv, [preBackfillShapeRow]);
+		if (!saved) throw new Error("seed failed to save a company");
+
+		try {
+			const connection = db(testEnv, "direct");
+			await connection.execute(sql.raw(migrationBackfillStatement()));
+			const after = await connection
+				.select()
+				.from(company)
+				.where(eq(company.id, saved.id));
+
+			expect(after[0]?.organizationId).toBe(orgA.id);
+			expect(after[0]?.icpId).toBe(icpRow.id);
+		} finally {
+			const connection = db(testEnv, "direct");
+			await connection.delete(company).where(eq(company.id, saved.id));
+			await connection.delete(run).where(eq(run.id, runId));
+			await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			await cleanupOrganizations([orgA.id, orgB.id]);
+		}
+	});
+});
+
+function isRunCompanyPageRow(row: CompanyPageRow): row is RunCompanyPageRow {
+	return "domain" in row && "runId" in row && "identity" in row;
+}
+
+describe("companiesPage: a people run's requested domains", () => {
+	it("records an unresolved requested domain without a company", async () => {
+		const org = await seedOrganization("unresolved");
+		const runId = `people_unresolved-${crypto.randomUUID()}`;
+		const runRow = await openRun(testEnv, {
+			id: runId,
+			organizationId: org.id,
+			icpId: null,
+			capability: "people",
+			status: "complete",
+		});
+		const domain = `notacompany-${crypto.randomUUID()}.example`;
+		await saveRunCompanies(testEnv, [
+			{
+				runId,
+				domain,
+				companyId: null,
+				identity: "unresolved",
+				mode: "roster",
+				buyerSource: "none",
+			},
+		]);
+
+		try {
+			const page = await companiesPage(testEnv, runRow, {
+				limit: 5,
+				cursor: undefined,
+			});
+
+			expect(page.rows).toHaveLength(1);
+			const row = page.rows[0];
+			if (!row || !isRunCompanyPageRow(row)) {
+				throw new Error("expected a run_company page row");
+			}
+			expect(row.domain).toBe(domain);
+			expect(row.companyId).toBeNull();
+			expect(row.company).toBeNull();
+		} finally {
+			const connection = db(testEnv, "direct");
+			await connection.delete(runCompany).where(eq(runCompany.runId, runId));
+			await connection.delete(run).where(eq(run.id, runId));
+			await cleanupOrganizations([org.id]);
+		}
+	});
+});
+
+type ProfilelessPeopleRunFixture = {
+	peopleRunRow: Run;
+	peopleRunId: string;
+	companiesRunId: string;
+	orgA: Organization;
+	orgB: Organization;
+	linkedCompanyIds: [string, string];
+	unlinkedCompanyId: string;
+	companyIds: string[];
+};
+
+async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFixture> {
+	const orgA = await seedOrganization("profileless-a");
+	const orgB = await seedOrganization("profileless-b");
+	const peopleRunId = `people_profileless-${crypto.randomUUID()}`;
+	const peopleRunRow = await openRun(testEnv, {
+		id: peopleRunId,
+		organizationId: orgA.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	const companiesRunId = `companies_profileless-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: companiesRunId,
+		organizationId: orgA.id,
+		icpId: null,
+		capability: "companies",
+		status: "complete",
+	});
+	const [companyA1, companyA2] = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: orgA.id,
+			domain: `profileless-a1-${crypto.randomUUID()}.com`,
+			name: "A1",
+			runId: companiesRunId,
+		},
+		{
+			icpId: null,
+			organizationId: orgA.id,
+			domain: `profileless-a2-${crypto.randomUUID()}.com`,
+			name: "A2",
+			runId: companiesRunId,
+		},
+	]);
+	const [companyB] = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: orgB.id,
+			domain: `profileless-b-${crypto.randomUUID()}.com`,
+			name: "B",
+			runId: companiesRunId,
+		},
+	]);
+	if (!companyA1 || !companyA2 || !companyB) {
+		throw new Error("seed failed to save a company");
+	}
+	await saveRunCompanies(testEnv, [
+		{
+			runId: peopleRunId,
+			domain: companyA1.domain,
+			companyId: companyA1.id,
+			identity: "domain",
+			mode: "roster",
+			buyerSource: "none",
+		},
+		{
+			runId: peopleRunId,
+			domain: companyA2.domain,
+			companyId: companyA2.id,
+			identity: "domain",
+			mode: "roster",
+			buyerSource: "none",
+		},
+	]);
+	await savePeople(testEnv, [
+		{
+			organizationId: orgA.id,
+			companyId: companyA1.id,
+			linkedinUrl: `https://linkedin.com/in/a1-${crypto.randomUUID()}`,
+			name: "Person A1",
+		},
+		{
+			organizationId: orgA.id,
+			companyId: companyA2.id,
+			linkedinUrl: `https://linkedin.com/in/a2-${crypto.randomUUID()}`,
+			name: "Person A2",
+		},
+		{
+			organizationId: orgB.id,
+			companyId: companyB.id,
+			linkedinUrl: `https://linkedin.com/in/b-${crypto.randomUUID()}`,
+			name: "Person B",
+		},
+	]);
+	return {
+		peopleRunRow,
+		peopleRunId,
+		companiesRunId,
+		orgA,
+		orgB,
+		linkedCompanyIds: [companyA1.id, companyA2.id],
+		unlinkedCompanyId: companyB.id,
+		companyIds: [companyA1.id, companyA2.id, companyB.id],
+	};
+}
+
+async function cleanupProfilelessPeopleRunFixture(
+	fixture: ProfilelessPeopleRunFixture,
+): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(runCompany)
+		.where(eq(runCompany.runId, fixture.peopleRunId));
+	await connection
+		.delete(person)
+		.where(inArray(person.companyId, fixture.companyIds));
+	await connection
+		.delete(company)
+		.where(inArray(company.id, fixture.companyIds));
+	await connection
+		.delete(run)
+		.where(inArray(run.id, [fixture.peopleRunId, fixture.companiesRunId]));
+	await cleanupOrganizations([fixture.orgA.id, fixture.orgB.id]);
+}
+
+describe("peoplePage: a profileless people run", () => {
+	it("scopes a profileless people run through its resolved run rows", async () => {
+		const fixture = await seedProfilelessPeopleRunFixture();
+
+		try {
+			const page = await peoplePage(testEnv, fixture.peopleRunRow, {
+				limit: 10,
+				cursor: undefined,
+			});
+
+			expect(page.rows.map((row) => row.name).sort()).toEqual([
+				"Person A1",
+				"Person A2",
+			]);
+		} finally {
+			await cleanupProfilelessPeopleRunFixture(fixture);
+		}
 	});
 });
 

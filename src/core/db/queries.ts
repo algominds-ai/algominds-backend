@@ -1,7 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
-import { companyExaId } from "@/core/companies/candidates";
 import { organization } from "@/core/db/auth-schema";
 import type { DbEnv, DbMode } from "@/core/db/client";
 import { db } from "@/core/db/client";
@@ -54,7 +53,7 @@ interface SelectLimitConnection<TTable, TRow> {
 	};
 }
 
-interface SelectAllWhereConnection<TTable, TRow> {
+export interface SelectAllWhereConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
 			where(condition: SQL | undefined): Promise<TRow[]>;
@@ -62,7 +61,7 @@ interface SelectAllWhereConnection<TTable, TRow> {
 	};
 }
 
-interface UpdateWhereConnection<TTable, TValues> {
+export interface UpdateWhereConnection<TTable, TValues> {
 	update(table: TTable): {
 		set(values: TValues): {
 			where(condition: SQL | undefined): Promise<never[]>;
@@ -88,7 +87,7 @@ interface InsertChain<TRow> {
 	};
 }
 
-interface InsertConnection<TTable, TNewRow, TRow> {
+export interface InsertConnection<TTable, TNewRow, TRow> {
 	insert(table: TTable): {
 		values(row: TNewRow): InsertChain<TRow>;
 		values(rows: TNewRow[]): InsertChain<TRow>;
@@ -166,21 +165,6 @@ export type OrganizationSpendConnection = SelectWhereConnection<
 	{ costDollars: typeof run.costDollars },
 	{ costDollars: number }
 >;
-export type CompanyRunRow = Pick<Company, "id" | "domain" | "name" | "data">;
-export type RunCompany = Pick<Company, "id" | "domain" | "name"> & {
-	exaId: string | null;
-};
-export type CompanyRunConnection = SelectWhereConnection<
-	typeof company,
-	{
-		id: typeof company.id;
-		domain: typeof company.domain;
-		name: typeof company.name;
-		data: typeof company.data;
-	},
-	CompanyRunRow
->;
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /** The instant `days` days before `now` (defaults to the current time). */
@@ -208,30 +192,6 @@ export async function organizationDomain(
 }
 
 /** Writes the profile and closes its run in one transaction, so a failure between them cannot leave a profile no run points at. Returns the new profile's id. */
-
-/** The id, domain, name, and saved Exa organization id of every company found in run `runId`. */
-export async function companiesForRun(
-	env: DbEnv,
-	runId: string,
-	buildDb: DbFactory<CompanyRunConnection> = db,
-): Promise<RunCompany[]> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select({
-			id: company.id,
-			domain: company.domain,
-			name: company.name,
-			data: company.data,
-		})
-		.from(company)
-		.where(eq(company.runId, runId));
-	return rows.map((row) => ({
-		id: row.id,
-		domain: row.domain,
-		name: row.name,
-		exaId: companyExaId(row.data),
-	}));
-}
 
 /**
  * Domains found for an ICP within the trailing `days` days, read through
@@ -378,6 +338,19 @@ export {
 	type NewIcpInput,
 	saveOnboardedIcp,
 } from "@/core/db/icp";
+export {
+	type CompanyCreateConnection,
+	type CompanyOfRun,
+	type CompanyRunConnection,
+	type CompanyRunRow,
+	companiesForRun,
+	createCompanyRow,
+	type RunCompanyInsertConnection,
+	type RunCompanyPatch,
+	type RunCompanyUpdateConnection,
+	saveRunCompanies,
+	updateRunCompany,
+} from "@/core/db/run-companies";
 export {
 	assertUnderDailyCeiling,
 	closeRun,

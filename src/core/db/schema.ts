@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
 	index,
 	integer,
@@ -7,6 +8,7 @@ import {
 	text,
 	timestamp,
 	unique,
+	uniqueIndex,
 	uuid,
 } from "drizzle-orm/pg-core";
 import { organization } from "@/core/db/auth-schema";
@@ -79,9 +81,10 @@ export const company = pgTable(
 	"company",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
-		icpId: uuid("icp_id")
+		organizationId: text("organization_id")
 			.notNull()
-			.references(() => icp.id),
+			.references(() => organization.id),
+		icpId: uuid("icp_id").references(() => icp.id),
 		domain: text("domain").notNull(),
 		name: text("name").notNull(),
 		linkedinUrl: text("linkedin_url"),
@@ -96,8 +99,35 @@ export const company = pgTable(
 	},
 	(t) => [
 		unique("company_icp_domain_unique").on(t.icpId, t.domain),
+		uniqueIndex("company_organization_domain_orphan_unique")
+			.on(t.organizationId, t.domain)
+			.where(sql`${t.icpId} is null`),
 		index("company_run_idx").on(t.runId),
 		index("company_icp_found_at_idx").on(t.icpId, t.foundAt.desc()),
+	],
+);
+
+/** One requested domain within a people run: its identity, buyer mode, and spend, whether or not it resolved to a company. */
+export const runCompany = pgTable(
+	"run_company",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		runId: text("run_id")
+			.notNull()
+			.references(() => run.id),
+		domain: text("domain").notNull(),
+		companyId: uuid("company_id").references(() => company.id),
+		identity: text("identity"),
+		mode: text("mode"),
+		buyerSource: text("buyer_source"),
+		spendDollars: real("spend_dollars").notNull().default(0),
+		clayRecords: integer("clay_records").notNull().default(0),
+		peopleVerified: integer("people_verified").notNull().default(0),
+		peopleRoster: integer("people_roster").notNull().default(0),
+	},
+	(t) => [
+		unique("run_company_run_domain_unique").on(t.runId, t.domain),
+		index("run_company_run_idx").on(t.runId),
 	],
 );
 
@@ -156,6 +186,8 @@ export type Round = typeof round.$inferSelect;
 export type NewRound = typeof round.$inferInsert;
 export type Company = typeof company.$inferSelect;
 export type NewCompany = typeof company.$inferInsert;
+export type RunCompany = typeof runCompany.$inferSelect;
+export type NewRunCompany = typeof runCompany.$inferInsert;
 export type Person = typeof person.$inferSelect;
 export type NewPerson = typeof person.$inferInsert;
 export type Evidence = typeof evidence.$inferSelect;

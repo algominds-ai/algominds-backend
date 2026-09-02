@@ -12,7 +12,7 @@ export type TargetCompany = Pick<
 
 export type TargetCompanies = {
 	companies: TargetCompany[];
-	icpId: string;
+	icpId: string | null;
 	unknownDomains: string[];
 };
 
@@ -25,20 +25,16 @@ async function targetByRun(
 	if (!runRow || runRow.organizationId !== organizationId) {
 		throw new NonRetryableError(`findPeople: unknown run ${runId}`);
 	}
-	const icpId = runRow.icpId;
-	if (icpId === null) {
-		throw new NonRetryableError(`findPeople: run ${runId} produced no profile`);
-	}
-	const companies = await companiesForRun(env, runId);
+	const companies = await companiesForRun(env, runRow);
 	return {
 		companies: companies.map((row) => ({
 			id: row.id,
 			domain: row.domain,
 			name: row.name,
-			linkedinUrl: null,
-			icpId,
+			linkedinUrl: row.linkedinUrl,
+			icpId: row.icpId,
 		})),
-		icpId,
+		icpId: runRow.icpId,
 		unknownDomains: [],
 	};
 }
@@ -64,13 +60,15 @@ export function companiesOfOneProfile(
 			.map((row) => [row.domain, row]),
 	);
 	return {
-		companies: [...byDomain.values()].map(({ id, domain, name }) => ({
-			id,
-			domain,
-			name,
-			linkedinUrl: null,
-			icpId,
-		})),
+		companies: [...byDomain.values()].map(
+			({ id, domain, name, linkedinUrl }) => ({
+				id,
+				domain,
+				name,
+				linkedinUrl,
+				icpId,
+			}),
+		),
 		icpId,
 		unknownDomains: domains.filter((domain) => !byDomain.has(domain)),
 	};

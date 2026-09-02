@@ -6,23 +6,29 @@ import { normalizeDomain } from "@/core/db/schema";
 
 const EVIDENCE_SOURCE = "exa";
 
+export type NewCompanyContext = {
+	icpId: string;
+	runId: string;
+	organizationId: string;
+};
+
 /** One judged row as the company row to store, or null when it lacks a name, a domain, or the vendor capture behind it. */
 export function toNewCompany(
 	row: CompanyRow,
-	icpId: string,
-	runId: string,
+	context: NewCompanyContext,
 	capture: CompanyCapture | undefined,
 ): NewCompany | null {
 	if (row.name === null || row.domain === null || capture === undefined)
 		return null;
 	return {
-		icpId,
+		icpId: context.icpId,
+		organizationId: context.organizationId,
 		domain: row.domain,
 		name: row.name,
 		linkedinUrl: row.linkedinUrl,
 		industry: row.industry,
 		data: toCompanyData(capture),
-		runId,
+		runId: context.runId,
 	};
 }
 

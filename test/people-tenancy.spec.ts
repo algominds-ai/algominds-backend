@@ -45,7 +45,13 @@ async function seedOrgWithCompany(
 		status: "complete",
 	});
 	const [savedCompany] = await saveCompanies(testEnv, [
-		{ icpId: icpRow.id, runId, domain, name: `${label} Co` },
+		{
+			icpId: icpRow.id,
+			organizationId: org.id,
+			runId,
+			domain,
+			name: `${label} Co`,
+		},
 	]);
 	if (!savedCompany) {
 		throw new Error(`seedOrgWithCompany: failed to save company for ${label}`);

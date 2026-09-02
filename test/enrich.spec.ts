@@ -1,14 +1,23 @@
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { toBatches } from "../src/core/batches";
+import { organization } from "../src/core/db/auth-schema";
 import type { DbMode } from "../src/core/db/client";
+import { db } from "../src/core/db/client";
+import { organizationForSlug } from "../src/core/db/organizations";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
 	EvidenceReadConnection,
+	Organization,
 	RunLookupConnection,
+} from "../src/core/db/queries";
+import {
+	openRun,
+	saveCompanies,
+	saveRunCompanies,
 } from "../src/core/db/queries";
 import type {
 	Company,
@@ -17,7 +26,7 @@ import type {
 	Person,
 	Run,
 } from "../src/core/db/schema";
-import { company } from "../src/core/db/schema";
+import { company, runCompany, run as runTable } from "../src/core/db/schema";
 import type {
 	EnrichDeps,
 	EnrichSubject,
@@ -743,6 +752,81 @@ const EXPECTED_SUBJECTS = [
 	{ id: "person-2", domain: "acme.com" },
 ];
 
+type PeopleRunFixture = {
+	org: Organization;
+	companiesRunId: string;
+	peopleRunId: string;
+	run: Run;
+	saved: Company;
+};
+
+async function seedPeopleRunWithLinkedCompany(): Promise<PeopleRunFixture> {
+	const org = await organizationForSlug(
+		testEnv,
+		`enrich-people-run-${crypto.randomUUID()}.internal`,
+		"enrich-people-run",
+	);
+	const companiesRunId = `companies_icp-1-${crypto.randomUUID()}`;
+	const peopleRunId = `people_icp-1-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: companiesRunId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "companies",
+		status: "complete",
+	});
+	await openRun(testEnv, {
+		id: peopleRunId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "people",
+		status: "running",
+	});
+	const [saved] = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: org.id,
+			domain: `acme-${crypto.randomUUID()}.com`,
+			name: "Acme",
+			runId: companiesRunId,
+		},
+	]);
+	if (!saved) throw new Error("seed failed to save a company");
+	await saveRunCompanies(testEnv, [
+		{
+			runId: peopleRunId,
+			domain: saved.domain,
+			companyId: saved.id,
+			identity: "domain",
+			mode: "roster",
+			buyerSource: "none",
+		},
+	]);
+	return {
+		org,
+		companiesRunId,
+		peopleRunId,
+		run: runRow({ id: peopleRunId, capability: "people", icpId: null }),
+		saved,
+	};
+}
+
+async function cleanupPeopleRunFixture(
+	fixture: PeopleRunFixture,
+): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(runCompany)
+		.where(eq(runCompany.runId, fixture.peopleRunId));
+	await connection.delete(company).where(eq(company.id, fixture.saved.id));
+	await connection
+		.delete(runTable)
+		.where(inArray(runTable.id, [fixture.companiesRunId, fixture.peopleRunId]));
+	await connection
+		.delete(organization)
+		.where(eq(organization.id, fixture.org.id));
+}
+
 describe("subjectsForRun", () => {
 	it("resolves the people of a companies run's companies, reading through the direct binding", async () => {
 		const run = runRow({
@@ -751,6 +835,7 @@ describe("subjectsForRun", () => {
 		});
 		const companyRow: Company = {
 			id: "company-1",
+			organizationId: "org-1",
 			icpId: "icp-1",
 			domain: "acme.com",
 			name: "Acme",
@@ -778,34 +863,47 @@ describe("subjectsForRun", () => {
 	});
 
 	it("resolves the same people for a people run id, rather than an empty set", async () => {
-		const run = runRow({ id: "people_icp-1_2026-08-27", capability: "people" });
-		const icpId = run.icpId ?? "icp-1";
-		const companyRow: Company = {
-			id: "company-1",
-			icpId,
-			domain: "acme.com",
-			name: "Acme",
-			linkedinUrl: null,
-			industry: null,
-			data: null,
-			runId: "companies_icp-1_2026-08-26",
-			foundAt: new Date(),
-		};
+		const fixture = await seedPeopleRunWithLinkedCompany();
 		const existsRecorded: Recorded = {};
 		const peopleRecorded: Recorded = {};
 		const deps: SubjectsDeps = {
-			findRun: fakeFindRun(run),
-			companyExists: fakeCompanyExists([{ id: companyRow.id }], existsRecorded),
-			runPeople: fakeRunPeople(personCompanyRows(companyRow), peopleRecorded),
+			findRun: fakeFindRun(fixture.run),
+			companyExists: fakeCompanyExists(
+				[{ id: fixture.saved.id }],
+				existsRecorded,
+			),
+			runPeople: fakeRunPeople(
+				personCompanyRows(fixture.saved),
+				peopleRecorded,
+			),
 		};
 
-		const subjects = await subjectsForRun(testEnv, run.id, deps);
+		try {
+			const subjects = await subjectsForRun(testEnv, fixture.run.id, deps);
 
-		expect(subjects).toEqual(EXPECTED_SUBJECTS);
-		expect(existsRecorded.condition).toEqual(eq(company.icpId, icpId));
-		expect(peopleRecorded.condition).toEqual(eq(company.icpId, icpId));
+			expect(subjects).toEqual(
+				personCompanyRows(fixture.saved).map((row) => ({
+					id: row.person.id,
+					domain: row.company.domain,
+					...(row.person.name !== null ? { name: row.person.name } : {}),
+					...(row.person.linkedinUrl !== null
+						? { linkedinUrl: row.person.linkedinUrl }
+						: {}),
+				})),
+			);
+			expect(existsRecorded.condition).toEqual(
+				inArray(company.id, [fixture.saved.id]),
+			);
+			expect(peopleRecorded.condition).toEqual(
+				inArray(company.id, [fixture.saved.id]),
+			);
+		} finally {
+			await cleanupPeopleRunFixture(fixture);
+		}
 	});
+});
 
+describe("subjectsForRun: refusals", () => {
 	it("throws rather than returning an empty list when the run matches no company", async () => {
 		const run = runRow({
 			id: "companies_icp-2_2026-08-27",

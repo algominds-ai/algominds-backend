@@ -573,6 +573,7 @@ async function seedRunWithCompanies(
 		testEnv,
 		Array.from({ length: companyCount }, (_, i) => ({
 			icpId: icpRow.id,
+			organizationId: CALLER_ORGANIZATION_ID,
 			runId,
 			domain: `${label}-${i}.com`,
 			name: `${label} Co ${i}`,
