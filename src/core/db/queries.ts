@@ -333,6 +333,8 @@ export async function deletePerson(
 }
 
 export {
+	type BuyerBackfillResult,
+	backfillIcpBuyer,
 	createIcp,
 	loadIcp,
 	type NewIcpInput,

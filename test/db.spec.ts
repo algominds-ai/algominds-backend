@@ -5,7 +5,7 @@ import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import migration0002 from "../drizzle/0002_company_tenancy.sql?raw";
 import { organization } from "../src/core/db/auth-schema";
-import type { DbEnv, DbMode } from "../src/core/db/client";
+import type { Db, DbEnv, DbMode } from "../src/core/db/client";
 import { db } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {
@@ -29,6 +29,7 @@ import type {
 } from "../src/core/db/queries";
 import {
 	appendEvidence,
+	backfillIcpBuyer,
 	closeRun,
 	companiesForRun,
 	createCompanyRow,
@@ -76,7 +77,12 @@ import {
 	run,
 	runCompany,
 } from "../src/core/db/schema";
-import type { IcpSeller } from "../src/core/synthesize";
+import type { IcpBuyer, IcpSeller } from "../src/core/synthesize";
+import {
+	IcpBuyerSchema,
+	IcpDocSchema,
+	SENIOR_BANDS,
+} from "../src/core/synthesize";
 
 function fakeEnv(cached: string, direct: string): DbEnv {
 	return {
@@ -903,6 +909,148 @@ describe("createCompanyRow", () => {
 			await connection.delete(company).where(eq(company.id, existing.id));
 			await connection.delete(run).where(eq(run.id, runId));
 			await cleanupOrganizations([org.id]);
+		}
+	});
+});
+
+const BACKFILL_BUYER_A: IcpBuyer = IcpBuyerSchema.parse({
+	rubric: "Domain A buyer rubric text used only by the backfill test.",
+	bands: SENIOR_BANDS,
+	keywordBands: [{ band: "manager", keywords: ["HR", "recruiting"] }],
+});
+const BACKFILL_BUYER_B: IcpBuyer = IcpBuyerSchema.parse({
+	rubric: "Domain B buyer rubric text used only by the backfill test.",
+	bands: SENIOR_BANDS,
+	keywordBands: [],
+});
+
+async function seedBackfillProfile(
+	organizationId: string,
+	domain: string,
+	buyer: IcpBuyer | null = null,
+): Promise<Icp> {
+	return createIcp(testEnv, {
+		domain,
+		organizationId,
+		description: `seed profile for ${domain}`,
+		buyer,
+	});
+}
+
+async function icpDoc(
+	connection: Db,
+	icpId: string,
+): Promise<ReturnType<typeof IcpDocSchema.parse>> {
+	const [row] = await connection
+		.select()
+		.from(icpTable)
+		.where(eq(icpTable.id, icpId));
+	return IcpDocSchema.parse(row?.doc);
+}
+
+async function cleanupIcpRows(
+	connection: Db,
+	icpIds: readonly string[],
+	organizationId: string,
+): Promise<void> {
+	await connection.delete(icpTable).where(inArray(icpTable.id, [...icpIds]));
+	await cleanupOrganizations([organizationId]);
+}
+
+describe("backfillIcpBuyer", () => {
+	it("backfills each measured rubric once", async () => {
+		const org = await seedOrganization("backfill-buyer-once");
+		const domainA = `db-spec-backfill-buyer-a-${crypto.randomUUID()}.internal`;
+		const domainB = `db-spec-backfill-buyer-b-${crypto.randomUUID()}.internal`;
+		const icpA = await seedBackfillProfile(org.id, domainA);
+		const icpB = await seedBackfillProfile(org.id, domainB);
+		const connection = db(testEnv, "direct");
+
+		try {
+			const firstA = await backfillIcpBuyer(
+				connection,
+				domainA,
+				BACKFILL_BUYER_A,
+			);
+			const firstB = await backfillIcpBuyer(
+				connection,
+				domainB,
+				BACKFILL_BUYER_B,
+			);
+			expect(firstA).toEqual({ status: "updated" });
+			expect(firstB).toEqual({ status: "updated" });
+
+			expect((await icpDoc(connection, icpA.id)).buyer).toEqual(
+				BACKFILL_BUYER_A,
+			);
+			expect((await icpDoc(connection, icpB.id)).buyer).toEqual(
+				BACKFILL_BUYER_B,
+			);
+
+			const secondA = await backfillIcpBuyer(
+				connection,
+				domainA,
+				BACKFILL_BUYER_A,
+			);
+			const secondB = await backfillIcpBuyer(
+				connection,
+				domainB,
+				BACKFILL_BUYER_B,
+			);
+			expect(secondA).toEqual({ status: "already-set" });
+			expect(secondB).toEqual({ status: "already-set" });
+		} finally {
+			await cleanupIcpRows(connection, [icpA.id, icpB.id], org.id);
+		}
+	});
+
+	it("refuses an ambiguous profile match", async () => {
+		const org = await seedOrganization("backfill-buyer-ambiguous");
+		const domain = `db-spec-backfill-buyer-ambiguous-${crypto.randomUUID()}.internal`;
+		const missingDomain = `db-spec-backfill-buyer-missing-${crypto.randomUUID()}.internal`;
+		const icpOne = await seedBackfillProfile(org.id, domain);
+		const icpTwo = await seedBackfillProfile(org.id, domain);
+		const connection = db(testEnv, "direct");
+
+		try {
+			const zeroMatches = await backfillIcpBuyer(
+				connection,
+				missingDomain,
+				BACKFILL_BUYER_A,
+			);
+			const twoMatches = await backfillIcpBuyer(
+				connection,
+				domain,
+				BACKFILL_BUYER_A,
+			);
+			expect(zeroMatches).toEqual({ status: "ambiguous", count: 0 });
+			expect(twoMatches).toEqual({ status: "ambiguous", count: 2 });
+
+			expect((await icpDoc(connection, icpOne.id)).buyer).toBeNull();
+			expect((await icpDoc(connection, icpTwo.id)).buyer).toBeNull();
+		} finally {
+			await cleanupIcpRows(connection, [icpOne.id, icpTwo.id], org.id);
+		}
+	});
+
+	it("preserves an existing captured buyer", async () => {
+		const org = await seedOrganization("backfill-buyer-captured");
+		const domain = `db-spec-backfill-buyer-captured-${crypto.randomUUID()}.internal`;
+		const seeded = await seedBackfillProfile(org.id, domain, BACKFILL_BUYER_A);
+		const connection = db(testEnv, "direct");
+
+		try {
+			const result = await backfillIcpBuyer(
+				connection,
+				domain,
+				BACKFILL_BUYER_B,
+			);
+			expect(result).toEqual({ status: "already-set" });
+			expect((await icpDoc(connection, seeded.id)).buyer).toEqual(
+				BACKFILL_BUYER_A,
+			);
+		} finally {
+			await cleanupIcpRows(connection, [seeded.id], org.id);
 		}
 	});
 });

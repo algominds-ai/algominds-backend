@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import type { DbEnv } from "@/core/db/client";
+import type { Db, DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type {
 	DbFactory,
@@ -80,4 +80,38 @@ export async function createIcp(
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
 	return insertIcp(buildDb(env, "cached"), input);
+}
+
+export type BuyerBackfillResult =
+	| { status: "updated" }
+	| { status: "already-set" }
+	| { status: "ambiguous"; count: number };
+
+/**
+ * Adds a buyer block to the one profile whose domain matches, leaving an
+ * ambiguous match or an already-captured buyer untouched.
+ */
+export async function backfillIcpBuyer(
+	connection: Db,
+	domain: string,
+	buyer: IcpBuyer,
+): Promise<BuyerBackfillResult> {
+	const rows = await connection
+		.select()
+		.from(icp)
+		.where(eq(icp.domain, domain));
+	const row = rows[0];
+	if (rows.length !== 1 || !row) {
+		return { status: "ambiguous", count: rows.length };
+	}
+	const doc = IcpDocSchema.parse(row.doc);
+	if (doc.buyer != null) {
+		return { status: "already-set" };
+	}
+	const updatedDoc: IcpDoc = IcpDocSchema.parse({ ...doc, buyer });
+	await connection
+		.update(icp)
+		.set({ doc: updatedDoc })
+		.where(eq(icp.id, row.id));
+	return { status: "updated" };
 }
