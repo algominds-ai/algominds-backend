@@ -57,8 +57,9 @@ companies:
   seenDomainsWindowDays: 90
   # The source and the agent's effort are no longer set here. The synthesizer picks
   # both per round from the profile, because only it knows whether the profile asks
-  # for a recent event. Measured: "low" effort returns in about 5 seconds for $0.025.
-  # The vendor requires a beta request header for "max", which this client does not send.
+  # for a recent event. Its effort choice is limited to two values: "low", measured
+  # at about $0.025 and 5 seconds, and "medium", measured at about $0.10 and 2
+  # minutes. Higher levels exist on the vendor but are not offered to the model.
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
   # Polls allowed before a stuck exa-agent run is treated as failed. A run that

@@ -5,7 +5,7 @@ import { generateStructured, reasoningModel } from "@/core/model";
 export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
 /** `deep-lite` is absent on purpose: measured against `category: "company"` it returns pages with no company record, so every row falls at the filter. */
 export const SEARCH_TYPES = ["fast", "deep", "deep-reasoning"] as const;
-export const AGENT_EFFORTS = ["minimal", "low", "medium", "high"] as const;
+export const AGENT_EFFORTS = ["low", "medium"] as const;
 
 const DEEP_TYPES: ReadonlySet<string> = new Set(["deep", "deep-reasoning"]);
 
@@ -160,10 +160,11 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"companies were ones the same search without variations never found. Leave the list",
 	"empty on `fast`, where the vendor accepts the field and ignores it.",
 	"`agentEffort` is how long `exa-agent` may work, and applies to `exa-agent` only.",
-	"Choose `medium`. Measured on the same profile and the same count, `medium` returned",
-	"evidence with a median age of thirty two days against `low`'s fifty three, both fully",
-	"inside the window the profile asked for, at indistinguishable cost. Raise it above",
-	"`medium` only when an earlier round on this run came back short of the count.",
+	"Only two levels are allowed. Choose `low` for a broad, well-known population the",
+	"agent can name without digging for proof, measured at about $0.025 and five",
+	"seconds. Choose `medium` when the round's signal needs dated proof, a page",
+	"published inside the window `recency` and `recencyDays` name, measured at about",
+	"$0.10 and two minutes. Leave `agentEffort` null to get `medium`.",
 	"`eventWindowDays` is how far back the profile allows the event itself to have happened,",
 	"counted in days. `recencyDays` answers a different question: how old may the page",
 	"proving it be, and still show that this situation is live and worth acting on today?",

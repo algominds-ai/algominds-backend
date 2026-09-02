@@ -6,6 +6,7 @@ import { buildAgentRunRequest } from "../src/core/companies/agent-search";
 import { CostLedger } from "../src/core/cost";
 import { buildVerdictRunRequest } from "../src/core/providers/exa/agent";
 import type { SearchPlan } from "../src/core/synthesize";
+import { AGENT_EFFORTS } from "../src/core/synthesize";
 import { agentSearch } from "../src/workflows/find-companies-agent";
 
 const originalFetch = globalThis.fetch;
@@ -335,5 +336,21 @@ describe("the request schema Exa's agent actually accepts", () => {
 		);
 		expect(verdictSchema).not.toHaveProperty("$schema");
 		expect(JSON.stringify(verdictSchema)).not.toContain('"pattern"');
+	});
+});
+
+describe("the built request never asks the agent for effort above medium", () => {
+	it("carries only low or medium, the two values a plan can hold", () => {
+		expect(AGENT_EFFORTS).toEqual(["low", "medium"]);
+
+		for (const agentEffort of AGENT_EFFORTS) {
+			const request = buildAgentRunRequest(
+				planFor("US managed service providers", { agentEffort }),
+				5,
+				"2026-09-02",
+				null,
+			);
+			expect(request.effort).toBe(agentEffort);
+		}
 	});
 });

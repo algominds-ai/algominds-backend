@@ -412,20 +412,32 @@ describe("the agent is given the effort that keeps evidence freshest", () => {
 		return parsed.messages.map((message) => message.content).join("\n");
 	}
 
-	it("names medium as the default and no longer tells the model to choose low", async () => {
+	it("tells the model when to choose low and when to choose medium, with their measured cost and time", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
 		await runSynthesize();
 
 		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("Choose `low`");
 		expect(sent).toContain("Choose `medium`");
-		expect(sent).not.toContain("Choose `low`");
+		expect(sent).toContain("$0.025");
+		expect(sent).toContain("$0.10");
+		expect(sent).not.toContain("high");
 	});
 
 	it("fills medium when the model writes agentEffort as null", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(planReply({ agentEffort: null })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+
+	it("sends medium when the model writes agentEffort as medium", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: "medium" })),
 		]);
 		globalThis.fetch = gateway.fetch;
 
@@ -440,6 +452,20 @@ describe("the agent is given the effort that keeps evidence freshest", () => {
 		globalThis.fetch = gateway.fetch;
 
 		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+
+	it("falls back to the template plan when the model writes agentEffort as high, because the schema no longer allows it", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: "high" })),
+			chatCompletionResponse(planReply({ agentEffort: "high" })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await runSynthesize();
+
+		expect(gateway.calls).toHaveLength(2);
+		expect(result.plan.query).toBe(icp.description);
+		expect(result.plan.agentEffort).toBe("medium");
 	});
 });
 

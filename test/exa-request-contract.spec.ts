@@ -366,12 +366,12 @@ describe("the plan chooses the search type, and only a deep type reads its varia
 describe("the plan chooses how hard the agent works", () => {
 	it("sends the effort the plan picked, not a fixed setting", () => {
 		const request = buildAgentRunRequest(
-			samplePlan({ agentEffort: "high" }),
+			samplePlan({ agentEffort: "medium" }),
 			5,
 			"2026-08-30",
 			null,
 		);
 
-		expect(request.effort).toBe("high");
+		expect(request.effort).toBe("medium");
 	});
 });
