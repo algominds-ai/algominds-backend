@@ -8,27 +8,42 @@
 	"request": {
 		"query": "Does Jane Doe currently hold the title \"VP of Sales\" at Acme Inc (acme.com)?",
 		"outputSchema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
+			"properties": {
+				"verdict": {
+					"type": "string",
+					"enum": ["CONFIRMED", "CONTRADICTED", "UNKNOWN"]
+				},
+				"evidence_url": {
+					"anyOf": [{ "type": "string" }, { "type": "null" }]
+				},
+				"evidence_quote": {
+					"anyOf": [{ "type": "string" }, { "type": "null" }]
+				},
+				"evidence_kind": {
+					"anyOf": [
+						{
+							"type": "string",
+							"enum": ["first_party", "press", "aggregator", "linkedin"]
+						},
+						{ "type": "null" }
+					]
+				},
+				"confidence": {
+					"anyOf": [
+						{ "type": "number", "minimum": 0, "maximum": 1 },
+						{ "type": "null" }
+					]
+				}
+			},
 			"required": [
 				"verdict",
 				"evidence_url",
 				"evidence_quote",
 				"evidence_kind",
 				"confidence"
-			],
-			"properties": {
-				"verdict": {
-					"type": "string",
-					"enum": ["CONFIRMED", "CONTRADICTED", "UNKNOWN"]
-				},
-				"evidence_url": { "type": ["string", "null"] },
-				"evidence_quote": { "type": ["string", "null"] },
-				"evidence_kind": {
-					"type": ["string", "null"],
-					"enum": ["first_party", "press", "aggregator", "linkedin", null]
-				},
-				"confidence": { "type": ["number", "null"] }
-			}
+			]
 		},
 		"effort": "minimal"
 	},
