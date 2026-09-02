@@ -10,10 +10,12 @@ import { CostLedger } from "../src/core/cost";
 import {
 	ExaAgentCompanySchema,
 	getAgentRun,
+	getAgentVerdictRun,
 	startAgentRun,
 } from "../src/core/providers/exa/agent";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import type { SearchPlan } from "../src/core/synthesize";
+import emptyRun from "./fixtures/exa-agent-run-empty.json";
 import runningRun from "./fixtures/exa-agent-run-running.json";
 
 type FetchStub = { calls: number; init: RequestInit | undefined };
@@ -248,6 +250,66 @@ describe("agent run cost reporting", () => {
 		expect(byProvider.agentCompute).toBe(0.018);
 		expect(byProvider.search).toBe(0.007);
 		expect(ledger.total()).toBeCloseTo(0.025, 5);
+	});
+});
+
+describe("a completed agent run that reports no companies is an empty result, not a bad shape", () => {
+	it("parses companies: null into an empty array instead of throwing", async () => {
+		stubFetch(jsonResponse(200, emptyRun));
+		const ledger = new CostLedger();
+
+		const run = await getAgentRun(emptyRun.id, exaEnv(), ledger);
+
+		expect(run.status).toBe("completed");
+		if (run.status !== "completed") return;
+		expect(run.companies).toEqual([]);
+	});
+
+	it("still banks the run's cost when it found nothing", async () => {
+		stubFetch(jsonResponse(200, emptyRun));
+		const ledger = new CostLedger();
+
+		await getAgentRun(emptyRun.id, exaEnv(), ledger);
+
+		expect(ledger.total()).toBeCloseTo(0.012, 5);
+	});
+
+	it("still raises NonRetryableError when companies is the wrong shape entirely", async () => {
+		stubFetch(
+			jsonResponse(200, {
+				id: "run-bad-shape",
+				status: "completed",
+				output: { structured: { companies: "nope" } },
+				costDollars: { total: 0.01 },
+			}),
+		);
+
+		await expect(
+			getAgentRun("run-bad-shape", exaEnv(), new CostLedger()),
+		).rejects.toThrow(NonRetryableError);
+	});
+
+	it("still raises NonRetryableError for a verdict run whose verdict field is null, which has no empty form", async () => {
+		stubFetch(
+			jsonResponse(200, {
+				id: "run-verdict-null",
+				status: "completed",
+				output: {
+					structured: {
+						verdict: null,
+						evidence_url: null,
+						evidence_quote: null,
+						evidence_kind: null,
+						confidence: null,
+					},
+				},
+				costDollars: { total: 0.01 },
+			}),
+		);
+
+		await expect(
+			getAgentVerdictRun("run-verdict-null", exaEnv(), new CostLedger()),
+		).rejects.toThrow(NonRetryableError);
 	});
 });
 

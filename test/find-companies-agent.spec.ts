@@ -75,6 +75,23 @@ function stubAgentCompanyFetch(): { started: StartedRun[] } {
 	return { started };
 }
 
+function stubAgentCompanyFetchReportingNull(): void {
+	globalThis.fetch = async (input, init) => {
+		if (init?.method === "POST") {
+			return jsonResponse({ id: "run-null-companies", status: "running" });
+		}
+		const id = String(input).split("/").pop();
+		return jsonResponse({
+			id,
+			object: "agent_run",
+			status: "completed",
+			stopReason: "schema_satisfied",
+			output: { text: "no companies matched", structured: { companies: null } },
+			costDollars: { total: 0.012, agentCompute: 0.012 },
+		});
+	};
+}
+
 function fakeWorkflowStep(): WorkflowStep {
 	async function runNamed(
 		name: string,
@@ -201,6 +218,30 @@ describe("the company agent run asks for more candidates than the caller wants",
 
 		expect(started[0]?.query).toContain("headcount between 10 and 300");
 		expect(started[0]?.query).toContain("United States");
+	});
+});
+
+describe("a round whose agent finds nothing counts as an empty round, not a failure", () => {
+	it("resolves to zero results and banks the run's cost, instead of throwing", async () => {
+		stubAgentCompanyFetchReportingNull();
+		const ledger = new CostLedger();
+
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: 3,
+			today: "2026-08-30",
+			seller: null,
+		});
+		const result = await search(
+			planFor("payment platforms serving credit unions"),
+			{ query: "payment platforms serving credit unions" },
+			exaEnv(),
+			ledger,
+		);
+
+		expect(result.results).toEqual([]);
+		expect(ledger.total()).toBeCloseTo(0.012, 5);
 	});
 });
 

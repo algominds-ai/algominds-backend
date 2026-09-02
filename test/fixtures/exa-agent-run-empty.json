@@ -1,0 +1,81 @@
+{
+	"id": "agent_run_empty0000000000000000000",
+	"object": "agent_run",
+	"status": "completed",
+	"stopReason": "schema_satisfied",
+	"createdAt": "2026-08-28T01:11:16.746Z",
+	"completedAt": "2026-08-28T01:11:32.533Z",
+	"request": {
+		"query": "Founder-led B2B software company selling directly without a sales team. Return exactly 2 distinct companies.",
+		"systemPrompt": "Give a working website domain for every company. Never repeat a company.",
+		"outputSchema": {
+			"type": "object",
+			"required": ["companies"],
+			"properties": {
+				"companies": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["name", "website"],
+						"properties": {
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"country": {
+								"type": "string"
+							},
+							"website": {
+								"type": "string"
+							},
+							"description": {
+								"type": "string"
+							},
+							"foundedYear": {
+								"type": "number"
+							},
+							"fundingTotal": {
+								"type": "number"
+							},
+							"revenueAnnual": {
+								"type": "number"
+							},
+							"workforceTotal": {
+								"type": "number"
+							}
+						}
+					},
+					"minItems": 2
+				}
+			}
+		},
+		"effort": "low",
+		"dataSources": [
+			{
+				"provider": "fiber"
+			}
+		]
+	},
+	"output": {
+		"text": "No companies matched every constraint in the profile.",
+		"structured": {
+			"companies": null
+		},
+		"grounding": []
+	},
+	"usage": {
+		"agentComputeUnits": 0.05,
+		"searches": 2,
+		"emails": 0,
+		"phoneNumbers": 0
+	},
+	"costDollars": {
+		"total": 0.012,
+		"agentCompute": 0.008,
+		"search": 0.004,
+		"emails": 0,
+		"phoneNumbers": 0
+	}
+}
