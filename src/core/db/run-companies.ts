@@ -2,7 +2,7 @@ import type { SQL } from "drizzle-orm";
 import { and, eq, isNull } from "drizzle-orm";
 import { companyExaId } from "@/core/companies/candidates";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	InsertConnection,
@@ -88,19 +88,20 @@ export async function companiesForRun(
 ): Promise<CompanyOfRun[]> {
 	const condition = await companyScopeForRun(env, run);
 	if (condition === null) return [];
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select({
-			id: company.id,
-			domain: company.domain,
-			name: company.name,
-			data: company.data,
-			linkedinUrl: company.linkedinUrl,
-			icpId: company.icpId,
-		})
-		.from(company)
-		.where(condition)
-		.orderBy(company.foundAt, company.id);
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.select({
+				id: company.id,
+				domain: company.domain,
+				name: company.name,
+				data: company.data,
+				linkedinUrl: company.linkedinUrl,
+				icpId: company.icpId,
+			})
+			.from(company)
+			.where(condition)
+			.orderBy(company.foundAt, company.id),
+	);
 	return rows.map((row) => ({
 		id: row.id,
 		domain: row.domain,
@@ -134,26 +135,27 @@ export async function createCompanyRow(
 	row: NewCompany,
 	buildDb: DbFactory<CompanyCreateConnection> = db,
 ): Promise<Company> {
-	const connection = buildDb(env, "cached");
 	const normalized = { ...row, domain: normalizeDomain(row.domain) };
-	const inserted = await connection
-		.insert(company)
-		.values(normalized)
-		.onConflictDoNothing()
-		.returning();
-	const own = inserted[0];
-	if (own) return own;
-	const existing = await connection
-		.select()
-		.from(company)
-		.where(companyIdentityCondition(normalized));
-	const found = existing[0];
-	if (!found) {
-		throw new Error(
-			`createCompanyRow: no row found for ${normalized.domain} after a no-op insert`,
-		);
-	}
-	return found;
+	return withConnection(env, "cached", buildDb, async (connection) => {
+		const inserted = await connection
+			.insert(company)
+			.values(normalized)
+			.onConflictDoNothing()
+			.returning();
+		const own = inserted[0];
+		if (own) return own;
+		const existing = await connection
+			.select()
+			.from(company)
+			.where(companyIdentityCondition(normalized));
+		const found = existing[0];
+		if (!found) {
+			throw new Error(
+				`createCompanyRow: no row found for ${normalized.domain} after a no-op insert`,
+			);
+		}
+		return found;
+	});
 }
 
 /** Inserts one row per requested domain of a people run, skipping a domain the run already recorded. */
@@ -165,12 +167,13 @@ export async function saveRunCompanies(
 	if (rows.length === 0) {
 		return [];
 	}
-	const connection = buildDb(env, "cached");
-	return connection
-		.insert(runCompany)
-		.values(rows)
-		.onConflictDoNothing({ target: [runCompany.runId, runCompany.domain] })
-		.returning();
+	return withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.insert(runCompany)
+			.values(rows)
+			.onConflictDoNothing({ target: [runCompany.runId, runCompany.domain] })
+			.returning(),
+	);
 }
 
 /** Records the outcome of one requested domain: its identity, buyer mode, and spend so far. */
@@ -180,6 +183,7 @@ export async function updateRunCompany(
 	patch: RunCompanyPatch,
 	buildDb: DbFactory<RunCompanyUpdateConnection> = db,
 ): Promise<void> {
-	const connection = buildDb(env, "cached");
-	await connection.update(runCompany).set(patch).where(eq(runCompany.id, id));
+	await withConnection(env, "cached", buildDb, (connection) =>
+		connection.update(runCompany).set(patch).where(eq(runCompany.id, id)),
+	);
 }

@@ -157,9 +157,10 @@ describe("model: the request body the SDK sends", () => {
 
 		const body = capturedBody(gateway.calls[0]);
 		expect(body.response_format.type).toBe("json_schema");
-		expect(
-			body.response_format.json_schema?.schema.properties.widgetName,
-		).toBeDefined();
+		expect(body.response_format.json_schema?.schema.properties).toEqual({
+			widgetName: { type: "string" },
+			count: { type: "number" },
+		});
 	});
 
 	it("carries the OpenRouter routing flag that makes a provider honour the schema", async () => {

@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
@@ -128,11 +128,9 @@ async function companiesExistFor(
 	condition: SQL | undefined,
 	buildDb: DbFactory<RunCompanyExistsConnection> = db,
 ): Promise<boolean> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select({ id: company.id })
-		.from(company)
-		.where(condition);
+	const rows = await withConnection(env, "direct", buildDb, (connection) =>
+		connection.select({ id: company.id }).from(company).where(condition),
+	);
 	return rows.length > 0;
 }
 
@@ -141,12 +139,13 @@ async function runPeopleFor(
 	condition: SQL | undefined,
 	buildDb: DbFactory<RunPeopleConnection> = db,
 ): Promise<PersonCompanyRow[]> {
-	const connection = buildDb(env, "direct");
-	return connection
-		.select()
-		.from(person)
-		.innerJoin(company, eq(person.companyId, company.id))
-		.where(condition);
+	return withConnection(env, "direct", buildDb, (connection) =>
+		connection
+			.select()
+			.from(person)
+			.innerJoin(company, eq(person.companyId, company.id))
+			.where(condition),
+	);
 }
 
 /**

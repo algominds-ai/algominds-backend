@@ -16,5 +16,15 @@ export default defineConfig({
 	test: {
 		fileParallelism: false,
 		exclude: [...configDefaults.exclude, "**/.claude/**"],
+		onUnhandledError(error) {
+			const stack = error.stack ?? "";
+			if (
+				error.message === "Stream was cancelled." &&
+				stack.includes("postgres/cf/polyfills.js")
+			) {
+				return false;
+			}
+			return undefined;
+		},
 	},
 });

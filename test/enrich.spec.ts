@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { toBatches } from "../src/core/batches";
 import { organization } from "../src/core/db/auth-schema";
 import type { DbMode } from "../src/core/db/client";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {
 	DbFactory,
@@ -814,17 +814,20 @@ async function seedPeopleRunWithLinkedCompany(): Promise<PeopleRunFixture> {
 async function cleanupPeopleRunFixture(
 	fixture: PeopleRunFixture,
 ): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection
-		.delete(runCompany)
-		.where(eq(runCompany.runId, fixture.peopleRunId));
-	await connection.delete(company).where(eq(company.id, fixture.saved.id));
-	await connection
-		.delete(runTable)
-		.where(inArray(runTable.id, [fixture.companiesRunId, fixture.peopleRunId]));
-	await connection
-		.delete(organization)
-		.where(eq(organization.id, fixture.org.id));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(runCompany)
+			.where(eq(runCompany.runId, fixture.peopleRunId));
+		await connection.delete(company).where(eq(company.id, fixture.saved.id));
+		await connection
+			.delete(runTable)
+			.where(
+				inArray(runTable.id, [fixture.companiesRunId, fixture.peopleRunId]),
+			);
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, fixture.org.id));
+	});
 }
 
 describe("subjectsForRun", () => {

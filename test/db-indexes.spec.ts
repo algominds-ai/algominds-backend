@@ -1,14 +1,15 @@
 import { env as testEnv } from "cloudflare:workers";
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 
 async function queryPlan(statement: ReturnType<typeof sql>): Promise<string> {
-	const connection = db(testEnv, "direct");
-	const plan = await connection.transaction(async (tx) => {
-		await tx.execute(sql`set local enable_seqscan = off`);
-		return tx.execute(sql`explain ${statement}`);
-	});
+	const plan = await withConnection(testEnv, "direct", db, (connection) =>
+		connection.transaction(async (tx) => {
+			await tx.execute(sql`set local enable_seqscan = off`);
+			return tx.execute(sql`explain ${statement}`);
+		}),
+	);
 	return plan.map((row) => String(row["QUERY PLAN"])).join("\n");
 }
 

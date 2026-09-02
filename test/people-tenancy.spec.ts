@@ -3,11 +3,12 @@ import { env as testEnv } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { organization } from "../src/core/db/auth-schema";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { companiesForDomains } from "../src/core/db/company-domains";
 import { organizationForSlug } from "../src/core/db/organizations";
 import {
 	createIcp,
+	findRun,
 	openRun,
 	saveCompanies,
 	upsertPeople,
@@ -65,13 +66,14 @@ async function seedOrgWithCompany(
 }
 
 async function cleanupOrg(seed: SeededOrg): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection.delete(company).where(eq(company.runId, seed.runId));
-	await connection.delete(run).where(eq(run.id, seed.runId));
-	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
-	await connection
-		.delete(organization)
-		.where(eq(organization.id, seed.organizationId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(company).where(eq(company.runId, seed.runId));
+		await connection.delete(run).where(eq(run.id, seed.runId));
+		await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, seed.organizationId));
+	});
 }
 
 describe("companiesForDomains: tenancy", () => {
@@ -149,17 +151,19 @@ describe("upsertPeople: tenancy", () => {
 			expect(savedB).toHaveLength(1);
 			expect(savedAAgain).toHaveLength(1);
 
-			const stored = await db(testEnv, "direct")
-				.select()
-				.from(person)
-				.where(eq(person.linkedinUrl, linkedinUrl));
+			const stored = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(person)
+					.where(eq(person.linkedinUrl, linkedinUrl)),
+			);
 			expect(stored.map((row) => row.organizationId).sort()).toEqual(
 				[orgA.organizationId, orgB.organizationId].sort(),
 			);
 		} finally {
-			await db(testEnv, "direct")
-				.delete(person)
-				.where(eq(person.linkedinUrl, linkedinUrl));
+			await withConnection(testEnv, "direct", db, (connection) =>
+				connection.delete(person).where(eq(person.linkedinUrl, linkedinUrl)),
+			);
 			await cleanupOrg(orgA);
 			await cleanupOrg(orgB);
 		}
@@ -232,6 +236,31 @@ describe("FindPeopleWorkflow: an icp from another organization", () => {
 				},
 			});
 			await instance.waitForStatus("errored");
+
+			expect(await findRun(testEnv, MISMATCH_SCOPE)).toBeUndefined();
+
+			const writtenCompanies = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(company)
+						.where(eq(company.organizationId, attackerOrganizationId)),
+			);
+			const writtenPeople = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(person)
+						.where(eq(person.organizationId, attackerOrganizationId)),
+			);
+			expect(writtenCompanies).toHaveLength(0);
+			expect(writtenPeople).toHaveLength(0);
 		} finally {
 			await instance.dispose();
 			await cleanupOrg(victim);

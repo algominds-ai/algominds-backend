@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, inArray } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type { DbFactory } from "@/core/db/queries";
 import type { Company } from "@/core/db/schema";
 import { company } from "@/core/db/schema";
@@ -40,15 +40,16 @@ export async function companiesForDomains(
 	if (domains.length === 0) {
 		return [];
 	}
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select()
-		.from(company)
-		.where(
-			and(
-				inArray(company.domain, [...domains]),
-				eq(company.organizationId, organizationId),
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.select()
+			.from(company)
+			.where(
+				and(
+					inArray(company.domain, [...domains]),
+					eq(company.organizationId, organizationId),
+				),
 			),
-		);
+	);
 	return rows.map((row) => toCompanyDomainMatch(row));
 }

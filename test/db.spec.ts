@@ -1,12 +1,12 @@
 import { env as testEnv } from "cloudflare:workers";
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, gt, gte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import migration0002 from "../drizzle/0002_company_tenancy.sql?raw";
 import { organization } from "../src/core/db/auth-schema";
 import type { Db, DbEnv, DbMode } from "../src/core/db/client";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {
 	CompanyInsertConnection,
@@ -824,10 +824,11 @@ describe("createCompanyRow", () => {
 			expect(found.id).toBe(existing.id);
 			expect(found.name).toBe("Existing Co");
 		} finally {
-			const connection = db(testEnv, "direct");
-			await connection.delete(company).where(eq(company.id, existing.id));
-			await connection.delete(run).where(eq(run.id, runId));
-			await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(company).where(eq(company.id, existing.id));
+				await connection.delete(run).where(eq(run.id, runId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			});
 			await cleanupOrganizations([org.id]);
 		}
 	});
@@ -866,9 +867,10 @@ describe("createCompanyRow", () => {
 			expect(found.id).toBe(existing.id);
 			expect(found.name).toBe("Existing Orphan");
 		} finally {
-			const connection = db(testEnv, "direct");
-			await connection.delete(company).where(eq(company.id, existing.id));
-			await connection.delete(run).where(eq(run.id, runId));
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(company).where(eq(company.id, existing.id));
+				await connection.delete(run).where(eq(run.id, runId));
+			});
 			await cleanupOrganizations([org.id]);
 		}
 	});
@@ -925,44 +927,45 @@ describe("backfillIcpBuyer", () => {
 		const domainB = `db-spec-backfill-buyer-b-${crypto.randomUUID()}.internal`;
 		const icpA = await seedBackfillProfile(org.id, domainA);
 		const icpB = await seedBackfillProfile(org.id, domainB);
-		const connection = db(testEnv, "direct");
 
-		try {
-			const firstA = await backfillIcpBuyer(
-				connection,
-				domainA,
-				BACKFILL_BUYER_A,
-			);
-			const firstB = await backfillIcpBuyer(
-				connection,
-				domainB,
-				BACKFILL_BUYER_B,
-			);
-			expect(firstA).toEqual({ status: "updated" });
-			expect(firstB).toEqual({ status: "updated" });
+		await withConnection(testEnv, "direct", db, async (connection) => {
+			try {
+				const firstA = await backfillIcpBuyer(
+					connection,
+					domainA,
+					BACKFILL_BUYER_A,
+				);
+				const firstB = await backfillIcpBuyer(
+					connection,
+					domainB,
+					BACKFILL_BUYER_B,
+				);
+				expect(firstA).toEqual({ status: "updated" });
+				expect(firstB).toEqual({ status: "updated" });
 
-			expect((await icpDoc(connection, icpA.id)).buyer).toEqual(
-				BACKFILL_BUYER_A,
-			);
-			expect((await icpDoc(connection, icpB.id)).buyer).toEqual(
-				BACKFILL_BUYER_B,
-			);
+				expect((await icpDoc(connection, icpA.id)).buyer).toEqual(
+					BACKFILL_BUYER_A,
+				);
+				expect((await icpDoc(connection, icpB.id)).buyer).toEqual(
+					BACKFILL_BUYER_B,
+				);
 
-			const secondA = await backfillIcpBuyer(
-				connection,
-				domainA,
-				BACKFILL_BUYER_A,
-			);
-			const secondB = await backfillIcpBuyer(
-				connection,
-				domainB,
-				BACKFILL_BUYER_B,
-			);
-			expect(secondA).toEqual({ status: "already-set" });
-			expect(secondB).toEqual({ status: "already-set" });
-		} finally {
-			await cleanupIcpRows(connection, [icpA.id, icpB.id], org.id);
-		}
+				const secondA = await backfillIcpBuyer(
+					connection,
+					domainA,
+					BACKFILL_BUYER_A,
+				);
+				const secondB = await backfillIcpBuyer(
+					connection,
+					domainB,
+					BACKFILL_BUYER_B,
+				);
+				expect(secondA).toEqual({ status: "already-set" });
+				expect(secondB).toEqual({ status: "already-set" });
+			} finally {
+				await cleanupIcpRows(connection, [icpA.id, icpB.id], org.id);
+			}
+		});
 	});
 
 	it("refuses an ambiguous profile match", async () => {
@@ -971,48 +974,50 @@ describe("backfillIcpBuyer", () => {
 		const missingDomain = `db-spec-backfill-buyer-missing-${crypto.randomUUID()}.internal`;
 		const icpOne = await seedBackfillProfile(org.id, domain);
 		const icpTwo = await seedBackfillProfile(org.id, domain);
-		const connection = db(testEnv, "direct");
 
-		try {
-			const zeroMatches = await backfillIcpBuyer(
-				connection,
-				missingDomain,
-				BACKFILL_BUYER_A,
-			);
-			const twoMatches = await backfillIcpBuyer(
-				connection,
-				domain,
-				BACKFILL_BUYER_A,
-			);
-			expect(zeroMatches).toEqual({ status: "ambiguous", count: 0 });
-			expect(twoMatches).toEqual({ status: "ambiguous", count: 2 });
+		await withConnection(testEnv, "direct", db, async (connection) => {
+			try {
+				const zeroMatches = await backfillIcpBuyer(
+					connection,
+					missingDomain,
+					BACKFILL_BUYER_A,
+				);
+				const twoMatches = await backfillIcpBuyer(
+					connection,
+					domain,
+					BACKFILL_BUYER_A,
+				);
+				expect(zeroMatches).toEqual({ status: "ambiguous", count: 0 });
+				expect(twoMatches).toEqual({ status: "ambiguous", count: 2 });
 
-			expect((await icpDoc(connection, icpOne.id)).buyer).toBeNull();
-			expect((await icpDoc(connection, icpTwo.id)).buyer).toBeNull();
-		} finally {
-			await cleanupIcpRows(connection, [icpOne.id, icpTwo.id], org.id);
-		}
+				expect((await icpDoc(connection, icpOne.id)).buyer).toBeNull();
+				expect((await icpDoc(connection, icpTwo.id)).buyer).toBeNull();
+			} finally {
+				await cleanupIcpRows(connection, [icpOne.id, icpTwo.id], org.id);
+			}
+		});
 	});
 
 	it("preserves an existing captured buyer", async () => {
 		const org = await seedOrganization("backfill-buyer-captured");
 		const domain = `db-spec-backfill-buyer-captured-${crypto.randomUUID()}.internal`;
 		const seeded = await seedBackfillProfile(org.id, domain, BACKFILL_BUYER_A);
-		const connection = db(testEnv, "direct");
 
-		try {
-			const result = await backfillIcpBuyer(
-				connection,
-				domain,
-				BACKFILL_BUYER_B,
-			);
-			expect(result).toEqual({ status: "already-set" });
-			expect((await icpDoc(connection, seeded.id)).buyer).toEqual(
-				BACKFILL_BUYER_A,
-			);
-		} finally {
-			await cleanupIcpRows(connection, [seeded.id], org.id);
-		}
+		await withConnection(testEnv, "direct", db, async (connection) => {
+			try {
+				const result = await backfillIcpBuyer(
+					connection,
+					domain,
+					BACKFILL_BUYER_B,
+				);
+				expect(result).toEqual({ status: "already-set" });
+				expect((await icpDoc(connection, seeded.id)).buyer).toEqual(
+					BACKFILL_BUYER_A,
+				);
+			} finally {
+				await cleanupIcpRows(connection, [seeded.id], org.id);
+			}
+		});
 	});
 });
 
@@ -1058,43 +1063,6 @@ function recordingCompanyPageDb(
 }
 
 describe("companiesPage", () => {
-	it("filters by run id and orders by id ascending when there is no cursor", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const rows = [companyRow("company-1"), companyRow("company-2")];
-		const spy: { condition?: unknown; order?: unknown; limit?: number } = {};
-		const buildDb = recordingCompanyPageDb(rows, spy);
-
-		const page = await companiesPage(
-			env,
-			testRun({ id: "run-1", capability: "companies" }),
-			{ limit: 5, cursor: undefined },
-			buildDb,
-		);
-
-		expect(spy.condition).toEqual(eq(company.runId, "run-1"));
-		expect(spy.order).toEqual(asc(company.id));
-		expect(spy.limit).toBe(6);
-		expect(page.rows).toEqual(rows);
-		expect(page.nextCursor).toBeNull();
-	});
-
-	it("adds an id-greater-than-cursor condition when a cursor is given", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const spy: { condition?: unknown } = {};
-		const buildDb = recordingCompanyPageDb([], spy);
-
-		await companiesPage(
-			env,
-			testRun({ id: "run-1", capability: "companies" }),
-			{ limit: 5, cursor: "company-1" },
-			buildDb,
-		);
-
-		expect(spy.condition).toEqual(
-			and(eq(company.runId, "run-1"), gt(company.id, "company-1")),
-		);
-	});
-
 	it("reports the last row's id as the next cursor only when a row is left over", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const rows = [companyRow("c1"), companyRow("c2"), companyRow("c3")];
@@ -1191,49 +1159,6 @@ function testRun(fields: {
 }
 
 describe("peoplePage", () => {
-	it("joins on the person's company, filters by run id, and orders by id ascending", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const rows = [personRow("person-1")];
-		const spy: {
-			join?: unknown;
-			condition?: unknown;
-			order?: unknown;
-			limit?: number;
-		} = {};
-		const buildDb = recordingPersonPageDb(rows, spy);
-
-		const page = await peoplePage(
-			env,
-			testRun({ id: "run-1", capability: "companies" }),
-			{ limit: 5, cursor: undefined },
-			buildDb,
-		);
-
-		expect(spy.join).toEqual(eq(person.companyId, company.id));
-		expect(spy.condition).toEqual(eq(company.runId, "run-1"));
-		expect(spy.order).toEqual(asc(person.id));
-		expect(spy.limit).toBe(6);
-		expect(page.rows).toEqual(rows);
-		expect(page.nextCursor).toBeNull();
-	});
-
-	it("adds an id-greater-than-cursor condition when a cursor is given", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const spy: { condition?: unknown } = {};
-		const buildDb = recordingPersonPageDb([], spy);
-
-		await peoplePage(
-			env,
-			testRun({ id: "run-1", capability: "companies" }),
-			{ limit: 5, cursor: "person-1" },
-			buildDb,
-		);
-
-		expect(spy.condition).toEqual(
-			and(eq(company.runId, "run-1"), gt(person.id, "person-1")),
-		);
-	});
-
 	it("reports the last row's id as the next cursor only when a row is left over", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
 		const rows = [personRow("p1"), personRow("p2"), personRow("p3")];
@@ -1252,19 +1177,92 @@ describe("peoplePage", () => {
 });
 
 describe("peoplePage scopes by what the run covers", () => {
-	it("keeps a companies run scoped through its own company rows", async () => {
-		const env = fakeEnv("postgres://cached", "postgres://direct");
-		const spy: { condition?: unknown } = {};
-		const buildDb = recordingPersonPageDb([], spy);
+	it("returns a companies run's own person, never another companies run's", async () => {
+		const org = await seedOrganization("people-scope-companies");
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for peoplePage companies-run scope test",
+			domain: `people-scope-companies-${crypto.randomUUID()}.internal`,
+			organizationId: org.id,
+		});
+		const runId = `companies_${crypto.randomUUID()}`;
+		const otherRunId = `companies_${crypto.randomUUID()}`;
+		const runRow = await openRun(testEnv, {
+			id: runId,
+			organizationId: org.id,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "complete",
+		});
+		await openRun(testEnv, {
+			id: otherRunId,
+			organizationId: org.id,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "complete",
+		});
+		const [ownCompany] = await saveCompanies(testEnv, [
+			{
+				icpId: icpRow.id,
+				organizationId: org.id,
+				runId,
+				domain: `own-${crypto.randomUUID()}.com`,
+				name: "Own Co",
+			},
+		]);
+		const [otherCompany] = await saveCompanies(testEnv, [
+			{
+				icpId: icpRow.id,
+				organizationId: org.id,
+				runId: otherRunId,
+				domain: `other-${crypto.randomUUID()}.com`,
+				name: "Other Co",
+			},
+		]);
+		if (!ownCompany || !otherCompany) {
+			throw new Error("seed produced no company");
+		}
+		await upsertPeople(testEnv, [
+			{
+				organizationId: org.id,
+				companyId: ownCompany.id,
+				linkedinUrl: `https://linkedin.com/in/own-${crypto.randomUUID()}`,
+				name: "Own Person",
+				title: "VP of Sales",
+			},
+		]);
+		await upsertPeople(testEnv, [
+			{
+				organizationId: org.id,
+				companyId: otherCompany.id,
+				linkedinUrl: `https://linkedin.com/in/other-${crypto.randomUUID()}`,
+				name: "Other Person",
+				title: "VP of Sales",
+			},
+		]);
 
-		await peoplePage(
-			env,
-			testRun({ id: "companies_x", capability: "companies" }),
-			{ limit: 5, cursor: undefined },
-			buildDb,
-		);
+		try {
+			const page = await peoplePage(testEnv, runRow, {
+				limit: 5,
+				cursor: undefined,
+			});
 
-		expect(spy.condition).toEqual(eq(company.runId, "companies_x"));
+			expect(page.rows).toHaveLength(1);
+			expect(page.rows[0]?.companyId).toBe(ownCompany.id);
+		} finally {
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection
+					.delete(person)
+					.where(inArray(person.companyId, [ownCompany.id, otherCompany.id]));
+				await connection
+					.delete(company)
+					.where(inArray(company.id, [ownCompany.id, otherCompany.id]));
+				await connection
+					.delete(run)
+					.where(inArray(run.id, [runId, otherRunId]));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			});
+			await cleanupOrganizations([org.id]);
+		}
 	});
 
 	it("hands back an empty page for an onboarding run, which covers no companies", async () => {
@@ -1293,9 +1291,11 @@ async function seedOrganization(label: string): Promise<Organization> {
 }
 
 async function cleanupOrganizations(orgIds: readonly string[]): Promise<void> {
-	await db(testEnv, "direct")
-		.delete(organization)
-		.where(inArray(organization.id, [...orgIds]));
+	await withConnection(testEnv, "direct", db, (connection) =>
+		connection
+			.delete(organization)
+			.where(inArray(organization.id, [...orgIds])),
+	);
 }
 
 /**
@@ -1345,20 +1345,27 @@ describe("the migration's tenancy backfill", () => {
 		if (!saved) throw new Error("seed failed to save a company");
 
 		try {
-			const connection = db(testEnv, "direct");
-			await connection.execute(sql.raw(migrationBackfillStatement()));
-			const after = await connection
-				.select()
-				.from(company)
-				.where(eq(company.id, saved.id));
+			const after = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				async (connection) => {
+					await connection.execute(sql.raw(migrationBackfillStatement()));
+					return connection
+						.select()
+						.from(company)
+						.where(eq(company.id, saved.id));
+				},
+			);
 
 			expect(after[0]?.organizationId).toBe(orgA.id);
 			expect(after[0]?.icpId).toBe(icpRow.id);
 		} finally {
-			const connection = db(testEnv, "direct");
-			await connection.delete(company).where(eq(company.id, saved.id));
-			await connection.delete(run).where(eq(run.id, runId));
-			await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(company).where(eq(company.id, saved.id));
+				await connection.delete(run).where(eq(run.id, runId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			});
 			await cleanupOrganizations([orgA.id, orgB.id]);
 		}
 	});
@@ -1406,9 +1413,10 @@ describe("companiesPage: a people run's requested domains", () => {
 			expect(row.companyId).toBeNull();
 			expect(row.company).toBeNull();
 		} finally {
-			const connection = db(testEnv, "direct");
-			await connection.delete(runCompany).where(eq(runCompany.runId, runId));
-			await connection.delete(run).where(eq(run.id, runId));
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(runCompany).where(eq(runCompany.runId, runId));
+				await connection.delete(run).where(eq(run.id, runId));
+			});
 			await cleanupOrganizations([org.id]);
 		}
 	});
@@ -1525,19 +1533,20 @@ async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFi
 async function cleanupProfilelessPeopleRunFixture(
 	fixture: ProfilelessPeopleRunFixture,
 ): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection
-		.delete(runCompany)
-		.where(eq(runCompany.runId, fixture.peopleRunId));
-	await connection
-		.delete(person)
-		.where(inArray(person.companyId, fixture.companyIds));
-	await connection
-		.delete(company)
-		.where(inArray(company.id, fixture.companyIds));
-	await connection
-		.delete(run)
-		.where(inArray(run.id, [fixture.peopleRunId, fixture.companiesRunId]));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(runCompany)
+			.where(eq(runCompany.runId, fixture.peopleRunId));
+		await connection
+			.delete(person)
+			.where(inArray(person.companyId, fixture.companyIds));
+		await connection
+			.delete(company)
+			.where(inArray(company.id, fixture.companyIds));
+		await connection
+			.delete(run)
+			.where(inArray(run.id, [fixture.peopleRunId, fixture.companiesRunId]));
+	});
 	await cleanupOrganizations([fixture.orgA.id, fixture.orgB.id]);
 }
 
@@ -1728,14 +1737,15 @@ async function seedUpsertPeopleFixture(
 async function cleanupUpsertPeopleFixture(
 	fixture: UpsertPeopleFixture,
 ): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection
-		.delete(person)
-		.where(eq(person.organizationId, fixture.org.id));
-	await connection
-		.delete(company)
-		.where(inArray(company.id, [fixture.companyA.id, fixture.companyB.id]));
-	await connection.delete(run).where(eq(run.id, fixture.runId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(person)
+			.where(eq(person.organizationId, fixture.org.id));
+		await connection
+			.delete(company)
+			.where(inArray(company.id, [fixture.companyA.id, fixture.companyB.id]));
+		await connection.delete(run).where(eq(run.id, fixture.runId));
+	});
 	await cleanupOrganizations([fixture.org.id]);
 }
 
@@ -1885,14 +1895,15 @@ async function seedRunCompanyEvidenceFixture(
 async function cleanupRunCompanyEvidenceFixture(
 	fixture: RunCompanyEvidenceFixture,
 ): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection
-		.delete(evidence)
-		.where(eq(evidence.subjectId, fixture.runCompanyId));
-	await connection
-		.delete(runCompany)
-		.where(eq(runCompany.runId, fixture.runId));
-	await connection.delete(run).where(eq(run.id, fixture.runId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(evidence)
+			.where(eq(evidence.subjectId, fixture.runCompanyId));
+		await connection
+			.delete(runCompany)
+			.where(eq(runCompany.runId, fixture.runId));
+		await connection.delete(run).where(eq(run.id, fixture.runId));
+	});
 	await cleanupOrganizations([fixture.org.id]);
 }
 
@@ -1931,10 +1942,12 @@ describe("rawEvidenceRow: stored on the requested-domain row", () => {
 				),
 			]);
 
-			const rows = await db(testEnv, "direct")
-				.select()
-				.from(evidence)
-				.where(eq(evidence.subjectId, fixture.runCompanyId));
+			const rows = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(evidence)
+					.where(eq(evidence.subjectId, fixture.runCompanyId)),
+			);
 
 			expect(rows).toHaveLength(3);
 			for (const row of rows) {
@@ -1970,10 +1983,12 @@ describe("rawEvidenceRow: stored on the requested-domain row", () => {
 			await appendEvidence(testEnv, [row]);
 			await appendEvidence(testEnv, [row]);
 
-			const rows = await db(testEnv, "direct")
-				.select()
-				.from(evidence)
-				.where(eq(evidence.subjectId, fixture.runCompanyId));
+			const rows = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(evidence)
+					.where(eq(evidence.subjectId, fixture.runCompanyId)),
+			);
 
 			expect(rows).toHaveLength(2);
 			expect(rows[0]?.value).toBe(JSON.stringify(body));

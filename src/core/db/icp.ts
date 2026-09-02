@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { Db, DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	IcpConnection,
@@ -16,12 +16,9 @@ export async function loadIcp(
 	icpId: string,
 	buildDb: DbFactory<IcpConnection> = db,
 ): Promise<Icp | undefined> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select()
-		.from(icp)
-		.where(eq(icp.id, icpId))
-		.limit(1);
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection.select().from(icp).where(eq(icp.id, icpId)).limit(1),
+	);
 	return rows[0];
 }
 
@@ -58,19 +55,24 @@ export async function saveOnboardedIcp(
 	env: DbEnv,
 	input: NewIcpInput & { runId: string; costDollars: number },
 ): Promise<string> {
-	return db(env, "cached").transaction(async (tx) => {
-		const row = await insertIcp(tx, input);
-		await tx
-			.update(run)
-			.set({
-				status: "complete",
-				costDollars: input.costDollars,
-				icpId: row.id,
-				finishedAt: new Date(),
-			})
-			.where(eq(run.id, input.runId));
-		return row.id;
-	});
+	const connection = db(env, "cached");
+	try {
+		return await connection.transaction(async (tx) => {
+			const row = await insertIcp(tx, input);
+			await tx
+				.update(run)
+				.set({
+					status: "complete",
+					costDollars: input.costDollars,
+					icpId: row.id,
+					finishedAt: new Date(),
+				})
+				.where(eq(run.id, input.runId));
+			return row.id;
+		});
+	} finally {
+		await connection.$client.end();
+	}
 }
 
 /** Stores the whole ideal customer profile document, description and seller block alike. */
@@ -79,7 +81,9 @@ export async function createIcp(
 	input: NewIcpInput,
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
-	return insertIcp(buildDb(env, "cached"), input);
+	return withConnection(env, "cached", buildDb, (connection) =>
+		insertIcp(connection, input),
+	);
 }
 
 export type BuyerBackfillResult =

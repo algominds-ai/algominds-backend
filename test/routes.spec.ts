@@ -7,7 +7,7 @@ import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
 import { organization } from "../src/core/db/auth-schema";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import {
 	createIcp,
 	openRun,
@@ -31,18 +31,13 @@ import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 const BASE = "https://algo.test";
 const authedEnv: Env = testEnv;
 
-const ICP_A = "11111111-1111-4111-8111-111111111111";
-const FIXTURE_ICP_IDS: readonly string[] = [
-	ICP_A,
-	"55555555-5555-4555-8555-555555555555",
-	"66666666-6666-4666-8666-666666666666",
-	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-];
-const FIXTURE_RUN_IDS: readonly string[] = [
-	"companies_88888888-8888-4888-8888-888888888888_2026-08-27",
-	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
-	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
-];
+let ICP_A = "";
+let ICP_B = "";
+let ICP_C = "";
+let ICP_D = "";
+let RUN_COMPANIES_FIXTURE = "";
+let RUN_PEOPLE_FIXTURE_A = "";
+let RUN_PEOPLE_FIXTURE_B = "";
 
 let TOKEN = "";
 let CALLER_ORGANIZATION_ID = "";
@@ -82,18 +77,20 @@ async function issueKey(
  * reference stable ids while still passing the real ownership check.
  */
 async function seedIcpFixture(id: string): Promise<void> {
-	await db(testEnv, "cached")
-		.insert(icpTable)
-		.values({
-			id,
-			organizationId: CALLER_ORGANIZATION_ID,
-			domain: `routes-fixture-${id}`,
-			doc: { description: "fixture icp for routes route tests" },
-		})
-		.onConflictDoUpdate({
-			target: icpTable.id,
-			set: { organizationId: CALLER_ORGANIZATION_ID },
-		});
+	await withConnection(testEnv, "cached", db, (connection) =>
+		connection
+			.insert(icpTable)
+			.values({
+				id,
+				organizationId: CALLER_ORGANIZATION_ID,
+				domain: `routes-fixture-${id}`,
+				doc: { description: "fixture icp for routes route tests" },
+			})
+			.onConflictDoUpdate({
+				target: icpTable.id,
+				set: { organizationId: CALLER_ORGANIZATION_ID },
+			}),
+	);
 }
 
 /**
@@ -112,27 +109,46 @@ async function seedOwnedIcp(label: string): Promise<string> {
 
 /** Owns a fixed run id under the caller's organization, as a source run. */
 async function seedRunFixture(id: string): Promise<void> {
-	await db(testEnv, "cached")
-		.insert(run)
-		.values({
-			id,
-			organizationId: CALLER_ORGANIZATION_ID,
-			icpId: ICP_A,
-			capability: id.split("_")[0] ?? "companies",
-			status: "complete",
-		})
-		.onConflictDoUpdate({
-			target: run.id,
-			set: { organizationId: CALLER_ORGANIZATION_ID, icpId: ICP_A },
-		});
+	await withConnection(testEnv, "cached", db, (connection) =>
+		connection
+			.insert(run)
+			.values({
+				id,
+				organizationId: CALLER_ORGANIZATION_ID,
+				icpId: ICP_A,
+				capability: id.split("_")[0] ?? "companies",
+				status: "complete",
+			})
+			.onConflictDoUpdate({
+				target: run.id,
+				set: { organizationId: CALLER_ORGANIZATION_ID, icpId: ICP_A },
+			}),
+	);
 }
+
+let RUN_COMPANIES_FIXTURE_SCOPE = "";
 
 beforeAll(async () => {
 	const issued = await issueKey(`routes-caller-${crypto.randomUUID()}`);
 	TOKEN = issued.key;
 	CALLER_ORGANIZATION_ID = issued.organizationId;
-	for (const id of FIXTURE_ICP_IDS) await seedIcpFixture(id);
-	for (const id of FIXTURE_RUN_IDS) await seedRunFixture(id);
+
+	ICP_A = crypto.randomUUID();
+	ICP_B = crypto.randomUUID();
+	ICP_C = crypto.randomUUID();
+	ICP_D = crypto.randomUUID();
+	RUN_COMPANIES_FIXTURE_SCOPE = crypto.randomUUID();
+	RUN_COMPANIES_FIXTURE = buildRunId("companies", RUN_COMPANIES_FIXTURE_SCOPE);
+	RUN_PEOPLE_FIXTURE_A = buildRunId("people", crypto.randomUUID());
+	RUN_PEOPLE_FIXTURE_B = buildRunId("people", crypto.randomUUID());
+
+	for (const id of [ICP_A, ICP_B, ICP_C, ICP_D]) await seedIcpFixture(id);
+	for (const id of [
+		RUN_COMPANIES_FIXTURE,
+		RUN_PEOPLE_FIXTURE_A,
+		RUN_PEOPLE_FIXTURE_B,
+	])
+		await seedRunFixture(id);
 });
 
 async function publicCall(path: string, init?: RequestInit): Promise<Response> {
@@ -171,17 +187,9 @@ async function waitForRunVisible(
 	return authedCall(`/runs/${runId}`, authedGetInit());
 }
 
-const SCOPES: readonly string[] = [
-	"11111111-1111-4111-8111-111111111111",
-	"55555555-5555-4555-8555-555555555555",
-	"66666666-6666-4666-8666-666666666666",
-	"77777777-7777-4777-8777-777777777777",
-	"88888888-8888-4888-8888-888888888888",
-	"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
-	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
-];
+function scopes(): readonly string[] {
+	return [ICP_A, ICP_B, ICP_C, ICP_D, RUN_COMPANIES_FIXTURE_SCOPE];
+}
 
 async function terminateRun(runId: string | undefined): Promise<void> {
 	if (runId === undefined) return;
@@ -204,7 +212,7 @@ async function terminateStartedRuns(): Promise<void> {
 		[testEnv.ENRICH, "enrich"],
 	];
 	for (const [binding, capability] of bindings) {
-		for (const scope of SCOPES) {
+		for (const scope of scopes()) {
 			const instance = await binding
 				.get(`${capability}_${scope}_${today}`)
 				.catch(() => null);
@@ -299,7 +307,7 @@ describe("bearer authentication", () => {
 
 describe("POST /companies/find", () => {
 	it("rejects a malformed body with the Zod issue list and creates no instance", async () => {
-		const icpId = "55555555-5555-4555-8555-555555555555";
+		const icpId = ICP_B;
 		const response = await authedCall(
 			"/companies/find",
 			postInit({ icpId, count: "five" }, TOKEN),
@@ -319,7 +327,7 @@ describe("POST /companies/find", () => {
 	});
 
 	it("returns 202 with a runId built from capability, icpId and today, and reports the run as new", async () => {
-		const icpId = "66666666-6666-4666-8666-666666666666";
+		const icpId = ICP_C;
 		const started = Date.now();
 
 		const response = await authedCall(
@@ -365,7 +373,7 @@ describe("POST /companies/find", () => {
 	});
 
 	it("reports the existing run when a repeat arrives with a different count, instead of presenting the new count as accepted", async () => {
-		const icpId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+		const icpId = ICP_D;
 
 		const first = await authedCall(
 			"/companies/find",
@@ -466,8 +474,7 @@ async function expectTargetDrivesBuyer(
 
 describe("POST /people/find and /enrich", () => {
 	it("starts a people/find run scoped by a digest of the whole request", async () => {
-		const companiesRunId =
-			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
+		const companiesRunId = RUN_COMPANIES_FIXTURE;
 		const expectedRunId = await expectedPeopleRunId({ runId: companiesRunId });
 
 		const response = await authedCall(
@@ -484,7 +491,7 @@ describe("POST /people/find and /enrich", () => {
 
 	it("accepts both find-people entry shapes with an optional target, and lets the target drive who is searched", async () => {
 		await expectTargetDrivesBuyer({
-			runId: "companies_88888888-8888-4888-8888-888888888888_2026-08-27",
+			runId: RUN_COMPANIES_FIXTURE,
 			target: ["VP Product"],
 		});
 		await expectTargetDrivesBuyer({
@@ -497,8 +504,7 @@ describe("POST /people/find and /enrich", () => {
 
 describe("POST /people/find: the job scope hashes the whole request", () => {
 	it("hashes the whole parsed request into the job scope, not just the run id or domain list", async () => {
-		const companiesRunId =
-			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
+		const companiesRunId = RUN_COMPANIES_FIXTURE;
 		const base = { runId: companiesRunId, maxCompanies: 5 };
 
 		const first = await authedCall("/people/find", postInit(base, TOKEN));
@@ -538,12 +544,14 @@ describe("POST /people/find: the job scope hashes the whole request", () => {
 		expect(oversized.status).toBe(400);
 
 		const foreignOrganizationId = `foreign-org-${crypto.randomUUID()}`;
-		await db(testEnv, "cached").insert(organization).values({
-			id: foreignOrganizationId,
-			name: "foreign org",
-			slug: foreignOrganizationId,
-			createdAt: new Date(),
-		});
+		await withConnection(testEnv, "cached", db, (connection) =>
+			connection.insert(organization).values({
+				id: foreignOrganizationId,
+				name: "foreign org",
+				slug: foreignOrganizationId,
+				createdAt: new Date(),
+			}),
+		);
 		const foreignIcp = await createIcp(testEnv, {
 			description: "a profile owned by another organization",
 			domain: `foreign-${crypto.randomUUID()}.internal`,
@@ -604,7 +612,7 @@ describe("POST /people/find and /enrich", () => {
 	});
 
 	it("starts an enrich run scoped by the people-find run it enriches, and resolves its actual subjects rather than just accepting the request", async () => {
-		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
+		const sourceRun = RUN_PEOPLE_FIXTURE_A;
 		const subjects: EnrichSubject[] = [
 			{
 				id: "person-route-test",
@@ -626,7 +634,7 @@ describe("POST /people/find and /enrich", () => {
 	});
 
 	it("rejects an enrich body with an unknown channel", async () => {
-		const sourceRun = "people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27";
+		const sourceRun = RUN_PEOPLE_FIXTURE_B;
 
 		const response = await authedCall(
 			"/enrich",
@@ -681,6 +689,84 @@ describe("GET /runs/:runId", () => {
 	});
 });
 
+describe("GET /runs/:runId, /companies, /people: cross-organization reads", () => {
+	it("refuses to read another organization's run, companies, and people", async () => {
+		const foreignOrganizationId = `foreign-org-${crypto.randomUUID()}`;
+		await withConnection(testEnv, "cached", db, (connection) =>
+			connection.insert(organization).values({
+				id: foreignOrganizationId,
+				name: "foreign org",
+				slug: foreignOrganizationId,
+				createdAt: new Date(),
+			}),
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for cross-organization read test",
+			domain: `cross-org-read-${crypto.randomUUID()}.internal`,
+			organizationId: foreignOrganizationId,
+		});
+		const runId = `companies_cross-org-read-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: runId,
+			organizationId: foreignOrganizationId,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "complete",
+		});
+		const saved = await saveCompanies(testEnv, [
+			{
+				icpId: icpRow.id,
+				organizationId: foreignOrganizationId,
+				runId,
+				domain: `cross-org-read-${crypto.randomUUID()}.com`,
+				name: "Cross Org Co",
+			},
+		]);
+		const companyRow = saved[0];
+		if (!companyRow) throw new Error("seed produced no company");
+		await upsertPeople(testEnv, [
+			{
+				organizationId: foreignOrganizationId,
+				companyId: companyRow.id,
+				linkedinUrl: `https://linkedin.com/in/cross-org-${crypto.randomUUID()}`,
+				name: "Cross Org Person",
+				title: "VP of Sales",
+			},
+		]);
+
+		try {
+			const statusResponse = await authedCall(
+				`/runs/${runId}`,
+				authedGetInit(),
+			);
+			const companiesResponse = await authedCall(
+				`/runs/${runId}/companies`,
+				authedGetInit(),
+			);
+			const peopleResponse = await authedCall(
+				`/runs/${runId}/people`,
+				authedGetInit(),
+			);
+
+			expect(statusResponse.status).toBe(404);
+			expect(companiesResponse.status).toBe(404);
+			expect(peopleResponse.status).toBe(404);
+		} finally {
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection
+					.delete(person)
+					.where(eq(person.companyId, companyRow.id));
+				await connection.delete(company).where(eq(company.id, companyRow.id));
+				await connection.delete(run).where(eq(run.id, runId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, foreignOrganizationId));
+			});
+		}
+	});
+});
+
 type PageSeed = {
 	icpId: string;
 	runId: string;
@@ -726,13 +812,14 @@ async function seedRunWithCompanies(
 }
 
 async function cleanupPageSeed(seed: PageSeed): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection
-		.delete(person)
-		.where(inArray(person.companyId, seed.companyIds));
-	await connection.delete(company).where(eq(company.runId, seed.runId));
-	await connection.delete(run).where(eq(run.id, seed.runId));
-	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(person)
+			.where(inArray(person.companyId, seed.companyIds));
+		await connection.delete(company).where(eq(company.runId, seed.runId));
+		await connection.delete(run).where(eq(run.id, seed.runId));
+		await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	});
 }
 
 type CompanyPageBody = {
@@ -974,11 +1061,12 @@ async function seedPeopleReport(label: string): Promise<PeopleReportSeed> {
 
 async function cleanupPeopleReport(seed: PeopleReportSeed): Promise<void> {
 	await terminateRun(seed.runId);
-	const connection = db(testEnv, "direct");
-	await connection.delete(person).where(eq(person.companyId, seed.companyId));
-	await connection.delete(runCompany).where(eq(runCompany.runId, seed.runId));
-	await connection.delete(company).where(eq(company.runId, seed.runId));
-	await connection.delete(run).where(eq(run.id, seed.runId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(person).where(eq(person.companyId, seed.companyId));
+		await connection.delete(runCompany).where(eq(runCompany.runId, seed.runId));
+		await connection.delete(company).where(eq(company.runId, seed.runId));
+		await connection.delete(run).where(eq(run.id, seed.runId));
+	});
 }
 
 type PeopleReportCompanyRow = {

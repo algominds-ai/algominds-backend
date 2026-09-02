@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { z } from "zod";
 import { authOptions, buildPlugins } from "@/auth-options";
 import * as authSchema from "@/core/db/auth-schema";
+import type { Db } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import { publicDomain } from "@/core/db/schema";
 import { buildRunId, domainsScopeId } from "@/http/jobs";
@@ -48,18 +49,27 @@ export async function startOnboarding(
 }
 
 /**
- * The auth instance for one request. Built per call because its database
- * client is, and a Workers isolate may not reuse a socket across requests.
+ * The auth instance for one request, over a connection the caller already
+ * opened and owns the lifetime of.
  */
-export function createAuth(env: Env) {
+export function createAuthWith(env: Env, connection: Db) {
 	return betterAuth({
 		...authOptions,
 		plugins: buildPlugins((data) => startOnboarding(env, data.organization)),
-		database: drizzleAdapter(db(env, "cached"), {
+		database: drizzleAdapter(connection, {
 			provider: "pg",
 			schema: authSchema,
 		}),
 	});
+}
+
+/**
+ * The auth instance for one request, over a connection built and owned for
+ * this call. Built per call because its database client is, and a Workers
+ * isolate may not reuse a socket across requests.
+ */
+export function createAuth(env: Env) {
+	return createAuthWith(env, db(env, "cached"));
 }
 
 export type Auth = ReturnType<typeof createAuth>;

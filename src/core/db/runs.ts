@@ -2,7 +2,7 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { and, eq, gte } from "drizzle-orm";
 import { config } from "@/config";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	OrganizationSpendConnection,
@@ -19,19 +19,18 @@ export async function openRun(
 	newRun: NewRun,
 	buildDb: DbFactory<RunOpenConnection> = db,
 ): Promise<Run> {
-	const connection = buildDb(env, "cached");
-	const inserted = await connection
-		.insert(run)
-		.values(newRun)
-		.onConflictDoNothing({ target: [run.id] })
-		.returning();
+	const inserted = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.insert(run)
+			.values(newRun)
+			.onConflictDoNothing({ target: [run.id] })
+			.returning(),
+	);
 	const created = inserted[0];
 	if (created) return created;
-	const existing = await buildDb(env, "direct")
-		.select()
-		.from(run)
-		.where(eq(run.id, newRun.id))
-		.limit(1);
+	const existing = await withConnection(env, "direct", buildDb, (connection) =>
+		connection.select().from(run).where(eq(run.id, newRun.id)).limit(1),
+	);
 	const row = existing[0];
 	if (!row) throw new Error(`openRun: no run for id ${newRun.id}`);
 	return row;
@@ -46,12 +45,9 @@ export async function findRun(
 	runId: string,
 	buildDb: DbFactory<RunLookupConnection> = db,
 ): Promise<Run | undefined> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select()
-		.from(run)
-		.where(eq(run.id, runId))
-		.limit(1);
+	const rows = await withConnection(env, "direct", buildDb, (connection) =>
+		connection.select().from(run).where(eq(run.id, runId)).limit(1),
+	);
 	return rows[0];
 }
 
@@ -65,8 +61,9 @@ export async function recordRunSpend(
 	costDollars: number,
 	buildDb: DbFactory<RunUpdateConnection> = db,
 ): Promise<void> {
-	const connection = buildDb(env, "cached");
-	await connection.update(run).set({ costDollars }).where(eq(run.id, runId));
+	await withConnection(env, "cached", buildDb, (connection) =>
+		connection.update(run).set({ costDollars }).where(eq(run.id, runId)),
+	);
 }
 
 /** Records a run's terminal status and spend, and stamps `finished_at`. */
@@ -77,11 +74,12 @@ export async function closeRun(
 		Partial<Pick<NewRun, "icpId">>,
 	buildDb: DbFactory<RunUpdateConnection> = db,
 ): Promise<void> {
-	const connection = buildDb(env, "cached");
-	await connection
-		.update(run)
-		.set({ ...outcome, finishedAt: new Date() })
-		.where(eq(run.id, runId));
+	await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.update(run)
+			.set({ ...outcome, finishedAt: new Date() })
+			.where(eq(run.id, runId)),
+	);
 }
 
 /** Midnight UTC on the day of `now` (defaults to the current time). */
@@ -115,15 +113,16 @@ export async function organizationSpendToday(
 	now: Date = new Date(),
 	buildDb: DbFactory<OrganizationSpendConnection> = db,
 ): Promise<number> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select({ costDollars: run.costDollars })
-		.from(run)
-		.where(
-			and(
-				eq(run.organizationId, organizationId),
-				gte(run.startedAt, startOfUtcDay(now)),
+	const rows = await withConnection(env, "direct", buildDb, (connection) =>
+		connection
+			.select({ costDollars: run.costDollars })
+			.from(run)
+			.where(
+				and(
+					eq(run.organizationId, organizationId),
+					gte(run.startedAt, startOfUtcDay(now)),
+				),
 			),
-		);
+	);
 	return rows.reduce((total, row) => total + row.costDollars, 0);
 }

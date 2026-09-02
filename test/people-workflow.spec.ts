@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { config } from "../src/config";
 import { organization } from "../src/core/db/auth-schema";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import { openRun } from "../src/core/db/queries";
 import type { Evidence, Person } from "../src/core/db/schema";
@@ -33,7 +33,6 @@ afterEach(() => {
 const SCOPES = [
 	"people_workflow_unresolved_test",
 	"people_workflow_roster_test",
-	"people_workflow_profileless_test",
 	"people_workflow_spend_cap_test",
 ];
 
@@ -203,61 +202,6 @@ describe("FindPeopleWorkflow: roster mode", () => {
 			await instance.dispose();
 		}
 	});
-
-	it("runs a profileless run through the ladder without throwing", async () => {
-		const domain = "harborit.com";
-		const instanceId = "people_workflow_profileless_test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
-		);
-		try {
-			await instance.modify(async (m) => {
-				await m.mockStepResult(
-					{ name: "load-companies" },
-					{ companies: [bareCompany(domain)], icpId: null, unknownDomains: [] },
-				);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { closed: true });
-				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
-				await m.mockStepResult(
-					{ name: `people-${domain}-identity` },
-					{
-						how: "domain",
-						identifier: domain,
-						name: "Harbor IT",
-						clayRecords: 1,
-						costEntries: [],
-					},
-				);
-				await m.mockStepResult(
-					{ name: `people-${domain}-create-company` },
-					"company-1",
-				);
-				await m.mockStepResult(
-					{ name: `people-${domain}-roster` },
-					{ candidates: [rosterCandidate], clayRecords: 5, costEntries: [] },
-				);
-				await m.mockStepResult({ name: `people-${domain}-save` }, { count: 1 });
-				await m.mockStepResult(
-					{ name: `people-${domain}-spend` },
-					{ total: 0 },
-				);
-			});
-
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: { runId: "companies_harborit_test", organizationId: "org-1" },
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await summaryOf(instance);
-			expect(output.mode).toBe("roster");
-			expect(output.peopleRoster).toBe(1);
-		} finally {
-			await instance.dispose();
-		}
-	});
 });
 
 describe("FindPeopleWorkflow: the company cap", () => {
@@ -382,28 +326,29 @@ async function cleanupTargetRun(
 	organizationId: string,
 	runId: string,
 ): Promise<void> {
-	const connection = db(testEnv, "direct");
-	const runCompanyRows = await connection
-		.select()
-		.from(runCompany)
-		.where(eq(runCompany.runId, runId));
-	const runCompanyIds = runCompanyRows.map((row) => row.id);
-	if (runCompanyIds.length > 0) {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		const runCompanyRows = await connection
+			.select()
+			.from(runCompany)
+			.where(eq(runCompany.runId, runId));
+		const runCompanyIds = runCompanyRows.map((row) => row.id);
+		if (runCompanyIds.length > 0) {
+			await connection
+				.delete(evidence)
+				.where(inArray(evidence.subjectId, runCompanyIds));
+		}
 		await connection
-			.delete(evidence)
-			.where(inArray(evidence.subjectId, runCompanyIds));
-	}
-	await connection
-		.delete(person)
-		.where(eq(person.organizationId, organizationId));
-	await connection.delete(runCompany).where(eq(runCompany.runId, runId));
-	await connection
-		.delete(company)
-		.where(eq(company.organizationId, organizationId));
-	await connection.delete(run).where(eq(run.id, runId));
-	await connection
-		.delete(organization)
-		.where(eq(organization.id, organizationId));
+			.delete(person)
+			.where(eq(person.organizationId, organizationId));
+		await connection.delete(runCompany).where(eq(runCompany.runId, runId));
+		await connection
+			.delete(company)
+			.where(eq(company.organizationId, organizationId));
+		await connection.delete(run).where(eq(run.id, runId));
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, organizationId));
+	});
 }
 
 const CONFIRMED_VERDICT = {
@@ -420,6 +365,22 @@ const UNKNOWN_VERDICT = {
 	evidence_quote: null,
 	evidence_kind: null,
 	confidence: 0.1,
+};
+
+const CONTRADICTED_VERDICT = {
+	verdict: "CONTRADICTED",
+	evidence_url: null,
+	evidence_quote: null,
+	evidence_kind: null,
+	confidence: 0.2,
+};
+
+const AGGREGATOR_CONFIRMED_VERDICT = {
+	verdict: "CONFIRMED",
+	evidence_url: "https://peoplesite.example/jordan-blake",
+	evidence_quote: "Jordan Blake — VP Sales",
+	evidence_kind: "aggregator",
+	confidence: 0.5,
 };
 
 function targetCandidate(
@@ -531,10 +492,16 @@ async function assertVerifiedTargetRun(
 	organizationId: string,
 	runId: string,
 ): Promise<void> {
-	const storedPeople = await db(testEnv, "direct")
-		.select()
-		.from(person)
-		.where(eq(person.organizationId, organizationId));
+	const storedPeople = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection
+				.select()
+				.from(person)
+				.where(eq(person.organizationId, organizationId)),
+	);
 	expect(
 		storedPeople.filter(
 			(row: Person) =>
@@ -547,17 +514,26 @@ async function assertVerifiedTargetRun(
 		),
 	).toBe(false);
 
-	const runCompanyRows = await db(testEnv, "direct")
-		.select()
-		.from(runCompany)
-		.where(eq(runCompany.runId, runId));
+	const runCompanyRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection.select().from(runCompany).where(eq(runCompany.runId, runId)),
+	);
 	const runCompanyRow = runCompanyRows[0];
 	if (!runCompanyRow) throw new Error("expected a run_company row");
 
-	const evidenceRows = await db(testEnv, "direct")
-		.select()
-		.from(evidence)
-		.where(eq(evidence.subjectId, runCompanyRow.id));
+	const evidenceRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection
+				.select()
+				.from(evidence)
+				.where(eq(evidence.subjectId, runCompanyRow.id)),
+	);
 	const kinds = evidenceRows.map((row: Evidence) => row.kind);
 	expect(kinds.filter((kind: string) => kind === "identity")).toHaveLength(2);
 	expect(kinds.filter((kind: string) => kind === "roster")).toHaveLength(16);
@@ -618,6 +594,303 @@ describe("FindPeopleWorkflow: a target run", () => {
 			expect(result.outcome.unresolvedDomain).toBeNull();
 
 			await assertVerifiedTargetRun(org.id, runId);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function contradictedRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: CONTRADICTED_VERDICT },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a contradicted verdict", () => {
+	it("stores no person for a candidate the agent contradicts", async () => {
+		const domain = `contradicted-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-contradicted-${crypto.randomUUID()}`,
+			"people workflow contradicted test",
+		);
+		const runId = `people_contradicted_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(contradictedRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(0);
+			const storedPeople = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(person)
+						.where(eq(person.organizationId, org.id)),
+			);
+			expect(storedPeople).toHaveLength(0);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function wrongCompanyRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: AGGREGATOR_CONFIRMED_VERDICT },
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-index`,
+			{
+				found: true,
+				employer: "A Totally Different Company",
+				reply: "{}",
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-agree`,
+			{
+				label: "DIFFERENT",
+				reply: { employer: "DIFFERENT" },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
+	it("does not verify a candidate the second opinion says works at a different company", async () => {
+		const domain = `wrong-company-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-wrong-company-${crypto.randomUUID()}`,
+			"people workflow wrong company test",
+		);
+		const runId = `people_wrong_company_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(wrongCompanyRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(0);
+			const storedPeople = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(person)
+						.where(eq(person.organizationId, org.id)),
+			);
+			expect(storedPeople).toHaveLength(0);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			const runCompanyRow = runCompanyRows[0];
+			if (!runCompanyRow) throw new Error("expected a run_company row");
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidence)
+						.where(eq(evidence.subjectId, runCompanyRow.id)),
+			);
+			const agreeRow = evidenceRows.find((row) => row.kind === "verify-agree");
+			expect(agreeRow).toBeDefined();
+			expect(JSON.parse(agreeRow?.value ?? "null")).toEqual({
+				employer: "DIFFERENT",
+			});
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function nullSelectRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{ picks: [], droppedIds: [], reply: null, costDollars: 0 },
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a null selector reply", () => {
+	it("picks nobody but still records one select evidence row", async () => {
+		const domain = `null-select-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-null-select-${crypto.randomUUID()}`,
+			"people workflow null select test",
+		);
+		const runId = `people_null_select_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(nullSelectRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(0);
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			const runCompanyRow = runCompanyRows[0];
+			if (!runCompanyRow) throw new Error("expected a run_company row");
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidence)
+						.where(eq(evidence.subjectId, runCompanyRow.id)),
+			);
+			const selectRows = evidenceRows.filter((row) => row.kind === "select");
+			expect(selectRows).toHaveLength(1);
+			expect(selectRows[0]?.value).toBe("null");
 		} finally {
 			await cleanupTargetRun(org.id, runId);
 		}

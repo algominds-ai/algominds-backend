@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, asc, eq, gt } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type { DbFactory, SelectOrderedConnection } from "@/core/db/queries";
 import { companyScopeForRun } from "@/core/db/run-scope";
 import type { Company, Person, Run, RunCompany } from "@/core/db/schema";
@@ -42,30 +42,31 @@ async function peopleRunCompaniesPage(
 	run: Run,
 	page: { limit: number; cursor: string | undefined },
 ): Promise<{ rows: CompanyPageRow[]; nextCursor: string | null }> {
-	const connection = db(env, "cached");
 	const condition = page.cursor
 		? and(eq(runCompany.runId, run.id), gt(runCompany.id, page.cursor))
 		: eq(runCompany.runId, run.id);
-	const rows = await connection
-		.select({
-			id: runCompany.id,
-			runId: runCompany.runId,
-			domain: runCompany.domain,
-			companyId: runCompany.companyId,
-			identity: runCompany.identity,
-			mode: runCompany.mode,
-			buyerSource: runCompany.buyerSource,
-			spendDollars: runCompany.spendDollars,
-			clayRecords: runCompany.clayRecords,
-			peopleVerified: runCompany.peopleVerified,
-			peopleRoster: runCompany.peopleRoster,
-			company,
-		})
-		.from(runCompany)
-		.leftJoin(company, eq(runCompany.companyId, company.id))
-		.where(condition)
-		.orderBy(asc(runCompany.id))
-		.limit(page.limit + 1);
+	const rows = await withConnection(env, "cached", db, (connection) =>
+		connection
+			.select({
+				id: runCompany.id,
+				runId: runCompany.runId,
+				domain: runCompany.domain,
+				companyId: runCompany.companyId,
+				identity: runCompany.identity,
+				mode: runCompany.mode,
+				buyerSource: runCompany.buyerSource,
+				spendDollars: runCompany.spendDollars,
+				clayRecords: runCompany.clayRecords,
+				peopleVerified: runCompany.peopleVerified,
+				peopleRoster: runCompany.peopleRoster,
+				company,
+			})
+			.from(runCompany)
+			.leftJoin(company, eq(runCompany.companyId, company.id))
+			.where(condition)
+			.orderBy(asc(runCompany.id))
+			.limit(page.limit + 1),
+	);
 	const kept = rows.slice(0, page.limit);
 	return {
 		rows: kept,
@@ -89,16 +90,17 @@ export async function companiesPage(
 	if (run.capability === "people") {
 		return peopleRunCompaniesPage(env, run, page);
 	}
-	const connection = buildDb(env, "cached");
 	const condition = page.cursor
 		? and(eq(company.runId, run.id), gt(company.id, page.cursor))
 		: eq(company.runId, run.id);
-	const rows = await connection
-		.select()
-		.from(company)
-		.where(condition)
-		.orderBy(asc(company.id))
-		.limit(page.limit + 1);
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.select()
+			.from(company)
+			.where(condition)
+			.orderBy(asc(company.id))
+			.limit(page.limit + 1),
+	);
 	const kept = rows.slice(0, page.limit);
 	return {
 		rows: kept,
@@ -118,19 +120,20 @@ export async function peoplePage(
 	page: { limit: number; cursor: string | undefined },
 	buildDb: DbFactory<PersonPageConnection> = db,
 ): Promise<{ rows: Person[]; nextCursor: string | null }> {
-	const connection = buildDb(env, "cached");
 	const scope = await companyScopeForRun(env, run);
 	if (scope === null) return { rows: [], nextCursor: null };
 	const condition = page.cursor
 		? and(scope, gt(person.id, page.cursor))
 		: scope;
-	const joined = await connection
-		.select({ person })
-		.from(person)
-		.innerJoin(company, eq(person.companyId, company.id))
-		.where(condition)
-		.orderBy(asc(person.id))
-		.limit(page.limit + 1);
+	const joined = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.select({ person })
+			.from(person)
+			.innerJoin(company, eq(person.companyId, company.id))
+			.where(condition)
+			.orderBy(asc(person.id))
+			.limit(page.limit + 1),
+	);
 	const rows = joined.map((row) => row.person);
 	const kept = rows.slice(0, page.limit);
 	return {

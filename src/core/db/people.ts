@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, isNull, or } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	PersonInsertConnection,
@@ -83,14 +83,17 @@ export async function upsertPeople(
 	buildDb: DbFactory<PersonUpsertConnection> = db,
 ): Promise<Person[]> {
 	if (rows.length === 0) return [];
-	const connection = buildDb(env, "cached");
-	await connection
-		.insert(person)
-		.values(rows)
-		.onConflictDoNothing({
-			target: [person.organizationId, person.linkedinUrl],
-		})
-		.returning();
-	await updateVerifiedRows(connection, rows);
-	return readBackRows(buildDb(env, "direct"), rows);
+	await withConnection(env, "cached", buildDb, async (connection) => {
+		await connection
+			.insert(person)
+			.values(rows)
+			.onConflictDoNothing({
+				target: [person.organizationId, person.linkedinUrl],
+			})
+			.returning();
+		await updateVerifiedRows(connection, rows);
+	});
+	return withConnection(env, "direct", buildDb, (connection) =>
+		readBackRows(connection, rows),
+	);
 }

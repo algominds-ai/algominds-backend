@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { saveOnboardedIcp } from "../src/core/db/icp";
 import { organizationForSlug } from "../src/core/db/organizations";
 import {
@@ -100,12 +100,12 @@ function mockedBuyer(): IcpBuyer {
 
 async function deleteIcpAndRun(runId: string): Promise<void> {
 	const runRow = await findRun(testEnv, runId);
-	await db(testEnv, "direct").delete(run).where(eq(run.id, runId));
-	if (runRow?.icpId) {
-		await db(testEnv, "direct")
-			.delete(icpTable)
-			.where(eq(icpTable.id, runRow.icpId));
-	}
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(run).where(eq(run.id, runId));
+		if (runRow?.icpId) {
+			await connection.delete(icpTable).where(eq(icpTable.id, runRow.icpId));
+		}
+	});
 }
 
 describe("POST /icp/onboard: validation", () => {
@@ -250,10 +250,13 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 			expect(secondBody.status).toBe("existing");
 			expect(secondBody.runId).toBe(firstBody.runId);
 
-			const icpRows = await db(testEnv, "direct")
-				.select()
-				.from(icpTable)
-				.where(eq(icpTable.domain, domain));
+			const icpRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection.select().from(icpTable).where(eq(icpTable.domain, domain)),
+			);
 			expect(icpRows).toHaveLength(1);
 		} finally {
 			await instance.dispose();
@@ -402,10 +405,10 @@ describe("OnboardIcpWorkflow: the daily spend ceiling", () => {
 			expect(await findRun(testEnv, instanceId)).toBeUndefined();
 		} finally {
 			await instance.dispose();
-			await db(testEnv, "direct").delete(run).where(eq(run.id, spentRunId));
-			await db(testEnv, "direct")
-				.delete(icpTable)
-				.where(eq(icpTable.id, icpRow.id));
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, spentRunId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			});
 		}
 	});
 });
