@@ -105,24 +105,46 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 type PlanShape = {
 	query: string;
 	angle: string;
+	recency: string | null;
+	eventWindowDays: number | null;
+	recencyDays: number | null;
+	source: string | null;
+	type: string | null;
+	agentEffort: string | null;
+	additionalQueries: string[] | null;
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
 	maxWorkforce: number | null;
-	eventWindowDays: number | null;
-	recencyDays: number | null;
+	minFoundedYear: number | null;
+	maxFoundedYear: number | null;
+	minRevenueAnnual: number | null;
+	maxRevenueAnnual: number | null;
+	minFundingTotal: number | null;
+	maxFundingTotal: number | null;
 };
 
 function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
 	return objectReply({
 		query: "small US software teams that sell without a sales team",
 		angle: "founder-led vertical software",
+		recency: null,
+		eventWindowDays: null,
+		recencyDays: null,
+		source: null,
+		type: null,
+		agentEffort: null,
+		additionalQueries: null,
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
 		maxWorkforce: 20,
-		eventWindowDays: null,
-		recencyDays: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 		...overrides,
 	});
 }
@@ -186,8 +208,13 @@ describe("synthesize: gateway wiring", () => {
 					{
 						query: "q",
 						angle: "a",
+						recency: null,
 						eventWindowDays: null,
 						recencyDays: null,
+						source: null,
+						type: null,
+						agentEffort: null,
+						additionalQueries: null,
 						userLocation: null,
 						countries: [],
 						minWorkforce: null,
@@ -230,8 +257,13 @@ describe("synthesize: cost recording without a cost field", () => {
 						content: JSON.stringify({
 							query: "q",
 							angle: "a",
+							recency: null,
 							eventWindowDays: null,
 							recencyDays: null,
+							source: null,
+							type: null,
+							agentEffort: null,
+							additionalQueries: null,
 							userLocation: null,
 							countries: [],
 							minWorkforce: null,
@@ -391,8 +423,10 @@ describe("the agent is given the effort that keeps evidence freshest", () => {
 		expect(sent).not.toContain("Choose `low`");
 	});
 
-	it("fills medium when the model leaves the field out", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+	it("fills medium when the model writes agentEffort as null", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: null })),
+		]);
 		globalThis.fetch = gateway.fetch;
 
 		expect((await runSynthesize()).plan.agentEffort).toBe("medium");

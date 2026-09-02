@@ -118,14 +118,16 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 }
 
 function verdictsFor(rowSet: readonly CompanyRow[]): {
-	verdicts: Array<{ index: number; keep: boolean; reason?: string }>;
+	verdicts: Array<{ index: number; keep: boolean; reason: string | null }>;
 } {
 	return {
 		verdicts: rowSet.map((_, index) => {
 			const keep = index !== 1;
-			return keep
-				? { index, keep }
-				: { index, keep, reason: "no qualifying signal" };
+			return {
+				index,
+				keep,
+				reason: keep ? null : "no qualifying signal",
+			};
 		}),
 	};
 }
@@ -253,11 +255,15 @@ describe("judge: verdicts and retries", () => {
 		expect(result.verdicts[1]?.keep).toBe(false);
 	});
 
-	it("parses a kept row that carries no reason", async () => {
+	it("parses a kept row whose reason is null", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply({
-					verdicts: rows.map((_, index) => ({ index, keep: true })),
+					verdicts: rows.map((_, index) => ({
+						index,
+						keep: true,
+						reason: null,
+					})),
 				}),
 			),
 		]);
@@ -266,9 +272,9 @@ describe("judge: verdicts and retries", () => {
 		const result = await judge(icp, rows, env, null);
 
 		expect(result.verdicts.every((verdict) => verdict.keep)).toBe(true);
-		expect(
-			result.verdicts.every((verdict) => verdict.reason === undefined),
-		).toBe(true);
+		expect(result.verdicts.every((verdict) => verdict.reason === null)).toBe(
+			true,
+		);
 	});
 
 	it("carries a refused row's reason through to the caller", async () => {
