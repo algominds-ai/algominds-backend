@@ -13,30 +13,16 @@ import type { ResolvedBuyer } from "@/core/people/buyer";
 import { resolveBuyer } from "@/core/people/buyer";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
+import { peopleFindSchema } from "@/http/schemas";
 import { runCompanies } from "@/workflows/find-people-company";
 import type { TargetCompany } from "@/workflows/find-people-target";
 import { loadTargetCompanies } from "@/workflows/find-people-target";
 
-const maxCompaniesField = z.number().int().positive().optional();
-const targetField = z
-	.union([z.array(z.string().min(1)).min(1), z.string().min(1)])
-	.optional();
-
-const FindPeoplePayloadSchema = z.union([
-	z.object({
-		runId: z.string().min(1),
-		maxCompanies: maxCompaniesField,
-		target: targetField,
-		organizationId: z.string().min(1),
-	}),
-	z.object({
-		domains: z.array(z.string().min(1)).min(1),
-		maxCompanies: maxCompaniesField,
-		target: targetField,
-		icpId: z.uuid().optional(),
-		organizationId: z.string().min(1),
-	}),
-]);
+const FindPeoplePayloadSchema = z.union(
+	peopleFindSchema.options.map((option) =>
+		option.extend({ organizationId: z.string().min(1) }),
+	),
+);
 
 export type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
 

@@ -168,6 +168,9 @@ function normalizeWhitespace(text: string): string {
 	return text.replace(/\s+/g, " ").trim();
 }
 
+const MIN_QUOTE_CHUNK_BYTES = 1;
+const MAX_QUOTE_READS = QUOTE_MAX_BYTES / MIN_QUOTE_CHUNK_BYTES + 1;
+
 async function readCappedText(response: Response): Promise<string | null> {
 	const body = response.body;
 	if (!body) return "";
@@ -175,9 +178,9 @@ async function readCappedText(response: Response): Promise<string | null> {
 	const decoder = new TextDecoder();
 	let total = 0;
 	let text = "";
-	while (true) {
+	for (let read = 0; read < MAX_QUOTE_READS; read++) {
 		const { done, value } = await reader.read();
-		if (done) break;
+		if (done) return text;
 		total += value.byteLength;
 		if (total > QUOTE_MAX_BYTES) {
 			await reader.cancel();
@@ -185,7 +188,8 @@ async function readCappedText(response: Response): Promise<string | null> {
 		}
 		text += decoder.decode(value, { stream: true });
 	}
-	return text;
+	await reader.cancel();
+	return null;
 }
 
 /**

@@ -112,3 +112,9 @@ titles, or one sentence. A Target outranks the Profile's Buyer for that request.
 What find-people returns when nothing says who buys: the company's senior people with
 their real current titles, nobody selected and nobody verified, at quota cost only. It is
 the honest bottom of the Buyer ladder, never a guess.
+
+### Run company report
+The per-domain row a people run keeps (`run_company`): the domain's identity outcome,
+mode, buyer source, spend and people counts, read through the run's companies page. It
+exists for every requested domain, resolved or not, so a domain that never became a
+company row still shows up as unknown rather than disappearing.

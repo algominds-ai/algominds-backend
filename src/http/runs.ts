@@ -46,6 +46,13 @@ const InstanceStatusSchema = z.object({
 			wroteProfile: z.boolean().nullish(),
 			status: z.string().nullish(),
 			roundReports: z.array(z.unknown()).nullish(),
+			unknownDomains: z.array(z.string()).nullish(),
+			companiesSearched: z.number().nullish(),
+			peopleVerified: z.number().nullish(),
+			peopleRoster: z.number().nullish(),
+			costDollars: z.number().nullish(),
+			mode: z.string().nullish(),
+			buyerSource: z.string().nullish(),
 		})
 		.nullish(),
 	error: z.unknown().nullish(),

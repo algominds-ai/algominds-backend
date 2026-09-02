@@ -1,6 +1,8 @@
 import { Hono } from "hono";
+import type { z } from "zod";
 import type { ApiEnv } from "@/http/auth";
 import { requireApiKey } from "@/http/auth";
+import type { Job } from "@/http/jobs";
 import { domainsScopeId, resolveIcpId, startJob } from "@/http/jobs";
 import {
 	getRunCompanies,
@@ -14,6 +16,37 @@ import {
 	onboardIcpSchema,
 	peopleFindSchema,
 } from "@/http/schemas";
+
+type PeopleFindBody = z.infer<typeof peopleFindSchema>;
+type DomainsPeopleFindBody = Extract<PeopleFindBody, { domains: unknown }>;
+
+/**
+ * The job for a `domains` find-people request: the profile named by `icpId`
+ * when it belongs to the caller, none when no `icpId` was given, or `null`
+ * when the named profile is unknown or foreign.
+ */
+async function domainsPeopleJob(
+	env: Env,
+	body: DomainsPeopleFindBody,
+	organizationId: string,
+	scopeId: string,
+): Promise<Job | null> {
+	const icpId =
+		body.icpId === undefined
+			? null
+			: await resolveIcpId(env, { icpId: body.icpId }, organizationId);
+	if (body.icpId !== undefined && icpId === null) return null;
+	return {
+		scopeId,
+		params: {
+			domains: body.domains,
+			maxCompanies: body.maxCompanies,
+			target: body.target,
+			icpId: icpId ?? undefined,
+			organizationId,
+		},
+	};
+}
 
 /** The bearer-protected job API: four routes that start a capability, and the routes that read a run back. */
 export function createApiRoutes(): Hono<ApiEnv> {
@@ -49,26 +82,24 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, peopleFindSchema, {
 			capability: "people",
 			workflow: c.env.FIND_PEOPLE,
-			toJob: async (body, _env, organizationId) => {
+			toJob: async (body, env, organizationId) => {
+				const scopeId = await domainsScopeId(
+					[JSON.stringify(body)],
+					organizationId,
+				);
 				if ("runId" in body) {
 					return {
-						scopeId: body.runId,
+						scopeId,
 						sourceRunId: body.runId,
 						params: {
 							runId: body.runId,
 							maxCompanies: body.maxCompanies,
+							target: body.target,
 							organizationId,
 						},
 					};
 				}
-				return {
-					scopeId: await domainsScopeId(body.domains, organizationId),
-					params: {
-						domains: body.domains,
-						maxCompanies: body.maxCompanies,
-						organizationId,
-					},
-				};
+				return domainsPeopleJob(env, body, organizationId, scopeId);
 			},
 		}),
 	);

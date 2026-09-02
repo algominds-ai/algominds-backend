@@ -2,19 +2,29 @@ import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
 import { eq, inArray } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import type { z } from "zod";
 import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
+import { organization } from "../src/core/db/auth-schema";
 import { db } from "../src/core/db/client";
 import {
 	createIcp,
 	openRun,
 	saveCompanies,
+	saveRunCompanies,
 	upsertPeople,
 } from "../src/core/db/queries";
-import { company, icp as icpTable, person, run } from "../src/core/db/schema";
+import {
+	company,
+	icp as icpTable,
+	person,
+	run,
+	runCompany,
+} from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
 import { buildRunId, domainsScopeId, instanceExists } from "../src/http/jobs";
+import { peopleFindSchema } from "../src/http/schemas";
 import app from "../src/index";
 import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 
@@ -407,10 +417,58 @@ describe("POST /companies/find: exclusions and the run id", () => {
 	});
 });
 
+async function expectedPeopleRunId(
+	rawBody: z.input<typeof peopleFindSchema>,
+): Promise<string> {
+	const parsed = peopleFindSchema.parse(rawBody);
+	const scopeId = await domainsScopeId(
+		[JSON.stringify(parsed)],
+		CALLER_ORGANIZATION_ID,
+	);
+	return buildRunId("people", scopeId);
+}
+
+/**
+ * Starts a people/find run whose companies are never actually searched, then
+ * confirms the run's own read route reports the buyer the request's target
+ * produced: the observable proof that the target reached the workflow.
+ */
+async function expectTargetDrivesBuyer(
+	rawBody: z.input<typeof peopleFindSchema>,
+): Promise<void> {
+	const runId = await expectedPeopleRunId(rawBody);
+	const instance = await introspectWorkflowInstance(testEnv.FIND_PEOPLE, runId);
+	try {
+		await instance.modify(async (m) => {
+			await m.mockStepResult(
+				{ name: "load-companies" },
+				{ companies: [], icpId: null, unknownDomains: [] },
+			);
+		});
+
+		const response = await authedCall("/people/find", postInit(rawBody, TOKEN));
+		const started: { runId?: string } = await response.json();
+		expect(response.status).toBe(202);
+		expect(started.runId).toBe(runId);
+
+		await instance.waitForStatus("complete");
+		const statusResponse = await authedCall(`/runs/${runId}`, authedGetInit());
+		const status: { summary?: { mode?: string; buyerSource?: string } } =
+			await statusResponse.json();
+		expect(statusResponse.status).toBe(200);
+		expect(status.summary?.mode).toBe("target");
+		expect(status.summary?.buyerSource).toBe("target");
+	} finally {
+		await instance.dispose();
+		await terminateRun(runId);
+	}
+}
+
 describe("POST /people/find and /enrich", () => {
-	it("starts a people/find run scoped by a companies runId", async () => {
+	it("starts a people/find run scoped by a digest of the whole request", async () => {
 		const companiesRunId =
 			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
+		const expectedRunId = await expectedPeopleRunId({ runId: companiesRunId });
 
 		const response = await authedCall(
 			"/people/find",
@@ -418,13 +476,94 @@ describe("POST /people/find and /enrich", () => {
 		);
 		const body: { runId?: string; icpId?: string } = await response.json();
 		await terminateRun(body.runId);
-		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`people_${companiesRunId}_${today}`);
+		expect(body.runId).toBe(expectedRunId);
 		expect(body.icpId).toBeUndefined();
 	});
 
+	it("accepts both find-people entry shapes with an optional target, and lets the target drive who is searched", async () => {
+		await expectTargetDrivesBuyer({
+			runId: "companies_88888888-8888-4888-8888-888888888888_2026-08-27",
+			target: ["VP Product"],
+		});
+		await expectTargetDrivesBuyer({
+			domains: [`target-shape-${crypto.randomUUID()}.example`],
+			icpId: ICP_A,
+			target: "the marketing team",
+		});
+	});
+});
+
+describe("POST /people/find: the job scope hashes the whole request", () => {
+	it("hashes the whole parsed request into the job scope, not just the run id or domain list", async () => {
+		const companiesRunId =
+			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
+		const base = { runId: companiesRunId, maxCompanies: 5 };
+
+		const first = await authedCall("/people/find", postInit(base, TOKEN));
+		const firstBody: { runId: string; status?: string } = await first.json();
+		expect(first.status).toBe(202);
+
+		const variants = [
+			{ ...base, maxCompanies: 6 },
+			{ ...base, target: ["Head of Growth"] },
+		];
+		const changedRunIds: string[] = [];
+		for (const variant of variants) {
+			const response = await authedCall(
+				"/people/find",
+				postInit(variant, TOKEN),
+			);
+			const body: { runId: string } = await response.json();
+			expect(body.runId).not.toBe(firstBody.runId);
+			changedRunIds.push(body.runId);
+			await terminateRun(body.runId);
+		}
+		expect(new Set(changedRunIds).size).toBe(variants.length);
+		await terminateRun(firstBody.runId);
+	});
+
+	it("rejects an oversized target list and a foreign icpId before a workflow starts", async () => {
+		const oversized = await authedCall(
+			"/people/find",
+			postInit(
+				{
+					runId: "companies_dd000000-0000-4000-8000-000000000000_2026-08-27",
+					target: Array.from({ length: 21 }, (_, i) => `Title ${i}`),
+				},
+				TOKEN,
+			),
+		);
+		expect(oversized.status).toBe(400);
+
+		const foreignOrganizationId = `foreign-org-${crypto.randomUUID()}`;
+		await db(testEnv, "cached").insert(organization).values({
+			id: foreignOrganizationId,
+			name: "foreign org",
+			slug: foreignOrganizationId,
+			createdAt: new Date(),
+		});
+		const foreignIcp = await createIcp(testEnv, {
+			description: "a profile owned by another organization",
+			domain: `foreign-${crypto.randomUUID()}.internal`,
+			organizationId: foreignOrganizationId,
+		});
+		const foreignRef = await authedCall(
+			"/people/find",
+			postInit(
+				{
+					domains: [`foreign-icp-${crypto.randomUUID()}.example`],
+					icpId: foreignIcp.id,
+				},
+				TOKEN,
+			),
+		);
+		expect(foreignRef.status).toBe(404);
+	});
+});
+
+describe("POST /people/find and /enrich", () => {
 	it("rejects a people/find body with neither runId nor domains", async () => {
 		const response = await authedCall("/people/find", postInit({}, TOKEN));
 		expect(response.status).toBe(400);
@@ -743,6 +882,159 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 		} finally {
 			await cleanupPageSeed(seedA);
 			await cleanupPageSeed(seedB);
+		}
+	});
+});
+
+type PeopleReportSeed = {
+	runId: string;
+	companyId: string;
+	resolvedDomain: string;
+	unresolvedDomain: string;
+};
+
+/**
+ * Seeds a people run's durable per-domain report directly: one resolved
+ * `run_company` row with its company and a verified person, and one
+ * unresolved row with no company, so the read routes can be checked without
+ * running the pipeline that would normally have produced them. The run and
+ * its company carry no profile, since none is needed to prove the report.
+ */
+async function seedPeopleReport(label: string): Promise<PeopleReportSeed> {
+	const runId = `people_${label}`;
+	const resolvedDomain = `${label}-resolved.com`;
+	const unresolvedDomain = `${label}-unresolved.example`;
+	await openRun(testEnv, {
+		id: runId,
+		organizationId: CALLER_ORGANIZATION_ID,
+		icpId: null,
+		capability: "people",
+		status: "running",
+	});
+	const saved = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: CALLER_ORGANIZATION_ID,
+			runId,
+			domain: resolvedDomain,
+			name: `${label} Co`,
+		},
+	]);
+	const companyId = saved[0]?.id;
+	if (!companyId) throw new Error("seed produced no company");
+	await saveRunCompanies(testEnv, [
+		{
+			runId,
+			domain: resolvedDomain,
+			companyId,
+			identity: "domain",
+			mode: "target",
+			buyerSource: "target",
+			spendDollars: 0.12,
+			clayRecords: 5,
+			peopleVerified: 1,
+			peopleRoster: 0,
+		},
+		{
+			runId,
+			domain: unresolvedDomain,
+			companyId: null,
+			identity: "unresolved",
+			mode: null,
+			buyerSource: null,
+			spendDollars: 0,
+			clayRecords: 0,
+			peopleVerified: 0,
+			peopleRoster: 0,
+		},
+	]);
+	await upsertPeople(testEnv, [
+		{
+			organizationId: CALLER_ORGANIZATION_ID,
+			companyId,
+			linkedinUrl: `https://linkedin.com/in/${label}`,
+			name: "Report Person",
+			title: "VP of Sales",
+			data: {
+				status: "verified",
+				basis: "buyer fit",
+				seenBy: ["clay"],
+				since: null,
+				location: null,
+			},
+		},
+	]);
+	return {
+		runId,
+		companyId,
+		resolvedDomain,
+		unresolvedDomain,
+	};
+}
+
+async function cleanupPeopleReport(seed: PeopleReportSeed): Promise<void> {
+	await terminateRun(seed.runId);
+	const connection = db(testEnv, "direct");
+	await connection.delete(person).where(eq(person.companyId, seed.companyId));
+	await connection.delete(runCompany).where(eq(runCompany.runId, seed.runId));
+	await connection.delete(company).where(eq(company.runId, seed.runId));
+	await connection.delete(run).where(eq(run.id, seed.runId));
+}
+
+type PeopleReportCompanyRow = {
+	domain: string;
+	identity: string | null;
+	mode: string | null;
+	buyerSource: string | null;
+	spendDollars: number;
+	company: { id: string } | null;
+};
+
+async function expectCompaniesPageShowsBothRows(
+	seed: PeopleReportSeed,
+): Promise<void> {
+	const response = await authedCall(
+		`/runs/${seed.runId}/companies`,
+		authedGetInit(),
+	);
+	const body: { rows: PeopleReportCompanyRow[] } = await response.json();
+	expect(response.status).toBe(200);
+	const resolvedRow = body.rows.find(
+		(row) => row.domain === seed.resolvedDomain,
+	);
+	const unresolvedRow = body.rows.find(
+		(row) => row.domain === seed.unresolvedDomain,
+	);
+	expect(resolvedRow?.company?.id).toBe(seed.companyId);
+	expect(resolvedRow?.mode).toBe("target");
+	expect(resolvedRow?.buyerSource).toBe("target");
+	expect(resolvedRow?.spendDollars).toBeGreaterThan(0);
+	expect(unresolvedRow?.company).toBeNull();
+	expect(unresolvedRow?.identity).toBe("unresolved");
+}
+
+async function expectPeoplePageShowsVerifiedStatus(
+	seed: PeopleReportSeed,
+): Promise<void> {
+	const response = await authedCall(
+		`/runs/${seed.runId}/people`,
+		authedGetInit(),
+	);
+	const body: { rows: Array<{ data: { status: string } | null }> } =
+		await response.json();
+	expect(response.status).toBe(200);
+	expect(body.rows).toHaveLength(1);
+	expect(body.rows[0]?.data?.status).toBe("verified");
+}
+
+describe("GET /runs/:runId for a people run: the durable per-domain report", () => {
+	it("reads the durable people-run report", async () => {
+		const seed = await seedPeopleReport(`people-report-${crypto.randomUUID()}`);
+		try {
+			await expectCompaniesPageShowsBothRows(seed);
+			await expectPeoplePageShowsVerifiedStatus(seed);
+		} finally {
+			await cleanupPeopleReport(seed);
 		}
 	});
 });
