@@ -10,4 +10,5 @@ export type Unit =
 /** Dollar rate per unit for every vendor `CostLedger.metered()` prices. */
 export const RATES: Record<string, Partial<Record<Unit, number>>> = {
 	findymail: { credits: 0.01, verifier_credits: 0.01 },
+	clay: { records: 0 },
 };

@@ -80,6 +80,8 @@ people:
   # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls
   # at 5 seconds is 2 minutes, well past the measured 5-second completion time.
   exaAgentMaxPollAttempts: 24
+  # Milliseconds before a Clay create or run fetch is treated as timed out.
+  clayFetchTimeoutMs: 30000
 
 enrich:
   batchSize: 5
