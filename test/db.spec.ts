@@ -236,6 +236,7 @@ describe("createIcp", () => {
 		expect(insertedDoc).toEqual({
 			description: "an ideal customer profile",
 			seller,
+			buyer: null,
 		});
 	});
 
@@ -263,6 +264,7 @@ describe("createIcp", () => {
 		expect(insertedDoc).toEqual({
 			description: "an ideal customer profile",
 			seller: null,
+			buyer: null,
 		});
 	});
 });

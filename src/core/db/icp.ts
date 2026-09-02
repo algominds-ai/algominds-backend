@@ -8,7 +8,7 @@ import type {
 } from "@/core/db/queries";
 import type { Icp, NewIcp } from "@/core/db/schema";
 import { icp, run } from "@/core/db/schema";
-import type { IcpDoc, IcpSeller } from "@/core/synthesize";
+import type { IcpBuyer, IcpDoc, IcpSeller } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 
 export async function loadIcp(
@@ -28,6 +28,7 @@ export async function loadIcp(
 export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 	description: string;
 	seller?: IcpSeller | null;
+	buyer?: IcpBuyer | null;
 };
 
 /** Inserts the profile and returns the stored row, on whichever connection the caller is already inside. */
@@ -38,6 +39,7 @@ async function insertIcp(
 	const doc: IcpDoc = IcpDocSchema.parse({
 		description: input.description,
 		seller: input.seller ?? null,
+		buyer: input.buyer ?? null,
 	});
 	const rows = await connection
 		.insert(icp)

@@ -3,6 +3,7 @@ import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { readSellerPages, writeSellerProfile } from "../src/core/onboard";
+import { IcpDocSchema, SENIOR_BANDS } from "../src/core/synthesize";
 
 async function buildIcp(
 	env: Env,
@@ -11,6 +12,7 @@ async function buildIcp(
 ): Promise<{
 	description: string;
 	seller: Awaited<ReturnType<typeof writeSellerProfile>>["seller"];
+	buyer: Awaited<ReturnType<typeof writeSellerProfile>>["buyer"];
 	wroteProfile: boolean;
 	ledger: Awaited<ReturnType<typeof readSellerPages>>["ledger"];
 }> {
@@ -117,6 +119,11 @@ function profileReply(
 		description: string;
 		customers: string[];
 		competitorTest: string;
+		buyer: {
+			rubric: string;
+			bands: string[];
+			keywordBands: { band: string; keywords: string[] }[];
+		} | null;
 	}> = {},
 ): ScriptedModelReply {
 	return {
@@ -124,6 +131,7 @@ function profileReply(
 			description: "a four paragraph ideal customer profile",
 			customers: ["Acme Corp"],
 			competitorTest: "A competitor sells the same tooling to other vendors.",
+			buyer: null,
 			...overrides,
 		}),
 	};
@@ -224,6 +232,79 @@ describe("buildIcp: a normal profile", () => {
 			customers: ["Acme Corp"],
 			competitorTest: "A competitor sells the same tooling to other vendors.",
 		});
+	});
+});
+
+describe("buildIcp: the buyer block", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("captures buyer criteria beside the seller profile", async () => {
+		const buyer = {
+			rubric:
+				"The positives own the budget for this purchase and sit on the revenue team; influencers scope the rollout without owning spend; a VP of Engineering with no budget authority is a hard negative here even though the title reads senior; below two hundred employees the same rubric applies one band lower.",
+			bands: [...SENIOR_BANDS],
+			keywordBands: [{ band: "manager", keywords: ["revenue operations"] }],
+		};
+		const gateway = router({
+			exa: [
+				exaSuccessResponse([
+					{ url: "https://acme.example/", text: "Acme sells tooling." },
+				]),
+			],
+			model: [modelResponse(profileReply({ buyer }))],
+		});
+		globalThis.fetch = gateway.fetch;
+
+		const result = await buildIcp(onboardEnv(), "acme.example");
+
+		expect(result.buyer).toEqual(buyer);
+		expect(() =>
+			IcpDocSchema.parse({
+				description: result.description,
+				seller: result.seller,
+				buyer: result.buyer,
+			}),
+		).not.toThrow();
+	});
+
+	it("keeps the buyer absent when onboarding cannot write one", async () => {
+		const gateway = router({
+			exa: [
+				exaSuccessResponse([
+					{
+						url: "https://acme.example/",
+						text: "Acme sells tooling to agencies.",
+					},
+				]),
+			],
+			model: [
+				modelResponse({ content: "", finishReason: "length" }),
+				modelResponse({ content: "", finishReason: "length" }),
+			],
+		});
+		globalThis.fetch = gateway.fetch;
+
+		const result = await buildIcp(
+			onboardEnv(),
+			"acme.example",
+			"We sell to agencies with more than fifty staff that bill their own clients directly, and never to the freelancers those agencies subcontract to.",
+		);
+
+		expect(result.description).toBe(
+			"We sell to agencies with more than fifty staff that bill their own clients directly, and never to the freelancers those agencies subcontract to.",
+		);
+		expect(result.buyer).toBeNull();
+		expect(() =>
+			IcpDocSchema.parse({
+				description: result.description,
+				seller: result.seller,
+				buyer: result.buyer,
+			}),
+		).not.toThrow();
 	});
 });
 

@@ -14,6 +14,45 @@ export function acceptsAdditionalQueries(type: string): boolean {
 	return DEEP_TYPES.has(type);
 }
 
+/** Clay's closed set of fourteen seniority bands, in Clay's own order. */
+export const CLAY_BANDS = [
+	"founder",
+	"owner",
+	"board-member",
+	"partner",
+	"c-suite",
+	"vp",
+	"director",
+	"head",
+	"manager",
+	"senior",
+	"mid-level",
+	"entry",
+	"intern",
+	"unknown",
+] as const;
+
+/** The eight most senior bands, the default a buyer rubric searches with. */
+export const SENIOR_BANDS: readonly (typeof CLAY_BANDS)[number][] =
+	CLAY_BANDS.slice(0, 8);
+
+export const BandSchema = z.enum(CLAY_BANDS);
+
+export const IcpBuyerSchema = z.object({
+	rubric: z.string().min(1).max(4000),
+	bands: z.array(BandSchema).min(1).max(14),
+	keywordBands: z
+		.array(
+			z.object({
+				band: BandSchema,
+				keywords: z.array(z.string().min(1).max(40)).min(1).max(8),
+			}),
+		)
+		.max(14),
+});
+
+export type IcpBuyer = z.infer<typeof IcpBuyerSchema>;
+
 export const IcpDocSchema = z.object({
 	description: z.string(),
 	seller: z
@@ -23,6 +62,7 @@ export const IcpDocSchema = z.object({
 			competitorTest: z.string(),
 		})
 		.nullish(),
+	buyer: IcpBuyerSchema.nullish(),
 });
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
