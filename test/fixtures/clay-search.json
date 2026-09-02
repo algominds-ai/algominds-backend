@@ -1,0 +1,25 @@
+{
+	"data": [
+		{
+			"name": "Priya Raman",
+			"url": "https://www.linkedin.com/in/priyaraman-vp/",
+			"latest_experience_title": "VP of Revenue Operations",
+			"latest_experience_company": "Harbor Robotics",
+			"latest_experience_start_date": "2022-03-01",
+			"matched_experience": true,
+			"location": "Austin, Texas, United States"
+		},
+		{
+			"name": "Devon Ashworth",
+			"url": "https://linkedin.com/in/devonashworth",
+			"latest_experience_title": "Chief Revenue Officer",
+			"latest_experience_company": "Harbor Robotics",
+			"latest_experience_start_date": "2020-11-15",
+			"matched_experience": true,
+			"location": "Remote"
+		}
+	],
+	"has_more": false,
+	"period_quota": { "used": 48210, "limit": 1500000 },
+	"exhaustion_reason": null
+}
