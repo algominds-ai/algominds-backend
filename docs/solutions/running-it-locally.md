@@ -21,20 +21,13 @@ This does not affect the test suite: every unit test injects a fake binding
 (`{ get: async () => "test-key" }`), which is the correct thing for a test to do.
 It only blocks a live run from inside Vitest.
 
-## Database — not done
+## Database — local
 
-`findCompanies` reads the ICP document and the 90-day exclusion set from
-Postgres, and the last step writes companies and evidence back. There is no
-database yet, so the Workflow fails at its first step.
-
-Needed:
-1. A PlanetScale Postgres database.
-2. Two Hyperdrive configurations against it — one default, one with
-   `--caching-disabled` for the dedupe read. Hyperdrive does not invalidate its
-   cache on write, so a cached read after a write re-delivers companies just
-   stored.
-3. `DATABASE_URL` set, then `bunx drizzle-kit push` to create the four tables.
-4. The two real configuration ids in `wrangler.jsonc`, replacing the placeholders.
+`wrangler dev` reads the local Postgres at `localhost:5432/algo` through the
+`localConnectionString` on both Hyperdrive bindings in `wrangler.jsonc`, so a
+full run works on the local stack with no remote database. Production still
+needs the two Hyperdrive configurations named in `wrangler.jsonc` and their
+ids in place of the placeholders.
 
 ## What is proven without either
 
