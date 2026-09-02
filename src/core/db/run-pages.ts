@@ -3,7 +3,7 @@ import { and, asc, eq, gt } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
 import { db } from "@/core/db/client";
 import type { DbFactory, SelectOrderedConnection } from "@/core/db/queries";
-import { companyScopeForRun } from "@/core/db/run-scope";
+import { companyScopeForRun, peopleStoredScope } from "@/core/db/run-scope";
 import type { Company, Person, Run, RunCompany } from "@/core/db/schema";
 import { company, person, runCompany } from "@/core/db/schema";
 
@@ -109,8 +109,10 @@ export async function companiesPage(
 /**
  * One page of the people found for the companies a run covers, ordered by id
  * ascending. A people run covers its resolved `run_company` rows, since a
- * person carries no run id of its own. An id is unique and never changes, so
- * `id > cursor` can neither skip nor repeat a row already seen.
+ * person carries no run id of its own, and is further scoped to the people
+ * that run's mode ever stores; a companies run keeps every person at its
+ * companies. An id is unique and never changes, so `id > cursor` can neither
+ * skip nor repeat a row already seen.
  */
 export async function peoplePage(
 	env: DbEnv,
@@ -119,7 +121,10 @@ export async function peoplePage(
 	buildDb: DbFactory<PersonPageConnection> = db,
 ): Promise<{ rows: Person[]; nextCursor: string | null }> {
 	const connection = buildDb(env, "cached");
-	const scope = await companyScopeForRun(env, run);
+	const scope =
+		run.capability === "people"
+			? await peopleStoredScope(env, run.id)
+			: await companyScopeForRun(env, run);
 	if (scope === null) return { rows: [], nextCursor: null };
 	const condition = page.cursor
 		? and(scope, gt(person.id, page.cursor))

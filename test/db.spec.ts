@@ -1425,25 +1425,11 @@ type ProfilelessPeopleRunFixture = {
 	companyIds: string[];
 };
 
-async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFixture> {
-	const orgA = await seedOrganization("profileless-a");
-	const orgB = await seedOrganization("profileless-b");
-	const peopleRunId = `people_profileless-${crypto.randomUUID()}`;
-	const peopleRunRow = await openRun(testEnv, {
-		id: peopleRunId,
-		organizationId: orgA.id,
-		icpId: null,
-		capability: "people",
-		status: "complete",
-	});
-	const companiesRunId = `companies_profileless-${crypto.randomUUID()}`;
-	await openRun(testEnv, {
-		id: companiesRunId,
-		organizationId: orgA.id,
-		icpId: null,
-		capability: "companies",
-		status: "complete",
-	});
+async function seedProfilelessCompanies(
+	orgA: Organization,
+	orgB: Organization,
+	companiesRunId: string,
+): Promise<[Company, Company, Company]> {
 	const [companyA1, companyA2] = await saveCompanies(testEnv, [
 		{
 			icpId: null,
@@ -1472,6 +1458,33 @@ async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFi
 	if (!companyA1 || !companyA2 || !companyB) {
 		throw new Error("seed failed to save a company");
 	}
+	return [companyA1, companyA2, companyB];
+}
+
+async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFixture> {
+	const orgA = await seedOrganization("profileless-a");
+	const orgB = await seedOrganization("profileless-b");
+	const peopleRunId = `people_profileless-${crypto.randomUUID()}`;
+	const peopleRunRow = await openRun(testEnv, {
+		id: peopleRunId,
+		organizationId: orgA.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	const companiesRunId = `companies_profileless-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: companiesRunId,
+		organizationId: orgA.id,
+		icpId: null,
+		capability: "companies",
+		status: "complete",
+	});
+	const [companyA1, companyA2, companyB] = await seedProfilelessCompanies(
+		orgA,
+		orgB,
+		companiesRunId,
+	);
 	await saveRunCompanies(testEnv, [
 		{
 			runId: peopleRunId,
@@ -1490,24 +1503,34 @@ async function seedProfilelessPeopleRunFixture(): Promise<ProfilelessPeopleRunFi
 			buyerSource: "none",
 		},
 	]);
+	const rosterData = {
+		status: "roster",
+		basis: null,
+		seenBy: ["clay"],
+		since: null,
+		location: null,
+	};
 	await upsertPeople(testEnv, [
 		{
 			organizationId: orgA.id,
 			companyId: companyA1.id,
 			linkedinUrl: `https://linkedin.com/in/a1-${crypto.randomUUID()}`,
 			name: "Person A1",
+			data: rosterData,
 		},
 		{
 			organizationId: orgA.id,
 			companyId: companyA2.id,
 			linkedinUrl: `https://linkedin.com/in/a2-${crypto.randomUUID()}`,
 			name: "Person A2",
+			data: rosterData,
 		},
 		{
 			organizationId: orgB.id,
 			companyId: companyB.id,
 			linkedinUrl: `https://linkedin.com/in/b-${crypto.randomUUID()}`,
 			name: "Person B",
+			data: rosterData,
 		},
 	]);
 	return {
@@ -1557,6 +1580,149 @@ describe("peoplePage: a profileless people run", () => {
 			]);
 		} finally {
 			await cleanupProfilelessPeopleRunFixture(fixture);
+		}
+	});
+});
+
+type StoredStatusFixture = {
+	org: Organization;
+	companyId: string;
+	targetRun: Run;
+	rosterRun: Run;
+};
+
+async function seedStoredStatusFixture(): Promise<StoredStatusFixture> {
+	const org = await seedOrganization("stored-status");
+	const targetRunId = `people_stored-status-target-${crypto.randomUUID()}`;
+	const targetRun = await openRun(testEnv, {
+		id: targetRunId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	const [savedCompany] = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: org.id,
+			domain: `stored-status-${crypto.randomUUID()}.com`,
+			name: "Stored Status Co",
+			runId: targetRunId,
+		},
+	]);
+	if (!savedCompany) throw new Error("seed failed to save a company");
+	const rosterRunId = `people_stored-status-roster-${crypto.randomUUID()}`;
+	const rosterRun = await openRun(testEnv, {
+		id: rosterRunId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	await saveRunCompanies(testEnv, [
+		{
+			runId: targetRunId,
+			domain: savedCompany.domain,
+			companyId: savedCompany.id,
+			identity: "domain",
+			mode: "target",
+			buyerSource: "target",
+		},
+		{
+			runId: rosterRunId,
+			domain: savedCompany.domain,
+			companyId: savedCompany.id,
+			identity: "domain",
+			mode: "roster",
+			buyerSource: "none",
+		},
+	]);
+	await upsertPeople(testEnv, [
+		{
+			organizationId: org.id,
+			companyId: savedCompany.id,
+			linkedinUrl: `https://linkedin.com/in/legacy-${crypto.randomUUID()}`,
+			name: "Legacy Person",
+		},
+		{
+			organizationId: org.id,
+			companyId: savedCompany.id,
+			linkedinUrl: `https://linkedin.com/in/roster-${crypto.randomUUID()}`,
+			name: "Roster Person",
+			data: {
+				status: "roster",
+				basis: null,
+				seenBy: ["clay"],
+				since: null,
+				location: null,
+			},
+		},
+		{
+			organizationId: org.id,
+			companyId: savedCompany.id,
+			linkedinUrl: `https://linkedin.com/in/verified-${crypto.randomUUID()}`,
+			name: "Verified Person",
+			data: {
+				status: "verified",
+				basis: "champion",
+				seenBy: ["exa"],
+				since: null,
+				location: null,
+			},
+		},
+	]);
+	return {
+		org,
+		companyId: savedCompany.id,
+		targetRun,
+		rosterRun,
+	};
+}
+
+async function cleanupStoredStatusFixture(
+	fixture: StoredStatusFixture,
+): Promise<void> {
+	const connection = db(testEnv, "direct");
+	await connection
+		.delete(runCompany)
+		.where(
+			inArray(runCompany.runId, [fixture.targetRun.id, fixture.rosterRun.id]),
+		);
+	await connection
+		.delete(person)
+		.where(eq(person.companyId, fixture.companyId));
+	await connection.delete(company).where(eq(company.id, fixture.companyId));
+	await connection
+		.delete(run)
+		.where(inArray(run.id, [fixture.targetRun.id, fixture.rosterRun.id]));
+	await connection
+		.delete(organization)
+		.where(eq(organization.id, fixture.org.id));
+}
+
+describe("peoplePage: only the people this engine stored", () => {
+	it("keeps only the verified row for a target-mode run, and both roster and verified for a roster-mode run", async () => {
+		const fixture = await seedStoredStatusFixture();
+
+		try {
+			const targetPage = await peoplePage(testEnv, fixture.targetRun, {
+				limit: 10,
+				cursor: undefined,
+			});
+			expect(targetPage.rows.map((row) => row.name).sort()).toEqual([
+				"Verified Person",
+			]);
+
+			const rosterPage = await peoplePage(testEnv, fixture.rosterRun, {
+				limit: 10,
+				cursor: undefined,
+			});
+			expect(rosterPage.rows.map((row) => row.name).sort()).toEqual([
+				"Roster Person",
+				"Verified Person",
+			]);
+		} finally {
+			await cleanupStoredStatusFixture(fixture);
 		}
 	});
 });

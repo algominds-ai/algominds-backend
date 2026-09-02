@@ -135,4 +135,20 @@ describe("identity resolution", () => {
 		expect(result.how).toBe("unresolved");
 		expect(calls.calls).toBe(2);
 	});
+
+	it("resolves a Clay-rejected domain to unresolved with no roster call", async () => {
+		const calls = stubClaySequence([
+			jsonResponse(200, { search_id: "domain-search" }),
+			jsonResponse(400, { error: "invalid company_identifier" }),
+		]);
+
+		const result = await resolveIdentity(
+			{ domain: "notacompany.example", linkedinUrl: null },
+			clayEnv(),
+			new CostLedger(),
+		);
+
+		expect(result.how).toBe("unresolved");
+		expect(calls.calls).toBe(2);
+	});
 });

@@ -147,5 +147,26 @@ describe("Clay failure modes", () => {
 			new CostLedger(),
 		);
 		expect(empty.rows).toEqual([]);
+		expect(empty.rejected).toBe(false);
+
+		const rejectCalls = stubClaySequence([
+			{ response: jsonResponse(200, { search_id: "search-rejected" }) },
+			{ response: jsonResponse(400, { error: "invalid company_identifier" }) },
+		]);
+		const rejected = await claySearch(
+			clayEnv(),
+			{ identifier: "notacompany.example" },
+			new CostLedger(),
+		);
+		expect(rejected).toEqual({
+			rows: [],
+			raw: [
+				JSON.stringify({ search_id: "search-rejected" }),
+				JSON.stringify({ error: "invalid company_identifier" }),
+			],
+			quotaUsed: 0,
+			rejected: true,
+		});
+		expect(rejectCalls.runCalls).toBe(1);
 	});
 });

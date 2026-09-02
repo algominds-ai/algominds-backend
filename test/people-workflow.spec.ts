@@ -21,7 +21,10 @@ import {
 import { resolveBuyer } from "../src/core/people/buyer";
 import { clampCompanies } from "../src/workflows/find-people";
 import type { CompanyLoopContext } from "../src/workflows/find-people-company";
-import { runOneCompany } from "../src/workflows/find-people-company";
+import {
+	runCompanies,
+	runOneCompany,
+} from "../src/workflows/find-people-company";
 import type { TargetCompany } from "../src/workflows/find-people-target";
 
 const originalFetch = globalThis.fetch;
@@ -515,7 +518,7 @@ function targetRunOverrides(domain: string): Map<string, unknown> {
 				costEntries: [],
 			},
 		],
-		[`people-${domain}-verify-0-quote`, true],
+		[`people-${domain}-verify-0-quote`, { found: true, reason: "found" }],
 		[`people-${domain}-verify-1-start`, { id: "agent-run-1" }],
 		[
 			`people-${domain}-verify-1-poll-1`,
@@ -568,6 +571,15 @@ async function assertVerifiedTargetRun(
 	expect(kinds.filter((kind: string) => kind === "verify-poll")).toHaveLength(
 		2,
 	);
+	const quoteRows = evidenceRows.filter(
+		(row: Evidence) => row.kind === "verify-quote",
+	);
+	expect(quoteRows).toHaveLength(1);
+	expect(JSON.parse(quoteRows[0]?.value ?? "")).toEqual({
+		url: "https://verifytarget.example/team",
+		found: true,
+		reason: "found",
+	});
 }
 
 describe("FindPeopleWorkflow: a target run", () => {
@@ -618,6 +630,77 @@ describe("FindPeopleWorkflow: a target run", () => {
 			expect(result.outcome.unresolvedDomain).toBeNull();
 
 			await assertVerifiedTargetRun(org.id, runId);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function stubClayRejectFetch(): { runCalls: number } {
+	const calls = { runCalls: 0 };
+	globalThis.fetch = async (input) => {
+		const path = new URL(String(input)).pathname;
+		if (path === "/public/v0/search/filters-mode") {
+			return clayResponse({ search_id: "search-rejected" });
+		}
+		calls.runCalls += 1;
+		return new Response(
+			JSON.stringify({ error: "invalid company_identifier" }),
+			{ status: 400, headers: CLAY_HEADERS },
+		);
+	};
+	return calls;
+}
+
+describe("FindPeopleWorkflow: a Clay-rejected domain", () => {
+	it("writes identity: unresolved and lists the domain as unknown, with no roster call", async () => {
+		const domain = "notacompany.example";
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-reject-${crypto.randomUUID()}`,
+			"people workflow reject test",
+		);
+		const runId = `people_reject_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			const calls = stubClayRejectFetch();
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(new Map()),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runCompanies(ctx, [bareCompany(domain)], 0);
+
+			expect(result.unknownDomains).toEqual([domain]);
+			expect(result.companiesSearched).toBe(1);
+			expect(result.peopleVerified).toBe(0);
+			expect(result.peopleRoster).toBe(0);
+			expect(calls.runCalls).toBe(1);
+
+			const runCompanyRows = await db(testEnv, "direct")
+				.select()
+				.from(runCompany)
+				.where(eq(runCompany.runId, runId));
+			expect(runCompanyRows).toHaveLength(1);
+			expect(runCompanyRows[0]?.identity).toBe("unresolved");
+			expect(runCompanyRows[0]?.companyId).toBeNull();
+
+			const companyRows = await db(testEnv, "direct")
+				.select()
+				.from(company)
+				.where(eq(company.organizationId, org.id));
+			expect(companyRows).toHaveLength(0);
 		} finally {
 			await cleanupTargetRun(org.id, runId);
 		}
