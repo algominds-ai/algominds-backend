@@ -85,8 +85,12 @@ export const ExaAgentCompanySchema = CompanyRecordSchema.extend({
 /** One company as Exa's agent reports it, matching the `outputSchema` a caller sent to `startAgentRun`. */
 export type ExaAgentCompany = z.infer<typeof ExaAgentCompanySchema>;
 
+/** An agent that finds nothing reports `companies: null`, which is an empty round and not a bad shape. */
 const ExaAgentStructuredOutputSchema = z.object({
-	companies: z.array(ExaAgentCompanySchema),
+	companies: z
+		.array(ExaAgentCompanySchema)
+		.nullable()
+		.transform((companies) => companies ?? []),
 });
 
 const LINKEDIN_PROFILE_URL_PATTERN =
