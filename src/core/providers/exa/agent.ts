@@ -5,6 +5,7 @@ import {
 	CompanyRecordSchema,
 	nullableString,
 } from "@/core/providers/exa/search";
+import { EXA_FETCH_TIMEOUT_MS } from "@/core/providers/exa/timeout";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
@@ -168,8 +169,6 @@ function throwForStatus(status: number, body: unknown): never {
 	throw new NonRetryableError(detail);
 }
 
-const AGENT_FETCH_TIMEOUT_MS = 60_000;
-
 async function exaAgentFetch(path: string, env: Env, init?: RequestInit) {
 	const apiKey = await env.EXA_API_KEY.get();
 	let response: Response;
@@ -177,7 +176,7 @@ async function exaAgentFetch(path: string, env: Env, init?: RequestInit) {
 		response = await fetch(`https://api.exa.ai/agent/runs${path}`, {
 			...init,
 			headers: { ...init?.headers, "x-api-key": apiKey },
-			signal: AbortSignal.timeout(AGENT_FETCH_TIMEOUT_MS),
+			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
 		});
 	} catch (error) {
 		if (error instanceof DOMException && error.name === "TimeoutError") {
@@ -293,4 +292,74 @@ export async function getAgentRun(
 	);
 	if (run.status !== "completed") return run;
 	return { status: "completed", companies: run.output.companies };
+}
+
+const EVIDENCE_KINDS = [
+	"first_party",
+	"press",
+	"aggregator",
+	"linkedin",
+] as const;
+
+/** The measured verification schema: a closed verdict, its evidence, and the kind of page it came from. */
+export const ExaAgentVerdictSchema = z.object({
+	verdict: z.enum(["CONFIRMED", "CONTRADICTED", "UNKNOWN"]),
+	evidence_url: z.string().nullable(),
+	evidence_quote: z.string().nullable(),
+	evidence_kind: z.enum(EVIDENCE_KINDS).nullable(),
+	confidence: z.number().min(0).max(1).nullable(),
+});
+
+export type ExaAgentVerdict = z.infer<typeof ExaAgentVerdictSchema>;
+
+export type VerdictRunInput = {
+	name: string;
+	title: string;
+	company: string;
+	domain: string;
+};
+
+function verdictQuery(input: VerdictRunInput): string {
+	return [
+		`Does ${input.name} currently hold the title "${input.title}" at`,
+		`${input.company} (${input.domain})?`,
+		"Prefer evidence from the company's own site or independent press coverage",
+		"over data aggregators or LinkedIn itself.",
+		"Copy the sentence that proves your answer word for word into",
+		"`evidence_quote`, exactly as it appears on the page.",
+		"Put the kind of page the evidence came from into `evidence_kind`:",
+		"`first_party` for the company's own site, `press` for independent news",
+		"coverage, `aggregator` for a data aggregator derived from LinkedIn, or",
+		"`linkedin` for a LinkedIn page itself.",
+	].join(" ");
+}
+
+const VERDICT_OUTPUT_SCHEMA = z
+	.json()
+	.parse(z.toJSONSchema(ExaAgentVerdictSchema, { io: "input" }));
+
+/**
+ * Builds one Exa agent run request asking whether `name` currently holds
+ * `title` at `company`, at the measured effort `minimal`.
+ */
+export function buildVerdictRunRequest(
+	input: VerdictRunInput,
+): ExaAgentRunRequest {
+	return {
+		query: verdictQuery(input),
+		effort: "minimal",
+		outputSchema: VERDICT_OUTPUT_SCHEMA,
+	};
+}
+
+/**
+ * Fetches one agent run's current state for the verification verdict
+ * schema. A thin wrapper over `getAgentRunOutput`, beside `getAgentRun`.
+ */
+export async function getAgentVerdictRun(
+	id: string,
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaAgentRunOutput<ExaAgentVerdict>> {
+	return getAgentRunOutput(id, env, ledger, ExaAgentVerdictSchema);
 }

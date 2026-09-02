@@ -237,6 +237,24 @@ describe("model: a response that never matches the schema", () => {
 	});
 });
 
+describe("model: a call that exceeds the shared timeout", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("times out shared calls as unknown", async () => {
+		globalThis.fetch = async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		};
+
+		const result = await callWorkerModel(new CostLedger());
+
+		expect(result).toBeNull();
+	});
+});
+
 describe("model: cost reporting", () => {
 	const originalFetch = globalThis.fetch;
 

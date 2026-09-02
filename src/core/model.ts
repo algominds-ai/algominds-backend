@@ -9,6 +9,7 @@ import {
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
 import { recordModelCall } from "@/core/cost";
+import { EXA_FETCH_TIMEOUT_MS } from "@/core/providers/exa/timeout";
 
 const PROVIDER_NAME = "aigw";
 
@@ -59,10 +60,18 @@ function costFromResponseBody(body: unknown): number {
 	return parsed.success ? (parsed.data.usage?.cost ?? 0) : 0;
 }
 
+function isTimeoutError(error: unknown): boolean {
+	return (
+		error instanceof DOMException &&
+		(error.name === "AbortError" || error.name === "TimeoutError")
+	);
+}
+
 function isRetryableModelError(error: unknown): boolean {
 	return (
 		NoObjectGeneratedError.isInstance(error) ||
-		NoOutputGeneratedError.isInstance(error)
+		NoOutputGeneratedError.isInstance(error) ||
+		isTimeoutError(error)
 	);
 }
 
@@ -89,6 +98,7 @@ async function attemptStructured<T>(
 			headers: params.headers,
 			providerOptions: STRUCTURED_ROUTING,
 			include: { responseBody: true },
+			abortSignal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
 		});
 		recordModelCall(ledger, op, params.configuredId, {
 			headers: new Headers(result.response.headers),
