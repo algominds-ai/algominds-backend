@@ -176,6 +176,40 @@ describe("verify: aggregator evidence needs a second opinion", () => {
 	});
 });
 
+describe("verify: the index match falls back from url to name key", () => {
+	it("matches by name key when no url matches, and reports nothing found when neither matches", async () => {
+		globalThis.fetch = async () => personSearchResponse();
+		const byName = await indexOpinion(
+			{
+				name: "Jane Doe",
+				title: "VP of Sales",
+				company: "Acme Inc",
+				url: "https://linkedin.com/in/someone-else",
+			},
+			exaEnv(),
+			new CostLedger(),
+		);
+		expect(byName.found).toBe(true);
+		expect(byName.employer).toBe("Acme Holdings");
+		expect(byName.indexedTitle).toBe("VP of Sales");
+
+		globalThis.fetch = async () => personSearchResponse();
+		const noMatch = await indexOpinion(
+			{
+				name: "John Smith",
+				title: "VP of Sales",
+				company: "Acme Inc",
+				url: "https://linkedin.com/in/someone-else",
+			},
+			exaEnv(),
+			new CostLedger(),
+		);
+		expect(noMatch.found).toBe(false);
+		expect(noMatch.employer).toBeNull();
+		expect(noMatch.indexedTitle).toBeNull();
+	});
+});
+
 describe("verify: the quote guard refuses unsafe URLs and redirects", () => {
 	it("refuses unsafe quote URLs and redirects", async () => {
 		expect(
