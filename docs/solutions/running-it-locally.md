@@ -27,6 +27,15 @@ suite: every unit test injects a fake binding (`{ get: async () => "test-key"
 }`), which is the correct thing for a test to do. It only blocks a live run
 from inside Vitest.
 
+## Local development secrets
+
+Local development reads every secret and variable from `.env`; do not create a `.dev.vars`
+file. When `.dev.vars` exists, Wrangler stops reading `.env`, loads only `.dev.vars` as
+secrets, and the empty `vars` in `wrangler.jsonc` (`AI_GATEWAY_BASE_URL`, `MODEL_ROUTE_REASONING`,
+`MODEL_ROUTE_WORKER`, `CF_GATEWAY_ID`) win instead, so every model call fails with
+`TypeError: Invalid URL string.` in the synthesizer step. The server's first log line shows
+which file it loaded (`Using secrets defined in .env`).
+
 ## Database
 
 Run `bun run db:migrate` against the production `DATABASE_URL` once. That

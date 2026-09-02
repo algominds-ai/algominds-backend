@@ -61,7 +61,7 @@
 		"MODEL_ROUTE_WORKER": ""
 	},
 
-	// Production secrets. Local dev reads the same names from .env / .dev.vars.
+	// Production secrets. Local dev reads the same names from .env only; do not create .dev.vars, it shadows .env and breaks model calls.
 	// Create with: wrangler secrets-store secret create <store> --name <NAME> --scopes workers
 	"secrets_store_secrets": [
 		{
