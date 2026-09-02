@@ -48,6 +48,7 @@ export type ClaySearchResult = {
 	rows: ClayRow[];
 	raw: string[];
 	quotaUsed: number;
+	rejected: boolean;
 };
 
 type ClayFilters = {
@@ -112,11 +113,14 @@ function buildFilters(input: ClaySearchInput): ClayFilters {
 	return filters;
 }
 
+type PostClayOutcome = { text: string; rejected: boolean };
+
 async function postClay(
 	path: string,
 	body: unknown,
 	ctx: ClayFetchContext,
-): Promise<string> {
+	options?: { allowRejection: boolean },
+): Promise<PostClayOutcome> {
 	let response: Response;
 	try {
 		response = await fetch(`${CLAY_BASE_URL}${path}`, {
@@ -139,12 +143,15 @@ async function postClay(
 			`Clay request to ${path} failed: status ${response.status}`,
 		);
 	}
+	if (response.status === 400 && options?.allowRejection) {
+		return { text: await response.text(), rejected: true };
+	}
 	if (!response.ok) {
 		throw new NonRetryableError(
 			`Clay request to ${path} failed: status ${response.status}`,
 		);
 	}
-	return response.text();
+	return { text: await response.text(), rejected: false };
 }
 
 function parseJson(text: string, whatFailed: string): unknown {
@@ -163,7 +170,7 @@ async function createSearch(
 		source_type: "people",
 		filters: buildFilters(input),
 	};
-	const text = await postClay("/search/filters-mode", request, ctx);
+	const { text } = await postClay("/search/filters-mode", request, ctx);
 	const parsed = ClaySearchCreateResponseSchema.safeParse(
 		parseJson(text, "create response"),
 	);
@@ -175,24 +182,34 @@ async function createSearch(
 	return { searchId: parsed.data.search_id, raw: text };
 }
 
+type RunPageResult =
+	| { rejected: true; raw: string }
+	| {
+			rejected: false;
+			page: z.infer<typeof ClaySearchRunResponseSchema>;
+			raw: string;
+	  };
+
 async function runPage(
 	searchId: string,
 	ctx: ClayFetchContext,
-): Promise<{ page: z.infer<typeof ClaySearchRunResponseSchema>; raw: string }> {
-	const text = await postClay(
+): Promise<RunPageResult> {
+	const outcome = await postClay(
 		`/search/filters-mode/${searchId}/run`,
 		{ limit: CLAY_RUN_LIMIT },
 		ctx,
+		{ allowRejection: true },
 	);
+	if (outcome.rejected) return { rejected: true, raw: outcome.text };
 	const parsed = ClaySearchRunResponseSchema.safeParse(
-		parseJson(text, "run response"),
+		parseJson(outcome.text, "run response"),
 	);
 	if (!parsed.success) {
 		throw new NonRetryableError(
 			"Clay: run response did not match the expected shape",
 		);
 	}
-	return { page: parsed.data, raw: text };
+	return { rejected: false, page: parsed.data, raw: outcome.text };
 }
 
 function quotaDelta(
@@ -208,6 +225,8 @@ function quotaDelta(
  * Runs Clay's two-step people search over `input.identifier`, paging the
  * created search until `has_more` is false or the code-level page ceiling is
  * reached, and returns the mapped rows alongside every untouched reply body.
+ * A 400 on the run call after a successful create means Clay rejected the
+ * identifier; that page's clean-empty result carries `rejected: true`.
  */
 export async function claySearch(
 	env: Env,
@@ -224,23 +243,24 @@ export async function claySearch(
 	let quotaStart: number | null = null;
 	let quotaEnd: number | null = null;
 	for (let page = 0; page < CLAY_MAX_PAGES; page++) {
-		const { page: parsedPage, raw: pageRaw } = await runPage(
-			created.searchId,
-			ctx,
-		);
-		raw.push(pageRaw);
-		rows = rows.concat(parsedPage.data.map(toClayRow));
-		const used = parsedPage.period_quota?.used;
+		const result = await runPage(created.searchId, ctx);
+		raw.push(result.raw);
+		if (result.rejected) {
+			return { rows: [], raw, quotaUsed: 0, rejected: true };
+		}
+		rows = rows.concat(result.page.data.map(toClayRow));
+		const used = result.page.period_quota?.used;
 		if (used !== undefined) {
 			quotaStart = quotaStart ?? used;
 			quotaEnd = used;
 		}
-		if (!parsedPage.has_more) break;
+		if (!result.page.has_more) break;
 	}
 	ledger.metered("clay", "search", rows.length, "records");
 	return {
 		rows,
 		raw,
 		quotaUsed: quotaDelta(quotaStart, quotaEnd, rows.length),
+		rejected: false,
 	};
 }

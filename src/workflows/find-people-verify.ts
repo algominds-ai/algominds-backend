@@ -155,21 +155,35 @@ async function secondOpinion(
 	return { verified: agreeResult.label === "SAME", evidence };
 }
 
+type QuoteResolution = { url: string | null; evidence: PickEvidence | null };
+
+/**
+ * Checks the verdict's quote against its own URL and reports both the kept
+ * URL (null on a miss) and the guard's outcome as one `verify-quote`
+ * evidence item, so a later run can see why a URL was dropped.
+ */
 async function resolveEvidenceUrl(
 	pick: PickContext,
 	verdict: ExaAgentVerdict,
 	verified: boolean,
-): Promise<string | null> {
-	if (!verified || !verdict.evidence_url || !verdict.evidence_quote)
-		return null;
+): Promise<QuoteResolution> {
+	if (!verified || !verdict.evidence_url || !verdict.evidence_quote) {
+		return { url: null, evidence: null };
+	}
 	const url = verdict.evidence_url;
 	const quote = verdict.evidence_quote;
-	const kept = await pick.ctx.step.do(
+	const outcome = await pick.ctx.step.do(
 		`${pick.name}-quote`,
 		config.stepConfig.paidCall,
 		() => quoteOnPage(url, quote, pick.ctx.env),
 	);
-	return kept ? url : null;
+	return {
+		url: outcome.found ? url : null,
+		evidence: {
+			kind: "verify-quote",
+			body: { url, found: outcome.found, reason: outcome.reason },
+		},
+	};
 }
 
 async function verifyPick(pick: PickContext): Promise<PickOutcome> {
@@ -200,11 +214,12 @@ async function verifyPick(pick: PickContext): Promise<PickOutcome> {
 		verified = opinion.verified;
 		evidence.push(...opinion.evidence);
 	}
-	const keptUrl = await resolveEvidenceUrl(pick, verdict, verified);
+	const resolvedUrl = await resolveEvidenceUrl(pick, verdict, verified);
 	evidence.push({
 		kind: "verify-poll",
-		body: { ...verdict, evidence_url: keptUrl },
+		body: { ...verdict, evidence_url: resolvedUrl.url },
 	});
+	if (resolvedUrl.evidence) evidence.push(resolvedUrl.evidence);
 	return { verified, evidence, costEntries: pollLedger.toJSON().entries };
 }
 
