@@ -229,9 +229,7 @@ export type RoundReport = {
 	eventWindowDays: number | null;
 	recencyDays: number | null;
 	source: string;
-	type: string;
 	agentEffort: string;
-	additionalQueries: string[];
 	found: number;
 	rejected: { filter: number; gate: number; judge: number };
 };
@@ -252,9 +250,7 @@ export function reportRound(
 		eventWindowDays: plan?.eventWindowDays ?? null,
 		recencyDays: plan?.recencyDays ?? null,
 		source: plan?.source ?? "",
-		type: plan?.type ?? "",
 		agentEffort: plan?.agentEffort ?? "",
-		additionalQueries: plan?.additionalQueries ?? [],
 		found: result.companies.length,
 		rejected: {
 			filter: count("filter"),

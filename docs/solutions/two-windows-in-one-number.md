@@ -95,13 +95,6 @@ and lost five that way, all of them paid for. `agentQuery` now appends the
 model's own number as a sentence. Filter refusals across a later three-round run
 fell to three of thirteen.
 
-**Let each round tell the next what its window bought.** The rounds already
-exchanged reject reasons. They now also carry the window the round demanded and
-the ages of the pages it kept, and the instruction reads it both ways: pages far
-fresher than the window allowed mean this market publishes faster than assumed,
-so ask for less; a round that kept nothing means evidence that fresh is scarce,
-so ask for more. The same line makes one profile tighten and another widen.
-
 ## Where it stands
 
 Three unrelated profiles, ten companies each, one clean pool:
@@ -129,17 +122,18 @@ round that draws wide fills the list with what it finds, and the engine keeps th
 first companies rather than the freshest. On one run this put four pages of 69,
 89, 147 and 180 days into a list whose other six were under 20.
 
-**The adaptive feedback's effect is unverified.** It has a unit test proving the
-ages reach the next round. On its first live run the window moved from 45 to 60,
-which is the opposite of what the instruction asks for, on a round that also
-changed angle. One sample, two explanations, and no way to separate them —
-because **feedback is never persisted**. The `round` table stores the plan and
-the rejects, not the feedback string, so what the model actually read cannot be
-recovered.
+**Feedback is never persisted.** The `round` table stores the plan and the
+rejects, not the feedback string, so what the model actually read on any given
+round cannot be recovered after the fact.
 
-**`windowFeedback` cannot tell two failures apart.** It reports "kept nothing"
-whether the agent found nothing or the judge refused everything. Those deserve
-opposite lessons, and it gives them the same one.
+**The round-to-round window feedback was removed, unmeasured.** It reported
+"kept nothing" whether the agent found nothing or the judge refused everything —
+those deserve opposite lessons and it gave them the same one — and on a search
+round it had nothing to report at all, since the company index carries no pages.
+Its effect on an agent round was never isolated from the angle also changing
+each round, so it was cut rather than fixed. The two fields it fed,
+`eventWindowDays` and `recencyDays`, are unaffected: they still travel from the
+profile through the plan to `staleRejectReason` and `agentQuery`.
 
 ## The trap that cost the most time
 

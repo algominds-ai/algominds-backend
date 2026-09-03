@@ -106,9 +106,7 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -153,9 +151,7 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 				eventWindowDays: null,
 				recencyDays: null,
 				source: "exa-search",
-				type: "fast",
 				agentEffort: "low",
-				additionalQueries: [],
 				userLocation: null,
 				countries: [],
 				minWorkforce: null,
@@ -1031,32 +1027,6 @@ describe("a round the vendor answers with nothing", () => {
 });
 
 describe("a round the filter refuses outright", () => {
-	it("tells the next round how old the pages the last one kept really were", async () => {
-		const { search } = scriptedSearch([
-			[
-				{ ...goodResult("alpha.com"), publishedDate: "2026-08-25" },
-				{ ...goodResult("beta.com"), publishedDate: "2026-08-20" },
-			],
-			[],
-		]);
-		const { synthesize, inputs } = scriptedSynthesize({
-			recency: "lately",
-			recencyDays: 180,
-		});
-
-		await findCompanies(icp, 10, testOptions(), {
-			recentDomains: recordingRecentDomains().recentDomains,
-			synthesize,
-			search,
-			gate,
-			judge: scriptedJudge([]),
-		});
-
-		const sent = inputs[1]?.feedback.join(" ") ?? "";
-		expect(sent).toContain("no older than 180 days");
-		expect(sent).toContain("5, 10 days old");
-	});
-
 	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
 		const { search } = scriptedSearch([
 			[
@@ -1137,9 +1107,7 @@ function reportFor(
 		eventWindowDays: null,
 		recencyDays: null,
 		source: plan.source,
-		type: plan.type,
 		agentEffort: plan.agentEffort,
-		additionalQueries: plan.additionalQueries,
 		found,
 		rejected,
 	};
@@ -1360,7 +1328,6 @@ describe("a round reports the freshness it demanded", () => {
 		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
 		expect(without.recency).toBeNull();
 		expect(withWindow.source).toBe("exa-search");
-		expect(withWindow.type).toBe("fast");
 	});
 });
 

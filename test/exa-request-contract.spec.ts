@@ -16,9 +16,7 @@ function planFor(query: string): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -130,9 +128,7 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
@@ -333,32 +329,11 @@ describe("what reaches the network matches what the builder produced", () => {
 	});
 });
 
-describe("the plan chooses the search type, and only a deep type reads its variations", () => {
-	it("sends the type the plan picked", () => {
-		const request = buildSearchRequest(samplePlan({ type: "deep" }));
+describe("the search request runs at fast, the only type a search round pins", () => {
+	it("sends fast and no additionalQueries, since nothing reads them at fast", () => {
+		const request = buildSearchRequest(samplePlan());
 
-		expect(request.type).toBe("deep");
-	});
-
-	it("passes the variations on a deep type", () => {
-		const request = buildSearchRequest(
-			samplePlan({
-				type: "deep",
-				additionalQueries: ["payment processors", "core banking vendors"],
-			}),
-		);
-
-		expect(request.additionalQueries).toEqual([
-			"payment processors",
-			"core banking vendors",
-		]);
-	});
-
-	it("drops the variations on a fast search, where nothing reads them", () => {
-		const request = buildSearchRequest(
-			samplePlan({ type: "fast", additionalQueries: ["payment processors"] }),
-		);
-
+		expect(request.type).toBe("fast");
 		expect(request.additionalQueries).toBeUndefined();
 	});
 });

@@ -138,42 +138,6 @@ function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
 	return groupRejectReasons(rejects);
 }
 
-function evidenceAges(
-	accepted: readonly CompanyRow[],
-	today: string,
-): number[] {
-	return accepted
-		.map((row) => row.evidenceDate)
-		.filter((date): date is string => date !== null)
-		.map((date) =>
-			Math.round((Date.parse(today) - Date.parse(date)) / 86_400_000),
-		)
-		.filter((age) => Number.isFinite(age))
-		.sort((left, right) => left - right);
-}
-
-/**
- * What the round's freshness demand actually bought: the window it asked for
- * and how old the pages it kept really were. The next round reads this and
- * decides for itself whether this market supplies fresher evidence or less.
- */
-function windowFeedback(
-	plan: SearchPlan,
-	accepted: readonly CompanyRow[],
-	today: string,
-): string[] {
-	if (plan.recencyDays === null) return [];
-	const ages = evidenceAges(accepted, today);
-	if (ages.length === 0) {
-		return [
-			`That round demanded a page no older than ${plan.recencyDays} days and kept nothing, so evidence that fresh may be scarce here.`,
-		];
-	}
-	return [
-		`That round demanded a page no older than ${plan.recencyDays} days and kept ${ages.length}, whose pages were ${ages.join(", ")} days old.`,
-	];
-}
-
 type RoundContext = {
 	icp: IcpDoc;
 	count: number;
@@ -381,10 +345,7 @@ async function runRounds(
 		const absorbed = absorbRound(outcome, input.seenDomains);
 		rejects.push(...absorbed.rejects);
 		companies.push(...absorbed.accepted);
-		feedback = [
-			...buildFeedback(absorbed.rejects),
-			...windowFeedback(outcome.plan, absorbed.accepted, opts.today),
-		];
+		feedback = buildFeedback(absorbed.rejects);
 
 		const decision = decideRound(companies.length, input.count, {
 			resultCount: outcome.resultCount,

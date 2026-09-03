@@ -19,7 +19,7 @@ export const config = {
 	companies: {
 		maxRounds: 3,
 		resultsPerRound: 100,
-		judgeCandidateMultiple: 3,
+		judgeCandidateMultiple: 2,
 		descriptionChars: 600,
 		seenDomainsWindowDays: 60,
 		exaAgentPollIntervalSeconds: 5,

@@ -35,7 +35,8 @@ export type RejectReason =
 	| "not-a-company-domain"
 	| "evidence-not-on-page";
 
-const NOT_A_COMPANY_DOMAIN = new Set([
+export const NOT_A_COMPANY_DOMAIN = new Set([
+	"exa.ai",
 	"linkedin.com",
 	"twitter.com",
 	"x.com",

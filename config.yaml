@@ -49,8 +49,10 @@ companies:
   maxRounds: 3
   # Exa returns at most 100 records per call. Fewer makes the requested count unreachable.
   resultsPerRound: 100
-  # Candidates sent to the judge, as a multiple of the requested count.
-  judgeCandidateMultiple: 3
+  # Candidates sent to the judge, as a multiple of the requested count. Measured on
+  # two profiles: every judge refusal sat at rank nineteen or lower, so 2x candidates
+  # was never short a company the judge would have kept.
+  judgeCandidateMultiple: 2
   # How much of a company description reaches the judge.
   descriptionChars: 600
   # Window for treating a domain as already seen: every company the account
