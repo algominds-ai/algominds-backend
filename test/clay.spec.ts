@@ -46,6 +46,7 @@ const originalFetch = globalThis.fetch;
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	vi.unstubAllGlobals();
 });
 
 describe("canonical linkedin person url", () => {
@@ -189,6 +190,78 @@ describe("Clay failure modes", () => {
 			rejected: true,
 		});
 		expect(rejectCalls.runCalls).toBe(1);
+	});
+});
+
+function stubSleep(): { waits: number[] } {
+	const waits: number[] = [];
+	vi.stubGlobal("setTimeout", (callback: () => void, ms: number) => {
+		waits.push(ms);
+		callback();
+		return 0;
+	});
+	return { waits };
+}
+
+describe("Clay 429 retry", () => {
+	it("retries once after a Retry-After wait and returns the retry's rows", async () => {
+		const calls = stubClaySequence([
+			{ response: jsonResponse(200, { search_id: "search-429" }) },
+			{
+				response: new Response(null, {
+					status: 429,
+					headers: { "retry-after": "1" },
+				}),
+			},
+			{ response: jsonResponse(200, searchPage) },
+		]);
+		const sleeps = stubSleep();
+
+		const result = await claySearch(
+			clayEnv(),
+			{ identifier: "harborit.com" },
+			new CostLedger(),
+		);
+
+		expect(calls.runCalls).toBe(2);
+		expect(sleeps.waits).toEqual([1000]);
+		expect(result.rows).toHaveLength(2);
+	});
+
+	it("throws RetryableProviderError after a second 429", async () => {
+		const calls = stubClaySequence([
+			{ response: jsonResponse(200, { search_id: "search-429-429" }) },
+			{ response: new Response(null, { status: 429 }) },
+			{ response: new Response(null, { status: 429 }) },
+		]);
+		stubSleep();
+
+		await expect(
+			claySearch(clayEnv(), { identifier: "harborit.com" }, new CostLedger()),
+		).rejects.toThrow(RetryableProviderError);
+		expect(calls.runCalls).toBe(2);
+	});
+
+	it("caps a Retry-After above the configured maximum", async () => {
+		stubClaySequence([
+			{ response: jsonResponse(200, { search_id: "search-429-cap" }) },
+			{
+				response: new Response(null, {
+					status: 429,
+					headers: { "retry-after": "3600" },
+				}),
+			},
+			{ response: jsonResponse(200, searchPage) },
+		]);
+		const sleeps = stubSleep();
+
+		await claySearch(
+			clayEnv(),
+			{ identifier: "harborit.com" },
+			new CostLedger(),
+		);
+
+		expect(sleeps.waits).toEqual([5000]);
 	});
 });
 

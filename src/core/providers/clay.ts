@@ -119,15 +119,13 @@ function buildFilters(input: ClaySearchInput): ClayFilters {
 
 type PostClayOutcome = { text: string; rejected: boolean };
 
-async function postClay(
+async function requestClay(
 	path: string,
 	body: unknown,
 	ctx: ClayFetchContext,
-	options?: { allowRejection: boolean },
-): Promise<PostClayOutcome> {
-	let response: Response;
+): Promise<Response> {
 	try {
-		response = await fetch(`${CLAY_BASE_URL}${path}`, {
+		return await fetch(`${CLAY_BASE_URL}${path}`, {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
@@ -142,12 +140,31 @@ async function postClay(
 		}
 		throw error;
 	}
+}
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryAfterMs(header: string | null): number {
+	if (header === null) return 1000;
+	const seconds = Number(header);
+	if (Number.isFinite(seconds)) return Math.max(seconds, 0) * 1000;
+	const dateMs = Date.parse(header);
+	return Number.isNaN(dateMs) ? 1000 : Math.max(dateMs - Date.now(), 0);
+}
+
+async function interpretClayResponse(
+	path: string,
+	response: Response,
+	allowRejection: boolean,
+): Promise<PostClayOutcome> {
 	if (response.status === 429 || response.status >= 500) {
 		throw new RetryableProviderError(
 			`Clay request to ${path} failed: status ${response.status}`,
 		);
 	}
-	if (response.status === 400 && options?.allowRejection) {
+	if (response.status === 400 && allowRejection) {
 		return { text: await response.text(), rejected: true };
 	}
 	if (!response.ok) {
@@ -156,6 +173,33 @@ async function postClay(
 		);
 	}
 	return { text: await response.text(), rejected: false };
+}
+
+/**
+ * Posts one Clay request. A 429 waits once for Clay's `Retry-After` (a
+ * fixed second when absent), capped at `config.people.clayRetryAfterMaxMs`,
+ * then repeats the same request once; a second 429 throws
+ * `RetryableProviderError` exactly as a first 429 would. Bounded by that
+ * capped wait plus two request timeouts of `ctx.timeoutMs`.
+ */
+async function postClay(
+	path: string,
+	body: unknown,
+	ctx: ClayFetchContext,
+	options?: { allowRejection: boolean },
+): Promise<PostClayOutcome> {
+	const allowRejection = options?.allowRejection ?? false;
+	const response = await requestClay(path, body, ctx);
+	if (response.status !== 429) {
+		return interpretClayResponse(path, response, allowRejection);
+	}
+	const waitMs = Math.min(
+		retryAfterMs(response.headers.get("retry-after")),
+		config.people.clayRetryAfterMaxMs,
+	);
+	await sleep(waitMs);
+	const retried = await requestClay(path, body, ctx);
+	return interpretClayResponse(path, retried, allowRejection);
 }
 
 function parseJson(text: string, whatFailed: string): unknown {
