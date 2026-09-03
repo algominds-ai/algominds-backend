@@ -1,3 +1,5 @@
 #!/bin/sh
 set -e
+command -v gitleaks >/dev/null || { echo "gitleaks is missing: brew install gitleaks"; exit 1; }
+gitleaks git --pre-commit --staged --redact --no-banner
 bun run lint
