@@ -4,6 +4,7 @@
 	"type": "module",
 	"author": "Lahfir",
 	"scripts": {
+		"prepare": "git config core.hooksPath .githooks",
 		"dev": "SFW_SHIM_DISABLE=1 wrangler dev",
 		"deploy": "SFW_SHIM_DISABLE=1 wrangler deploy",
 		"build": "SFW_SHIM_DISABLE=1 wrangler deploy --dry-run --outdir=dist",
