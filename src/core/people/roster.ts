@@ -1,4 +1,4 @@
-import type { CostLedger } from "@/core/cost";
+import { CostLedger } from "@/core/cost";
 import type { Candidate } from "@/core/people/candidate";
 import type { DedupeRow } from "@/core/people/dedupe";
 import { dedupe } from "@/core/people/dedupe";
@@ -40,19 +40,30 @@ export async function seniorRoster(
 		})),
 	];
 
-	for (const slice of slices) {
-		const result = await claySearch(
-			env,
-			{
-				identifier,
-				bands: [...slice.bands],
-				...(slice.keywords ? { keywords: slice.keywords } : {}),
-			},
-			ledger,
-		);
+	const results = await Promise.all(
+		slices.map(async (slice) => {
+			const sliceLedger = new CostLedger();
+			const result = await claySearch(
+				env,
+				{
+					identifier,
+					bands: [...slice.bands],
+					...(slice.keywords ? { keywords: slice.keywords } : {}),
+				},
+				sliceLedger,
+			);
+			return { result, sliceLedger };
+		}),
+	);
+	for (const [index, { result, sliceLedger }] of results.entries()) {
+		const slice = slices[index];
+		if (!slice) continue;
 		raw.push(...result.raw);
 		quotaUsed += result.quotaUsed;
 		for (const row of result.rows) rows.push({ ...row, source: slice.source });
+		for (const entry of sliceLedger.toJSON().entries) {
+			ledger.reported(entry.provider, entry.op, entry.dollars);
+		}
 	}
 
 	return { candidates: dedupe(rows), raw, quotaUsed };

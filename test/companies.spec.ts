@@ -1437,22 +1437,30 @@ function contentsFetch(
 		const { urls } = ContentsRequestSchema.parse(
 			JSON.parse(String(init?.body)),
 		);
-		const url = urls[0] ?? "";
-		const outcome = byUrl[url];
-		if (!outcome) throw new Error(`unexpected contents request for ${url}`);
-		const status =
-			"errorTag" in outcome
-				? {
-						id: url,
-						status: "error" as const,
-						error: { tag: outcome.errorTag },
-					}
-				: { id: url, status: "success" as const };
+		const results: { url: string; text: string }[] = [];
+		const statuses: (
+			| { id: string; status: "success" }
+			| { id: string; status: "error"; error: { tag: string } }
+		)[] = [];
+		for (const url of urls) {
+			const outcome = byUrl[url];
+			if (!outcome) throw new Error(`unexpected contents request for ${url}`);
+			if ("errorTag" in outcome) {
+				statuses.push({
+					id: url,
+					status: "error",
+					error: { tag: outcome.errorTag },
+				});
+				continue;
+			}
+			statuses.push({ id: url, status: "success" });
+			results.push({ url, text: outcome.text });
+		}
 		return new Response(
 			JSON.stringify({
 				requestId: "req-contents",
-				results: "text" in outcome ? [{ url, text: outcome.text }] : [],
-				statuses: [status],
+				results,
+				statuses,
 				costDollars: { total: 0.003 },
 			}),
 			{ status: 200, headers: { "content-type": "application/json" } },

@@ -1,13 +1,6 @@
 import type { Candidate } from "@/core/people/candidate";
 import { CandidateSchema } from "@/core/people/candidate";
-
-const LINKEDIN_PROFILE_PATTERN = /linkedin\.com\/in\/([^/?#]+)/;
-
-/** Canonical LinkedIn person URL: `https://linkedin.com/in/<slug>`, or null when `url` names no profile. */
-export function canonicalLinkedinUrl(url: string | null): string | null {
-	const match = (url ?? "").toLowerCase().match(LINKEDIN_PROFILE_PATTERN);
-	return match ? `https://linkedin.com/in/${match[1]}` : null;
-}
+import { canonicalPersonUrl } from "@/core/providers/clay";
 
 const CREDENTIAL_TOKENS = new Set([
 	"mba",
@@ -74,35 +67,46 @@ function findExisting(
 	url: string | null,
 	key: string | null,
 ): MergedRow | undefined {
-	return (
-		(url ? byUrl.get(url) : undefined) ?? (key ? byName.get(key) : undefined)
-	);
+	const byUrlMatch = url ? byUrl.get(url) : undefined;
+	if (byUrlMatch) return byUrlMatch;
+	const byNameMatch = key ? byName.get(key) : undefined;
+	if (!byNameMatch) return undefined;
+	if (url && byNameMatch.url && byNameMatch.url !== url) return undefined;
+	return byNameMatch;
 }
 
-/** Merges candidate rows by canonical LinkedIn URL, then by name key. Records every source that saw each person and assigns ids by position in the merged list. */
+function mergeRow(
+	byUrl: Map<string, MergedRow>,
+	byName: Map<string, MergedRow>,
+	row: DedupeRow,
+): void {
+	const url = canonicalPersonUrl(row.url);
+	const key = nameKey(row.name);
+	const existing = findExisting(byUrl, byName, url, key);
+	if (existing) {
+		mergeInto({ existing, row, url });
+		if (existing.url) byUrl.set(existing.url, existing);
+		return;
+	}
+	const merged: MergedRow = {
+		name: row.name,
+		title: row.title,
+		company: row.company,
+		url,
+		location: row.location,
+		since: row.since,
+		seenBy: [row.source],
+	};
+	if (url) byUrl.set(url, merged);
+	if (key) byName.set(key, merged);
+}
+
+/** Merges candidate rows by canonical LinkedIn URL, then by name key, dropping every row with no name — a person with no name cannot be contacted or verified. A name hit whose stored row already carries a different canonical URL is a new candidate, never a merge. Records every source that saw each person and assigns ids by position in the merged list. */
 export function dedupe(rows: DedupeRow[]): Candidate[] {
 	const byUrl = new Map<string, MergedRow>();
 	const byName = new Map<string, MergedRow>();
 	for (const row of rows) {
-		if (!row.name) continue;
-		const url = canonicalLinkedinUrl(row.url);
-		const key = nameKey(row.name);
-		const existing = findExisting(byUrl, byName, url, key);
-		if (existing) {
-			mergeInto({ existing, row, url });
-			continue;
-		}
-		const merged: MergedRow = {
-			name: row.name,
-			title: row.title,
-			company: row.company,
-			url,
-			location: row.location,
-			since: row.since,
-			seenBy: [row.source],
-		};
-		if (url) byUrl.set(url, merged);
-		if (key) byName.set(key, merged);
+		if (row.name !== null) mergeRow(byUrl, byName, row);
 	}
 	const unique = new Set<MergedRow>([...byUrl.values(), ...byName.values()]);
 	return Array.from(unique).map((row, index) =>

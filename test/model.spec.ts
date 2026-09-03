@@ -7,6 +7,7 @@ import {
 	reasoningModel,
 	workerModel,
 } from "../src/core/model";
+import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 const env: Env = {
 	...testEnv,
@@ -245,14 +246,14 @@ describe("model: a call that exceeds the shared timeout", () => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("times out shared calls as unknown", async () => {
+	it("throws so the durable step's own retry owns it, rather than resolving as an empty reply", async () => {
 		globalThis.fetch = async () => {
 			throw new DOMException("The operation timed out.", "TimeoutError");
 		};
 
-		const result = await callWorkerModel(new CostLedger());
-
-		expect(result).toBeNull();
+		await expect(callWorkerModel(new CostLedger())).rejects.toThrow(
+			RetryableProviderError,
+		);
 	});
 });
 

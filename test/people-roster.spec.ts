@@ -84,3 +84,55 @@ describe("senior roster retrieval", () => {
 		expect(result.candidates).toEqual([]);
 	});
 });
+
+describe("senior roster retrieval under concurrent completion", () => {
+	it("banks one ledger entry per slice even when an earlier slice's response resolves last", async () => {
+		const bandBySearchId = new Map<string, string>();
+		let releaseCSuite: (() => void) | undefined;
+		const cSuiteGate = new Promise<void>((resolve) => {
+			releaseCSuite = resolve;
+		});
+
+		function handleCreate(init: RequestInit | undefined): Response {
+			const body = CreateRequestSchema.parse(JSON.parse(String(init?.body)));
+			const band = body.filters.job_title_seniority_levels_v2?.[0] ?? "none";
+			const searchId = `search-${band}`;
+			bandBySearchId.set(searchId, band);
+			return jsonResponse(200, { search_id: searchId });
+		}
+
+		async function handleRun(path: string): Promise<Response> {
+			const band = bandBySearchId.get(path.split("/").at(-2) ?? "");
+			if (band === "c-suite") await cSuiteGate;
+			const name = band === "c-suite" ? "CSuite Person" : "VP Person";
+			return jsonResponse(200, { data: [{ name }], has_more: false });
+		}
+
+		globalThis.fetch = async (input, init) => {
+			const path = new URL(String(input)).pathname;
+			return path === "/public/v0/search/filters-mode"
+				? handleCreate(init)
+				: handleRun(path);
+		};
+
+		const ledger = new CostLedger();
+		const resultPromise = seniorRoster(
+			"harborit.com",
+			{ bands: ["c-suite", "vp"], keywordBands: [] },
+			clayEnv(),
+			ledger,
+		);
+
+		await Promise.resolve();
+		await Promise.resolve();
+		releaseCSuite?.();
+
+		const result = await resultPromise;
+
+		expect(result.candidates.map((c) => c.name).sort()).toEqual([
+			"CSuite Person",
+			"VP Person",
+		]);
+		expect(ledger.toJSON().entries).toHaveLength(2);
+	});
+});
