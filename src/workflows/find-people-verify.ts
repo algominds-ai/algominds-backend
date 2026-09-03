@@ -6,9 +6,13 @@ import {
 	updateRunCompany,
 	upsertPeople,
 } from "@/core/db/queries";
-import type { NewEvidence, NewPerson } from "@/core/db/schema";
+import type { NewEvidence, NewPerson, Person } from "@/core/db/schema";
 import type { Candidate } from "@/core/people/candidate";
-import { rawEvidenceRow, toNewPerson } from "@/core/people/rows";
+import {
+	personVerifyEvidenceRow,
+	rawEvidenceRow,
+	toNewPerson,
+} from "@/core/people/rows";
 import type { SelectedBuyer, SelectModelReply } from "@/core/people/select";
 import { MAX_PICKS, selectBuyers } from "@/core/people/select";
 import {
@@ -287,18 +291,37 @@ function verifiedPersonRows(
 	return rows;
 }
 
+/** The saved person a pick's own candidate resolved to, or undefined when the pick was never verified or carried no LinkedIn URL to key it on. */
+function personForPick(
+	stored: readonly Person[],
+	pick: SelectedBuyer,
+): Person | undefined {
+	const url = pick.candidate.url;
+	return url ? stored.find((person) => person.linkedinUrl === url) : undefined;
+}
+
 function verifiedEvidenceRows(
 	progress: CompanyProgress,
 	reply: SelectModelReply | null,
 	results: readonly PickResult[],
+	stored: readonly Person[],
 ): NewEvidence[] {
 	const rows: NewEvidence[] = [
 		rawEvidenceRow(progress.runCompanyId, "select", "reasoningModel", reply),
 	];
-	for (const { outcome } of results) {
+	for (const { pick, outcome } of results) {
+		const person = personForPick(stored, pick);
 		for (const item of outcome.evidence) {
 			rows.push(
-				rawEvidenceRow(progress.runCompanyId, item.kind, "exa", item.body),
+				person
+					? personVerifyEvidenceRow({
+							personId: person.id,
+							runCompanyId: progress.runCompanyId,
+							kind: item.kind,
+							source: "exa",
+							body: item.body,
+						})
+					: rawEvidenceRow(progress.runCompanyId, item.kind, "exa", item.body),
 			);
 		}
 	}
@@ -326,7 +349,7 @@ async function saveVerifiedPeople(
 			});
 			await appendEvidence(
 				ctx.env,
-				verifiedEvidenceRows(progress, reply, results),
+				verifiedEvidenceRows(progress, reply, results, stored),
 			);
 			return stored.length;
 		},

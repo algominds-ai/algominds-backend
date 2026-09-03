@@ -1,12 +1,14 @@
 import { env as testEnv } from "cloudflare:workers";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { config } from "../src/config";
 import { CostLedger } from "../src/core/cost";
 import {
 	generateStructured,
 	reasoningModel,
 	workerModel,
 } from "../src/core/model";
+import { EXA_FETCH_TIMEOUT_MS } from "../src/core/providers/exa/http";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 const env: Env = {
@@ -254,6 +256,26 @@ describe("model: a call that exceeds the shared timeout", () => {
 		await expect(callWorkerModel(new CostLedger())).rejects.toThrow(
 			RetryableProviderError,
 		);
+	});
+});
+
+describe("model: the abort timeout a structured call is given", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("aborts at the configured model timeout, not the shorter Exa fetch timeout", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
+		globalThis.fetch = gateway.fetch;
+		const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+
+		await callWorkerModel(new CostLedger());
+
+		expect(timeoutSpy).toHaveBeenCalledWith(config.model.timeoutMs);
+		expect(config.model.timeoutMs).not.toBe(EXA_FETCH_TIMEOUT_MS);
+		timeoutSpy.mockRestore();
 	});
 });
 

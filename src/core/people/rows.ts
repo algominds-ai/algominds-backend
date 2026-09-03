@@ -63,3 +63,27 @@ export function rawEvidenceRow(
 		value: evidenceValue(body),
 	};
 }
+
+export type PersonVerifyEvidence = {
+	personId: string;
+	runCompanyId: string;
+	kind: string;
+	source: string;
+	body: unknown;
+};
+
+/** One append-only evidence row for a verification reply about the person it judged, with the run_company it was judged under kept inside the value. */
+export function personVerifyEvidenceRow(
+	input: PersonVerifyEvidence,
+): NewEvidence {
+	return {
+		subjectType: "person",
+		subjectId: input.personId,
+		kind: input.kind,
+		source: input.source,
+		value: evidenceValue({
+			runCompanyId: input.runCompanyId,
+			body: input.body,
+		}),
+	};
+}

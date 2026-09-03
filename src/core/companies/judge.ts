@@ -6,11 +6,12 @@ import { generateStructured, reasoningModel } from "@/core/model";
 import type { IcpDoc } from "@/core/synthesize";
 
 const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
+const JUDGE_BATCH_SIZE = config.companies.judgeBatchSize;
 
 const VerdictSchema = z.object({
 	index: z.number().int().nonnegative(),
 	keep: z.boolean(),
-	reason: z.string().nullable(),
+	reason: z.string(),
 });
 
 export type Verdict = z.infer<typeof VerdictSchema>;
@@ -28,8 +29,9 @@ const JUDGE_INSTRUCTIONS = [
 	"You judge one batch of candidate companies against an ideal customer profile in a single",
 	"pass. For every row, by its index, decide whether it should keep going toward a campaign.",
 	"Return one verdict per row, in the same order, each carrying the row index and a keep",
-	"decision. Give a short reason only when you refuse a row. Set reason to null when you keep",
-	"a row.",
+	"decision. Give a one-sentence reason for every row, kept or refused, of about twenty five",
+	"words or fewer, in plain text describing only what that row's own fields show: never",
+	"invent a fact the row does not carry.",
 	"A row may carry the page its signal came from: `evidenceUrl`, `evidenceQuote` copied",
 	"word for word from that page, and `evidencePublisher` as the page names itself. When a",
 	"row carries them, weigh them: refuse a row whose page records nothing about the company",
@@ -63,20 +65,77 @@ function judgePrompt(
 	return [...criteria, "Rows:", ...numbered].join("\n");
 }
 
-function keepEveryGatedRow(
-	rows: readonly CompanyRow[],
-	ledger: CostLedger,
-): JudgeResult {
-	return {
-		verdicts: rows.map((_, index) => ({ index, keep: true, reason: null })),
-		ledger,
-	};
+const FALLBACK_REASON =
+	"the judge produced nothing usable, so this row was kept by default";
+
+type JudgeSlice = { rows: CompanyRow[]; offset: number };
+
+/** Splits gated rows into slices of at most `JUDGE_BATCH_SIZE`, each carrying the offset its local indices must be shifted by to land back on the full row list. */
+function judgeSlices(rows: readonly CompanyRow[]): JudgeSlice[] {
+	const slices: JudgeSlice[] = [];
+	for (let offset = 0; offset < rows.length; offset += JUDGE_BATCH_SIZE) {
+		slices.push({
+			rows: rows.slice(offset, offset + JUDGE_BATCH_SIZE),
+			offset,
+		});
+	}
+	return slices;
+}
+
+function keepEverySliceRow(slice: JudgeSlice): Verdict[] {
+	return slice.rows.map((_, index) => ({
+		index: index + slice.offset,
+		keep: true,
+		reason: FALLBACK_REASON,
+	}));
+}
+
+function shiftVerdicts(
+	slice: JudgeSlice,
+	verdicts: readonly Verdict[],
+): Verdict[] {
+	return verdicts.map((verdict) => ({
+		...verdict,
+		index: verdict.index + slice.offset,
+	}));
+}
+
+type JudgeContext = {
+	icp: IcpDoc;
+	env: Env;
+	recency: string | null;
+	model: Awaited<ReturnType<typeof reasoningModel>>;
+	ledger: CostLedger;
+};
+
+async function judgeSlice(
+	ctx: JudgeContext,
+	slice: JudgeSlice,
+): Promise<Verdict[]> {
+	const output = await generateStructured(
+		{
+			model: ctx.model,
+			configuredId: ctx.env.MODEL_ROUTE_REASONING,
+			instructions: JUDGE_INSTRUCTIONS,
+			prompt: judgePrompt(ctx.icp, slice.rows, ctx.recency),
+			schema: JudgeModelSchema,
+			headers: { "cf-aig-cache-ttl": String(JUDGE_CACHE_TTL_SECONDS) },
+		},
+		ctx.ledger,
+		"judge",
+	);
+	return output
+		? shiftVerdicts(slice, output.verdicts)
+		: keepEverySliceRow(slice);
 }
 
 /**
- * Judges one batch of gate-passed rows against the ICP document in a
- * single call. Falls back to keeping every row when the model produces
- * nothing usable twice in a row.
+ * Judges every gate-passed row against the ICP document, in slices of at
+ * most `JUDGE_BATCH_SIZE` rows so one call never sends the model more than
+ * it can finish inside its own timeout. Every slice runs as its own model
+ * call, concurrently, on one shared cost ledger; a slice whose model
+ * produces nothing usable twice in a row falls back to keeping its own rows
+ * rather than failing the whole batch.
  */
 export async function judge(
 	icp: IcpDoc,
@@ -85,18 +144,16 @@ export async function judge(
 	recency: string | null,
 ): Promise<JudgeResult> {
 	const ledger = new CostLedger();
-	const output = await generateStructured(
-		{
-			model: await reasoningModel(env),
-			configuredId: env.MODEL_ROUTE_REASONING,
-			instructions: JUDGE_INSTRUCTIONS,
-			prompt: judgePrompt(icp, rows, recency),
-			schema: JudgeModelSchema,
-			headers: { "cf-aig-cache-ttl": String(JUDGE_CACHE_TTL_SECONDS) },
-		},
+	const ctx: JudgeContext = {
+		icp,
+		env,
+		recency,
+		model: await reasoningModel(env),
 		ledger,
-		"judge",
+	};
+	const slices = judgeSlices(rows);
+	const verdictsBySlice = await Promise.all(
+		slices.map((slice) => judgeSlice(ctx, slice)),
 	);
-	if (!output) return keepEveryGatedRow(rows, ledger);
-	return { verdicts: output.verdicts, ledger };
+	return { verdicts: verdictsBySlice.flat(), ledger };
 }

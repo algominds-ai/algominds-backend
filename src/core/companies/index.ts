@@ -13,6 +13,7 @@ import {
 } from "@/core/companies/candidates";
 import {
 	applyEvidenceChecks,
+	applyJudgeReasons,
 	demandsEvidenceProof,
 	toEvidenceRejects,
 	toGateRejects,
@@ -122,7 +123,7 @@ function applyVerdicts(
 		else
 			judgeRejects.push({
 				domain: row.domain,
-				reason: verdict.reason ?? "refused without a reason",
+				reason: verdict.reason,
 				stage: "judge",
 			});
 	}
@@ -200,6 +201,7 @@ async function runRound(
 		evidenceChecked.kept.length > 0
 			? await deps.judge(ctx.icp, evidenceChecked.kept, opts.env, plan.recency)
 			: { verdicts: [], ledger: new CostLedger() };
+	applyJudgeReasons(filtered.captures, evidenceChecked.kept, judged.verdicts);
 	return {
 		plan,
 		rows: filtered.rows,

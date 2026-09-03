@@ -5,6 +5,7 @@ import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 
 const EVIDENCE_SOURCE = "exa";
+const RAW_RESULT_MAX_CHARS = 20_000;
 
 export type NewCompanyContext = {
 	icpId: string;
@@ -65,4 +66,24 @@ export function evidenceRowsFor(
 			value,
 			source: EVIDENCE_SOURCE,
 		}));
+}
+
+function boundedRaw(json: string): string {
+	return json.length > RAW_RESULT_MAX_CHARS
+		? json.slice(0, RAW_RESULT_MAX_CHARS)
+		: json;
+}
+
+/** One append-only evidence row carrying the vendor's raw result for a kept company, unshaped and bounded to `RAW_RESULT_MAX_CHARS`. `agent-result` names a row an agent round produced; every other round names it `search-result`. */
+export function rawResultEvidenceRow(
+	saved: Company,
+	capture: CompanyCapture,
+): NewEvidence {
+	return {
+		subjectType: "company",
+		subjectId: saved.id,
+		kind: capture.source === "exa-agent" ? "agent-result" : "search-result",
+		value: boundedRaw(capture.raw),
+		source: EVIDENCE_SOURCE,
+	};
 }

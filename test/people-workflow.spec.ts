@@ -450,11 +450,18 @@ async function cleanupTargetRun(
 			.select()
 			.from(runCompany)
 			.where(eq(runCompany.runId, runId));
-		const runCompanyIds = runCompanyRows.map((row) => row.id);
-		if (runCompanyIds.length > 0) {
+		const personRows = await connection
+			.select()
+			.from(person)
+			.where(eq(person.organizationId, organizationId));
+		const evidenceSubjectIds = [
+			...runCompanyRows.map((row) => row.id),
+			...personRows.map((row) => row.id),
+		];
+		if (evidenceSubjectIds.length > 0) {
 			await connection
 				.delete(evidence)
-				.where(inArray(evidence.subjectId, runCompanyIds));
+				.where(inArray(evidence.subjectId, evidenceSubjectIds));
 		}
 		await connection
 			.delete(person)
@@ -628,12 +635,10 @@ async function assertVerifiedTargetRun(
 				.from(person)
 				.where(eq(person.organizationId, organizationId)),
 	);
-	expect(
-		storedPeople.filter(
-			(row: Person) =>
-				row.linkedinUrl === "https://linkedin.com/in/jordan-blake",
-		),
-	).toHaveLength(1);
+	const jordanBlake = storedPeople.find(
+		(row: Person) => row.linkedinUrl === "https://linkedin.com/in/jordan-blake",
+	);
+	if (!jordanBlake) throw new Error("expected jordan blake to be verified");
 	expect(
 		storedPeople.some(
 			(row: Person) => row.linkedinUrl === "https://linkedin.com/in/casey-doe",
@@ -665,19 +670,43 @@ async function assertVerifiedTargetRun(
 	expect(kinds.filter((kind: string) => kind === "roster")).toHaveLength(16);
 	expect(kinds).toContain("select");
 	expect(kinds.filter((kind: string) => kind === "verify-start")).toHaveLength(
-		2,
+		1,
 	);
 	expect(kinds.filter((kind: string) => kind === "verify-poll")).toHaveLength(
-		2,
+		1,
 	);
-	const quoteRows = evidenceRows.filter(
+	expect(kinds.filter((kind: string) => kind === "verify-quote")).toHaveLength(
+		0,
+	);
+
+	const personEvidenceRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection
+				.select()
+				.from(evidence)
+				.where(eq(evidence.subjectId, jordanBlake.id)),
+	);
+	const personKinds = personEvidenceRows.map((row: Evidence) => row.kind);
+	expect(
+		personKinds.filter((kind: string) => kind === "verify-start"),
+	).toHaveLength(1);
+	expect(
+		personKinds.filter((kind: string) => kind === "verify-poll"),
+	).toHaveLength(1);
+	const quoteRows = personEvidenceRows.filter(
 		(row: Evidence) => row.kind === "verify-quote",
 	);
 	expect(quoteRows).toHaveLength(1);
 	expect(JSON.parse(quoteRows[0]?.value ?? "")).toEqual({
-		url: "https://verifytarget.example/team",
-		found: true,
-		reason: "found",
+		runCompanyId: runCompanyRow.id,
+		body: {
+			url: "https://verifytarget.example/team",
+			found: true,
+			reason: "found",
+		},
 	});
 }
 
