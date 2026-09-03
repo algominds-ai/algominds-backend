@@ -36,7 +36,6 @@ afterEach(() => {
 const SCOPES = [
 	"people_workflow_unresolved_test",
 	"people_workflow_roster_test",
-	"people_workflow_spend_cap_test",
 ];
 
 async function terminateStartedRuns(): Promise<void> {
@@ -286,65 +285,315 @@ describe("FindPeopleWorkflow: the company cap", () => {
 	});
 });
 
-describe("FindPeopleWorkflow: the run spend ceiling", () => {
-	it("stops before new work at the spend ceiling", async () => {
-		const domainA = "spend-a.example";
-		const domainB = "spend-b.example";
-		const instanceId = "people_workflow_spend_cap_test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
-		);
+function orderedStep(
+	overrides: Map<string, unknown>,
+	events: string[],
+): WorkflowStep {
+	async function runNamed(
+		name: string,
+		second: unknown,
+		third: unknown,
+	): Promise<unknown> {
+		events.push(`start:${name}`);
+		await Promise.resolve();
 		try {
-			await instance.modify(async (m) => {
-				await mockRunLevel(m, [bareCompany(domainA), bareCompany(domainB)]);
-				await m.mockStepResult({ name: `people-${domainA}-open` }, "rc-a");
-				await m.mockStepResult(
-					{ name: `people-${domainA}-identity` },
-					{
-						how: "domain",
-						identifier: domainA,
-						name: "Spend A",
-						clayRecords: 1,
-						costEntries: [],
-					},
-				);
-				await m.mockStepResult(
-					{ name: `people-${domainA}-create-company` },
-					"company-a",
-				);
-				await m.mockStepResult(
-					{ name: `people-${domainA}-roster` },
-					{ candidates: [rosterCandidate], clayRecords: 5, costEntries: [] },
-				);
-				await m.mockStepResult(
-					{ name: `people-${domainA}-save` },
-					{ count: 1 },
-				);
-				await m.mockStepResult(
-					{ name: `people-${domainA}-spend` },
-					{ total: config.spend.perRunDollars },
-				);
-				await m.mockStepError(
-					{ name: `people-${domainB}-open` },
-					new NonRetryableError(
-						"a run at the spend ceiling must never touch the next domain",
-					),
-				);
-			});
-
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: { domains: [domainA, domainB], organizationId: "org-1" },
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await summaryOf(instance);
-			expect(output.capped).toBe(true);
-			expect(output.companiesSearched).toBe(1);
-			expect(output.costDollars).toBe(config.spend.perRunDollars);
+			if (overrides.has(name)) {
+				const value = overrides.get(name);
+				if (value instanceof Error) throw value;
+				return value;
+			}
+			const callback = typeof second === "function" ? second : third;
+			if (typeof callback !== "function") {
+				throw new Error(`ordered step: no callback for ${name}`);
+			}
+			const ctx: WorkflowStepContext = {
+				step: { name, count: 0 },
+				attempt: 1,
+				config: {},
+			};
+			return await callback(ctx);
 		} finally {
-			await instance.dispose();
+			events.push(`end:${name}`);
+		}
+	}
+	return {
+		do: runNamed,
+		sleep: async () => undefined,
+		sleepUntil: async () => undefined,
+		waitForEvent: async () => {
+			throw new Error("ordered step: waitForEvent not implemented");
+		},
+	};
+}
+
+function eventIndex(events: string[], label: string): number {
+	const index = events.indexOf(label);
+	if (index === -1) throw new Error(`event never recorded: ${label}`);
+	return index;
+}
+
+function rosterModeOverrides(
+	domain: string,
+	index: number,
+): [string, unknown][] {
+	return [
+		[`people-${domain}-open`, `rc-${index}`],
+		[
+			`people-${domain}-identity`,
+			{
+				how: "domain",
+				identifier: domain,
+				name: `Company ${index}`,
+				clayRecords: 0,
+				costEntries: [],
+			},
+		],
+		[`people-${domain}-create-company`, `company-${index}`],
+		[
+			`people-${domain}-roster`,
+			{ candidates: [], clayRecords: 0, costEntries: [] },
+		],
+		[`people-${domain}-save`, { count: 0 }],
+	];
+}
+
+function unresolvedModeOverrides(
+	domain: string,
+	index: number,
+): [string, unknown][] {
+	return [
+		[`people-${domain}-open`, `rc-${index}`],
+		[
+			`people-${domain}-identity`,
+			{ how: "unresolved", clayRecords: 0, costEntries: [] },
+		],
+		[`people-${domain}-unresolved`, {}],
+	];
+}
+
+describe("runCompanies: batching by companyConcurrency", () => {
+	it("runs twelve companies as three batches of five, overlapping within a batch but never across a batch boundary, and reports the summary in request order", async () => {
+		const domains = Array.from(
+			{ length: 12 },
+			(_, i) => `batch-order-${i}.example`,
+		);
+		const unresolvedIndexes = new Set([1, 3]);
+		const overrides = new Map<string, unknown>();
+		for (const [i, domain] of domains.entries()) {
+			const pairs = unresolvedIndexes.has(i)
+				? unresolvedModeOverrides(domain, i)
+				: rosterModeOverrides(domain, i);
+			for (const [name, value] of pairs) overrides.set(name, value);
+			overrides.set(`people-${domain}-spend`, { total: 0 });
+		}
+
+		const events: string[] = [];
+		const ctx: CompanyLoopContext = {
+			env: testEnv,
+			step: orderedStep(overrides, events),
+			runId: "batch-order-run",
+			organizationId: "org-1",
+			buyer: resolveBuyer({ target: null, profile: null }),
+			profile: null,
+		};
+
+		const result = await runCompanies(ctx, domains.map(bareCompany), 0);
+
+		expect(result.companiesSearched).toBe(12);
+		expect(result.unknownDomains).toEqual([domains[1], domains[3]]);
+
+		const firstBatchSpendEnds = domains
+			.slice(0, 5)
+			.map((domain) => eventIndex(events, `end:people-${domain}-spend`));
+		const secondBatchStart = eventIndex(
+			events,
+			`start:people-${domains[5]}-open`,
+		);
+		expect(secondBatchStart).toBeGreaterThan(Math.max(...firstBatchSpendEnds));
+
+		const secondCompanyOpenStart = eventIndex(
+			events,
+			`start:people-${domains[1]}-open`,
+		);
+		const firstCompanySpendEnd = eventIndex(
+			events,
+			`end:people-${domains[0]}-spend`,
+		);
+		expect(secondCompanyOpenStart).toBeLessThan(firstCompanySpendEnd);
+	});
+});
+
+describe("runCompanies: the per-run spend ceiling checked between batches", () => {
+	it("lets a batch already started finish, banks every one of its companies' spend, then caps before the next batch starts", async () => {
+		const concurrency = config.people.companyConcurrency;
+		const domains = Array.from(
+			{ length: concurrency + 1 },
+			(_, i) => `batch-cap-${i}.example`,
+		);
+		const perCompanySpend = (config.spend.perRunDollars / concurrency) * 1.5;
+		const overrides = new Map<string, unknown>();
+		for (const [i, domain] of domains.slice(0, concurrency).entries()) {
+			for (const [name, value] of rosterModeOverrides(domain, i)) {
+				overrides.set(name, value);
+			}
+			overrides.set(`people-${domain}-spend`, { total: perCompanySpend });
+		}
+		const lastDomain = domains[concurrency];
+		overrides.set(
+			`people-${lastDomain}-open`,
+			new NonRetryableError(
+				"a run at the spend ceiling must never start the next batch",
+			),
+		);
+
+		const events: string[] = [];
+		const ctx: CompanyLoopContext = {
+			env: testEnv,
+			step: orderedStep(overrides, events),
+			runId: "batch-cap-run",
+			organizationId: "org-1",
+			buyer: resolveBuyer({ target: null, profile: null }),
+			profile: null,
+		};
+
+		const result = await runCompanies(ctx, domains.map(bareCompany), 0);
+
+		expect(result.capped).toBe(true);
+		expect(result.companiesSearched).toBe(concurrency);
+		expect(result.costDollars).toBeCloseTo(concurrency * perCompanySpend);
+		for (const domain of domains.slice(0, concurrency)) {
+			eventIndex(events, `end:people-${domain}-spend`);
+		}
+		expect(events).not.toContain(`start:people-${lastDomain}-open`);
+	});
+});
+
+type InterleaveCompany = {
+	domain: string;
+	name: string;
+	clayRecords: number;
+	rosterDollars: number;
+	candidate: typeof rosterCandidate;
+};
+
+function batchInterleaveOverrides(
+	company: InterleaveCompany,
+): [string, unknown][] {
+	const { domain, name, clayRecords, rosterDollars, candidate } = company;
+	return [
+		[
+			`people-${domain}-identity`,
+			{
+				how: "domain",
+				identifier: domain,
+				name,
+				clayRecords,
+				costEntries: [{ provider: "clay", op: "search", dollars: 0.02 }],
+			},
+		],
+		[
+			`people-${domain}-roster`,
+			{
+				candidates: [candidate],
+				clayRecords,
+				costEntries: [
+					{ provider: "clay", op: "search", dollars: rosterDollars },
+				],
+			},
+		],
+	];
+}
+
+describe("runCompanies: two companies sharing a batch", () => {
+	it("keeps its own run_company row, roster count, and banked spend for each company", async () => {
+		const domainA = `batch-interleave-a-${crypto.randomUUID()}.example`;
+		const domainB = `batch-interleave-b-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-batch-interleave-${crypto.randomUUID()}`,
+			"people workflow batch interleave test",
+		);
+		const runId = `people_batch_interleave_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			const candidateA = {
+				...rosterCandidate,
+				name: "Avery A",
+				url: "https://linkedin.com/in/avery-a-batch",
+			};
+			const candidateB = {
+				...rosterCandidate,
+				name: "Blair B",
+				url: "https://linkedin.com/in/blair-b-batch",
+			};
+			const overrides = new Map<string, unknown>([
+				...batchInterleaveOverrides({
+					domain: domainA,
+					name: "Batch Co A",
+					clayRecords: 2,
+					rosterDollars: 0.03,
+					candidate: candidateA,
+				}),
+				...batchInterleaveOverrides({
+					domain: domainB,
+					name: "Batch Co B",
+					clayRecords: 4,
+					rosterDollars: 0.05,
+					candidate: candidateB,
+				}),
+			]);
+
+			const events: string[] = [];
+			const ctx: CompanyLoopContext = {
+				env: testEnv,
+				step: orderedStep(overrides, events),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: null, profile: null }),
+				profile: null,
+			};
+
+			const result = await runCompanies(
+				ctx,
+				[bareCompany(domainA), bareCompany(domainB)],
+				0,
+			);
+
+			expect(result.companiesSearched).toBe(2);
+			expect(result.peopleRoster).toBe(2);
+			expect(eventIndex(events, `start:people-${domainB}-open`)).toBeLessThan(
+				eventIndex(events, `end:people-${domainA}-spend`),
+			);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			expect(runCompanyRows).toHaveLength(2);
+			const rowA = runCompanyRows.find((row) => row.domain === domainA);
+			const rowB = runCompanyRows.find((row) => row.domain === domainB);
+			if (!rowA || !rowB) throw new Error("expected one row per domain");
+			expect(rowA.peopleRoster).toBe(1);
+			expect(rowB.peopleRoster).toBe(1);
+			expect(rowA.spendDollars).toBeCloseTo(0.05);
+			expect(rowB.spendDollars).toBeCloseTo(0.07);
+			expect(result.costDollars).toBeCloseTo(
+				(rowA.spendDollars ?? 0) + (rowB.spendDollars ?? 0),
+			);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
 		}
 	});
 });

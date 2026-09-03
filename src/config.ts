@@ -29,6 +29,7 @@ export const config = {
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 24,
 		clayFetchTimeoutMs: 30000,
+		companyConcurrency: 5,
 	},
 	enrich: {
 		batchSize: 5,

@@ -82,6 +82,10 @@ people:
   exaAgentMaxPollAttempts: 24
   # Milliseconds before a Clay create or run fetch is treated as timed out.
   clayFetchTimeoutMs: 30000
+  # Companies run at once in one batch. Each company mostly waits on vendors
+  # (Clay, the Exa agent), so batching companies overlaps that wait time
+  # instead of paying it once per company.
+  companyConcurrency: 5
 
 enrich:
   batchSize: 5
