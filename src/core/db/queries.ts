@@ -1,6 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
+import { MAX_EXCLUDED_DOMAINS } from "@/core/companies/candidates";
 import { organization } from "@/core/db/auth-schema";
 import type { DbEnv, DbFactory } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
@@ -117,11 +118,17 @@ export interface TransactableConnection {
 
 export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
 export type IcpInsertConnection = AppendConnection<typeof icp, NewIcp, Icp>;
-export type DomainsConnection = SelectWhereConnection<
-	typeof company,
-	{ domain: typeof company.domain },
-	{ domain: string }
->;
+export interface DomainsConnection {
+	select(columns: { domain: typeof company.domain }): {
+		from(table: typeof company): {
+			where(condition: SQL | undefined): {
+				orderBy(order: SQL): {
+					limit(count: number): Promise<{ domain: string }[]>;
+				};
+			};
+		};
+	};
+}
 export type EvidenceReadConnection = SelectOrderedConnection<
 	typeof evidence,
 	Evidence
@@ -195,12 +202,13 @@ export async function organizationDomain(
 /** Writes the profile and closes its run in one transaction, so a failure between them cannot leave a profile no run points at. Returns the new profile's id. */
 
 /**
- * Domains found for an ICP within the trailing `days` days, read through
- * the cache-disabled binding.
+ * Domains this account found within the trailing `days` days, across every
+ * profile it owns, most recent first and capped at the search contract's
+ * exclusion limit. Read through the cache-disabled binding.
  */
 export async function recentDomains(
 	env: DbEnv,
-	icpId: string,
+	organizationId: string,
 	days: number,
 	buildDb: DbFactory<DomainsConnection> = db,
 ): Promise<string[]> {
@@ -209,8 +217,13 @@ export async function recentDomains(
 			.select({ domain: company.domain })
 			.from(company)
 			.where(
-				and(eq(company.icpId, icpId), gte(company.foundAt, cutoffDate(days))),
-			),
+				and(
+					eq(company.organizationId, organizationId),
+					gte(company.foundAt, cutoffDate(days)),
+				),
+			)
+			.orderBy(desc(company.foundAt))
+			.limit(MAX_EXCLUDED_DOMAINS),
 	);
 	return rows.map((row) => row.domain);
 }

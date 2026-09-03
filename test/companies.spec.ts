@@ -89,7 +89,13 @@ function entitylessResult(id: number): ExaResult {
 function testOptions(
 	overrides: Partial<FindCompaniesOptions> = {},
 ): FindCompaniesOptions {
-	return { icpId: "icp-1", env: testEnv, today: "2026-08-30", ...overrides };
+	return {
+		icpId: "icp-1",
+		organizationId: "org-1",
+		env: testEnv,
+		today: "2026-08-30",
+		...overrides,
+	};
 }
 
 function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
@@ -185,13 +191,13 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 }
 
 function recordingRecentDomains(domains: string[] = []) {
-	const calls: Array<{ icpId: string; days: number }> = [];
+	const calls: Array<{ organizationId: string; days: number }> = [];
 	const recentDomains: FindCompaniesDeps["recentDomains"] = async (
 		_env,
-		icpId,
+		organizationId,
 		days,
 	) => {
-		calls.push({ icpId, days });
+		calls.push({ organizationId, days });
 		return domains;
 	};
 	return { recentDomains, calls };
@@ -430,12 +436,12 @@ describe("findCompanies — round-to-round behaviour", () => {
 });
 
 describe("findCompanies — dependency wiring", () => {
-	it("reads seen domains through the injected recentDomains dependency", async () => {
+	it("reads seen domains through the injected recentDomains dependency, scoped to the account", async () => {
 		const { search } = scriptedSearch([[goodResult("acme.com")]]);
 		const { synthesize } = scriptedSynthesize();
 		const { recentDomains, calls } = recordingRecentDomains(["known.com"]);
 
-		await findCompanies(icp, 1, testOptions({ icpId: "icp-42" }), {
+		await findCompanies(icp, 1, testOptions({ organizationId: "org-42" }), {
 			recentDomains,
 			synthesize,
 			search,
@@ -443,7 +449,12 @@ describe("findCompanies — dependency wiring", () => {
 			judge: scriptedJudge([]),
 		});
 
-		expect(calls).toEqual([{ icpId: "icp-42", days: 90 }]);
+		expect(calls).toEqual([
+			{
+				organizationId: "org-42",
+				days: config.companies.seenDomainsWindowDays,
+			},
+		]);
 	});
 
 	it("runs as a plain function call, with no Hono context and no WorkflowStep", async () => {

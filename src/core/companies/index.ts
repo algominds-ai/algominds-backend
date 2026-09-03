@@ -51,6 +51,7 @@ const {
 
 export type FindCompaniesOptions = {
 	icpId: string;
+	organizationId: string;
 	env: Env;
 	today: string;
 	freshnessDays?: number;
@@ -62,7 +63,11 @@ export type FindCompaniesOptions = {
 };
 
 export type FindCompaniesDeps = {
-	recentDomains: (env: Env, icpId: string, days: number) => Promise<string[]>;
+	recentDomains: (
+		env: Env,
+		organizationId: string,
+		days: number,
+	) => Promise<string[]>;
 	synthesize: (input: SynthesizeInput, env: Env) => Promise<SynthesizeResult>;
 	search: (
 		plan: SearchPlan,
@@ -423,7 +428,7 @@ export async function findCompanies(
 ): Promise<FindCompaniesResult> {
 	const known = await deps.recentDomains(
 		opts.env,
-		opts.icpId,
+		opts.organizationId,
 		SEEN_DOMAINS_WINDOW_DAYS,
 	);
 	const seenDomains = new Set(known.map(normalizeDomain));

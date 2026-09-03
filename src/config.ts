@@ -21,7 +21,7 @@ export const config = {
 		resultsPerRound: 100,
 		judgeCandidateMultiple: 3,
 		descriptionChars: 600,
-		seenDomainsWindowDays: 90,
+		seenDomainsWindowDays: 60,
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 60,
 	},

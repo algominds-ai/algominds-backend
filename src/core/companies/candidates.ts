@@ -48,7 +48,7 @@ export type CompanyData = {
 	result: CompanyMatch;
 };
 
-const MAX_EXCLUDED_DOMAINS = 1200;
+export const MAX_EXCLUDED_DOMAINS = 1200;
 
 /**
  * The domains one round tells the vendor not to return: the caller's own list

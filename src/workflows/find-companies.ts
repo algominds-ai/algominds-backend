@@ -87,14 +87,19 @@ async function persistRound(input: PersistRoundInput): Promise<void> {
 }
 
 /** The options one round runs under, carrying the angles and reject reasons the rounds before it produced. */
-function roundOptions(
-	payload: FindCompaniesPayload,
-	env: Env,
-	today: string,
-	history: { pastAngles: readonly string[]; feedback: readonly string[] },
-): FindCompaniesOptions {
+type RoundOptionsInput = {
+	payload: FindCompaniesPayload;
+	organizationId: string;
+	env: Env;
+	today: string;
+	history: { pastAngles: readonly string[]; feedback: readonly string[] };
+};
+
+function roundOptions(input: RoundOptionsInput): FindCompaniesOptions {
+	const { payload, organizationId, env, today, history } = input;
 	return {
 		icpId: payload.icpId,
+		organizationId,
 		env,
 		today,
 		maxRounds: 1,
@@ -114,11 +119,12 @@ async function runFindCompaniesRounds(
 		payload: FindCompaniesPayload;
 		icp: IcpDoc;
 		runId: string;
+		organizationId: string;
 		alreadySpent: number;
 	},
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
-	const { env, payload, icp, runId } = target;
+	const { env, payload, icp, runId, organizationId } = target;
 	const today = await step.do("today", config.stepConfig.databaseCall, () =>
 		Promise.resolve(new Date().toISOString().slice(0, 10)),
 	);
@@ -143,7 +149,13 @@ async function runFindCompaniesRounds(
 		round++
 	) {
 		const remaining = payload.count - companies.length;
-		const opts = roundOptions(payload, env, today, { pastAngles, feedback });
+		const opts = roundOptions({
+			payload,
+			organizationId,
+			env,
+			today,
+			history: { pastAngles, feedback },
+		});
 		const deps = roundDeps({
 			accumulatedDomains,
 			step,
@@ -350,6 +362,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				payload,
 				icp,
 				runId: event.instanceId,
+				organizationId,
 				alreadySpent: alreadySpent.alreadySpent,
 			},
 			step,

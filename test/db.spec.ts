@@ -1,8 +1,10 @@
 import { env as testEnv } from "cloudflare:workers";
 import type { SQL } from "drizzle-orm";
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
+import { config } from "../src/config";
+import { MAX_EXCLUDED_DOMAINS } from "../src/core/companies/candidates";
 import { organization } from "../src/core/db/auth-schema";
 import type { Db, DbEnv, DbMode } from "../src/core/db/client";
 import { db, withConnection } from "../src/core/db/client";
@@ -149,18 +151,203 @@ describe("recentDomains", () => {
 			return {
 				select: () => ({
 					from: () => ({
-						where: () => Promise.resolve(rows),
+						where: () => ({
+							orderBy: () => ({
+								limit: () => Promise.resolve(rows),
+							}),
+						}),
 					}),
 				}),
 			};
 		};
 
-		const result = await recentDomains(env, "icp-1", 90, buildDb);
+		const result = await recentDomains(env, "org-1", 60, buildDb);
 
 		expect(recordedMode).toBe("direct");
 		expect(result).toEqual(["acme.com", "beta.com"]);
 	});
+
+	it("caps the exclusion list at the search contract's limit, most recent first", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const rows = [{ domain: "acme.com" }, { domain: "beta.com" }];
+		let recordedOrder: unknown;
+		let recordedLimit: number | undefined;
+
+		const buildDb: DbFactory<DomainsConnection> = () => ({
+			select: () => ({
+				from: () => ({
+					where: () => ({
+						orderBy: (order: SQL) => {
+							recordedOrder = order;
+							return {
+								limit: (count: number) => {
+									recordedLimit = count;
+									return Promise.resolve(rows);
+								},
+							};
+						},
+					}),
+				}),
+			}),
+		});
+
+		await recentDomains(env, "org-1", 60, buildDb);
+
+		expect(recordedOrder).toEqual(desc(company.foundAt));
+		expect(recordedLimit).toBe(MAX_EXCLUDED_DOMAINS);
+	});
+
+	it("excludes every company the account found in the window, across its profiles", async () => {
+		const fixture = await seedRecentDomainsFixture();
+		try {
+			const result = await recentDomains(
+				testEnv,
+				fixture.org.id,
+				config.companies.seenDomainsWindowDays,
+			);
+
+			expect(result.sort()).toEqual([fixture.domainA, fixture.domainB].sort());
+		} finally {
+			await cleanupRecentDomainsFixture(fixture);
+		}
+	});
 });
+
+type RecentDomainsFixture = {
+	org: Organization;
+	otherOrg: Organization;
+	icpA: Icp;
+	icpB: Icp;
+	runIdA: string;
+	runIdB: string;
+	otherRunId: string;
+	domainA: string;
+	domainB: string;
+	saved: Company[];
+};
+
+type RecentDomainsOrgs = {
+	org: Organization;
+	otherOrg: Organization;
+	icpA: Icp;
+	icpB: Icp;
+	runIdA: string;
+	runIdB: string;
+	otherRunId: string;
+};
+
+async function seedRecentDomainsOrgs(): Promise<RecentDomainsOrgs> {
+	const org = await seedOrganization("recent-domains-account");
+	const otherOrg = await seedOrganization("recent-domains-other");
+	const icpA = await createIcp(testEnv, {
+		description: "seed icp A for recentDomains",
+		domain: `db-spec-recent-domains-a-${crypto.randomUUID()}.internal`,
+		organizationId: org.id,
+	});
+	const icpB = await createIcp(testEnv, {
+		description: "seed icp B for recentDomains",
+		domain: `db-spec-recent-domains-b-${crypto.randomUUID()}.internal`,
+		organizationId: org.id,
+	});
+	const runIdA = `companies_recent-domains-a-${crypto.randomUUID()}`;
+	const runIdB = `companies_recent-domains-b-${crypto.randomUUID()}`;
+	const otherRunId = `companies_recent-domains-other-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: runIdA,
+		organizationId: org.id,
+		icpId: icpA.id,
+		capability: "companies",
+		status: "complete",
+	});
+	await openRun(testEnv, {
+		id: runIdB,
+		organizationId: org.id,
+		icpId: icpB.id,
+		capability: "companies",
+		status: "complete",
+	});
+	await openRun(testEnv, {
+		id: otherRunId,
+		organizationId: otherOrg.id,
+		icpId: null,
+		capability: "companies",
+		status: "complete",
+	});
+	return { org, otherOrg, icpA, icpB, runIdA, runIdB, otherRunId };
+}
+
+async function seedRecentDomainsFixture(): Promise<RecentDomainsFixture> {
+	const orgs = await seedRecentDomainsOrgs();
+	const now = Date.now();
+	const dayMs = 24 * 60 * 60 * 1000;
+	const recentDate = new Date(now - 10 * dayMs);
+	const staleDate = new Date(
+		now - (config.companies.seenDomainsWindowDays + 1) * dayMs,
+	);
+	const domainA = `recent-domains-a-${crypto.randomUUID()}.com`;
+	const domainB = `recent-domains-b-${crypto.randomUUID()}.com`;
+	const staleDomain = `recent-domains-stale-${crypto.randomUUID()}.com`;
+	const otherDomain = `recent-domains-other-${crypto.randomUUID()}.com`;
+
+	const saved = await saveCompanies(testEnv, [
+		{
+			icpId: orgs.icpA.id,
+			organizationId: orgs.org.id,
+			domain: domainA,
+			name: "Recent A",
+			runId: orgs.runIdA,
+			foundAt: recentDate,
+		},
+		{
+			icpId: orgs.icpB.id,
+			organizationId: orgs.org.id,
+			domain: domainB,
+			name: "Recent B",
+			runId: orgs.runIdB,
+			foundAt: recentDate,
+		},
+		{
+			icpId: orgs.icpA.id,
+			organizationId: orgs.org.id,
+			domain: staleDomain,
+			name: "Stale",
+			runId: orgs.runIdA,
+			foundAt: staleDate,
+		},
+		{
+			icpId: null,
+			organizationId: orgs.otherOrg.id,
+			domain: otherDomain,
+			name: "Other org",
+			runId: orgs.otherRunId,
+			foundAt: recentDate,
+		},
+	]);
+
+	return { ...orgs, domainA, domainB, saved };
+}
+
+async function cleanupRecentDomainsFixture(
+	fixture: RecentDomainsFixture,
+): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(company).where(
+			inArray(
+				company.id,
+				fixture.saved.map((row) => row.id),
+			),
+		);
+		await connection
+			.delete(run)
+			.where(
+				inArray(run.id, [fixture.runIdA, fixture.runIdB, fixture.otherRunId]),
+			);
+		await connection
+			.delete(icpTable)
+			.where(inArray(icpTable.id, [fixture.icpA.id, fixture.icpB.id]));
+	});
+	await cleanupOrganizations([fixture.org.id, fixture.otherOrg.id]);
+}
 
 describe("loadIcp", () => {
 	it("reads through the cached binding, not direct", async () => {

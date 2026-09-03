@@ -53,8 +53,10 @@ companies:
   judgeCandidateMultiple: 3
   # How much of a company description reaches the judge.
   descriptionChars: 600
-  # Window for treating a domain as already seen.
-  seenDomainsWindowDays: 90
+  # Window for treating a domain as already seen: every company the account
+  # found in the trailing N days, across every profile it owns. Feeds both
+  # excludeDomains on the search request and the seen-domain gate.
+  seenDomainsWindowDays: 60
   # The source and the agent's effort are no longer set here. The synthesizer picks
   # both per round from the profile, because only it knows whether the profile asks
   # for a recent event. Its effort choice is limited to two values: "low", measured
