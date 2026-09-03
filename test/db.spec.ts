@@ -2188,6 +2188,264 @@ describe("upsertPeople", () => {
 	});
 });
 
+describe("upsertPeople: renamed linkedin url", () => {
+	it("relinks a person whose linkedin slug changed since the last run, leaving one row for that name at that company", async () => {
+		const fixture = await seedUpsertPeopleFixture("upsert-relink");
+		const oldSlugUrl = `${fixture.linkedinUrl}-34742310`;
+		const newSlugUrl = `${fixture.linkedinUrl}-rotated`;
+
+		try {
+			await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: oldSlugUrl,
+					name: "Ettienne Gous",
+					title: "Sales Manager",
+					data: {
+						status: "verified",
+						basis: "champion",
+						seenBy: ["clay"],
+						since: "2025-01",
+						location: null,
+					},
+				},
+			]);
+
+			const result = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: newSlugUrl,
+					name: "Ettienne Gous",
+					title: "VP Sales",
+					data: {
+						status: "verified",
+						basis: "champion",
+						seenBy: ["clay"],
+						since: "2026-01",
+						location: "Cape Town",
+					},
+				},
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.linkedinUrl).toBe(newSlugUrl);
+			expect(result[0]?.title).toBe("VP Sales");
+
+			const stored = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(person)
+					.where(
+						and(
+							eq(person.organizationId, fixture.org.id),
+							eq(person.companyId, fixture.companyA.id),
+							eq(person.name, "Ettienne Gous"),
+						),
+					),
+			);
+
+			expect(stored).toHaveLength(1);
+			expect(stored[0]?.linkedinUrl).toBe(newSlugUrl);
+		} finally {
+			await cleanupUpsertPeopleFixture(fixture);
+		}
+	});
+});
+
+describe("upsertPeople: same name at different companies", () => {
+	it("keeps two different people with the same name at different companies separate", async () => {
+		const fixture = await seedUpsertPeopleFixture("upsert-same-name");
+		const urlAtCompanyA = `${fixture.linkedinUrl}-a`;
+		const urlAtCompanyB = `${fixture.linkedinUrl}-b`;
+
+		try {
+			const result = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: urlAtCompanyA,
+					name: "Alex Kim",
+					title: "Account Executive",
+				},
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyB.id,
+					linkedinUrl: urlAtCompanyB,
+					name: "Alex Kim",
+					title: "Product Manager",
+				},
+			]);
+
+			expect(result).toHaveLength(2);
+
+			const stored = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(person)
+					.where(
+						and(
+							eq(person.organizationId, fixture.org.id),
+							eq(person.name, "Alex Kim"),
+						),
+					),
+			);
+
+			expect(stored).toHaveLength(2);
+			expect(stored.map((row) => row.companyId).sort()).toEqual(
+				[fixture.companyA.id, fixture.companyB.id].sort(),
+			);
+			expect(stored.map((row) => row.linkedinUrl).sort()).toEqual(
+				[urlAtCompanyA, urlAtCompanyB].sort(),
+			);
+		} finally {
+			await cleanupUpsertPeopleFixture(fixture);
+		}
+	});
+});
+
+describe("upsertPeople: renamed linkedin url from a roster row", () => {
+	it("corrects the linkedin url without touching a verified person's title or data", async () => {
+		const fixture = await seedUpsertPeopleFixture("upsert-relink-roster");
+		const oldSlugUrl = `${fixture.linkedinUrl}-34742310`;
+		const newSlugUrl = `${fixture.linkedinUrl}-rotated`;
+
+		try {
+			await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: oldSlugUrl,
+					name: "Ettienne Gous",
+					title: "Sales Manager",
+					data: {
+						status: "verified",
+						basis: "champion",
+						seenBy: ["clay"],
+						since: "2025-01",
+						location: null,
+					},
+				},
+			]);
+
+			const result = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: newSlugUrl,
+					name: "Ettienne Gous",
+					title: "Someone Else",
+					data: {
+						status: "roster",
+						basis: null,
+						seenBy: ["clay"],
+						since: null,
+						location: null,
+					},
+				},
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.linkedinUrl).toBe(newSlugUrl);
+			expect(result[0]?.title).toBe("Sales Manager");
+			expect(result[0]?.data).toEqual({
+				status: "verified",
+				basis: "champion",
+				seenBy: ["clay"],
+				since: "2025-01",
+				location: null,
+			});
+
+			const stored = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(person)
+					.where(
+						and(
+							eq(person.organizationId, fixture.org.id),
+							eq(person.companyId, fixture.companyA.id),
+							eq(person.name, "Ettienne Gous"),
+						),
+					),
+			);
+
+			expect(stored).toHaveLength(1);
+			expect(stored[0]?.linkedinUrl).toBe(newSlugUrl);
+		} finally {
+			await cleanupUpsertPeopleFixture(fixture);
+		}
+	});
+});
+
+describe("upsertPeople: exact url match takes precedence over a namesake", () => {
+	it("moves an exact linkedin url match ahead of a name match at the target company, leaving the target company's namesake untouched", async () => {
+		const fixture = await seedUpsertPeopleFixture("upsert-precedence");
+		const movedUrl = `${fixture.linkedinUrl}-moved`;
+		const namesakeUrl = `${fixture.linkedinUrl}-namesake`;
+
+		try {
+			await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: movedUrl,
+					name: "Jordan Blake",
+					title: "Old Title",
+				},
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyB.id,
+					linkedinUrl: namesakeUrl,
+					name: "Jordan Blake",
+					title: "Namesake Title",
+				},
+			]);
+
+			const result = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyB.id,
+					linkedinUrl: movedUrl,
+					name: "Jordan Blake",
+					title: "New Title",
+					data: {
+						status: "verified",
+						basis: "champion",
+						seenBy: ["clay"],
+						since: "2026-01",
+						location: null,
+					},
+				},
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.linkedinUrl).toBe(movedUrl);
+			expect(result[0]?.companyId).toBe(fixture.companyB.id);
+			expect(result[0]?.title).toBe("New Title");
+
+			const stored = await withConnection(testEnv, "direct", db, (connection) =>
+				connection
+					.select()
+					.from(person)
+					.where(
+						and(
+							eq(person.organizationId, fixture.org.id),
+							eq(person.name, "Jordan Blake"),
+						),
+					),
+			);
+
+			expect(stored).toHaveLength(2);
+			const namesake = stored.find((row) => row.linkedinUrl === namesakeUrl);
+			expect(namesake?.companyId).toBe(fixture.companyB.id);
+			expect(namesake?.title).toBe("Namesake Title");
+		} finally {
+			await cleanupUpsertPeopleFixture(fixture);
+		}
+	});
+});
+
 type RunCompanyEvidenceFixture = {
 	org: Organization;
 	runId: string;
