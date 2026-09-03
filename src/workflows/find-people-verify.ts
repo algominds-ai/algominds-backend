@@ -155,7 +155,17 @@ async function secondOpinion(
 	return { verified: agreeResult.label === "SAME", evidence };
 }
 
-type QuoteResolution = { url: string | null; evidence: PickEvidence | null };
+type QuoteResolution = {
+	url: string | null;
+	evidence: PickEvidence | null;
+	costEntries: CostEntry[];
+};
+
+type QuoteStepResult = {
+	found: boolean;
+	reason: string;
+	costEntries: CostEntry[];
+};
 
 /**
  * Checks the verdict's quote against its own URL and reports both the kept
@@ -168,14 +178,22 @@ async function resolveEvidenceUrl(
 	verified: boolean,
 ): Promise<QuoteResolution> {
 	if (!verified || !verdict.evidence_url || !verdict.evidence_quote) {
-		return { url: null, evidence: null };
+		return { url: null, evidence: null, costEntries: [] };
 	}
 	const url = verdict.evidence_url;
 	const quote = verdict.evidence_quote;
 	const outcome = await pick.ctx.step.do(
 		`${pick.name}-quote`,
 		config.stepConfig.paidCall,
-		() => quoteOnPage(url, quote, pick.ctx.env),
+		async (): Promise<QuoteStepResult> => {
+			const stepLedger = new CostLedger();
+			const result = await quoteOnPage(url, quote, pick.ctx.env, stepLedger);
+			return {
+				found: result.found,
+				reason: result.reason,
+				costEntries: stepLedger.toJSON().entries,
+			};
+		},
 	);
 	return {
 		url: outcome.found ? url : null,
@@ -183,6 +201,7 @@ async function resolveEvidenceUrl(
 			kind: "verify-quote",
 			body: { url, found: outcome.found, reason: outcome.reason },
 		},
+		costEntries: outcome.costEntries,
 	};
 }
 
@@ -215,6 +234,7 @@ async function verifyPick(pick: PickContext): Promise<PickOutcome> {
 		evidence.push(...opinion.evidence);
 	}
 	const resolvedUrl = await resolveEvidenceUrl(pick, verdict, verified);
+	applyCostEntries(resolvedUrl.costEntries, pollLedger);
 	evidence.push({
 		kind: "verify-poll",
 		body: { ...verdict, evidence_url: resolvedUrl.url },

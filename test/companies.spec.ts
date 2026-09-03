@@ -1,6 +1,7 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { config } from "../src/config";
 import type {
 	FindCompaniesDeps,
@@ -1357,33 +1358,63 @@ describe("the sort of page a company was proved by survives onto the saved row",
 	});
 });
 
-describe("a round that demanded proof checks its own evidence before the judge sees it", () => {
-	function agentRow(domain: string, quote: string): ExaResult {
-		return {
-			...goodResult(domain),
-			evidenceUrl: `https://${domain}/careers`,
-			evidenceQuote: quote,
-		};
-	}
+const ContentsRequestSchema = z.object({ urls: z.array(z.string()) });
 
+function agentRow(domain: string, quote: string): ExaResult {
+	return {
+		...goodResult(domain),
+		evidenceUrl: `https://${domain}/careers`,
+		evidenceQuote: quote,
+	};
+}
+
+function exaOptions(): FindCompaniesOptions {
+	return testOptions({
+		env: { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } },
+	});
+}
+
+function contentsFetch(
+	byUrl: Record<string, { text: string } | { errorTag: string }>,
+): typeof fetch {
+	return async (_input, init) => {
+		const { urls } = ContentsRequestSchema.parse(
+			JSON.parse(String(init?.body)),
+		);
+		const url = urls[0] ?? "";
+		const outcome = byUrl[url];
+		if (!outcome) throw new Error(`unexpected contents request for ${url}`);
+		const status =
+			"errorTag" in outcome
+				? {
+						id: url,
+						status: "error" as const,
+						error: { tag: outcome.errorTag },
+					}
+				: { id: url, status: "success" as const };
+		return new Response(
+			JSON.stringify({
+				requestId: "req-contents",
+				results: "text" in outcome ? [{ url, text: outcome.text }] : [],
+				statuses: [status],
+				costDollars: { total: 0.003 },
+			}),
+			{ status: 200, headers: { "content-type": "application/json" } },
+		);
+	};
+}
+
+describe("a round that demanded proof checks its own evidence before the judge sees it", () => {
 	it("rejects a company whose evidence page truly does not exist, but keeps one whose page merely lacks the quote", async () => {
 		const good = agentRow("good.com", "Good Co is hiring now.");
 		const notFound = agentRow("missing404.com", "Missing Co is hiring now.");
 		const noQuote = agentRow("noquote.com", "No Quote Co is hiring now.");
 
-		globalThis.fetch = async (input) => {
-			const url = String(input);
-			if (url === "https://good.com/careers") {
-				return new Response("Good Co is hiring now.", { status: 200 });
-			}
-			if (url === "https://missing404.com/careers") {
-				return new Response("gone", { status: 404 });
-			}
-			if (url === "https://noquote.com/careers") {
-				return new Response("Nothing about hiring here.", { status: 200 });
-			}
-			throw new Error(`unexpected fetch to ${url}`);
-		};
+		globalThis.fetch = contentsFetch({
+			"https://good.com/careers": { text: "Good Co is hiring now." },
+			"https://missing404.com/careers": { errorTag: "CRAWL_NOT_FOUND" },
+			"https://noquote.com/careers": { text: "Nothing about hiring here." },
+		});
 
 		const { search } = scriptedSearch([[good, notFound, noQuote]]);
 		const { synthesize } = scriptedSynthesize({
@@ -1393,7 +1424,7 @@ describe("a round that demanded proof checks its own evidence before the judge s
 		});
 		const { recentDomains } = recordingRecentDomains();
 
-		const result = await findCompanies(icp, 3, testOptions(), {
+		const result = await findCompanies(icp, 3, exaOptions(), {
 			recentDomains,
 			synthesize,
 			search,
@@ -1409,11 +1440,42 @@ describe("a round that demanded proof checks its own evidence before the judge s
 		expect(result.captures["noquote.com"]?.result.evidenceCheck).toBe(
 			"missing",
 		);
-		expect(result.rejects.some((reject) => reject.reason === "fetch:404")).toBe(
-			true,
-		);
+		expect(
+			result.rejects.some((reject) => reject.reason === "CRAWL_NOT_FOUND"),
+		).toBe(true);
 	});
 
+	it("keeps a row whose evidence page refused the crawler, recording the tag as its evidence check", async () => {
+		const refused = agentRow("blocked.com", "Blocked Co is hiring now.");
+
+		globalThis.fetch = contentsFetch({
+			"https://blocked.com/careers": { errorTag: "SOURCE_NOT_AVAILABLE" },
+		});
+
+		const { search } = scriptedSearch([[refused]]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, exaOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["blocked.com"]);
+		expect(result.captures["blocked.com"]?.result.evidenceCheck).toBe(
+			"SOURCE_NOT_AVAILABLE",
+		);
+	});
+});
+
+describe("a round that demanded proof but never had it to check", () => {
 	it("rejects a company whose row carries no evidence quote at all", async () => {
 		const noQuoteAtAll: ExaResult = {
 			...goodResult("silent.com"),
@@ -1431,7 +1493,7 @@ describe("a round that demanded proof checks its own evidence before the judge s
 		});
 		const { recentDomains } = recordingRecentDomains();
 
-		const result = await findCompanies(icp, 1, testOptions(), {
+		const result = await findCompanies(icp, 1, exaOptions(), {
 			recentDomains,
 			synthesize,
 			search,
