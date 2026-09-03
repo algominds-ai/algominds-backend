@@ -33,12 +33,21 @@ export type CompanyMatch = {
 	publishedDate: string | null;
 	score: number | null;
 	evidenceCheck: string | null;
+	fitReason: string | null;
 };
 
-/** The vendor's own entity object, the fields that describe the match, and which source produced them. */
+/**
+ * The vendor's own entity object, the fields that describe the match, and
+ * which source produced them. `raw` is the vendor's own result for this
+ * company, already JSON-stringified: it is stored as evidence unshaped and
+ * nothing reads its structure, and pre-serializing it here keeps Exa's
+ * recursive `summary` field from reaching every workflow step's own
+ * serializability check, which cannot resolve a type that carries it.
+ */
 export type CompanyCapture = {
 	entity: CompanyEntity;
 	result: CompanyMatch;
+	raw: string;
 	source: string;
 };
 
@@ -153,6 +162,7 @@ function toCompanyMatch(result: ExaResult): CompanyMatch {
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
 		evidenceCheck: null,
+		fitReason: null,
 	};
 }
 
@@ -377,6 +387,7 @@ export function filterEntities(
 			outcome.captures[row.domain] = {
 				entity,
 				result: toCompanyMatch(result),
+				raw: JSON.stringify(result),
 				source: plan.source,
 			};
 		}

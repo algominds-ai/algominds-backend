@@ -29,7 +29,12 @@ import { organization } from "../src/core/db/auth-schema";
 import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import { createIcp, findRun } from "../src/core/db/queries";
-import { icp as icpTable, run } from "../src/core/db/schema";
+import {
+	company as companyTable,
+	evidence as evidenceTable,
+	icp as icpTable,
+	run,
+} from "../src/core/db/schema";
 import type { ExaAgentCompany } from "../src/core/providers/exa/agent";
 import type {
 	CompanyEntity,
@@ -504,6 +509,27 @@ describe("findCompanies — capturing the vendor payload", () => {
 		);
 	});
 
+	it("carries the judge's own reason for a kept company onto its stored row", async () => {
+		const { search } = scriptedSearch([[goodResult("kept.com")]]);
+		const { synthesize } = scriptedSynthesize();
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		const capture = result.captures["kept.com"];
+		expect(capture?.result.fitReason).toBe("fits icp");
+		if (!capture) throw new Error("expected a capture for kept.com");
+		expect(toCompanyData(capture).result).toMatchObject({
+			fitReason: "fits icp",
+		});
+	});
+
 	it("captures a result missing its score and published date with those fields null, not a thrown error", async () => {
 		const { search } = scriptedSearch([[goodResult("noscore.com")]]);
 		const { synthesize } = scriptedSynthesize();
@@ -530,6 +556,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			publishedDate: null,
 			score: null,
 			evidenceCheck: null,
+			fitReason: "fits icp",
 		});
 	});
 
@@ -599,6 +626,7 @@ describe("findCompanies — captures across sources", () => {
 		const capture: CompanyCapture | undefined = result.captures["agentco.com"];
 		expect(capture ? Object.keys(capture).sort() : []).toEqual([
 			"entity",
+			"raw",
 			"result",
 			"source",
 		]);
@@ -607,6 +635,7 @@ describe("findCompanies — captures across sources", () => {
 		);
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
 			"evidenceCheck",
+			"fitReason",
 			"id",
 			"kind",
 			"publishedDate",
@@ -635,7 +664,9 @@ describe("toCompanyData", () => {
 				publishedDate: null,
 				score: null,
 				evidenceCheck: null,
+				fitReason: null,
 			},
+			raw: JSON.stringify(goodResult("example.com")),
 			source,
 		};
 	}
@@ -1160,7 +1191,9 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							publishedDate: null,
 							score: null,
 							evidenceCheck: null,
+							fitReason: null,
 						},
+						raw: JSON.stringify(goodResult(domain)),
 						source: "exa-search",
 					},
 				]),
@@ -1339,6 +1372,164 @@ describe("FindCompaniesWorkflow: a round that throws after the run opens", () =>
 				await connection
 					.delete(organization)
 					.where(eq(organization.id, org.id));
+			});
+		}
+	});
+});
+
+function rawEvidenceRoundResult(domain: string): {
+	roundResult: FindCompaniesResult;
+	raw: ExaResult;
+} {
+	const raw = goodResult(domain);
+	const companyRow: CompanyRow = {
+		name: "Raw Co",
+		domain,
+		linkedinUrl: null,
+		evidenceUrl: `https://${domain}/careers`,
+		evidenceQuote: null,
+		evidencePublisher: null,
+		evidenceKind: null,
+		industry: null,
+		description: null,
+		signal: null,
+		evidenceDate: null,
+	};
+	const capture: CompanyCapture = {
+		entity: entity({ name: "Raw Co" }),
+		result: {
+			id: raw.id,
+			url: raw.url,
+			title: raw.title,
+			signal: null,
+			quote: null,
+			publisher: null,
+			kind: null,
+			publishedDate: null,
+			score: null,
+			evidenceCheck: null,
+			fitReason: "fits icp",
+		},
+		raw: JSON.stringify(raw),
+		source: "exa-search",
+	};
+	return {
+		raw,
+		roundResult: {
+			companies: [companyRow],
+			requested: 1,
+			found: 1,
+			rounds: 1,
+			status: "complete",
+			costDollars: 0.01,
+			rejects: [],
+			searches: [testPlan()],
+			captures: { [domain]: capture },
+			seenDomains: [domain],
+			feedback: [],
+		},
+	};
+}
+
+type RawEvidenceCleanup = {
+	instanceId: string;
+	organizationId: string;
+	icpId: string;
+	savedCompanyId: string | undefined;
+};
+
+async function cleanupRawEvidenceFixture(
+	fixture: RawEvidenceCleanup,
+): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		if (fixture.savedCompanyId) {
+			await connection
+				.delete(evidenceTable)
+				.where(eq(evidenceTable.subjectId, fixture.savedCompanyId));
+		}
+		await connection
+			.delete(companyTable)
+			.where(eq(companyTable.runId, fixture.instanceId));
+		await connection.delete(run).where(eq(run.id, fixture.instanceId));
+		await connection.delete(icpTable).where(eq(icpTable.id, fixture.icpId));
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, fixture.organizationId));
+	});
+}
+
+describe("FindCompaniesWorkflow: the raw vendor result kept as evidence", () => {
+	it("stores one search-result evidence row per kept company, carrying the vendor's own result", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`companies-workflow-raw-evidence-${crypto.randomUUID()}`,
+			"companies workflow raw evidence test",
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for the raw evidence test",
+			domain: `raw-evidence-${crypto.randomUUID()}.internal`,
+			organizationId: org.id,
+		});
+		const domain = `raw-evidence-co-${crypto.randomUUID()}.example`;
+		const { roundResult, raw } = rawEvidenceRoundResult(domain);
+		const instanceId = `companies_raw_evidence_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		let savedCompanyId: string | undefined;
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "round_1" }, roundResult);
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: icpRow.id, count: 1 },
+			});
+			await instance.waitForStatus("complete");
+
+			const savedCompanies = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(companyTable)
+						.where(eq(companyTable.runId, instanceId)),
+			);
+			const saved = savedCompanies[0];
+			if (!saved) throw new Error("expected a saved company row");
+			savedCompanyId = saved.id;
+
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidenceTable)
+						.where(eq(evidenceTable.subjectId, saved.id)),
+			);
+			const searchResultRows = evidenceRows.filter(
+				(row) => row.kind === "search-result",
+			);
+			expect(searchResultRows).toHaveLength(1);
+			const searchResultRow = searchResultRows[0];
+			if (!searchResultRow) {
+				throw new Error("expected a search-result evidence row");
+			}
+			expect(searchResultRow.source).toBe("exa");
+			expect(JSON.parse(searchResultRow.value).url).toBe(raw.url);
+		} finally {
+			await instance.dispose();
+			await cleanupRawEvidenceFixture({
+				instanceId,
+				organizationId: org.id,
+				icpId: icpRow.id,
+				savedCompanyId,
 			});
 		}
 	});

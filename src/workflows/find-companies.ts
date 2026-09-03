@@ -13,7 +13,12 @@ import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { seedExcludedDomains } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
-import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
+import {
+	evidenceRowsFor,
+	matchRow,
+	rawResultEvidenceRow,
+	toNewCompany,
+} from "@/core/companies/rows";
 import {
 	appendEvidence,
 	assertUnderDailyCeiling,
@@ -302,7 +307,10 @@ async function persistCompanies(
 	const saved = await saveCompanies(env, newCompanies);
 	const evidenceRows = saved.flatMap((company) => {
 		const row = matchRow(companies, company);
-		return row ? evidenceRowsFor(company, row) : [];
+		if (!row) return [];
+		const rows = evidenceRowsFor(company, row);
+		const capture = row.domain ? captures[row.domain] : undefined;
+		return capture ? [...rows, rawResultEvidenceRow(company, capture)] : rows;
 	});
 	await appendEvidence(env, evidenceRows);
 }

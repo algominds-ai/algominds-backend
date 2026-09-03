@@ -1,6 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { config } from "../src/config";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { judge } from "../src/core/companies/judge";
 import type { IcpDoc } from "../src/core/synthesize";
@@ -118,7 +119,7 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 }
 
 function verdictsFor(rowSet: readonly CompanyRow[]): {
-	verdicts: Array<{ index: number; keep: boolean; reason: string | null }>;
+	verdicts: Array<{ index: number; keep: boolean; reason: string }>;
 } {
 	return {
 		verdicts: rowSet.map((_, index) => {
@@ -126,7 +127,7 @@ function verdictsFor(rowSet: readonly CompanyRow[]): {
 			return {
 				index,
 				keep,
-				reason: keep ? null : "no qualifying signal",
+				reason: keep ? "fits the profile" : "no qualifying signal",
 			};
 		}),
 	};
@@ -255,14 +256,14 @@ describe("judge: verdicts and retries", () => {
 		expect(result.verdicts[1]?.keep).toBe(false);
 	});
 
-	it("parses a kept row whose reason is null", async () => {
+	it("carries a kept row's reason through to the caller, not just a refused row's", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply({
 					verdicts: rows.map((_, index) => ({
 						index,
 						keep: true,
-						reason: null,
+						reason: "fits the profile",
 					})),
 				}),
 			),
@@ -272,9 +273,9 @@ describe("judge: verdicts and retries", () => {
 		const result = await judge(icp, rows, env, null);
 
 		expect(result.verdicts.every((verdict) => verdict.keep)).toBe(true);
-		expect(result.verdicts.every((verdict) => verdict.reason === null)).toBe(
-			true,
-		);
+		expect(
+			result.verdicts.every((verdict) => verdict.reason === "fits the profile"),
+		).toBe(true);
 	});
 
 	it("carries a refused row's reason through to the caller", async () => {
@@ -404,6 +405,87 @@ describe("the kind of page a row came from is a label, not something the judge w
 		expect(sent).toContain("hiring a founding engineer");
 		expect(sent).not.toContain("evidenceKind");
 		expect(sent).not.toContain("vendor-case-study");
+	});
+});
+
+type DeferredCall = { url: string; headers: Headers; body: unknown };
+
+function deferredGateway(): {
+	fetch: typeof fetch;
+	calls: DeferredCall[];
+	resolvers: Array<(response: Response) => void>;
+} {
+	const calls: DeferredCall[] = [];
+	const resolvers: Array<(response: Response) => void> = [];
+	const handler: typeof fetch = (input, init) => {
+		const body =
+			typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
+		calls.push({
+			url: String(input),
+			headers: new Headers(init?.headers),
+			body,
+		});
+		return new Promise<Response>((resolve) => {
+			resolvers.push(resolve);
+		});
+	};
+	return { fetch: handler, calls, resolvers };
+}
+
+async function flushMicrotasks(iterations = 200): Promise<void> {
+	for (let i = 0; i < iterations; i++) await Promise.resolve();
+}
+
+function rowCountIn(call: DeferredCall | undefined): number {
+	const sent = z
+		.object({ messages: z.array(z.object({ content: z.string() })) })
+		.parse(call?.body)
+		.messages.map((message) => message.content)
+		.join("\n");
+	return (sent.match(/^\d+: /gm) ?? []).length;
+}
+
+describe("judge: slicing a large batch into concurrent, ordered calls", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("sends 35 rows as three concurrent calls of 15, 15 and 5, and returns every index in row order however the calls resolve", async () => {
+		const bigRows: CompanyRow[] = Array.from({ length: 35 }, (_, i) =>
+			row(`Company ${i}`, `co${i}.com`),
+		);
+		const gateway = deferredGateway();
+		globalThis.fetch = gateway.fetch;
+
+		const pending = judge(icp, bigRows, env, null);
+
+		await flushMicrotasks();
+		expect(gateway.calls).toHaveLength(3);
+		const sizes = gateway.calls.map((call) => rowCountIn(call));
+		expect(sizes).toEqual([15, 15, 5]);
+		expect(config.companies.judgeBatchSize).toBe(15);
+
+		for (const callIndex of [2, 0, 1]) {
+			const size = sizes[callIndex] ?? 0;
+			const verdicts = Array.from({ length: size }, (_, i) => ({
+				index: i,
+				keep: true,
+				reason: "fits the profile",
+			}));
+			gateway.resolvers[callIndex]?.(
+				chatCompletionResponse(objectReply({ verdicts })),
+			);
+		}
+
+		const result = await pending;
+
+		expect(result.verdicts).toHaveLength(35);
+		result.verdicts.forEach((verdict, index) => {
+			expect(verdict.index).toBe(index);
+			expect(verdict.keep).toBe(true);
+		});
 	});
 });
 

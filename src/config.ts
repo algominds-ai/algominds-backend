@@ -24,6 +24,7 @@ export const config = {
 		seenDomainsWindowDays: 60,
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 60,
+		judgeBatchSize: 15,
 	},
 	people: {
 		exaAgentPollIntervalSeconds: 5,
@@ -44,6 +45,9 @@ export const config = {
 	},
 	judge: {
 		cacheTtlSeconds: 86400,
+	},
+	model: {
+		timeoutMs: 90000,
 	},
 	stepConfig: {
 		paidCall: {

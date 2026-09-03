@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Candidate } from "../src/core/people/candidate";
-import { rawEvidenceRow, toNewPerson } from "../src/core/people/rows";
+import {
+	personVerifyEvidenceRow,
+	rawEvidenceRow,
+	toNewPerson,
+} from "../src/core/people/rows";
 
 const candidate: Candidate = {
 	id: 0,
@@ -97,5 +101,26 @@ describe("rawEvidenceRow", () => {
 		const row = rawEvidenceRow("run-company-1", "select", "workerModel", null);
 
 		expect(row.value).toBe("null");
+	});
+});
+
+describe("personVerifyEvidenceRow", () => {
+	it("subjects the row to the person, keeping the run_company link inside the value", () => {
+		const verdict = { verdict: "CONFIRMED" };
+		const row = personVerifyEvidenceRow({
+			personId: "person-1",
+			runCompanyId: "run-company-1",
+			kind: "verify-poll",
+			source: "exa",
+			body: verdict,
+		});
+
+		expect(row).toEqual({
+			subjectType: "person",
+			subjectId: "person-1",
+			kind: "verify-poll",
+			source: "exa",
+			value: JSON.stringify({ runCompanyId: "run-company-1", body: verdict }),
+		});
 	});
 });

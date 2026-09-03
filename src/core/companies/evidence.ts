@@ -3,6 +3,7 @@ import type {
 	FindCompaniesReject,
 } from "@/core/companies/candidates";
 import type { CompanyRow, Reject, RejectReason } from "@/core/companies/gate";
+import type { Verdict } from "@/core/companies/judge";
 import type { CostLedger } from "@/core/cost";
 import type {
 	ExaContentsResult,
@@ -154,6 +155,20 @@ export function applyEvidenceChecks(
 	for (const [domain, reason] of Object.entries(checks)) {
 		const capture = captures[domain];
 		if (capture) capture.result.evidenceCheck = reason;
+	}
+}
+
+/** Records every kept row's judge reason onto its capture, keyed by the row list `verdicts` indexes into, so the stored company and the read routes can see why it survived. */
+export function applyJudgeReasons(
+	captures: Record<string, CompanyCapture>,
+	rows: readonly CompanyRow[],
+	verdicts: readonly Verdict[],
+): void {
+	for (const verdict of verdicts) {
+		if (!verdict.keep) continue;
+		const domain = rows[verdict.index]?.domain;
+		const capture = domain ? captures[domain] : undefined;
+		if (capture) capture.result.fitReason = verdict.reason;
 	}
 }
 

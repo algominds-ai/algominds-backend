@@ -7,12 +7,13 @@ import {
 	Output,
 } from "ai";
 import { z } from "zod";
+import { config } from "@/config";
 import type { CostLedger } from "@/core/cost";
 import { recordModelCall } from "@/core/cost";
-import { EXA_FETCH_TIMEOUT_MS } from "@/core/providers/exa/http";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const PROVIDER_NAME = "aigw";
+const MODEL_TIMEOUT_MS = config.model.timeoutMs;
 
 /**
  * `supportsStructuredOutputs` makes the SDK send the real JSON schema
@@ -99,7 +100,7 @@ async function attemptStructured<T>(
 			headers: params.headers,
 			providerOptions: STRUCTURED_ROUTING,
 			include: { responseBody: true },
-			abortSignal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
+			abortSignal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
 		});
 		recordModelCall(ledger, op, params.configuredId, {
 			headers: new Headers(result.response.headers),

@@ -4,10 +4,12 @@ import { RetryableProviderError } from "@/core/providers/waterfall";
 
 /**
  * Shared abort timeout for every direct outbound call this engine waits on
- * synchronously: Exa's agent and search endpoints, and every structured
- * model call through the AI Gateway. One durable step pays for at most one
- * of these before it must give up and let the caller decide what a timeout
- * means.
+ * synchronously against Exa: its agent, search, and contents endpoints. A
+ * structured model call through the AI Gateway carries its own timeout,
+ * `config.model.timeoutMs`, since a judge call reasoning over a batch of
+ * rows needs longer than a plain vendor fetch. One durable step pays for at
+ * most one of these before it must give up and let the caller decide what a
+ * timeout means.
  */
 export const EXA_FETCH_TIMEOUT_MS = 60_000;
 

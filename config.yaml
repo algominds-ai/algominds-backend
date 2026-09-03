@@ -73,6 +73,10 @@ companies:
   # killed mid-flight, losing everything already paid for. 60 polls at 5
   # seconds is 5 minutes, which covers the constrained case.
   exaAgentMaxPollAttempts: 60
+  # Rows sent to the judge in one model call. A round that sent every judgeCandidateMultiple x
+  # count row in a single prompt was measured at 130 seconds across two attempts and timed out
+  # once; slicing into batches this size keeps each call inside model.timeoutMs below.
+  judgeBatchSize: 15
 
 people:
   # Seconds between polls of a running exa-agent run.
@@ -116,6 +120,12 @@ spend:
 
 judge:
   cacheTtlSeconds: 86400
+
+model:
+  # Milliseconds before a structured model call is aborted. Kept apart from Exa's own fetch
+  # timeout: a judge call reasoning over a batch of rows needs longer than a plain vendor
+  # fetch, and sharing that shorter timeout aborted it mid-flight.
+  timeoutMs: 90000
 
 # Retry and timeout budgets for Cloudflare Workflow steps.
 # Cloudflare's own default is 5 retries and a 10 minute timeout on every step.
