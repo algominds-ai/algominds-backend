@@ -341,7 +341,12 @@ export type PeopleLoopResult = {
 	capped: boolean;
 };
 
-/** Runs every clamped company in order, banking spend after each and stopping before the next once the run ceiling is reached. */
+/**
+ * Runs the clamped companies in `people.companyConcurrency`-sized batches,
+ * each batch run with `Promise.all`, checking the per-run spend ceiling once
+ * before every batch. A batch already started always finishes, so overshoot
+ * past the ceiling is bounded by at most one batch of companies.
+ */
 export async function runCompanies(
 	ctx: CompanyLoopContext,
 	companies: readonly TargetCompany[],
@@ -353,18 +358,25 @@ export async function runCompanies(
 	let companiesSearched = 0;
 	const unknownDomains: string[] = [];
 	let capped = false;
-	for (const company of companies) {
-		const result = await runOneCompany(ctx, company, costDollars);
-		companiesSearched += 1;
-		peopleVerified += result.outcome.verified;
-		peopleRoster += result.outcome.roster;
-		if (result.outcome.unresolvedDomain !== null) {
-			unknownDomains.push(result.outcome.unresolvedDomain);
-		}
-		costDollars = result.costDollars;
+	const batchSize = config.people.companyConcurrency;
+	for (let start = 0; start < companies.length; start += batchSize) {
 		if (costDollars >= config.spend.perRunDollars) {
 			capped = true;
 			break;
+		}
+		const batchStart = costDollars;
+		const batch = companies.slice(start, start + batchSize);
+		const results = await Promise.all(
+			batch.map((company) => runOneCompany(ctx, company, batchStart)),
+		);
+		for (const result of results) {
+			companiesSearched += 1;
+			peopleVerified += result.outcome.verified;
+			peopleRoster += result.outcome.roster;
+			if (result.outcome.unresolvedDomain !== null) {
+				unknownDomains.push(result.outcome.unresolvedDomain);
+			}
+			costDollars += result.costDollars - batchStart;
 		}
 	}
 	return {
