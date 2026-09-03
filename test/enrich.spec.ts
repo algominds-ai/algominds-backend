@@ -18,7 +18,10 @@ import {
 	openRun,
 	saveCompanies,
 	saveRunCompanies,
+	upsertPeople,
 } from "../src/core/db/queries";
+import { peoplePage } from "../src/core/db/run-pages";
+import { peopleStoredScope } from "../src/core/db/run-scope";
 import type {
 	Company,
 	Evidence,
@@ -26,7 +29,12 @@ import type {
 	Person,
 	Run,
 } from "../src/core/db/schema";
-import { company, runCompany, run as runTable } from "../src/core/db/schema";
+import {
+	company,
+	person,
+	runCompany,
+	run as runTable,
+} from "../src/core/db/schema";
 import type {
 	EnrichDeps,
 	EnrichSubject,
@@ -898,10 +906,152 @@ describe("subjectsForRun", () => {
 				inArray(company.id, [fixture.saved.id]),
 			);
 			expect(peopleRecorded.condition).toEqual(
-				inArray(company.id, [fixture.saved.id]),
+				await peopleStoredScope(testEnv, fixture.run.id),
 			);
 		} finally {
 			await cleanupPeopleRunFixture(fixture);
+		}
+	});
+});
+
+type MixedStatusPeopleRunFixture = {
+	org: Organization;
+	companiesRunId: string;
+	run: Run;
+	companyId: string;
+	verifiedPersonId: string;
+};
+
+async function seedMixedStatusTargetRun(): Promise<MixedStatusPeopleRunFixture> {
+	const org = await organizationForSlug(
+		testEnv,
+		`enrich-mixed-status-${crypto.randomUUID()}.internal`,
+		"enrich-mixed-status",
+	);
+	const companiesRunId = `companies_mixed-status-${crypto.randomUUID()}`;
+	const peopleRunId = `people_mixed-status-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: companiesRunId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "companies",
+		status: "complete",
+	});
+	const run = await openRun(testEnv, {
+		id: peopleRunId,
+		organizationId: org.id,
+		icpId: null,
+		capability: "people",
+		status: "complete",
+	});
+	const [saved] = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: org.id,
+			domain: `mixed-status-${crypto.randomUUID()}.com`,
+			name: "Mixed Status Co",
+			runId: companiesRunId,
+		},
+	]);
+	if (!saved) throw new Error("seed failed to save a company");
+	await saveRunCompanies(testEnv, [
+		{
+			runId: peopleRunId,
+			domain: saved.domain,
+			companyId: saved.id,
+			identity: "domain",
+			mode: "target",
+			buyerSource: "target",
+		},
+	]);
+	const [legacyPerson, rosterPerson, verifiedPerson] = await upsertPeople(
+		testEnv,
+		[
+			{
+				organizationId: org.id,
+				companyId: saved.id,
+				linkedinUrl: `https://linkedin.com/in/legacy-${crypto.randomUUID()}`,
+				name: "Legacy Person",
+			},
+			{
+				organizationId: org.id,
+				companyId: saved.id,
+				linkedinUrl: `https://linkedin.com/in/roster-${crypto.randomUUID()}`,
+				name: "Roster Person",
+				data: {
+					status: "roster",
+					basis: null,
+					seenBy: ["clay"],
+					since: null,
+					location: null,
+				},
+			},
+			{
+				organizationId: org.id,
+				companyId: saved.id,
+				linkedinUrl: `https://linkedin.com/in/verified-${crypto.randomUUID()}`,
+				name: "Verified Person",
+				data: {
+					status: "verified",
+					basis: "champion",
+					seenBy: ["exa"],
+					since: null,
+					location: null,
+				},
+			},
+		],
+	);
+	if (!legacyPerson || !rosterPerson || !verifiedPerson) {
+		throw new Error("seed failed to save a person");
+	}
+	return {
+		org,
+		companiesRunId,
+		run,
+		companyId: saved.id,
+		verifiedPersonId: verifiedPerson.id,
+	};
+}
+
+async function cleanupMixedStatusTargetRun(
+	fixture: MixedStatusPeopleRunFixture,
+): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(runCompany)
+			.where(eq(runCompany.runId, fixture.run.id));
+		await connection
+			.delete(person)
+			.where(eq(person.companyId, fixture.companyId));
+		await connection.delete(company).where(eq(company.id, fixture.companyId));
+		await connection
+			.delete(runTable)
+			.where(inArray(runTable.id, [fixture.companiesRunId, fixture.run.id]));
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, fixture.org.id));
+	});
+}
+
+describe("subjectsForRun: scoped to what the run's mode stored", () => {
+	it("enriches only the people the people page for the same run would show", async () => {
+		const fixture = await seedMixedStatusTargetRun();
+
+		try {
+			const subjects = await subjectsForRun(testEnv, fixture.run.id);
+			const page = await peoplePage(testEnv, fixture.run, {
+				limit: 10,
+				cursor: undefined,
+			});
+
+			expect(subjects.map((subject) => subject.id)).toEqual([
+				fixture.verifiedPersonId,
+			]);
+			expect(page.rows.map((row) => row.id)).toEqual([
+				fixture.verifiedPersonId,
+			]);
+		} finally {
+			await cleanupMixedStatusTargetRun(fixture);
 		}
 	});
 });

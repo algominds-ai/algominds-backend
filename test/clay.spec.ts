@@ -174,3 +174,27 @@ describe("Clay failure modes", () => {
 		expect(rejectCalls.runCalls).toBe(1);
 	});
 });
+
+describe("Clay failure modes: real vendor responses", () => {
+	it("treats a run call's 500 after a successful create as retryable", async () => {
+		stubClaySequence([
+			{ response: jsonResponse(200, { search_id: "search-500" }) },
+			{ response: jsonResponse(500, { error: "internal" }) },
+		]);
+
+		await expect(
+			claySearch(clayEnv(), { identifier: "harborit.com" }, new CostLedger()),
+		).rejects.toThrow(RetryableProviderError);
+	});
+
+	it("rejects a run response that does not match the expected shape", async () => {
+		stubClaySequence([
+			{ response: jsonResponse(200, { search_id: "search-bad-shape" }) },
+			{ response: jsonResponse(200, { unexpected: true }) },
+		]);
+
+		await expect(
+			claySearch(clayEnv(), { identifier: "harborit.com" }, new CostLedger()),
+		).rejects.toThrow("Clay: run response did not match the expected shape");
+	});
+});

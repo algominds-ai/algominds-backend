@@ -18,7 +18,7 @@ import {
 	findRun,
 	latestEvidence,
 } from "@/core/db/queries";
-import { companyScopeForRun } from "@/core/db/run-scope";
+import { companyScopeForRun, peopleStoredScope } from "@/core/db/run-scope";
 import type { Company, Evidence, NewEvidence, Person } from "@/core/db/schema";
 import { company, person } from "@/core/db/schema";
 import type {
@@ -162,21 +162,25 @@ export async function subjectsForRun(
 ): Promise<EnrichSubject[]> {
 	const run = await findRun(env, runId, deps.findRun);
 	if (!run) throw new NonRetryableError(`subjectsForRun: unknown run ${runId}`);
-	const condition = await companyScopeForRun(env, run);
-	if (condition === null) {
+	const companyCondition = await companyScopeForRun(env, run);
+	if (companyCondition === null) {
 		throw new NonRetryableError(
 			`subjectsForRun: run ${runId} covers no companies to enrich`,
 		);
 	}
 	const hasCompanies = await companiesExistFor(
 		env,
-		condition,
+		companyCondition,
 		deps.companyExists,
 	);
 	if (!hasCompanies) {
 		throw new NonRetryableError(`subjectsForRun: no company for run ${runId}`);
 	}
-	const rows = await runPeopleFor(env, condition, deps.runPeople);
+	const peopleCondition =
+		run.capability === "people"
+			? await peopleStoredScope(env, run.id)
+			: companyCondition;
+	const rows = await runPeopleFor(env, peopleCondition, deps.runPeople);
 	return rows.map(toEnrichSubject);
 }
 

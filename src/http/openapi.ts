@@ -231,7 +231,9 @@ const findPeopleRoute = createRoute({
 			},
 		}),
 	},
-	responses: startRouteResponses("The referenced source run is unknown."),
+	responses: startRouteResponses(
+		"The referenced source run is unknown, or the referenced profile is unknown.",
+	),
 });
 
 const enrichRoute = createRoute({

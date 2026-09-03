@@ -1,11 +1,22 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, gt } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
 import type { DbFactory, SelectOrderedConnection } from "@/core/db/queries";
 import { companyScopeForRun, peopleStoredScope } from "@/core/db/run-scope";
 import type { Company, Person, Run, RunCompany } from "@/core/db/schema";
 import { company, person, runCompany } from "@/core/db/schema";
+
+function toPage<T extends { id: string }>(
+	rows: T[],
+	limit: number,
+): { rows: T[]; nextCursor: string | null } {
+	const kept = rows.slice(0, limit);
+	return {
+		rows: kept,
+		nextCursor: rows.length > limit ? (kept.at(-1)?.id ?? null) : null,
+	};
+}
 
 export type CompanyPageConnection = SelectOrderedConnection<
 	typeof company,
@@ -47,31 +58,14 @@ async function peopleRunCompaniesPage(
 		: eq(runCompany.runId, run.id);
 	const rows = await withConnection(env, "cached", db, (connection) =>
 		connection
-			.select({
-				id: runCompany.id,
-				runId: runCompany.runId,
-				domain: runCompany.domain,
-				companyId: runCompany.companyId,
-				identity: runCompany.identity,
-				mode: runCompany.mode,
-				buyerSource: runCompany.buyerSource,
-				spendDollars: runCompany.spendDollars,
-				clayRecords: runCompany.clayRecords,
-				peopleVerified: runCompany.peopleVerified,
-				peopleRoster: runCompany.peopleRoster,
-				company,
-			})
+			.select({ ...getTableColumns(runCompany), company })
 			.from(runCompany)
 			.leftJoin(company, eq(runCompany.companyId, company.id))
 			.where(condition)
 			.orderBy(asc(runCompany.id))
 			.limit(page.limit + 1),
 	);
-	const kept = rows.slice(0, page.limit);
-	return {
-		rows: kept,
-		nextCursor: rows.length > page.limit ? (kept.at(-1)?.id ?? null) : null,
-	};
+	return toPage(rows, page.limit);
 }
 
 /**
@@ -101,11 +95,7 @@ export async function companiesPage(
 			.orderBy(asc(company.id))
 			.limit(page.limit + 1),
 	);
-	const kept = rows.slice(0, page.limit);
-	return {
-		rows: kept,
-		nextCursor: rows.length > page.limit ? (kept.at(-1)?.id ?? null) : null,
-	};
+	return toPage(rows, page.limit);
 }
 
 /**
@@ -140,9 +130,5 @@ export async function peoplePage(
 			.limit(page.limit + 1),
 	);
 	const rows = joined.map((row) => row.person);
-	const kept = rows.slice(0, page.limit);
-	return {
-		rows: kept,
-		nextCursor: rows.length > page.limit ? (kept.at(-1)?.id ?? null) : null,
-	};
+	return toPage(rows, page.limit);
 }
