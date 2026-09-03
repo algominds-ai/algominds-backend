@@ -8,7 +8,6 @@ node_modules/
 dist/
 .DS_Store
 *.log
-.claude/worktrees/
 
 # only docs/solutions is tracked; plans, review findings and reports stay local
 docs/*
@@ -16,3 +15,4 @@ docs/*
 
 # the probe kit, raw data and reports stay local; the method doc is the committed record
 docs/solutions/people-probe/
+.claude/
