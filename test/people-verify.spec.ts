@@ -1,5 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { CostLedger } from "../src/core/cost";
 import {
 	classifyVerdict,
@@ -8,6 +10,7 @@ import {
 	quoteOnPage,
 } from "../src/core/people/verify";
 import { getAgentVerdictRun } from "../src/core/providers/exa/agent";
+import { RetryableProviderError } from "../src/core/providers/waterfall";
 import verdictRun from "./fixtures/exa-agent-run-verdict.json";
 
 const originalFetch = globalThis.fetch;
@@ -59,6 +62,24 @@ function employerReply(employer: "SAME" | "DIFFERENT" | "UNKNOWN"): Response {
 	});
 }
 
+const ContentsRequestSchema = z.object({ urls: z.array(z.string()) });
+
+function contentsResponse(
+	url: string,
+	outcome: { text: string } | { errorTag: string },
+): Response {
+	const status =
+		"errorTag" in outcome
+			? { id: url, status: "error" as const, error: { tag: outcome.errorTag } }
+			: { id: url, status: "success" as const };
+	return jsonResponse(200, {
+		requestId: "req-contents",
+		results: "text" in outcome ? [{ url, text: outcome.text }] : [],
+		statuses: [status],
+		costDollars: { total: 0.003 },
+	});
+}
+
 function personSearchResponse(): Response {
 	return jsonResponse(200, {
 		requestId: "req-index-1",
@@ -98,13 +119,15 @@ function personSearchResponse(): Response {
 
 describe("verify: verdict classification", () => {
 	it("accepts first-party confirmation with a present quote", async () => {
-		globalThis.fetch = async (input) => {
+		globalThis.fetch = async (input, init) => {
 			const url = String(input);
 			if (url.includes("/agent/runs/")) return jsonResponse(200, verdictRun);
-			return new Response(
-				"Leadership. Jane Doe is Acme's VP of Sales. Contact the team.",
-				{ status: 200 },
+			const { urls } = ContentsRequestSchema.parse(
+				JSON.parse(String(init?.body)),
 			);
+			return contentsResponse(urls[0] ?? "", {
+				text: "Leadership. Jane Doe is Acme's VP of Sales. Contact the team.",
+			});
 		};
 
 		const run = await getAgentVerdictRun(
@@ -120,6 +143,7 @@ describe("verify: verdict classification", () => {
 			run.output.evidence_url ?? "",
 			run.output.evidence_quote ?? "",
 			exaEnv(),
+			new CostLedger(),
 		);
 		expect(outcome).toEqual({ found: true, reason: "found" });
 	});
@@ -210,53 +234,40 @@ describe("verify: the index match falls back from url to name key", () => {
 	});
 });
 
-describe("verify: the quote guard refuses unsafe URLs", () => {
-	it("reports unsafe-url for a non-https or credentialed URL", async () => {
-		expect(
-			await quoteOnPage("http://acme.com/team", "Jane Doe", exaEnv()),
-		).toEqual({ found: false, reason: "unsafe-url" });
-
-		expect(
-			await quoteOnPage(
-				"https://user:pass@acme.com/team",
-				"Jane Doe",
-				exaEnv(),
-			),
-		).toEqual({ found: false, reason: "unsafe-url" });
-	});
-});
-
-describe("verify: the quote guard normalises markup before matching", () => {
-	it("matches a quote through curly punctuation, entities, and an inline tag", async () => {
+describe("verify: the quote guard collapses whitespace before matching", () => {
+	it("matches a quote across a line break Exa's crawl inserted", async () => {
 		globalThis.fetch = async () =>
-			new Response(
-				"<p>This week, we’re welcoming <a></a>Kristina&nbsp;Harris, our new growth director.</p>",
-				{ status: 200, headers: { "content-type": "text/html" } },
-			);
+			contentsResponse("https://seccl.tech/blog/meet-the-secclers", {
+				text: "This week, we're welcoming\nKristina Harris, our new growth director.",
+			});
 		expect(
 			await quoteOnPage(
 				"https://seccl.tech/blog/meet-the-secclers",
 				"This week, we're welcoming Kristina Harris, our new growth director.",
 				exaEnv(),
+				new CostLedger(),
 			),
 		).toEqual({ found: true, reason: "found" });
 	});
 
 	it("still reports missing when the quote genuinely is not on the page", async () => {
 		globalThis.fetch = async () =>
-			new Response("Nothing about Jane Doe here.", { status: 200 });
+			contentsResponse("https://acme.com/team/jane-doe", {
+				text: "Nothing about Jane Doe here.",
+			});
 		expect(
 			await quoteOnPage(
 				"https://acme.com/team/jane-doe",
 				"Jane Doe is Acme's VP of Sales.",
 				exaEnv(),
+				new CostLedger(),
 			),
 		).toEqual({ found: false, reason: "missing" });
 	});
 });
 
 describe("verify: the quote guard drops the URL rather than the verdict", () => {
-	it("keeps a verdict but drops an unsupported URL", async () => {
+	it("keeps a verdict but drops a URL Exa could not crawl at all", async () => {
 		const verdict = {
 			verdict: "CONFIRMED" as const,
 			evidence_url: "https://acme.com/team/jane-doe",
@@ -266,23 +277,83 @@ describe("verify: the quote guard drops the URL rather than the verdict", () => 
 		};
 
 		globalThis.fetch = async () =>
-			new Response("Nothing about Jane Doe here.", { status: 200 });
+			contentsResponse(verdict.evidence_url, {
+				text: "Nothing about Jane Doe here.",
+			});
 		expect(
-			await quoteOnPage(verdict.evidence_url, verdict.evidence_quote, exaEnv()),
+			await quoteOnPage(
+				verdict.evidence_url,
+				verdict.evidence_quote,
+				exaEnv(),
+				new CostLedger(),
+			),
 		).toEqual({ found: false, reason: "missing" });
 
-		globalThis.fetch = async () => {
-			throw new DOMException("The operation timed out.", "TimeoutError");
-		};
+		globalThis.fetch = async () =>
+			contentsResponse(verdict.evidence_url, { errorTag: "CRAWL_NOT_FOUND" });
 		expect(
-			await quoteOnPage(verdict.evidence_url, verdict.evidence_quote, exaEnv()),
-		).toEqual({ found: false, reason: "timeout" });
+			await quoteOnPage(
+				verdict.evidence_url,
+				verdict.evidence_quote,
+				exaEnv(),
+				new CostLedger(),
+			),
+		).toEqual({ found: false, reason: "CRAWL_NOT_FOUND" });
 
-		globalThis.fetch = async () => new Response("gone", { status: 404 });
+		globalThis.fetch = async () =>
+			contentsResponse(verdict.evidence_url, {
+				errorTag: "SOURCE_NOT_AVAILABLE",
+			});
 		expect(
-			await quoteOnPage(verdict.evidence_url, verdict.evidence_quote, exaEnv()),
-		).toEqual({ found: false, reason: "fetch:404" });
+			await quoteOnPage(
+				verdict.evidence_url,
+				verdict.evidence_quote,
+				exaEnv(),
+				new CostLedger(),
+			),
+		).toEqual({ found: false, reason: "SOURCE_NOT_AVAILABLE" });
 
 		expect(classifyVerdict(verdict)).toBe("verified");
+	});
+});
+
+describe("verify: the quote guard's contents call", () => {
+	it("raises RetryableProviderError on a 429 and banks cost on success", async () => {
+		globalThis.fetch = async () =>
+			jsonResponse(429, { requestId: "req-429", message: "slow down" });
+		await expect(
+			quoteOnPage(
+				"https://acme.com/team/jane-doe",
+				"Jane Doe",
+				exaEnv(),
+				new CostLedger(),
+			),
+		).rejects.toThrow(RetryableProviderError);
+
+		globalThis.fetch = async () =>
+			contentsResponse("https://acme.com/team/jane-doe", {
+				text: "Jane Doe is Acme's VP of Sales.",
+			});
+		const ledger = new CostLedger();
+		await quoteOnPage(
+			"https://acme.com/team/jane-doe",
+			"Jane Doe",
+			exaEnv(),
+			ledger,
+		);
+		expect(ledger.total()).toBeCloseTo(0.003, 5);
+	});
+
+	it("raises NonRetryableError on a malformed body", async () => {
+		globalThis.fetch = async () =>
+			jsonResponse(200, { requestId: "req-bad", results: "not-an-array" });
+		await expect(
+			quoteOnPage(
+				"https://acme.com/team/jane-doe",
+				"Jane Doe",
+				exaEnv(),
+				new CostLedger(),
+			),
+		).rejects.toThrow(NonRetryableError);
 	});
 });

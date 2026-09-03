@@ -78,8 +78,6 @@ people:
   exaAgentMaxPollAttempts: 24
   # Milliseconds before a Clay create or run fetch is treated as timed out.
   clayFetchTimeoutMs: 30000
-  # Milliseconds before the quote-guard page fetch is treated as timed out.
-  quoteFetchTimeoutMs: 15000
 
 enrich:
   batchSize: 5

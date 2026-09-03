@@ -222,8 +222,9 @@ async function runRound(
 		seenDomains: ctx.seenDomains,
 	});
 	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
+	const evidenceLedger = new CostLedger();
 	const evidenceChecked = demandsEvidenceProof(plan)
-		? await verifyEvidenceRows(candidates)
+		? await verifyEvidenceRows(candidates, opts.env, evidenceLedger)
 		: { kept: candidates, rejects: [], checks: {} };
 	applyEvidenceChecks(filtered.captures, evidenceChecked.checks);
 	const judged =
@@ -240,7 +241,12 @@ async function runRound(
 		verdicts: judged.verdicts,
 		unseenCount,
 		resultCount: searched.results.length,
-		ledger: CostLedger.merge(synthesized.ledger, searchLedger, judged.ledger),
+		ledger: CostLedger.merge(
+			synthesized.ledger,
+			searchLedger,
+			evidenceLedger,
+			judged.ledger,
+		),
 		captures: filtered.captures,
 	};
 }

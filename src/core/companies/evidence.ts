@@ -3,8 +3,9 @@ import type {
 	FindCompaniesReject,
 } from "@/core/companies/candidates";
 import type { CompanyRow, Reject, RejectReason } from "@/core/companies/gate";
-import type { QuoteCheckReason } from "@/core/providers/page-quote";
-import { quoteOnPage } from "@/core/providers/page-quote";
+import type { CostLedger } from "@/core/cost";
+import type { QuoteCheckReason } from "@/core/people/verify";
+import { quoteOnPage } from "@/core/people/verify";
 import type { SearchPlan } from "@/core/synthesize";
 
 export function toGateRejects(
@@ -31,21 +32,23 @@ export type EvidenceOutcome = {
 };
 
 const PAGE_MISSING_REASONS = new Set<QuoteCheckReason>([
-	"fetch:404",
-	"fetch:410",
-	"fetch:0",
+	"CRAWL_NOT_FOUND",
+	"UNSUPPORTED_URL",
 ]);
 
 /**
  * Confirms every gated row's evidence page really exists, for a round whose
  * plan demanded proof from the agent. A row with no quote at all is
- * missing-required. A row whose page does not exist — a 404, a 410, or a
- * host that does not resolve — is evidence-not-on-page; every other outcome
- * (missing, a non-2xx status the page still answers, a timeout, an unsafe
- * URL) keeps the row and records the check for the judge to see.
+ * missing-required. A row whose page truly does not exist or cannot be
+ * fetched at all — `CRAWL_NOT_FOUND` or `UNSUPPORTED_URL` — is
+ * evidence-not-on-page; every other outcome (missing, a timeout, a source the
+ * crawler was refused) keeps the row and records the check for the judge to
+ * see.
  */
 export async function verifyEvidenceRows(
 	rows: readonly CompanyRow[],
+	env: Env,
+	ledger: CostLedger,
 ): Promise<EvidenceOutcome> {
 	const kept: CompanyRow[] = [];
 	const rejects: EvidenceReject[] = [];
@@ -57,7 +60,12 @@ export async function verifyEvidenceRows(
 			rejects.push({ index, reason: "missing-required", detail: null });
 			continue;
 		}
-		const outcome = await quoteOnPage(row.evidenceUrl, row.evidenceQuote);
+		const outcome = await quoteOnPage(
+			row.evidenceUrl,
+			row.evidenceQuote,
+			env,
+			ledger,
+		);
 		if (PAGE_MISSING_REASONS.has(outcome.reason)) {
 			rejects.push({
 				index,

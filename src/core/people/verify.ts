@@ -3,14 +3,41 @@ import type { CostLedger } from "@/core/cost";
 import { generateStructured, workerModel } from "@/core/model";
 import { canonicalLinkedinUrl, nameKey } from "@/core/people/dedupe";
 import type { ExaAgentVerdict } from "@/core/providers/exa/agent";
+import { exaContents } from "@/core/providers/exa/contents";
 import type { ExaSearchResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
 
-export type {
-	QuoteCheckOutcome,
-	QuoteCheckReason,
-} from "@/core/providers/page-quote";
-export { QUOTE_MAX_BYTES, quoteOnPage } from "@/core/providers/page-quote";
+/** `"found"` or `"missing"` when the page fetched cleanly, else the vendor's error tag for that URL. */
+export type QuoteCheckReason = string;
+
+export type QuoteCheckOutcome = { found: boolean; reason: QuoteCheckReason };
+
+function collapseWhitespace(text: string): string {
+	return text.trim().replace(/\s+/g, " ");
+}
+
+/**
+ * Confirms a quote appears on a page, over Exa's `/contents` crawl rather
+ * than a direct fetch. A per-URL crawl failure reports its vendor tag as the
+ * reason; otherwise the reason is `"found"` or `"missing"`.
+ */
+export async function quoteOnPage(
+	url: string,
+	quote: string,
+	env: Env,
+	ledger: CostLedger,
+): Promise<QuoteCheckOutcome> {
+	const contents = await exaContents([url], env, ledger);
+	const status = contents.statuses[0];
+	if (status?.status === "error") {
+		return { found: false, reason: status.tag ?? "CRAWL_UNKNOWN_ERROR" };
+	}
+	const text = contents.results[0]?.text ?? "";
+	const found = collapseWhitespace(text)
+		.toLowerCase()
+		.includes(collapseWhitespace(quote).toLowerCase());
+	return { found, reason: found ? "found" : "missing" };
+}
 
 export type VerdictClassification =
 	| "verified"

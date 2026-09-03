@@ -479,7 +479,10 @@ function targetRunOverrides(domain: string): Map<string, unknown> {
 				costEntries: [],
 			},
 		],
-		[`people-${domain}-verify-0-quote`, { found: true, reason: "found" }],
+		[
+			`people-${domain}-verify-0-quote`,
+			{ found: true, reason: "found", costEntries: [] },
+		],
 		[`people-${domain}-verify-1-start`, { id: "agent-run-1" }],
 		[
 			`people-${domain}-verify-1-poll-1`,
