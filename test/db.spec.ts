@@ -101,6 +101,8 @@ describe("normalizeDomain", () => {
 		["https://acme.com:8443/path?query=1", "acme.com"],
 		["Acme.com/", "acme.com"],
 		["HTTPS://WWW.ACME.COM", "acme.com"],
+		["shop.acme.co.uk", "acme.co.uk"],
+		["branches.lloydsbank.com", "lloydsbank.com"],
 	];
 
 	for (const [input, expected] of cases) {
@@ -109,8 +111,17 @@ describe("normalizeDomain", () => {
 		});
 	}
 
-	it("does not strip a non-www subdomain", () => {
-		expect(normalizeDomain("shop.acme.com")).toBe("shop.acme.com");
+	it("collapses any subdomain to its registrable domain, not only www", () => {
+		expect(normalizeDomain("shop.acme.com")).toBe("acme.com");
+	});
+
+	it("keeps a brand top-level domain as-is, because the whole host is already registrable", () => {
+		expect(normalizeDomain("jobs.barclays")).toBe("jobs.barclays");
+	});
+
+	it("keeps a host with no public-suffix match as-is", () => {
+		expect(normalizeDomain("localhost")).toBe("localhost");
+		expect(normalizeDomain("127.0.0.1")).toBe("127.0.0.1");
 	});
 });
 

@@ -1,43 +1,38 @@
-# Why `normalizeDomain` only strips `www.`
+# `normalizeDomain` collapses to the registrable domain
 
 `normalizeDomain` in `src/core/db/schema.ts` lowercases a domain or URL, drops the scheme and
-path, and removes one leading `www.`. It does not collapse a value to its registrable domain
-(eTLD+1) using a public-suffix list.
+path, and collapses the host to its registrable domain (eTLD+1) with `tldts`'s `getDomain`.
+`www.` and every other subdomain are subsumed by the same collapse.
 
 ## The problem
 
-Two inputs that name the same company should map to one stored domain: `https://WWW.Acme.com/careers`
-and `acme.com` both need to become `acme.com`. A naive string compare would treat them as two
-different companies.
+Two inputs that name the same company should map to one stored domain. That used to mean only
+`https://WWW.Acme.com/careers` and `acme.com` both becoming `acme.com`. A vendor returning
+`branches.lloydsbank.com`, `cashmarket.deutsche-boerse.com`, and other subdomains of a bank's
+own site made one company look like several, and the sixty-day exclusion could not match them
+because it compares normalized domains.
 
-## Why this stops short of a full public-suffix-list lookup
+## Why `tldts`
 
-A correct eTLD+1 reducer (`shop.acme.co.uk` → `acme.co.uk`) needs a maintained suffix list,
-because the split point is not "last two labels" — `co.uk` is a suffix, `com` is a suffix, but
-`acme.com` is not. No provider integrated so far returns a domain where that distinction
-matters; every input observed is already either bare or has at most a `www.` subdomain.
-
-Adding a dependency (`tldts` or similar) for a case with no observed input and no test behind
-it fails the "a new dependency needs a reason a few lines of code could not cover" bar.
-
-## Current behavior
-
-- Adds a scheme if the input has none, so `new URL()` can parse it.
-- Lowercases the resulting hostname.
-- Strips exactly one leading `www.`.
-- Leaves every other subdomain alone: `shop.acme.com` stays `shop.acme.com`.
-
-## Upgrade path
-
-If a provider starts returning domains with a multi-label public suffix that needs collapsing,
-swap the last two lines for a `tldts`-based (or equivalent) registrable-domain lookup. Until
-then this file is the single source of truth for both the write-side normalizer and the
-grounding-domain comparison that reuses it, so the two cannot drift apart.
+The split point is not "last two labels": `co.uk` is a public suffix, `com` is a public suffix,
+`barclays` is a public suffix too (a brand top-level domain), so `jobs.barclays` is already
+fully registrable and collapses no further. That distinction needs a maintained public-suffix
+list, which is what `tldts` ships. `getDomain` returns `null` for a host with no registrable
+domain under that list — `localhost`, an address literal, a bare TLD — and `normalizeDomain`
+falls back to the lowercased host unchanged in that case, matching its behavior before this
+change.
 
 ## Verification
 
-`test/db.spec.ts` runs `normalizeDomain` against scheme/case/port/path variations and asserts
-the `www.`-only limit directly.
+`test/db.spec.ts` runs `normalizeDomain` against scheme/case/port/path variations, a
+multi-label public suffix (`shop.acme.co.uk` → `acme.co.uk`), a brand TLD (`jobs.barclays`,
+unchanged), and the `localhost`/address-literal fallback.
+
+## Nothing migrates
+
+Existing stored `company` rows keep the domain they were saved under. A row saved as
+`shop.acme.com` before this change does not retroactively become `acme.com`; only domains
+normalized from here on collapse to their registrable form.
 
 ## `publicDomain`, when a domain will be crawled
 
