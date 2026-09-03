@@ -8,7 +8,8 @@ const CLAY_BASE_URL = "https://api.clay.com/public/v0";
 const CLAY_MAX_PAGES = 5;
 const CLAY_RUN_LIMIT = 500;
 
-const CLAY_BANDS = [
+/** Clay's closed set of fourteen seniority bands, in Clay's own order. */
+export const CLAY_BANDS = [
 	"founder",
 	"owner",
 	"board-member",
@@ -89,7 +90,10 @@ type ClayFetchContext = { apiKey: string; timeoutMs: number };
 
 const LINKEDIN_PERSON_URL_PATTERN = /linkedin\.com\/in\/([^/?#]+)/i;
 
-function canonicalPersonUrl(raw: string | null | undefined): string | null {
+/** Canonical LinkedIn person URL: `https://linkedin.com/in/<slug>`, or null when `raw` names no profile. */
+export function canonicalPersonUrl(
+	raw: string | null | undefined,
+): string | null {
 	if (!raw) return null;
 	const match = raw.toLowerCase().match(LINKEDIN_PERSON_URL_PATTERN);
 	return match ? `https://linkedin.com/in/${match[1]}` : null;

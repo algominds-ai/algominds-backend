@@ -2,7 +2,7 @@ import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CostLedger } from "../src/core/cost";
-import { claySearch } from "../src/core/providers/clay";
+import { canonicalPersonUrl, claySearch } from "../src/core/providers/clay";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import searchPage from "./fixtures/clay-search.json";
 
@@ -46,6 +46,23 @@ const originalFetch = globalThis.fetch;
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+});
+
+describe("canonical linkedin person url", () => {
+	it("normalizes protocol, www, trailing slash and query", () => {
+		expect(canonicalPersonUrl("https://www.linkedin.com/in/x/")).toBe(
+			"https://linkedin.com/in/x",
+		);
+		expect(canonicalPersonUrl("linkedin.com/in/x")).toBe(
+			"https://linkedin.com/in/x",
+		);
+		expect(canonicalPersonUrl("https://www.linkedin.com/in/x?trk=public")).toBe(
+			"https://linkedin.com/in/x",
+		);
+		expect(canonicalPersonUrl("https://example.com")).toBeNull();
+		expect(canonicalPersonUrl(null)).toBeNull();
+		expect(canonicalPersonUrl(undefined)).toBeNull();
+	});
 });
 
 describe("Clay's two-call search contract", () => {

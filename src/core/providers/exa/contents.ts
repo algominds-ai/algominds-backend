@@ -1,7 +1,12 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
-import { EXA_FETCH_TIMEOUT_MS } from "@/core/providers/exa/timeout";
+import {
+	EXA_FETCH_TIMEOUT_MS,
+	extractRequestId,
+	readJson,
+	throwForStatus,
+} from "@/core/providers/exa/http";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const EXA_CONTENTS_MAX_CHARACTERS = 20_000;
@@ -24,12 +29,6 @@ const ExaContentsResponseSchema = z.object({
 	costDollars: z.object({ total: z.number() }),
 });
 
-const ExaErrorSchema = z.object({
-	requestId: z.string().optional(),
-	error: z.string().optional(),
-	message: z.string().optional(),
-});
-
 export type ExaContentResult = { url: string; text: string | null };
 
 /** One URL's fetch outcome. `tag` is the vendor's error tag, present only when `status` is `"error"`. */
@@ -44,32 +43,6 @@ export type ExaContentsResult = {
 	results: ExaContentResult[];
 	statuses: ExaContentStatus[];
 };
-
-async function readJson(response: Response): Promise<unknown> {
-	try {
-		return await response.json();
-	} catch {
-		return {};
-	}
-}
-
-function extractRequestId(body: unknown): string | undefined {
-	const parsed = ExaErrorSchema.safeParse(body);
-	return parsed.success ? parsed.data.requestId : undefined;
-}
-
-function throwForStatus(status: number, body: unknown): never {
-	const parsed = ExaErrorSchema.safeParse(body);
-	const requestId = extractRequestId(body);
-	const reason = parsed.success
-		? (parsed.data.message ?? parsed.data.error ?? `status ${status}`)
-		: `status ${status}`;
-	const detail = requestId
-		? `Exa contents request failed: ${reason} (requestId ${requestId})`
-		: `Exa contents request failed: ${reason}`;
-	if (status === 429 || status >= 500) throw new RetryableProviderError(detail);
-	throw new NonRetryableError(detail);
-}
 
 function parseResponse(
 	body: unknown,
@@ -113,7 +86,7 @@ export async function exaContents(
 		throw error;
 	}
 	const body = await readJson(response);
-	if (!response.ok) throwForStatus(response.status, body);
+	if (!response.ok) throwForStatus("Exa contents", response.status, body);
 	const parsed = parseResponse(body);
 	ledger.reported("exa", "contents", parsed.costDollars.total);
 	return {
@@ -128,4 +101,41 @@ export async function exaContents(
 			tag: status.error?.tag ?? null,
 		})),
 	};
+}
+
+function collapseWhitespace(text: string): string {
+	return text.trim().replace(/\s+/g, " ");
+}
+
+/** Whether `quote` appears in `text`, ignoring case and collapsing whitespace so a crawl-inserted line break does not break a match. */
+export function quoteFoundInText(text: string, quote: string): boolean {
+	return collapseWhitespace(text)
+		.toLowerCase()
+		.includes(collapseWhitespace(quote).toLowerCase());
+}
+
+/** `"found"` or `"missing"` when the page fetched cleanly, else the vendor's error tag for that URL. */
+export type QuoteCheckReason = string;
+
+export type QuoteCheckOutcome = { found: boolean; reason: QuoteCheckReason };
+
+/**
+ * Confirms a quote appears on a page, over Exa's `/contents` crawl rather
+ * than a direct fetch. A crawl failure reports its vendor tag as the reason;
+ * otherwise the reason is `"found"` or `"missing"`.
+ */
+export async function quoteOnPage(
+	url: string,
+	quote: string,
+	env: Env,
+	ledger: CostLedger,
+): Promise<QuoteCheckOutcome> {
+	const contents = await exaContents([url], env, ledger);
+	const status = contents.statuses[0];
+	if (status?.status === "error") {
+		return { found: false, reason: status.tag ?? "CRAWL_UNKNOWN_ERROR" };
+	}
+	const text = contents.results[0]?.text ?? "";
+	const found = quoteFoundInText(text, quote);
+	return { found, reason: found ? "found" : "missing" };
 }

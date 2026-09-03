@@ -7,9 +7,9 @@ import {
 	classifyVerdict,
 	employerOpinion,
 	indexOpinion,
-	quoteOnPage,
 } from "../src/core/people/verify";
 import { getAgentVerdictRun } from "../src/core/providers/exa/agent";
+import { quoteOnPage } from "../src/core/providers/exa/contents";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
 import verdictRun from "./fixtures/exa-agent-run-verdict.json";
 

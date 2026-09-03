@@ -1,27 +1,10 @@
 import { z } from "zod";
 import { CostLedger } from "@/core/cost";
 import { generateStructured, reasoningModel } from "@/core/model";
+import { CLAY_BANDS } from "@/core/providers/clay";
 
 export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
 export const AGENT_EFFORTS = ["low", "medium"] as const;
-
-/** Clay's closed set of fourteen seniority bands, in Clay's own order. */
-export const CLAY_BANDS = [
-	"founder",
-	"owner",
-	"board-member",
-	"partner",
-	"c-suite",
-	"vp",
-	"director",
-	"head",
-	"manager",
-	"senior",
-	"mid-level",
-	"entry",
-	"intern",
-	"unknown",
-] as const;
 
 /** The eight most senior bands, the default a buyer rubric searches with. */
 export const SENIOR_BANDS: readonly (typeof CLAY_BANDS)[number][] =

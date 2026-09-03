@@ -15,7 +15,6 @@ import {
 	classifyVerdict,
 	employerOpinion,
 	indexOpinion,
-	quoteOnPage,
 } from "@/core/people/verify";
 import type {
 	ExaAgentVerdict,
@@ -26,6 +25,7 @@ import {
 	getAgentVerdictRun,
 	startAgentRun,
 } from "@/core/providers/exa/agent";
+import { quoteOnPage } from "@/core/providers/exa/contents";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
 import type {
 	CompanyLoopContext,
