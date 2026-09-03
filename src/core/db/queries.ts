@@ -28,8 +28,6 @@ import {
 	round,
 	type run,
 } from "@/core/db/schema";
-import type { IcpDoc, IcpSeller } from "@/core/synthesize";
-import { IcpDocSchema } from "@/core/synthesize";
 
 export type Organization = typeof organization.$inferSelect;
 export type NewOrganization = typeof organization.$inferInsert;
@@ -198,8 +196,6 @@ export async function organizationDomain(
 	);
 	return rows[0]?.domain ?? null;
 }
-
-/** Writes the profile and closes its run in one transaction, so a failure between them cannot leave a profile no run points at. Returns the new profile's id. */
 
 /**
  * Domains this account found within the trailing `days` days, across every

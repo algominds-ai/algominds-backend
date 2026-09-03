@@ -1,12 +1,12 @@
 import { env as testEnv } from "cloudflare:workers";
 import type { SQL } from "drizzle-orm";
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import type { IndexColumn, PgTable } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import { config } from "../src/config";
 import { MAX_EXCLUDED_DOMAINS } from "../src/core/companies/candidates";
 import { organization } from "../src/core/db/auth-schema";
-import type { Db, DbEnv, DbMode } from "../src/core/db/client";
+import type { DbEnv, DbMode } from "../src/core/db/client";
 import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {

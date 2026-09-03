@@ -1,9 +1,7 @@
-import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { createAuth, startOnboarding } from "../src/auth";
 import { buildRunId, onboardScopeId } from "../src/http/jobs";
-import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 
 type StartedBatch = Parameters<Env["ONBOARD_ICP"]["createBatch"]>[0][number];
 

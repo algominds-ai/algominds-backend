@@ -102,6 +102,34 @@ describe("dedupe: nameless rows and id assignment", () => {
 		expect(result[0]?.name).toBe("Alice Alpha");
 	});
 
+	it("drops a row with a whitespace-only name", () => {
+		const rows = [
+			{
+				name: "   ",
+				title: "Head of Compliance",
+				company: "Harbor Robotics",
+				url: "https://www.linkedin.com/in/nameless/",
+				location: null,
+				since: null,
+				source: "clay:head",
+			},
+			{
+				name: "Alice Alpha",
+				title: "CEO",
+				company: "Acme",
+				url: null,
+				location: null,
+				since: null,
+				source: "clay:founder",
+			},
+		];
+
+		const result = dedupe(rows);
+
+		expect(result).toHaveLength(1);
+		expect(result[0]?.name).toBe("Alice Alpha");
+	});
+
 	it("assigns ids as positions in the merged list", () => {
 		const rows = [
 			{

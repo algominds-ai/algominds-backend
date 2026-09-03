@@ -107,11 +107,6 @@ export function startOfUtcDay(now: Date = new Date()): Date {
 	);
 }
 
-/**
- * Sums an organization's run spend since the start of the current UTC day,
- * read through the cache-disabled binding so a same-run write is never
- * missed.
- */
 /** Throws when the account has already spent its daily ceiling, so a refused run never reaches a paid step. */
 export async function assertUnderDailyCeiling(
 	env: DbEnv,
@@ -125,6 +120,11 @@ export async function assertUnderDailyCeiling(
 	}
 }
 
+/**
+ * Sums an organization's run spend since the start of the current UTC day,
+ * read through the cache-disabled binding so a same-run write is never
+ * missed.
+ */
 export async function organizationSpendToday(
 	env: DbEnv,
 	organizationId: string,

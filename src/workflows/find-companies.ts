@@ -11,10 +11,7 @@ import type {
 } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
-import {
-	seedExcludedDomains,
-	toCompanyData,
-} from "@/core/companies/candidates";
+import { seedExcludedDomains } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
 import {
@@ -28,8 +25,7 @@ import {
 	saveCompanies,
 	saveRound,
 } from "@/core/db/queries";
-import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
-import { normalizeDomain } from "@/core/db/schema";
+import type { NewCompany } from "@/core/db/schema";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";

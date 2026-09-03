@@ -106,7 +106,7 @@ export function dedupe(rows: DedupeRow[]): Candidate[] {
 	const byUrl = new Map<string, MergedRow>();
 	const byName = new Map<string, MergedRow>();
 	for (const row of rows) {
-		if (row.name !== null) mergeRow(byUrl, byName, row);
+		if (row.name?.trim()) mergeRow(byUrl, byName, row);
 	}
 	const unique = new Set<MergedRow>([...byUrl.values(), ...byName.values()]);
 	return Array.from(unique).map((row, index) =>
