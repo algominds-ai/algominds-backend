@@ -1,7 +1,8 @@
 import { createMCPClient } from "@ai-sdk/mcp";
 import { generateText } from "ai";
 import { Hono } from "hono";
-import { createAuth } from "@/auth";
+import { createAuthWith } from "@/auth";
+import { db, withConnection } from "@/core/db/client";
 import { mountOpenApi } from "@/http/openapi";
 import { createApiRoutes } from "@/routes";
 
@@ -19,7 +20,11 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.get("/health", (c) => c.json({ ok: true, bundled }));
 
-app.all("/api/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
+app.all("/api/auth/*", (c) =>
+	withConnection(c.env, "cached", db, (connection) =>
+		createAuthWith(c.env, connection).handler(c.req.raw),
+	),
+);
 
 mountOpenApi(app);
 app.route("/", createApiRoutes());

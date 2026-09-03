@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { saveOnboardedIcp } from "../src/core/db/icp";
 import { organizationForSlug } from "../src/core/db/organizations";
 import {
@@ -19,8 +19,9 @@ import {
 import { organizationSpendToday } from "../src/core/db/runs";
 import { icp as icpTable, run } from "../src/core/db/schema";
 import { NOTE_MAX_LENGTH } from "../src/core/onboard";
-import type { IcpSeller } from "../src/core/synthesize";
-import { buildRunId, domainsScopeId } from "../src/http/jobs";
+import type { IcpBuyer, IcpSeller } from "../src/core/synthesize";
+import { SENIOR_BANDS } from "../src/core/synthesize";
+import { buildRunId, onboardScopeId } from "../src/http/jobs";
 import app from "../src/index";
 import { ONBOARD_STEPS, publicHostname } from "../src/workflows/onboard-icp";
 
@@ -88,14 +89,23 @@ function mockedSeller(domain: string): IcpSeller {
 	return { domain, customers: ["Acme Corp"], competitorTest: "test" };
 }
 
+function mockedBuyer(): IcpBuyer {
+	return {
+		rubric:
+			"The positives own the budget for this purchase; influencers scope it without owning spend; a senior title with no budget authority is a hard negative here.",
+		bands: [...SENIOR_BANDS],
+		keywordBands: [{ band: "manager", keywords: ["revenue operations"] }],
+	};
+}
+
 async function deleteIcpAndRun(runId: string): Promise<void> {
 	const runRow = await findRun(testEnv, runId);
-	await db(testEnv, "direct").delete(run).where(eq(run.id, runId));
-	if (runRow?.icpId) {
-		await db(testEnv, "direct")
-			.delete(icpTable)
-			.where(eq(icpTable.id, runRow.icpId));
-	}
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(run).where(eq(run.id, runId));
+		if (runRow?.icpId) {
+			await connection.delete(icpTable).where(eq(icpTable.id, runRow.icpId));
+		}
+	});
 }
 
 describe("POST /icp/onboard: validation", () => {
@@ -137,7 +147,7 @@ describe("POST /icp/onboard: validation", () => {
 describe("POST /icp/onboard: starts a workflow without waiting for the profile", () => {
 	it("returns 202 with a runId built from the domain scope, well under the profile's own latency", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -195,7 +205,7 @@ describe("POST /icp/onboard: starts a workflow without waiting for the profile",
 describe("POST /icp/onboard: a same-day repeat", () => {
 	it("does not create a second icp or run row for the same organization and domain", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -240,10 +250,13 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 			expect(secondBody.status).toBe("existing");
 			expect(secondBody.runId).toBe(firstBody.runId);
 
-			const icpRows = await db(testEnv, "direct")
-				.select()
-				.from(icpTable)
-				.where(eq(icpTable.domain, domain));
+			const icpRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection.select().from(icpTable).where(eq(icpTable.domain, domain)),
+			);
 			expect(icpRows).toHaveLength(1);
 		} finally {
 			await instance.dispose();
@@ -253,10 +266,11 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 });
 
 describe("OnboardIcpWorkflow: persisting the profile", () => {
-	it("writes one icp row carrying the description and seller block, and a run row GET /runs/:runId resolves", async () => {
+	it("writes one icp row carrying the description, seller block, and buyer block, and a run row GET /runs/:runId resolves", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
 		const instanceId = `onboarding_persist-${crypto.randomUUID()}`;
 		const seller = mockedSeller(domain);
+		const buyer = mockedBuyer();
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
 			instanceId,
@@ -275,6 +289,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 					{
 						description: "a four paragraph ideal customer profile",
 						seller,
+						buyer,
 						wroteProfile: true,
 						costDollars: 0.02,
 					},
@@ -311,6 +326,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 			expect(icpRow.doc).toEqual({
 				description: "a four paragraph ideal customer profile",
 				seller,
+				buyer,
 			});
 
 			const statusResponse = await authedCall(
@@ -389,10 +405,10 @@ describe("OnboardIcpWorkflow: the daily spend ceiling", () => {
 			expect(await findRun(testEnv, instanceId)).toBeUndefined();
 		} finally {
 			await instance.dispose();
-			await db(testEnv, "direct").delete(run).where(eq(run.id, spentRunId));
-			await db(testEnv, "direct")
-				.delete(icpTable)
-				.where(eq(icpTable.id, icpRow.id));
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, spentRunId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+			});
 		}
 	});
 });
@@ -454,7 +470,7 @@ describe("OnboardIcpWorkflow: a run that dies after buying something", () => {
 describe("POST /icp/onboard: after a run has failed", () => {
 	it("lets the caller retry the same day rather than waiting for it to roll over", async () => {
 		const domain = `retry-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -640,6 +656,7 @@ describe("saveOnboardedIcp", () => {
 		expect(stored?.doc).toEqual({
 			description: "a stored profile",
 			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
+			buyer: null,
 		});
 
 		const closed = await findRun(testEnv, runId);

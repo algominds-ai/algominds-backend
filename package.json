@@ -16,8 +16,10 @@
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
+		"db:test:reset": "PGPASSWORD=postgres dropdb --if-exists -h localhost -p 5432 -U postgres algo_test && PGPASSWORD=postgres createdb -h localhost -p 5432 -U postgres algo_test && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/algo_test drizzle-kit migrate",
 		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
-		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs"
+		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs",
+		"schemas": "schemalint check-node --profile openai --source 'src/**/*.ts' --exclude 'src/core/providers/exa/*.ts' --exclude 'src/http/schemas.ts' --config package.json --format human"
 	},
 	"dependencies": {
 		"@ai-sdk/mcp": "2.0.39",

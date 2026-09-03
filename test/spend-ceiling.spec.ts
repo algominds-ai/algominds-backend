@@ -3,7 +3,7 @@ import { env as testEnv } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "../src/config";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import { closeRun, createIcp, findRun, openRun } from "../src/core/db/queries";
 import { icp as icpTable, run } from "../src/core/db/schema";
@@ -41,10 +41,11 @@ async function seedOrganizationThatSpent(
 }
 
 async function cleanup(seed: Seed, startedRunId: string): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection.delete(run).where(eq(run.id, startedRunId));
-	await connection.delete(run).where(eq(run.id, seed.spentRunId));
-	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(run).where(eq(run.id, startedRunId));
+		await connection.delete(run).where(eq(run.id, seed.spentRunId));
+		await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	});
 }
 
 const started: string[] = [];

@@ -1,9 +1,11 @@
 CREATE TABLE "company" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"icp_id" uuid NOT NULL,
+	"organization_id" text NOT NULL,
+	"icp_id" uuid,
 	"domain" text NOT NULL,
 	"name" text NOT NULL,
 	"linkedin_url" text,
+	"industry" text,
 	"data" jsonb,
 	"run_id" text NOT NULL,
 	"found_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -56,12 +58,27 @@ CREATE TABLE "round" (
 CREATE TABLE "run" (
 	"id" text PRIMARY KEY NOT NULL,
 	"organization_id" text NOT NULL,
-	"icp_id" uuid NOT NULL,
+	"icp_id" uuid,
 	"capability" text NOT NULL,
 	"status" text NOT NULL,
 	"cost_dollars" real DEFAULT 0 NOT NULL,
 	"started_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"finished_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "run_company" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"run_id" text NOT NULL,
+	"domain" text NOT NULL,
+	"company_id" uuid,
+	"identity" text,
+	"mode" text,
+	"buyer_source" text,
+	"spend_dollars" real DEFAULT 0 NOT NULL,
+	"clay_records" integer DEFAULT 0 NOT NULL,
+	"people_verified" integer DEFAULT 0 NOT NULL,
+	"people_roster" integer DEFAULT 0 NOT NULL,
+	CONSTRAINT "run_company_run_domain_unique" UNIQUE("run_id","domain")
 );
 --> statement-breakpoint
 CREATE TABLE "account" (
@@ -169,6 +186,7 @@ CREATE TABLE "verification" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "company" ADD CONSTRAINT "company_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "company" ADD CONSTRAINT "company_icp_id_icp_id_fk" FOREIGN KEY ("icp_id") REFERENCES "public"."icp"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "company" ADD CONSTRAINT "company_run_id_run_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."run"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "icp" ADD CONSTRAINT "icp_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -177,12 +195,15 @@ ALTER TABLE "person" ADD CONSTRAINT "person_company_id_company_id_fk" FOREIGN KE
 ALTER TABLE "round" ADD CONSTRAINT "round_run_id_run_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."run"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "run" ADD CONSTRAINT "run_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "run" ADD CONSTRAINT "run_icp_id_icp_id_fk" FOREIGN KEY ("icp_id") REFERENCES "public"."icp"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "run_company" ADD CONSTRAINT "run_company_run_id_run_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."run"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "run_company" ADD CONSTRAINT "run_company_company_id_company_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."company"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation" ADD CONSTRAINT "invitation_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation" ADD CONSTRAINT "invitation_inviter_id_user_id_fk" FOREIGN KEY ("inviter_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "member" ADD CONSTRAINT "member_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "member" ADD CONSTRAINT "member_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "company_organization_domain_orphan_unique" ON "company" USING btree ("organization_id","domain") WHERE "company"."icp_id" is null;--> statement-breakpoint
 CREATE INDEX "company_run_idx" ON "company" USING btree ("run_id");--> statement-breakpoint
 CREATE INDEX "company_icp_found_at_idx" ON "company" USING btree ("icp_id","found_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "evidence_subject_kind_seen_idx" ON "evidence" USING btree ("subject_type","subject_id","kind","seen_at" DESC NULLS LAST);--> statement-breakpoint
@@ -190,6 +211,7 @@ CREATE INDEX "icp_organization_idx" ON "icp" USING btree ("organization_id");-->
 CREATE INDEX "person_company_idx" ON "person" USING btree ("company_id");--> statement-breakpoint
 CREATE INDEX "round_run_idx" ON "round" USING btree ("run_id");--> statement-breakpoint
 CREATE INDEX "run_organization_started_idx" ON "run" USING btree ("organization_id","started_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "run_company_run_idx" ON "run_company" USING btree ("run_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "account_issuer_accountId_uidx" ON "account" USING btree ("issuer","account_id");--> statement-breakpoint
 CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "apikey_configId_idx" ON "apikey" USING btree ("config_id");--> statement-breakpoint

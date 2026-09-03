@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	EvidenceAppendConnection,
@@ -18,7 +18,7 @@ import {
 	findRun,
 	latestEvidence,
 } from "@/core/db/queries";
-import { companyScopeForRun } from "@/core/db/run-scope";
+import { companyScopeForRun, peopleStoredScope } from "@/core/db/run-scope";
 import type { Company, Evidence, NewEvidence, Person } from "@/core/db/schema";
 import { company, person } from "@/core/db/schema";
 import type {
@@ -128,11 +128,9 @@ async function companiesExistFor(
 	condition: SQL | undefined,
 	buildDb: DbFactory<RunCompanyExistsConnection> = db,
 ): Promise<boolean> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select({ id: company.id })
-		.from(company)
-		.where(condition);
+	const rows = await withConnection(env, "direct", buildDb, (connection) =>
+		connection.select({ id: company.id }).from(company).where(condition),
+	);
 	return rows.length > 0;
 }
 
@@ -141,12 +139,13 @@ async function runPeopleFor(
 	condition: SQL | undefined,
 	buildDb: DbFactory<RunPeopleConnection> = db,
 ): Promise<PersonCompanyRow[]> {
-	const connection = buildDb(env, "direct");
-	return connection
-		.select()
-		.from(person)
-		.innerJoin(company, eq(person.companyId, company.id))
-		.where(condition);
+	return withConnection(env, "direct", buildDb, (connection) =>
+		connection
+			.select()
+			.from(person)
+			.innerJoin(company, eq(person.companyId, company.id))
+			.where(condition),
+	);
 }
 
 /**
@@ -163,21 +162,25 @@ export async function subjectsForRun(
 ): Promise<EnrichSubject[]> {
 	const run = await findRun(env, runId, deps.findRun);
 	if (!run) throw new NonRetryableError(`subjectsForRun: unknown run ${runId}`);
-	const condition = companyScopeForRun(run);
-	if (condition === null) {
+	const companyCondition = await companyScopeForRun(env, run);
+	if (companyCondition === null) {
 		throw new NonRetryableError(
 			`subjectsForRun: run ${runId} covers no companies to enrich`,
 		);
 	}
 	const hasCompanies = await companiesExistFor(
 		env,
-		condition,
+		companyCondition,
 		deps.companyExists,
 	);
 	if (!hasCompanies) {
 		throw new NonRetryableError(`subjectsForRun: no company for run ${runId}`);
 	}
-	const rows = await runPeopleFor(env, condition, deps.runPeople);
+	const peopleCondition =
+		run.capability === "people"
+			? await peopleStoredScope(env, run.id)
+			: companyCondition;
+	const rows = await runPeopleFor(env, peopleCondition, deps.runPeople);
 	return rows.map(toEnrichSubject);
 }
 

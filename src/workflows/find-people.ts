@@ -3,288 +3,69 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
-import { toBatches } from "@/core/batches";
-import { knownPeopleDomains } from "@/core/db/known-people";
 import {
-	appendEvidence,
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	loadIcp,
 	openRun,
-	recordRunSpend,
-	savePeople,
 } from "@/core/db/queries";
-import type { NewEvidence, NewPerson } from "@/core/db/schema";
-import { normalizeDomain } from "@/core/db/schema";
-import type {
-	CompanyPeopleResult,
-	FindPeopleDeps,
-	FindPeopleOptions,
-	FindPeopleResult,
-	PeopleCompany,
-	PeopleSearchPlan,
-	PersonCandidate,
-} from "@/core/people";
-import {
-	decisionMakerTitles,
-	findPeople,
-	resolveMaxCompanies,
-	splitKnownCompanies,
-	toPersonData,
-	truncateCompanies,
-} from "@/core/people";
-import { apolloPeopleSearch } from "@/core/providers/apollo/index";
-import { search } from "@/core/providers/exa/search";
+import type { ResolvedBuyer } from "@/core/people/buyer";
+import { resolveBuyer } from "@/core/people/buyer";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
-import { agentPersonSearch } from "@/workflows/find-people-agent";
+import { peopleFindSchema } from "@/http/schemas";
+import { runCompanies } from "@/workflows/find-people-company";
+import type { TargetCompany } from "@/workflows/find-people-target";
 import { loadTargetCompanies } from "@/workflows/find-people-target";
 
-const BATCH_SIZE = config.people.batchSize;
-const EVIDENCE_SOURCE_EXA = "exa";
-const EVIDENCE_SOURCE_TARGET = "target";
-const PEOPLE_SOURCE: "exa-search" | "exa-agent" = config.people.peopleSource;
-
-const maxCompaniesField = z.number().int().positive().optional();
-
-const FindPeoplePayloadSchema = z.union([
-	z.object({
-		runId: z.string().min(1),
-		maxCompanies: maxCompaniesField,
-		organizationId: z.string().min(1),
-	}),
-	z.object({
-		domains: z.array(z.string().min(1)).min(1),
-		maxCompanies: maxCompaniesField,
-		organizationId: z.string().min(1),
-	}),
-]);
+const FindPeoplePayloadSchema = z.union(
+	peopleFindSchema.options.map((option) =>
+		option.extend({ organizationId: z.string().min(1) }),
+	),
+);
 
 export type FindPeoplePayload = z.infer<typeof FindPeoplePayloadSchema>;
 
-type FindPeopleWorkflowResult = FindPeopleResult & {
-	unknownDomains: string[];
-	knownDomains: string[];
-	capped: boolean;
-};
-
-/**
- * What the workflow reports back: counts and spend. The per-company row
- * arrays stay in Postgres, read back a page at a time through
- * `GET /runs/{runId}/people`.
- */
 export type FindPeopleSummary = {
-	searched: number;
-	skippedCompanies: number;
-	peopleFound: number;
+	companiesSearched: number;
+	peopleVerified: number;
+	peopleRoster: number;
 	costDollars: number;
 	unknownDomains: string[];
-	knownDomains: string[];
 	capped: boolean;
+	mode: ResolvedBuyer["mode"];
+	buyerSource: ResolvedBuyer["buyerSource"];
 };
 
-function summarizeFindPeople(
-	result: FindPeopleWorkflowResult,
-): FindPeopleSummary {
-	return {
-		searched: result.searched,
-		skippedCompanies: result.skippedCompanies,
-		peopleFound: result.companies.reduce(
-			(sum, company) => sum + company.people.length,
-			0,
-		),
-		costDollars: result.costDollars,
-		unknownDomains: result.unknownDomains,
-		knownDomains: result.knownDomains,
-		capped: result.capped,
-	};
-}
-
-/**
- * Builds the dependencies one people batch runs with. The search dependency
- * branches on the configured people source; every other dependency stays
- * the same regardless of source.
- */
-function batchDeps(step: WorkflowStep, batchIndex: number): FindPeopleDeps {
-	const isAgent = PEOPLE_SOURCE === "exa-agent";
-	return {
-		search: isAgent
-			? agentPersonSearch(step, batchIndex)
-			: (_company, req, env, ledger) => search(req, env, ledger),
-		apolloSearch: apolloPeopleSearch.run,
-	};
-}
-
-/** Splits `companies` into ordered groups of `BATCH_SIZE`, for one durable step each. */
-function mergeResults(
-	batches: readonly FindPeopleResult[],
-	skippedCompanies: number,
-): FindPeopleResult {
-	return {
-		companies: batches.flatMap((batch) => batch.companies),
-		searched: batches.reduce((sum, batch) => sum + batch.searched, 0),
-		skippedCompanies,
-		costDollars: batches.reduce((sum, batch) => sum + batch.costDollars, 0),
-	};
-}
-
-function companyByDomain(
-	companies: readonly PeopleCompany[],
-): Map<string, PeopleCompany> {
-	return new Map(companies.map((row) => [row.domain, row]));
-}
-
-function toNewPerson(
-	person: PersonCandidate,
-	companyId: string,
-	organizationId: string,
-): NewPerson {
-	return {
-		organizationId,
-		companyId,
-		linkedinUrl: person.linkedinUrl,
-		name: person.fullName,
-		title: person.title,
-		data: toPersonData(person, EVIDENCE_SOURCE_EXA),
-	};
-}
-
-function collectNewPeople(
-	companies: readonly PeopleCompany[],
-	results: readonly CompanyPeopleResult[],
-	organizationId: string,
-): { rows: NewPerson[]; byUrl: Map<string, PersonCandidate> } {
-	const byDomain = companyByDomain(companies);
-	const byUrl = new Map<string, PersonCandidate>();
-	const rows: NewPerson[] = [];
-	for (const result of results) {
-		const matchedCompany = byDomain.get(result.domain);
-		if (!matchedCompany) continue;
-		for (const person of result.people) {
-			byUrl.set(person.linkedinUrl, person);
-			rows.push(toNewPerson(person, matchedCompany.id, organizationId));
-		}
-	}
-	return { rows, byUrl };
-}
-
-function evidenceRowsForPerson(
-	subjectId: string,
-	person: PersonCandidate,
-): NewEvidence[] {
-	const rows: NewEvidence[] = [
-		{
-			subjectType: "person",
-			subjectId,
-			kind: "fullName",
-			value: person.fullName,
-			source: EVIDENCE_SOURCE_EXA,
-		},
-	];
-	if (person.rawTitle !== null) {
-		rows.push({
-			subjectType: "person",
-			subjectId,
-			kind: "rawHeadline",
-			value: person.rawTitle,
-			source: EVIDENCE_SOURCE_EXA,
-		});
-	}
-	if (person.title !== null) {
-		rows.push({
-			subjectType: "person",
-			subjectId,
-			kind: "title",
-			value: person.title,
-			source: EVIDENCE_SOURCE_EXA,
-		});
-	}
-	if (person.location !== null) {
-		rows.push({
-			subjectType: "person",
-			subjectId,
-			kind: "location",
-			value: person.location,
-			source: EVIDENCE_SOURCE_EXA,
-		});
-	}
-	for (const claim of person.employment) {
-		rows.push({
-			subjectType: "person",
-			subjectId,
-			kind: "employer",
-			value: claim.company,
-			source:
-				claim.source === "exa" ? EVIDENCE_SOURCE_EXA : EVIDENCE_SOURCE_TARGET,
-			confidence: claim.confidence,
-		});
-	}
-	return rows;
-}
-
-async function persistPeople(
+async function loadProfile(
 	env: Env,
-	companies: readonly PeopleCompany[],
-	results: readonly CompanyPeopleResult[],
+	icpId: string | null,
 	organizationId: string,
-): Promise<void> {
-	const { rows, byUrl } = collectNewPeople(companies, results, organizationId);
-	const saved = await savePeople(env, rows);
-	const evidenceRows = saved.flatMap((row) => {
-		const candidate =
-			row.linkedinUrl !== null ? byUrl.get(row.linkedinUrl) : undefined;
-		return candidate ? evidenceRowsForPerson(row.id, candidate) : [];
-	});
-	await appendEvidence(env, evidenceRows);
-}
-
-/** `run.spentAlready` is what the run paid before its first batch, so the ceiling counts every dollar the run owes and not only the batches' own. */
-async function runBatches(
-	batches: readonly PeopleCompany[][],
-	opts: FindPeopleOptions,
-	step: WorkflowStep,
-	run: { id: string; spentAlready: number },
-): Promise<{ batches: FindPeopleResult[]; capped: boolean }> {
-	const results: FindPeopleResult[] = [];
-	let costDollars = run.spentAlready;
-	for (const [index, batch] of batches.entries()) {
-		const batchResult = await step.do(
-			`people-batch-${index}`,
-			config.stepConfig.paidCall,
-			() => findPeople(batch, opts, batchDeps(step, index)),
-		);
-		results.push(batchResult);
-		costDollars += batchResult.costDollars;
-		await step.do(
-			`people-batch-${index}-spend`,
-			config.stepConfig.databaseCall,
-			() => recordRunSpend(opts.env, run.id, costDollars),
-		);
-		if (costDollars >= config.spend.perRunDollars) {
-			return { batches: results, capped: index < batches.length - 1 };
-		}
+): Promise<IcpDoc | null> {
+	if (icpId === null) return null;
+	const icpRow = await loadIcp(env, icpId);
+	if (!icpRow) {
+		throw new NonRetryableError(`findPeople: unknown icp ${icpId}`);
 	}
-	return { batches: results, capped: false };
+	if (icpRow.organizationId !== organizationId) {
+		throw new NonRetryableError(
+			`findPeople: icp ${icpId} does not belong to organization ${organizationId}`,
+		);
+	}
+	return IcpDocSchema.parse(icpRow.doc);
 }
 
-/**
- * The titles and query one run searches with, resolved once. They depend only
- * on the profile, so a call per batch would pay a model for the same answer
- * as many times as the run has batches.
- */
-async function resolvePlan(
-	icp: IcpDoc,
-	env: Env,
-	step: WorkflowStep,
-): Promise<PeopleSearchPlan & { costDollars: number }> {
-	return step.do("people-plan", config.stepConfig.paidCall, async () => {
-		const result = await decisionMakerTitles(icp, env);
-		return {
-			titles: result.titles,
-			userLocation: result.userLocation,
-			costDollars: result.ledger.total(),
-		};
-	});
+/** Clamps a target company list to the caller's own `maxCompanies` and the single account-wide `limits.maxCompaniesPerPeopleRun` ceiling, whichever is smaller. */
+export function clampCompanies(
+	companies: readonly TargetCompany[],
+	maxCompanies: number | undefined,
+): TargetCompany[] {
+	const limit = Math.min(
+		maxCompanies ?? config.limits.defaultMaxCompaniesPerPeopleRun,
+		config.limits.maxCompaniesPerPeopleRun,
+	);
+	return companies.slice(0, limit);
 }
 
 export class FindPeopleWorkflow extends WorkflowEntrypoint<
@@ -295,7 +76,22 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 		event: Readonly<WorkflowEvent<FindPeoplePayload>>,
 		step: WorkflowStep,
 	): Promise<FindPeopleSummary> {
+		try {
+			return await this.runToCompletion(event, step);
+		} catch (error) {
+			await step.do("close-errored", config.stepConfig.databaseCall, () =>
+				closeErroredRun(this.env, event.instanceId),
+			);
+			throw error;
+		}
+	}
+
+	private async runToCompletion(
+		event: Readonly<WorkflowEvent<FindPeoplePayload>>,
+		step: WorkflowStep,
+	): Promise<FindPeopleSummary> {
 		const payload = FindPeoplePayloadSchema.parse(event.payload);
+		const organizationId = payload.organizationId;
 
 		const target = await step.do(
 			"load-companies",
@@ -303,27 +99,19 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			() => loadTargetCompanies(this.env, payload),
 		);
 
-		const { doc: icp } = await step.do(
-			"load-icp",
+		const profile = await step.do(
+			"load-profile",
 			config.stepConfig.databaseCall,
-			async () => {
-				const icpRow = await loadIcp(this.env, target.icpId);
-				if (!icpRow) {
-					throw new NonRetryableError(
-						`findPeople: unknown icp ${target.icpId}`,
-					);
-				}
-				if (icpRow.organizationId !== payload.organizationId) {
-					throw new NonRetryableError(
-						`findPeople: icp ${target.icpId} does not belong to organization ${payload.organizationId}`,
-					);
-				}
-				return { doc: IcpDocSchema.parse(icpRow.doc) };
-			},
+			() => loadProfile(this.env, target.icpId, organizationId),
 		);
-		const organizationId = payload.organizationId;
 
-		const alreadySpent = await step.do(
+		const buyer = await step.do(
+			"resolve-buyer",
+			config.stepConfig.databaseCall,
+			async () => resolveBuyer({ target: payload.target ?? null, profile }),
+		);
+
+		const opened = await step.do(
 			"open-run",
 			config.stepConfig.databaseCall,
 			async () => {
@@ -339,51 +127,36 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		const known = await step.do(
-			"known-people",
-			config.stepConfig.databaseCall,
-			() =>
-				knownPeopleDomains(this.env, organizationId, {
-					days: config.people.seenPeopleWindowDays,
-				}),
-		);
-		const filtered = splitKnownCompanies(
-			target.companies,
-			new Set(known.map(normalizeDomain)),
-		);
-
-		const effectiveMax = resolveMaxCompanies(payload.maxCompanies);
-		const { companies: scoped, skipped } = truncateCompanies(
-			filtered.companies,
-			effectiveMax,
-		);
-		const resolved = await resolvePlan(icp, this.env, step);
-		const opts: FindPeopleOptions = { icp, env: this.env, plan: resolved };
-		const run = await runBatches(toBatches(scoped, BATCH_SIZE), opts, step, {
-			id: event.instanceId,
-			spentAlready: alreadySpent.alreadySpent + resolved.costDollars,
-		});
-		const merged = mergeResults(run.batches, skipped);
-		const result: FindPeopleWorkflowResult = {
-			...merged,
-			costDollars:
-				alreadySpent.alreadySpent + merged.costDollars + resolved.costDollars,
-			unknownDomains: target.unknownDomains,
-			knownDomains: filtered.skipped,
-			capped: run.capped,
-		};
-
-		await step.do("save-people", config.stepConfig.databaseCall, () =>
-			persistPeople(this.env, scoped, result.companies, organizationId),
+		const companies = clampCompanies(target.companies, payload.maxCompanies);
+		const loop = await runCompanies(
+			{
+				env: this.env,
+				step,
+				runId: event.instanceId,
+				organizationId,
+				buyer,
+				profile,
+			},
+			companies,
+			opened.alreadySpent,
 		);
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
 				status: "complete",
-				costDollars: result.costDollars,
+				costDollars: loop.costDollars,
 			}),
 		);
 
-		return summarizeFindPeople(result);
+		return {
+			companiesSearched: loop.companiesSearched,
+			peopleVerified: loop.peopleVerified,
+			peopleRoster: loop.peopleRoster,
+			costDollars: loop.costDollars,
+			unknownDomains: loop.unknownDomains,
+			capped: loop.capped,
+			mode: buyer.mode,
+			buyerSource: buyer.buyerSource,
+		};
 	}
 }

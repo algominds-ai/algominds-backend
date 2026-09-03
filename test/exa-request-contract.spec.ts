@@ -4,8 +4,6 @@ import { z } from "zod";
 import { buildAgentRunRequest } from "../src/core/companies/agent-search";
 import { buildSearchRequest } from "../src/core/companies/candidates";
 import { CostLedger } from "../src/core/cost";
-import type { PeopleCompany } from "../src/core/people/candidates";
-import { buildPersonSearchRequest } from "../src/core/people/candidates";
 import { startAgentRun } from "../src/core/providers/exa/agent";
 import { search } from "../src/core/providers/exa/search";
 import type { SearchPlan } from "../src/core/synthesize";
@@ -18,9 +16,7 @@ function planFor(query: string): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -103,18 +99,6 @@ const MeasuredSearchRequestSchema = z
 	})
 	.strict();
 
-/**
- * The same measured shape, minus the category enum. The person path sends a
- * category value outside the measured set, a known gap left for separate
- * work; every other field still has to conform.
- */
-const SearchFieldsAndTypeSchema = z
-	.object({
-		...SEARCH_FIELDS_WITHOUT_CATEGORY,
-		category: z.string().optional(),
-	})
-	.strict();
-
 /** The `/agent/runs` request body, measured the same way as the `/search` one above. */
 const MeasuredAgentRunRequestSchema = z
 	.object({
@@ -144,9 +128,7 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
@@ -159,10 +141,6 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		maxFundingTotal: null,
 		...overrides,
 	};
-}
-
-function samplePeopleCompany(): PeopleCompany {
-	return { id: "company-1", domain: "acme.example", name: "Acme", exaId: null };
 }
 
 describe("company search request stays inside the measured Exa /search schema", () => {
@@ -199,26 +177,6 @@ describe("the search query carries the plan's bounds", () => {
 		expect(request.query).toBe(
 			"fintech companies at seed stage with a small team",
 		);
-	});
-});
-
-describe("person search request stays inside the measured Exa /search schema, aside from category", () => {
-	it("emits only fields and enum values the measured schema allows", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["Chief Executive Officer"],
-			userLocation: null,
-		});
-
-		expect(SearchFieldsAndTypeSchema.safeParse(request).success).toBe(true);
-	});
-
-	it("sends a category value from the measured enum", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["Chief Executive Officer"],
-			userLocation: null,
-		});
-
-		expect(MeasuredSearchRequestSchema.safeParse(request).success).toBe(true);
 	});
 });
 
@@ -371,76 +329,11 @@ describe("what reaches the network matches what the builder produced", () => {
 	});
 });
 
-describe("the people request carries only filters the people category accepts", () => {
-	it("sends the country the model wrote, uppercased", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			userLocation: "US",
-		});
+describe("the search request runs at fast, the only type a search round pins", () => {
+	it("sends fast and no additionalQueries, since nothing reads them at fast", () => {
+		const request = buildSearchRequest(samplePlan());
 
-		expect(request.userLocation).toBe("US");
-		expect(request.category).toBe("people");
-	});
-
-	it("omits the country entirely when the model named none", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			userLocation: null,
-		});
-
-		expect("userLocation" in request).toBe(false);
-	});
-
-	it("never sends a filter the people category rejects", () => {
-		const request = buildPersonSearchRequest(samplePeopleCompany(), {
-			titles: ["VP of Sales"],
-			userLocation: "US",
-		});
-
-		expect("excludeDomains" in request).toBe(false);
-		expect("startPublishedDate" in request).toBe(false);
-		expect("endPublishedDate" in request).toBe(false);
-	});
-
-	it("quotes the company name, which is what stops a person of the same name matching", () => {
-		const company = samplePeopleCompany();
-		const request = buildPersonSearchRequest(company, {
-			titles: ["VP of Sales", "Head of Growth"],
-			userLocation: null,
-		});
-
-		expect(request.query).toBe(
-			`VP of Sales, Head of Growth at "${company.name}"`,
-		);
-	});
-});
-
-describe("the plan chooses the search type, and only a deep type reads its variations", () => {
-	it("sends the type the plan picked", () => {
-		const request = buildSearchRequest(samplePlan({ type: "deep" }));
-
-		expect(request.type).toBe("deep");
-	});
-
-	it("passes the variations on a deep type", () => {
-		const request = buildSearchRequest(
-			samplePlan({
-				type: "deep",
-				additionalQueries: ["payment processors", "core banking vendors"],
-			}),
-		);
-
-		expect(request.additionalQueries).toEqual([
-			"payment processors",
-			"core banking vendors",
-		]);
-	});
-
-	it("drops the variations on a fast search, where nothing reads them", () => {
-		const request = buildSearchRequest(
-			samplePlan({ type: "fast", additionalQueries: ["payment processors"] }),
-		);
-
+		expect(request.type).toBe("fast");
 		expect(request.additionalQueries).toBeUndefined();
 	});
 });
@@ -448,12 +341,12 @@ describe("the plan chooses the search type, and only a deep type reads its varia
 describe("the plan chooses how hard the agent works", () => {
 	it("sends the effort the plan picked, not a fixed setting", () => {
 		const request = buildAgentRunRequest(
-			samplePlan({ agentEffort: "high" }),
+			samplePlan({ agentEffort: "medium" }),
 			5,
 			"2026-08-30",
 			null,
 		);
 
-		expect(request.effort).toBe("high");
+		expect(request.effort).toBe("medium");
 	});
 });

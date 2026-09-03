@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { config } from "@/config";
 import type { CompanyRow, SearchResult } from "@/core/companies/gate";
+import { NOT_A_COMPANY_DOMAIN } from "@/core/companies/gate";
 import { normalizeDomain } from "@/core/db/schema";
 import type {
 	CompanyEntity,
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
-import type { IcpDoc } from "@/core/synthesize";
-import { acceptsAdditionalQueries, type SearchPlan } from "@/core/synthesize";
+import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 
 const {
 	resultsPerRound: RESULTS_PER_ROUND,
@@ -32,6 +32,7 @@ export type CompanyMatch = {
 	kind: string | null;
 	publishedDate: string | null;
 	score: number | null;
+	evidenceCheck: string | null;
 };
 
 /** The vendor's own entity object, the fields that describe the match, and which source produced them. */
@@ -47,7 +48,7 @@ export type CompanyData = {
 	result: CompanyMatch;
 };
 
-const MAX_EXCLUDED_DOMAINS = 1200;
+export const MAX_EXCLUDED_DOMAINS = 1200;
 
 /**
  * The domains one round tells the vendor not to return: the caller's own list
@@ -69,7 +70,9 @@ export function excludedDomains(
 	caller: readonly string[],
 	seen: ReadonlySet<string>,
 ): string[] {
-	return [...new Set([...caller, ...seen])].slice(0, MAX_EXCLUDED_DOMAINS);
+	return [...new Set([...caller, ...seen])]
+		.filter((domain) => !NOT_A_COMPANY_DOMAIN.has(domain))
+		.slice(0, MAX_EXCLUDED_DOMAINS);
 }
 
 /**
@@ -83,15 +86,11 @@ export function buildSearchRequest(
 	excludeDomains: readonly string[] = [],
 ): ExaSearchRequest {
 	const constraints = planConstraints(plan);
-	const variations = acceptsAdditionalQueries(plan.type)
-		? plan.additionalQueries
-		: [];
 	return {
 		query: constraints ? `${plan.query} ${constraints}` : plan.query,
 		category: "company",
-		type: plan.type,
+		type: "fast",
 		numResults: RESULTS_PER_ROUND,
-		...(variations.length > 0 ? { additionalQueries: variations } : {}),
 		...(plan.userLocation ? { userLocation: plan.userLocation } : {}),
 		...(excludeDomains.length > 0
 			? { excludeDomains: [...excludeDomains] }
@@ -153,6 +152,7 @@ function toCompanyMatch(result: ExaResult): CompanyMatch {
 		kind: result.evidenceKind ?? null,
 		publishedDate: result.publishedDate ?? null,
 		score: result.score ?? null,
+		evidenceCheck: null,
 	};
 }
 

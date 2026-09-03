@@ -7,6 +7,7 @@ import {
 	reasoningModel,
 	workerModel,
 } from "../src/core/model";
+import { RetryableProviderError } from "../src/core/providers/waterfall";
 
 const env: Env = {
 	...testEnv,
@@ -157,9 +158,10 @@ describe("model: the request body the SDK sends", () => {
 
 		const body = capturedBody(gateway.calls[0]);
 		expect(body.response_format.type).toBe("json_schema");
-		expect(
-			body.response_format.json_schema?.schema.properties.widgetName,
-		).toBeDefined();
+		expect(body.response_format.json_schema?.schema.properties).toEqual({
+			widgetName: { type: "string" },
+			count: { type: "number" },
+		});
 	});
 
 	it("carries the OpenRouter routing flag that makes a provider honour the schema", async () => {
@@ -234,6 +236,24 @@ describe("model: a response that never matches the schema", () => {
 
 		expect(gateway.calls).toHaveLength(2);
 		expect(result?.widgetName).toBe("Acme Widget");
+	});
+});
+
+describe("model: a call that exceeds the shared timeout", () => {
+	const originalFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	it("throws so the durable step's own retry owns it, rather than resolving as an empty reply", async () => {
+		globalThis.fetch = async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		};
+
+		await expect(callWorkerModel(new CostLedger())).rejects.toThrow(
+			RetryableProviderError,
+		);
 	});
 });
 

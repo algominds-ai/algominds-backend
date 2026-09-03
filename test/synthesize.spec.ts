@@ -105,24 +105,42 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 type PlanShape = {
 	query: string;
 	angle: string;
+	recency: string | null;
+	eventWindowDays: number | null;
+	recencyDays: number | null;
+	source: string | null;
+	agentEffort: string | null;
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
 	maxWorkforce: number | null;
-	eventWindowDays: number | null;
-	recencyDays: number | null;
+	minFoundedYear: number | null;
+	maxFoundedYear: number | null;
+	minRevenueAnnual: number | null;
+	maxRevenueAnnual: number | null;
+	minFundingTotal: number | null;
+	maxFundingTotal: number | null;
 };
 
 function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
 	return objectReply({
 		query: "small US software teams that sell without a sales team",
 		angle: "founder-led vertical software",
+		recency: null,
+		eventWindowDays: null,
+		recencyDays: null,
+		source: null,
+		agentEffort: null,
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
 		maxWorkforce: 20,
-		eventWindowDays: null,
-		recencyDays: null,
+		minFoundedYear: null,
+		maxFoundedYear: null,
+		minRevenueAnnual: null,
+		maxRevenueAnnual: null,
+		minFundingTotal: null,
+		maxFundingTotal: null,
 		...overrides,
 	});
 }
@@ -154,7 +172,7 @@ describe("synthesize: gateway wiring", () => {
 		expect(new URL(String(call?.url)).pathname).toContain("/compat");
 	});
 
-	it("runs on the reasoning route, because the plan now chooses the source and the type", async () => {
+	it("runs on the reasoning route, because the plan now chooses the source", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
@@ -186,8 +204,11 @@ describe("synthesize: gateway wiring", () => {
 					{
 						query: "q",
 						angle: "a",
+						recency: null,
 						eventWindowDays: null,
 						recencyDays: null,
+						source: null,
+						agentEffort: null,
 						userLocation: null,
 						countries: [],
 						minWorkforce: null,
@@ -230,8 +251,11 @@ describe("synthesize: cost recording without a cost field", () => {
 						content: JSON.stringify({
 							query: "q",
 							angle: "a",
+							recency: null,
 							eventWindowDays: null,
 							recencyDays: null,
+							source: null,
+							agentEffort: null,
 							userLocation: null,
 							countries: [],
 							minWorkforce: null,
@@ -373,26 +397,28 @@ describe("the agent is given the effort that keeps evidence freshest", () => {
 		globalThis.fetch = originalFetch;
 	});
 
-	function everyMessage(call: { body: unknown }): string {
-		const parsed = z
-			.object({ messages: z.array(z.object({ content: z.string() })) })
-			.parse(call.body);
-		return parsed.messages.map((message) => message.content).join("\n");
-	}
-
-	it("names medium as the default and no longer tells the model to choose low", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+	it("sends low unchanged when the model writes agentEffort as low", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: "low" })),
+		]);
 		globalThis.fetch = gateway.fetch;
 
-		await runSynthesize();
-
-		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("Choose `medium`");
-		expect(sent).not.toContain("Choose `low`");
+		expect((await runSynthesize()).plan.agentEffort).toBe("low");
 	});
 
-	it("fills medium when the model leaves the field out", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+	it("fills medium when the model writes agentEffort as null", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: null })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
+	});
+
+	it("sends medium when the model writes agentEffort as medium", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: "medium" })),
+		]);
 		globalThis.fetch = gateway.fetch;
 
 		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
@@ -407,73 +433,69 @@ describe("the agent is given the effort that keeps evidence freshest", () => {
 
 		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
 	});
+
+	it("falls back to the template plan when the model writes agentEffort as high, because the schema no longer allows it", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ agentEffort: "high" })),
+			chatCompletionResponse(planReply({ agentEffort: "high" })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await runSynthesize();
+
+		expect(gateway.calls).toHaveLength(2);
+		expect(result.plan.query).toBe(icp.description);
+		expect(result.plan.agentEffort).toBe("medium");
+	});
 });
 
-describe("a profile that lists dated events is asking for something recent", () => {
+describe("the routing rule: a shape draw searches, an event draw calls the agent", () => {
 	const originalFetch = globalThis.fetch;
 
 	afterEach(() => {
 		globalThis.fetch = originalFetch;
 	});
 
-	function everyMessage(call: { body: unknown }): string {
-		const parsed = z
-			.object({ messages: z.array(z.object({ content: z.string() })) })
-			.parse(call.body);
-		return parsed.messages.map((message) => message.content).join("\n");
-	}
-
-	it("tells the model those events are what recency is for, and no longer claims an undated page is refused", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
-		globalThis.fetch = gateway.fetch;
-
-		await runSynthesize();
-
-		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("those events are what `recency` is");
-		expect(sent).toContain("sends the round to a source that holds no events");
-		expect(sent).not.toContain("refuses one carrying no date");
-	});
-
-	it("describes what each source can answer and leaves the choice to the model", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
-		globalThis.fetch = gateway.fetch;
-
-		await runSynthesize();
-
-		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("It holds no pages, no events and no dates");
-		expect(sent).toContain(
-			"Choose the one that can answer the round you are writing",
-		);
-		expect(sent).not.toContain("whenever you set `recency`");
-		expect(sent).not.toContain("a breach, a licence or a funding round");
-	});
-
-	it("asks how old the event may be and how old its proof may be as two separate questions", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
-		globalThis.fetch = gateway.fetch;
-
-		await runSynthesize();
-
-		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain(
-			"`eventWindowDays` is how far back the profile allows",
-		);
-		expect(sent).toContain("still show that this situation is live");
-		expect(sent).toContain("may be a year while `recencyDays` is a few");
-	});
-
-	it("keeps a wide event window and a narrow proof window apart in the plan", async () => {
+	it("routes a shape profile draw to search, with no recency or agent windows", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
-				planReply({ eventWindowDays: 365, recencyDays: 30 }),
+				planReply({
+					source: "exa-search",
+					recency: null,
+					eventWindowDays: null,
+					recencyDays: null,
+				}),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
 
 		const result = await runSynthesize();
 
+		expect(result.plan.source).toBe("exa-search");
+		expect(result.plan.recency).toBeNull();
+		expect(result.plan.eventWindowDays).toBeNull();
+		expect(result.plan.recencyDays).toBeNull();
+	});
+
+	it("routes an event profile draw to the agent, with recency and both windows carried through", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				planReply({
+					source: "exa-agent",
+					recency: "a platform engineering role posted in the last 30 days",
+					eventWindowDays: 365,
+					recencyDays: 30,
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await runSynthesize();
+
+		expect(result.plan.source).toBe("exa-agent");
+		expect(result.plan.recency).toBe(
+			"a platform engineering role posted in the last 30 days",
+		);
 		expect(result.plan.eventWindowDays).toBe(365);
 		expect(result.plan.recencyDays).toBe(30);
 	});

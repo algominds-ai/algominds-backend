@@ -11,15 +11,13 @@ import type {
 } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
-import {
-	seedExcludedDomains,
-	toCompanyData,
-} from "@/core/companies/candidates";
+import { seedExcludedDomains } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
 import {
 	appendEvidence,
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	loadIcp,
 	openRun,
@@ -27,8 +25,7 @@ import {
 	saveCompanies,
 	saveRound,
 } from "@/core/db/queries";
-import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
-import { normalizeDomain } from "@/core/db/schema";
+import type { NewCompany } from "@/core/db/schema";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";
@@ -87,14 +84,19 @@ async function persistRound(input: PersistRoundInput): Promise<void> {
 }
 
 /** The options one round runs under, carrying the angles and reject reasons the rounds before it produced. */
-function roundOptions(
-	payload: FindCompaniesPayload,
-	env: Env,
-	today: string,
-	history: { pastAngles: readonly string[]; feedback: readonly string[] },
-): FindCompaniesOptions {
+type RoundOptionsInput = {
+	payload: FindCompaniesPayload;
+	organizationId: string;
+	env: Env;
+	today: string;
+	history: { pastAngles: readonly string[]; feedback: readonly string[] };
+};
+
+function roundOptions(input: RoundOptionsInput): FindCompaniesOptions {
+	const { payload, organizationId, env, today, history } = input;
 	return {
 		icpId: payload.icpId,
+		organizationId,
 		env,
 		today,
 		maxRounds: 1,
@@ -114,11 +116,12 @@ async function runFindCompaniesRounds(
 		payload: FindCompaniesPayload;
 		icp: IcpDoc;
 		runId: string;
+		organizationId: string;
 		alreadySpent: number;
 	},
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
-	const { env, payload, icp, runId } = target;
+	const { env, payload, icp, runId, organizationId } = target;
 	const today = await step.do("today", config.stepConfig.databaseCall, () =>
 		Promise.resolve(new Date().toISOString().slice(0, 10)),
 	);
@@ -143,7 +146,13 @@ async function runFindCompaniesRounds(
 		round++
 	) {
 		const remaining = payload.count - companies.length;
-		const opts = roundOptions(payload, env, today, { pastAngles, feedback });
+		const opts = roundOptions({
+			payload,
+			organizationId,
+			env,
+			today,
+			history: { pastAngles, feedback },
+		});
 		const deps = roundDeps({
 			accumulatedDomains,
 			step,
@@ -217,9 +226,7 @@ export type RoundReport = {
 	eventWindowDays: number | null;
 	recencyDays: number | null;
 	source: string;
-	type: string;
 	agentEffort: string;
-	additionalQueries: string[];
 	found: number;
 	rejected: { filter: number; gate: number; judge: number };
 };
@@ -240,9 +247,7 @@ export function reportRound(
 		eventWindowDays: plan?.eventWindowDays ?? null,
 		recencyDays: plan?.recencyDays ?? null,
 		source: plan?.source ?? "",
-		type: plan?.type ?? "",
 		agentEffort: plan?.agentEffort ?? "",
-		additionalQueries: plan?.additionalQueries ?? [],
 		found: result.companies.length,
 		rejected: {
 			filter: count("filter"),
@@ -275,6 +280,7 @@ function summarizeFindCompanies(result: ReportedRounds): FindCompaniesSummary {
 type PersistCompaniesInput = {
 	icpId: string;
 	runId: string;
+	organizationId: string;
 	companies: readonly CompanyRow[];
 	captures: Record<string, CompanyCapture>;
 };
@@ -283,13 +289,12 @@ async function persistCompanies(
 	env: Env,
 	input: PersistCompaniesInput,
 ): Promise<void> {
-	const { icpId, runId, companies, captures } = input;
+	const { icpId, runId, organizationId, companies, captures } = input;
 	const newCompanies = companies
 		.map((row) =>
 			toNewCompany(
 				row,
-				icpId,
-				runId,
+				{ icpId, runId, organizationId },
 				row.domain ? captures[row.domain] : undefined,
 			),
 		)
@@ -307,6 +312,20 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 	FindCompaniesPayload
 > {
 	override async run(
+		event: Readonly<WorkflowEvent<FindCompaniesPayload>>,
+		step: WorkflowStep,
+	): Promise<FindCompaniesSummary> {
+		try {
+			return await this.runToCompletion(event, step);
+		} catch (error) {
+			await step.do("close-errored", config.stepConfig.databaseCall, () =>
+				closeErroredRun(this.env, event.instanceId),
+			);
+			throw error;
+		}
+	}
+
+	private async runToCompletion(
 		event: Readonly<WorkflowEvent<FindCompaniesPayload>>,
 		step: WorkflowStep,
 	): Promise<FindCompaniesSummary> {
@@ -350,6 +369,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				payload,
 				icp,
 				runId: event.instanceId,
+				organizationId,
 				alreadySpent: alreadySpent.alreadySpent,
 			},
 			step,
@@ -359,6 +379,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			persistCompanies(this.env, {
 				icpId: payload.icpId,
 				runId: event.instanceId,
+				organizationId,
 				companies: result.companies,
 				captures: result.captures,
 			}),

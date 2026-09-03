@@ -1,6 +1,12 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
+import {
+	EXA_FETCH_TIMEOUT_MS,
+	extractRequestId,
+	readJson,
+	throwForStatus,
+} from "@/core/providers/exa/http";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
@@ -187,12 +193,6 @@ const ExaResponseSchema = z.object({
 	results: z.array(ExaResultSchema),
 });
 
-const ExaErrorSchema = z.object({
-	requestId: z.string().optional(),
-	error: z.string().optional(),
-	message: z.string().optional(),
-});
-
 /** The structured company record Exa returns. Every field can be absent; see `docs/solutions/exa-search-contract.md` for the measured fill rates. */
 export type CompanyEntity = z.infer<typeof CompanyRecordSchema>;
 
@@ -328,32 +328,6 @@ function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
 	};
 }
 
-async function readJson(response: Response): Promise<unknown> {
-	try {
-		return await response.json();
-	} catch {
-		return {};
-	}
-}
-
-function extractRequestId(body: unknown): string | undefined {
-	const parsed = ExaErrorSchema.safeParse(body);
-	return parsed.success ? parsed.data.requestId : undefined;
-}
-
-function throwForStatus(status: number, body: unknown): never {
-	const parsed = ExaErrorSchema.safeParse(body);
-	const requestId = extractRequestId(body);
-	const reason = parsed.success
-		? (parsed.data.message ?? parsed.data.error ?? `status ${status}`)
-		: `status ${status}`;
-	const detail = requestId
-		? `Exa request failed: ${reason} (requestId ${requestId})`
-		: `Exa request failed: ${reason}`;
-	if (status === 429 || status >= 500) throw new RetryableProviderError(detail);
-	throw new NonRetryableError(detail);
-}
-
 function parseResponse(body: unknown): z.infer<typeof ExaResponseSchema> {
 	const parsed = ExaResponseSchema.safeParse(body);
 	if (parsed.success) return parsed.data;
@@ -376,13 +350,22 @@ export async function search(
 	const validated = ExaSearchRequestSchema.parse(req);
 	rejectEntityIndexFilters(validated);
 	const apiKey = await env.EXA_API_KEY.get();
-	const response = await fetch("https://api.exa.ai/search", {
-		method: "POST",
-		headers: { "x-api-key": apiKey, "content-type": "application/json" },
-		body: JSON.stringify(validated),
-	});
+	let response: Response;
+	try {
+		response = await fetch("https://api.exa.ai/search", {
+			method: "POST",
+			headers: { "x-api-key": apiKey, "content-type": "application/json" },
+			body: JSON.stringify(validated),
+			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
+		});
+	} catch (error) {
+		if (error instanceof DOMException && error.name === "TimeoutError") {
+			throw new RetryableProviderError("Exa search request timed out");
+		}
+		throw error;
+	}
 	const body = await readJson(response);
-	if (!response.ok) throwForStatus(response.status, body);
+	if (!response.ok) throwForStatus("Exa", response.status, body);
 	const parsed = parseResponse(body);
 	const { total, ...rest } = parsed.costDollars;
 	ledger.reported("exa", "search", total, flattenCost(rest));

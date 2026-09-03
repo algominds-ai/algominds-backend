@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
-import { createAuth } from "@/auth";
+import { createAuthWith } from "@/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "@/auth-options";
+import { db, withConnection } from "@/core/db/client";
 
 export type ApiEnv = {
 	Bindings: Env;
@@ -34,9 +35,11 @@ export const requireApiKey = createMiddleware<ApiEnv>(async (c, next) => {
 	);
 	if (!key) return c.json({ error: "unauthorized" }, 401);
 
-	const verified = await createAuth(c.env).api.verifyApiKey({
-		body: { key, configId: ORGANIZATION_KEY_CONFIG_ID },
-	});
+	const verified = await withConnection(c.env, "cached", db, (connection) =>
+		createAuthWith(c.env, connection).api.verifyApiKey({
+			body: { key, configId: ORGANIZATION_KEY_CONFIG_ID },
+		}),
+	);
 
 	const organizationId = verified.valid ? verified.key?.referenceId : undefined;
 	if (!organizationId) return c.json({ error: "unauthorized" }, 401);

@@ -14,7 +14,12 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["**", "!docs"]
+		"includes": [
+			"**",
+			"!docs",
+			"!.claude/settings.local.json",
+			"!.claude/worktrees"
+		]
 	},
 	"formatter": {
 		"enabled": true,

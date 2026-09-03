@@ -3,7 +3,7 @@ export const config = {
 	limits: {
 		maxCompaniesPerRequest: 300,
 		defaultMaxCompaniesPerPeopleRun: 100,
-		maxCompaniesPerPeopleRun: 300,
+		maxCompaniesPerPeopleRun: 100,
 		maxRunPageSize: 200,
 	},
 	auth: {
@@ -19,20 +19,16 @@ export const config = {
 	companies: {
 		maxRounds: 3,
 		resultsPerRound: 100,
-		judgeCandidateMultiple: 3,
+		judgeCandidateMultiple: 2,
 		descriptionChars: 600,
-		seenDomainsWindowDays: 90,
+		seenDomainsWindowDays: 60,
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 60,
 	},
 	people: {
-		seenPeopleWindowDays: 90,
-		resultsPerCompany: 25,
-		batchSize: 5,
-		peopleSource: "exa-search",
-		exaAgentEffort: "low",
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 24,
+		clayFetchTimeoutMs: 30000,
 	},
 	enrich: {
 		batchSize: 5,

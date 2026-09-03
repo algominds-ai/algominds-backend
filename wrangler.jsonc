@@ -41,7 +41,8 @@
 		{
 			"binding": "FIND_PEOPLE",
 			"name": "find-people",
-			"class_name": "FindPeopleWorkflow"
+			"class_name": "FindPeopleWorkflow",
+			"limits": { "steps": 25000 }
 		},
 		{ "binding": "ENRICH", "name": "enrich", "class_name": "EnrichWorkflow" },
 		{
@@ -60,18 +61,13 @@
 		"MODEL_ROUTE_WORKER": ""
 	},
 
-	// Production secrets. Local dev reads the same names from .env / .dev.vars.
+	// Production secrets. Local dev reads the same names from .env only; do not create .dev.vars, it shadows .env and breaks model calls.
 	// Create with: wrangler secrets-store secret create <store> --name <NAME> --scopes workers
 	"secrets_store_secrets": [
 		{
 			"binding": "EXA_API_KEY",
 			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "exa-api-key"
-		},
-		{
-			"binding": "APOLLO_API_KEY",
-			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
-			"secret_name": "apollo-api-key"
 		},
 		{
 			"binding": "FINDYMAIL_API_KEY",
@@ -84,9 +80,9 @@
 			"secret_name": "cf-aig-token"
 		},
 		{
-			"binding": "API_BEARER_TOKEN",
+			"binding": "CLAY_API_KEY",
 			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
-			"secret_name": "api-bearer-token"
+			"secret_name": "clay-api-key"
 		}
 	]
 }

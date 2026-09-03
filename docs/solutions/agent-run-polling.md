@@ -41,10 +41,11 @@ fails silently, and a future change may want a louder signal.
 
 ## Step names must be unique per company
 
-`agentPersonSearch` in `src/workflows/find-people-agent.ts` is called once
-per company inside one `people-batch-N` step. Cloudflare caches a step result
-by name, so two companies sharing a nested step name would make the second
-company receive the first company's agent run. Wrong people, no error.
+`src/workflows/find-people-verify.ts` names every step it opens for one
+company after that company's own domain, such as `people-${domain}-select`
+and `${pick.name}-index`. Cloudflare caches a step result by name, so two
+companies sharing a nested step name would make the second company receive
+the first company's agent run. Wrong people, no error.
 
 The name carries the company's own domain, and the company is passed to the
 search call rather than inferred. It used to be inferred: a counter was

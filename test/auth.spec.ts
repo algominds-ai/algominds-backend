@@ -5,7 +5,7 @@ import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import authOptionsSource from "../src/auth-options?raw";
 import { apikey } from "../src/core/db/auth-schema";
-import { db } from "../src/core/db/client";
+import { db, withConnection } from "../src/core/db/client";
 import app from "../src/index";
 
 const BASE = "https://algo.test";
@@ -185,14 +185,16 @@ describe("key storage", () => {
 	it("never stores the plaintext key handed to the caller", async () => {
 		const issued = await issueKey(`auth-plaintext-${crypto.randomUUID()}`);
 
-		const rows = await db(testEnv, "direct")
-			.select({ key: apikey.key })
-			.from(apikey)
-			.where(eq(apikey.id, issued.id))
-			.limit(1);
+		const rows = await withConnection(testEnv, "direct", db, (connection) =>
+			connection
+				.select({ key: apikey.key })
+				.from(apikey)
+				.where(eq(apikey.id, issued.id))
+				.limit(1),
+		);
 		const stored = rows[0];
 
-		expect(stored).toBeDefined();
+		expect(stored?.key).toEqual(expect.any(String));
 		expect(stored?.key).not.toBe(issued.key);
 	});
 });

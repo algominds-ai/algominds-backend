@@ -64,9 +64,24 @@ export const companiesFindSchema = z.intersection(
 
 export const maxCompaniesField = z.number().int().positive().optional();
 
+/** Who a find-people request says to find: a bounded title list, or one sentence. */
+export const targetField = z.union([
+	z.array(z.string().trim().min(2).max(80)).min(1).max(20),
+	z.string().trim().min(3).max(300),
+]);
+
 export const peopleFindSchema = z.union([
-	z.strictObject({ runId: z.string().min(1), maxCompanies: maxCompaniesField }),
-	z.strictObject({ domains: domainsField, maxCompanies: maxCompaniesField }),
+	z.strictObject({
+		runId: z.string().min(1),
+		maxCompanies: maxCompaniesField,
+		target: targetField.optional(),
+	}),
+	z.strictObject({
+		domains: domainsField,
+		maxCompanies: maxCompaniesField,
+		target: targetField.optional(),
+		icpId: z.uuid().optional(),
+	}),
 ]);
 
 export const enrichSchema = z.strictObject({

@@ -46,6 +46,13 @@ const InstanceStatusSchema = z.object({
 			wroteProfile: z.boolean().nullish(),
 			status: z.string().nullish(),
 			roundReports: z.array(z.unknown()).nullish(),
+			unknownDomains: z.array(z.string()).nullish(),
+			companiesSearched: z.number().nullish(),
+			peopleVerified: z.number().nullish(),
+			peopleRoster: z.number().nullish(),
+			costDollars: z.number().nullish(),
+			mode: z.string().nullish(),
+			buyerSource: z.string().nullish(),
 		})
 		.nullish(),
 	error: z.unknown().nullish(),
@@ -126,7 +133,7 @@ export async function getRunCompanies(
 	if (query instanceof Response) return query;
 	const runRow = await callersRun(c, runId);
 	if (!runRow) return c.json({ error: "unknown run" }, 404);
-	const page = await companiesPage(c.env, runId, query);
+	const page = await companiesPage(c.env, runRow, query);
 	return c.json(
 		{ rows: page.rows, nextCursor: page.nextCursor, limit: query.limit },
 		200,

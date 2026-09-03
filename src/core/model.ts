@@ -9,6 +9,8 @@ import {
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
 import { recordModelCall } from "@/core/cost";
+import { EXA_FETCH_TIMEOUT_MS } from "@/core/providers/exa/http";
+import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const PROVIDER_NAME = "aigw";
 
@@ -59,10 +61,18 @@ function costFromResponseBody(body: unknown): number {
 	return parsed.success ? (parsed.data.usage?.cost ?? 0) : 0;
 }
 
+function isTimeoutError(error: unknown): boolean {
+	return (
+		error instanceof DOMException &&
+		(error.name === "AbortError" || error.name === "TimeoutError")
+	);
+}
+
 function isRetryableModelError(error: unknown): boolean {
 	return (
 		NoObjectGeneratedError.isInstance(error) ||
-		NoOutputGeneratedError.isInstance(error)
+		NoOutputGeneratedError.isInstance(error) ||
+		isTimeoutError(error)
 	);
 }
 
@@ -89,6 +99,7 @@ async function attemptStructured<T>(
 			headers: params.headers,
 			providerOptions: STRUCTURED_ROUTING,
 			include: { responseBody: true },
+			abortSignal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
 		});
 		recordModelCall(ledger, op, params.configuredId, {
 			headers: new Headers(result.response.headers),
@@ -110,8 +121,10 @@ async function attemptStructured<T>(
 
 /**
  * Runs one structured model call and retries once when the model returns
- * nothing usable. Returns `null` after a second failure instead of
- * throwing, so the caller can fall back to a safe default.
+ * nothing usable. A second empty reply resolves `null`, so the caller can
+ * fall back to a safe default; a second timeout throws
+ * `RetryableProviderError` instead, since a timeout means unknown, never
+ * empty, and the durable step's own retry must own it.
  */
 export async function generateStructured<T>(
 	params: StructuredCallParams<T>,
@@ -127,6 +140,9 @@ export async function generateStructured<T>(
 		return await attemptStructured(params, ledger, op);
 	} catch (secondError) {
 		if (!isRetryableModelError(secondError)) throw secondError;
+		if (isTimeoutError(secondError)) {
+			throw new RetryableProviderError("Model call timed out twice");
+		}
 		return null;
 	}
 }

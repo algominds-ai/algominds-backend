@@ -1,9 +1,7 @@
-import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { createAuth, startOnboarding } from "../src/auth";
-import { buildRunId, domainsScopeId } from "../src/http/jobs";
-import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
+import { buildRunId, onboardScopeId } from "../src/http/jobs";
 
 type StartedBatch = Parameters<Env["ONBOARD_ICP"]["createBatch"]>[0][number];
 
@@ -50,7 +48,7 @@ describe("an organization that names a domain begins onboarding", () => {
 
 		await startOnboarding(env, { id: "org-1", domain: "form3.tech" });
 
-		const scopeId = await domainsScopeId(["form3.tech"], "org-1");
+		const scopeId = await onboardScopeId({ domain: "form3.tech" }, "org-1");
 		expect(started[0]?.id).toBe(buildRunId("onboarding", scopeId));
 	});
 

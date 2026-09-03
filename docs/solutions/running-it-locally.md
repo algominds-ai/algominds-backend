@@ -1,50 +1,62 @@
-# What it takes to run this end to end
+# What a fresh deploy needs
 
-Every unit is tested and the vendors are verified live, but a full run through
-the deployed path needs two things that are not provisioned yet.
+Every unit is tested and the vendors are verified live. A fresh deploy needs
+three things: the two Hyperdrive configurations, the four secrets-store
+secrets, and one migration run against the production database.
 
-## Secrets — done
+## Hyperdrive
 
-`default_secrets_store` (`5ad6bd7de0494762a21914ec40d3e4da`) holds all five:
-`exa-api-key`, `apollo-api-key`, `findymail-api-key`, `cf-aig-token`,
-`api-bearer-token`. They exist both remotely and in the local store.
+`wrangler.jsonc` declares two Hyperdrive bindings against the same database,
+`HYPERDRIVE_CACHED` and `HYPERDRIVE_DIRECT` (caching disabled, used for
+dedupe reads). Both still carry the placeholder ids `<algo-cached-id>` and
+`<algo-direct-id>`. Create each with `wrangler hyperdrive create`, the exact
+commands are the comment above the `"hyperdrive"` block, and put the real ids
+in their place.
 
-**But the Vitest pool cannot see them.** Its Miniflare instance persists to a
-different directory than the Wrangler CLI, and `secretsStoreSecrets` only accepts
-`{store_id, secret_name}` — it points at a store, it cannot inject values. So a
-test that calls a real binding fails with `Secret "cf-aig-token" not found` even
-though the secret exists.
+## Secrets — four, in `default_secrets_store` (`5ad6bd7de0494762a21914ec40d3e4da`)
 
-This does not affect the test suite: every unit test injects a fake binding
-(`{ get: async () => "test-key" }`), which is the correct thing for a test to do.
-It only blocks a live run from inside Vitest.
+`exa-api-key`, `findymail-api-key`, `cf-aig-token`, `clay-api-key`. Create each
+with the `wrangler secrets-store secret create` command in `wrangler.jsonc`.
 
-## Database — not done
+**The Vitest pool cannot see them.** Its Miniflare instance persists to a
+different directory than the Wrangler CLI, and `secretsStoreSecrets` only
+accepts `{store_id, secret_name}` — it points at a store, it cannot inject
+values. So a test that calls a real binding fails with `Secret "cf-aig-token"
+not found` even though the secret exists. This does not affect the test
+suite: every unit test injects a fake binding (`{ get: async () => "test-key"
+}`), which is the correct thing for a test to do. It only blocks a live run
+from inside Vitest.
 
-`findCompanies` reads the ICP document and the 90-day exclusion set from
-Postgres, and the last step writes companies and evidence back. There is no
-database yet, so the Workflow fails at its first step.
+## Local development secrets
 
-Needed:
-1. A PlanetScale Postgres database.
-2. Two Hyperdrive configurations against it — one default, one with
-   `--caching-disabled` for the dedupe read. Hyperdrive does not invalidate its
-   cache on write, so a cached read after a write re-delivers companies just
-   stored.
-3. `DATABASE_URL` set, then `bunx drizzle-kit push` to create the four tables.
-4. The two real configuration ids in `wrangler.jsonc`, replacing the placeholders.
+Local development reads every secret and variable from `.env`; do not create a `.dev.vars`
+file. When `.dev.vars` exists, Wrangler stops reading `.env`, loads only `.dev.vars` as
+secrets, and the empty `vars` in `wrangler.jsonc` (`AI_GATEWAY_BASE_URL`, `MODEL_ROUTE_REASONING`,
+`MODEL_ROUTE_WORKER`, `CF_GATEWAY_ID`) win instead, so every model call fails with
+`TypeError: Invalid URL string.` in the synthesizer step. The server's first log line shows
+which file it loaded (`Using secrets defined in .env`).
 
-## What is proven without either
+## Database
+
+Run `bun run db:migrate` against the production `DATABASE_URL` once. That
+applies `drizzle/0000_baseline.sql`, which creates every table this Worker
+and its auth layer need. `wrangler dev` needs no separate step: it reads the
+local Postgres at `localhost:5432/algo` through the `localConnectionString`
+already set on both Hyperdrive bindings in `wrangler.jsonc`.
+
+## What is proven without a deploy
 
 - Every vendor call, against live APIs. See `vendor-probe-findings.md`.
 - The full chain end to end, calling vendors directly: an ICP search returned
   real seed fintech companies, a people search returned real decision makers with
   current employment, and a LinkedIn URL resolved to a deliverable address, for
   about $0.019 and one Findymail credit.
-- Every capability function, against injected fakes, across 202 tests.
+- Every capability function, against injected fakes, across the test suite.
+- The full local stack, including real bindings and a real database: `wrangler
+  dev` against the local Postgres above, migrated with `bun run db:migrate`.
 
-## What is not
+## What only a deploy proves
 
-The glue at runtime: real bindings resolving, Workflow steps persisting across
-a real engine, and Hyperdrive returning rows. That gap closes when the database
-lands, not before, and it is the right next step.
+Real Hyperdrive resolving against the production database, and Workflow steps
+persisting across Cloudflare's own engine rather than the local one `wrangler
+dev` runs. That gap closes on the first deploy, not before.

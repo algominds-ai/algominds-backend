@@ -86,12 +86,12 @@ function storedRow(name: string, description: string) {
 
 const companyRow = storedRow(
 	"Company",
-	"One company row as stored, with its id, domain, name and the vendor record it was found from.",
+	"One company row as stored, with its id, domain, name and the vendor record it was found from. For a people run this is instead its own run_company row: identity, mode, buyerSource, spendDollars, clayRecords, peopleVerified and peopleRoster, with the resolved company nested under `company`, or null when the domain never resolved.",
 );
 
 const personRow = storedRow(
 	"Person",
-	"One person row as stored, with its id, the company it belongs to, and its LinkedIn URL, name and title where known.",
+	"One person row as stored, with its id, the company it belongs to, and its LinkedIn URL, name and title where known. `data.status` is verified or roster.",
 );
 
 function pageResponse<Row extends z.ZodTypeAny>(row: Row) {
@@ -208,17 +208,32 @@ const findPeopleRoute = createRoute({
 	request: {
 		body: jsonBodyWithExamples(peopleFindSchema, {
 			"every company a run found": {
-				summary: "Search the companies of a finished companies run.",
-				value: { runId: "companies_8f1c2b4e_2026-08-29", maxCompanies: 25 },
-			},
-			"a list of domains you name": {
 				summary:
-					"Search companies you already hold, which must belong to one profile.",
-				value: { domains: ["acme.com", "widget.io"] },
+					"Search the companies of a finished companies run, naming who to find.",
+				value: {
+					runId: "companies_8f1c2b4e_2026-08-29",
+					target: ["VP Product"],
+				},
+			},
+			"a list of domains under a named profile": {
+				summary:
+					"Search domains you already hold, applying one profile and naming who to find.",
+				value: {
+					domains: ["acme.com"],
+					icpId: "8f1c2b4e-3a5d-4c6f-9b0a-1d2e3f4a5b6c",
+					target: "the product and growth leaders",
+				},
+			},
+			"a bare list of domains": {
+				summary:
+					"Search domains with no profile and no target: returns the senior roster.",
+				value: { domains: ["acme.com"] },
 			},
 		}),
 	},
-	responses: startRouteResponses("The referenced source run is unknown."),
+	responses: startRouteResponses(
+		"The referenced source run is unknown, or the referenced profile is unknown.",
+	),
 });
 
 const enrichRoute = createRoute({

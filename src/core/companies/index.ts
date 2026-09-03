@@ -11,6 +11,13 @@ import {
 	filterEntities,
 	groupRejectReasons,
 } from "@/core/companies/candidates";
+import {
+	applyEvidenceChecks,
+	demandsEvidenceProof,
+	toEvidenceRejects,
+	toGateRejects,
+	verifyEvidenceRows,
+} from "@/core/companies/evidence";
 import type {
 	CompanyRow,
 	GateOptions,
@@ -44,6 +51,7 @@ const {
 
 export type FindCompaniesOptions = {
 	icpId: string;
+	organizationId: string;
 	env: Env;
 	today: string;
 	freshnessDays?: number;
@@ -55,7 +63,11 @@ export type FindCompaniesOptions = {
 };
 
 export type FindCompaniesDeps = {
-	recentDomains: (env: Env, icpId: string, days: number) => Promise<string[]>;
+	recentDomains: (
+		env: Env,
+		organizationId: string,
+		days: number,
+	) => Promise<string[]>;
 	synthesize: (input: SynthesizeInput, env: Env) => Promise<SynthesizeResult>;
 	search: (
 		plan: SearchPlan,
@@ -97,17 +109,6 @@ export type FindCompaniesResult = {
 	feedback: string[];
 };
 
-function toGateRejects(
-	rows: readonly CompanyRow[],
-	rejects: readonly Reject[],
-): FindCompaniesReject[] {
-	return rejects.map((reject) => ({
-		domain: rows[reject.index]?.domain ?? null,
-		reason: reject.reason,
-		stage: "gate",
-	}));
-}
-
 function applyVerdicts(
 	keptRows: readonly CompanyRow[],
 	verdicts: readonly Verdict[],
@@ -137,42 +138,6 @@ function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
 	return groupRejectReasons(rejects);
 }
 
-function evidenceAges(
-	accepted: readonly CompanyRow[],
-	today: string,
-): number[] {
-	return accepted
-		.map((row) => row.evidenceDate)
-		.filter((date): date is string => date !== null)
-		.map((date) =>
-			Math.round((Date.parse(today) - Date.parse(date)) / 86_400_000),
-		)
-		.filter((age) => Number.isFinite(age))
-		.sort((left, right) => left - right);
-}
-
-/**
- * What the round's freshness demand actually bought: the window it asked for
- * and how old the pages it kept really were. The next round reads this and
- * decides for itself whether this market supplies fresher evidence or less.
- */
-function windowFeedback(
-	plan: SearchPlan,
-	accepted: readonly CompanyRow[],
-	today: string,
-): string[] {
-	if (plan.recencyDays === null) return [];
-	const ages = evidenceAges(accepted, today);
-	if (ages.length === 0) {
-		return [
-			`That round demanded a page no older than ${plan.recencyDays} days and kept nothing, so evidence that fresh may be scarce here.`,
-		];
-	}
-	return [
-		`That round demanded a page no older than ${plan.recencyDays} days and kept ${ages.length}, whose pages were ${ages.join(", ")} days old.`,
-	];
-}
-
 type RoundContext = {
 	icp: IcpDoc;
 	count: number;
@@ -186,6 +151,7 @@ type RoundOutcome = {
 	filterRejects: FindCompaniesReject[];
 	rows: CompanyRow[];
 	gateRejects: Reject[];
+	evidenceRejects: FindCompaniesReject[];
 	keptRows: CompanyRow[];
 	verdicts: Verdict[];
 	unseenCount: number;
@@ -225,20 +191,31 @@ async function runRound(
 		seenDomains: ctx.seenDomains,
 	});
 	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
+	const evidenceLedger = new CostLedger();
+	const evidenceChecked = demandsEvidenceProof(plan)
+		? await verifyEvidenceRows(candidates, opts.env, evidenceLedger)
+		: { kept: candidates, rejects: [], checks: {} };
+	applyEvidenceChecks(filtered.captures, evidenceChecked.checks);
 	const judged =
-		candidates.length > 0
-			? await deps.judge(ctx.icp, candidates, opts.env, plan.recency)
+		evidenceChecked.kept.length > 0
+			? await deps.judge(ctx.icp, evidenceChecked.kept, opts.env, plan.recency)
 			: { verdicts: [], ledger: new CostLedger() };
 	return {
 		plan,
 		rows: filtered.rows,
 		filterRejects: filtered.rejects,
 		gateRejects: gated.rejects,
-		keptRows: candidates,
+		evidenceRejects: toEvidenceRejects(candidates, evidenceChecked.rejects),
+		keptRows: evidenceChecked.kept,
 		verdicts: judged.verdicts,
 		unseenCount,
 		resultCount: searched.results.length,
-		ledger: CostLedger.merge(synthesized.ledger, searchLedger, judged.ledger),
+		ledger: CostLedger.merge(
+			synthesized.ledger,
+			searchLedger,
+			evidenceLedger,
+			judged.ledger,
+		),
 		captures: filtered.captures,
 	};
 }
@@ -276,7 +253,12 @@ function absorbRound(
 		outcome.verdicts,
 	);
 	return {
-		rejects: [...outcome.filterRejects, ...gateRejects, ...judgeRejects],
+		rejects: [
+			...outcome.filterRejects,
+			...gateRejects,
+			...outcome.evidenceRejects,
+			...judgeRejects,
+		],
 		accepted,
 	};
 }
@@ -369,10 +351,7 @@ async function runRounds(
 		const absorbed = absorbRound(outcome, input.seenDomains);
 		rejects.push(...absorbed.rejects);
 		companies.push(...absorbed.accepted);
-		feedback = [
-			...buildFeedback(absorbed.rejects),
-			...windowFeedback(outcome.plan, absorbed.accepted, opts.today),
-		];
+		feedback = buildFeedback(absorbed.rejects);
 
 		const decision = decideRound(companies.length, input.count, {
 			resultCount: outcome.resultCount,
@@ -416,7 +395,7 @@ export async function findCompanies(
 ): Promise<FindCompaniesResult> {
 	const known = await deps.recentDomains(
 		opts.env,
-		opts.icpId,
+		opts.organizationId,
 		SEEN_DOMAINS_WINDOW_DAYS,
 	);
 	const seenDomains = new Set(known.map(normalizeDomain));

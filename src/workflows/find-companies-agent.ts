@@ -105,12 +105,12 @@ export function agentSynthesize(
 export function agentRecentDomains(
 	step: WorkflowStep,
 	round: number,
-): (env: Env, icpId: string, days: number) => Promise<string[]> {
-	return (env, icpId, days) =>
+): (env: Env, organizationId: string, days: number) => Promise<string[]> {
+	return (env, organizationId, days) =>
 		step.do(
 			`round_${round}-recent-domains`,
 			config.stepConfig.databaseCall,
-			() => recentDomains(env, icpId, days),
+			() => recentDomains(env, organizationId, days),
 		);
 }
 
@@ -158,8 +158,8 @@ export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 	const lookupRecentDomains = agentRecentDomains(step, round);
 	const viaAgent = agentSearch({ step, round, remaining, today, seller });
 	return {
-		recentDomains: async (env, icpId, days) => {
-			const known = await lookupRecentDomains(env, icpId, days);
+		recentDomains: async (env, organizationId, days) => {
+			const known = await lookupRecentDomains(env, organizationId, days);
 			return [...known, ...accumulatedDomains];
 		},
 		synthesize: agentSynthesize(step, round),

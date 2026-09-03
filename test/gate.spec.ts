@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	excludedDomains,
 	seedExcludedDomains,
 	staleRejectReason,
 } from "../src/core/companies/candidates";
@@ -158,6 +159,34 @@ describe("gate — a profile page is not the company's own site", () => {
 		const result = gate(rows, [{}], { seenDomains: new Set() });
 
 		expect(result.kept).toEqual(rows);
+	});
+
+	it("rejects an Exa library record as not a company domain", () => {
+		const rows = [
+			companyRow({
+				domain: "exa.ai",
+				evidenceUrl: "https://exa.ai/library/organization/abc123",
+			}),
+		];
+
+		const result = gate(rows, [{}], { seenDomains: new Set() });
+
+		expect(result.kept).toEqual([]);
+		expect(result.rejects).toEqual([
+			{ index: 0, reason: "not-a-company-domain" },
+		]);
+	});
+});
+
+describe("gate — a directory host never re-poisons the next round's search", () => {
+	it("never sends a directory host as an excluded domain", () => {
+		const seen = new Set(["real.com", "exa.ai", "linkedin.com"]);
+
+		const excluded = excludedDomains([], seen);
+
+		expect(excluded).toContain("real.com");
+		expect(excluded).not.toContain("exa.ai");
+		expect(excluded).not.toContain("linkedin.com");
 	});
 });
 

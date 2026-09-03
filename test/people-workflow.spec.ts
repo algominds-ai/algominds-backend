@@ -1,42 +1,42 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
+import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
+import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { config } from "../src/config";
-import type {
-	FindPeopleResult,
-	PeopleCompany,
-	PersonCandidate,
-} from "../src/core/people";
-import type { IcpDoc } from "../src/core/synthesize";
+import { organization } from "../src/core/db/auth-schema";
+import { db, withConnection } from "../src/core/db/client";
+import { organizationForSlug } from "../src/core/db/organizations";
+import { findRun, openRun } from "../src/core/db/queries";
+import type { Evidence, Person } from "../src/core/db/schema";
+import {
+	company,
+	evidence,
+	person,
+	run,
+	runCompany,
+} from "../src/core/db/schema";
+import { resolveBuyer } from "../src/core/people/buyer";
+import { clampCompanies } from "../src/workflows/find-people";
+import type { CompanyLoopContext } from "../src/workflows/find-people-company";
+import {
+	runCompanies,
+	runOneCompany,
+} from "../src/workflows/find-people-company";
+import type { TargetCompany } from "../src/workflows/find-people-target";
 
-const icp: IcpDoc = {
-	description:
-		"fintech companies at seed stage in San Francisco with a small team",
-};
+const originalFetch = globalThis.fetch;
 
-let companySeq = 0;
-
-function testCompany(fields: {
-	domain: string;
-	name: string;
-	exaId?: string | null;
-}): PeopleCompany {
-	companySeq += 1;
-	return {
-		id: `company-${companySeq}`,
-		domain: fields.domain,
-		name: fields.name,
-		exaId: fields.exaId ?? null,
-	};
-}
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
 
 const SCOPES = [
-	"batches-test",
-	"no-people-test",
-	"domains-batches-test",
-	"unknown-run-test",
-	"people-found-test",
-	"known-people-test",
+	"people_workflow_unresolved_test",
+	"people_workflow_roster_test",
+	"people_workflow_spend_cap_test",
 ];
 
 async function terminateStartedRuns(): Promise<void> {
@@ -48,550 +48,1313 @@ async function terminateStartedRuns(): Promise<void> {
 
 afterEach(terminateStartedRuns);
 
-describe("FindPeopleWorkflow: runId", () => {
-	it("resolves companies for a companies runId, truncates them, and runs one step per batch of five", async () => {
-		const instanceId = "batches-test";
+type StepMocker = {
+	mockStepResult: (step: { name: string }, value: unknown) => Promise<void>;
+	mockStepError: (step: { name: string }, error: Error) => Promise<void>;
+};
+
+function bareCompany(domain: string): TargetCompany {
+	return { id: null, domain, name: null, linkedinUrl: null, icpId: null };
+}
+
+async function mockRunLevel(
+	m: StepMocker,
+	companies: TargetCompany[],
+): Promise<void> {
+	await m.mockStepResult(
+		{ name: "load-companies" },
+		{ companies, icpId: null, unknownDomains: [] },
+	);
+	await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
+	await m.mockStepResult({ name: "close-run" }, { closed: true });
+}
+
+const FindPeopleSummarySchema = z.object({
+	companiesSearched: z.number(),
+	peopleVerified: z.number(),
+	peopleRoster: z.number(),
+	costDollars: z.number(),
+	unknownDomains: z.array(z.string()),
+	capped: z.boolean(),
+	mode: z.enum(["roster", "profile", "target"]),
+	buyerSource: z.enum(["target", "captured", "description", "none"]),
+});
+
+async function summaryOf(
+	instance: Awaited<ReturnType<typeof introspectWorkflowInstance>>,
+): Promise<z.infer<typeof FindPeopleSummarySchema>> {
+	return FindPeopleSummarySchema.parse(await instance.getOutput());
+}
+
+describe("FindPeopleWorkflow: identity resolution", () => {
+	it("reports an unresolved domain without searching people", async () => {
+		const domain = "notacompany.example";
+		const instanceId = "people_workflow_unresolved_test";
 		const instance = await introspectWorkflowInstance(
 			testEnv.FIND_PEOPLE,
 			instanceId,
 		);
 		try {
-			const companies = Array.from({ length: 7 }, (_, i) =>
-				testCompany({ domain: `run-${i}.com`, name: `Run ${i}` }),
+			await instance.modify(async (m) => {
+				await mockRunLevel(m, [bareCompany(domain)]);
+				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
+				await m.mockStepResult(
+					{ name: `people-${domain}-identity` },
+					{ how: "unresolved", clayRecords: 0, costEntries: [] },
+				);
+				await m.mockStepResult({ name: `people-${domain}-unresolved` }, {});
+				await m.mockStepError(
+					{ name: `people-${domain}-create-company` },
+					new NonRetryableError(
+						"an unresolved domain must never reach create-company",
+					),
+				);
+				await m.mockStepError(
+					{ name: `people-${domain}-roster` },
+					new NonRetryableError(
+						"an unresolved domain must never search the roster",
+					),
+				);
+			});
+
+			await testEnv.FIND_PEOPLE.create({
+				id: instanceId,
+				params: { domains: [domain], organizationId: "org-1" },
+			});
+			await instance.waitForStatus("complete");
+
+			const output = await summaryOf(instance);
+			expect(output.unknownDomains).toEqual([domain]);
+			expect(output.companiesSearched).toBe(1);
+			expect(output.peopleRoster).toBe(0);
+			expect(output.peopleVerified).toBe(0);
+			expect(output.costDollars).toBe(0);
+			expect(output.capped).toBe(false);
+		} finally {
+			await instance.dispose();
+		}
+	});
+});
+
+describe("runOneCompany: an unresolved domain's Clay spend", () => {
+	it("banks the identity step's clay records and spend on the run_company row", async () => {
+		const domain = `unresolved-spend-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-unresolved-spend-${crypto.randomUUID()}`,
+			"people workflow unresolved spend test",
+		);
+		const runId = `people_unresolved_spend_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(
+					new Map([
+						[
+							`people-${domain}-identity`,
+							{
+								how: "unresolved",
+								clayRecords: 7,
+								costEntries: [
+									{ provider: "clay", op: "search", dollars: 0.03 },
+								],
+							},
+						],
+					]),
+				),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.unresolvedDomain).toBe(domain);
+			expect(result.costDollars).toBeCloseTo(0.03);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
 			);
-			const batchZero: FindPeopleResult = {
-				companies: [
-					{
-						domain: "run-0.com",
-						people: [],
-						apolloOnly: [],
-						reason: "no people found for this company",
-					},
-				],
-				searched: 5,
-				skippedCompanies: 0,
-				costDollars: 0.05,
-			};
-			const batchOne: FindPeopleResult = {
-				companies: [
-					{
-						domain: "run-5.com",
-						people: [],
-						apolloOnly: [],
-						reason: "no people found for this company",
-					},
-				],
-				searched: 2,
-				skippedCompanies: 0,
-				costDollars: 0.02,
-			};
+			expect(runCompanyRows[0]?.clayRecords).toBe(7);
+			expect(runCompanyRows[0]?.spendDollars).toBeCloseTo(0.03);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
 
+const rosterCandidate = {
+	id: 0,
+	name: "Riley Chen",
+	title: "VP Marketing",
+	company: "Google",
+	url: "https://linkedin.com/in/riley-chen-roster",
+	location: null,
+	since: null,
+	seenBy: ["clay:vp"],
+};
+
+describe("FindPeopleWorkflow: roster mode", () => {
+	it("returns a bare-domain senior roster without judging it", async () => {
+		const domain = "google.com";
+		const instanceId = "people_workflow_roster_test";
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_PEOPLE,
+			instanceId,
+		);
+		try {
 			await instance.modify(async (m) => {
+				await mockRunLevel(m, [bareCompany(domain)]);
+				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
 				await m.mockStepResult(
-					{ name: "load-companies" },
-					{ companies, icpId: "icp-1", unknownDomains: [] },
-				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
-				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
+					{ name: `people-${domain}-identity` },
 					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: 0,
+						how: "domain",
+						identifier: domain,
+						name: "Google",
+						clayRecords: 1,
+						costEntries: [],
 					},
 				);
-				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "people-batch-1" }, batchOne);
-				await m.mockStepResult({ name: "save-people" }, {});
+				await m.mockStepResult(
+					{ name: `people-${domain}-create-company` },
+					"company-1",
+				);
+				await m.mockStepResult(
+					{ name: `people-${domain}-roster` },
+					{ candidates: [rosterCandidate], clayRecords: 5, costEntries: [] },
+				);
+				await m.mockStepResult({ name: `people-${domain}-save` }, { count: 1 });
+				await m.mockStepResult(
+					{ name: `people-${domain}-spend` },
+					{ total: 0 },
+				);
+				await m.mockStepError(
+					{ name: `people-${domain}-select` },
+					new NonRetryableError("roster mode must never call the selector"),
+				);
 			});
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-1_test", organizationId: "org-1" },
+				params: { domains: [domain], organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 
-			const output = await instance.getOutput();
-			expect(output).toEqual({
-				searched: 7,
-				skippedCompanies: 0,
-				peopleFound: 0,
-				costDollars: 0.05 + 0.02,
-				unknownDomains: [],
-				knownDomains: [],
-				capped: false,
-			});
+			const output = await summaryOf(instance);
+			expect(output.mode).toBe("roster");
+			expect(output.buyerSource).toBe("none");
+			expect(output.peopleRoster).toBe(1);
+			expect(output.peopleVerified).toBe(0);
+			expect(output.costDollars).toBe(0);
+			expect(output.unknownDomains).toEqual([]);
 		} finally {
 			await instance.dispose();
 		}
 	});
 });
 
-describe("FindPeopleWorkflow: an empty run", () => {
-	it("resolves a run with no companies and completes without a person-batch step", async () => {
-		const instanceId = "no-people-test";
+describe("FindPeopleWorkflow: the company cap", () => {
+	it("uses one cap in every mode, regardless of the caller's own number", () => {
+		const companies = Array.from({ length: 101 }, (_, i) =>
+			bareCompany(`company-${i}.example`),
+		);
+
+		expect(clampCompanies(companies, undefined)).toHaveLength(
+			config.limits.maxCompaniesPerPeopleRun,
+		);
+		expect(clampCompanies(companies, 5000)).toHaveLength(
+			config.limits.maxCompaniesPerPeopleRun,
+		);
+		expect(clampCompanies(companies, 3)).toHaveLength(3);
+	});
+});
+
+describe("FindPeopleWorkflow: the run spend ceiling", () => {
+	it("stops before new work at the spend ceiling", async () => {
+		const domainA = "spend-a.example";
+		const domainB = "spend-b.example";
+		const instanceId = "people_workflow_spend_cap_test";
 		const instance = await introspectWorkflowInstance(
 			testEnv.FIND_PEOPLE,
 			instanceId,
 		);
 		try {
 			await instance.modify(async (m) => {
+				await mockRunLevel(m, [bareCompany(domainA), bareCompany(domainB)]);
+				await m.mockStepResult({ name: `people-${domainA}-open` }, "rc-a");
 				await m.mockStepResult(
-					{ name: "load-companies" },
-					{ companies: [], icpId: "icp-empty", unknownDomains: [] },
-				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
-				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
+					{ name: `people-${domainA}-identity` },
 					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: 0,
+						how: "domain",
+						identifier: domainA,
+						name: "Spend A",
+						clayRecords: 1,
+						costEntries: [],
 					},
 				);
-				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "save-people" }, {});
+				await m.mockStepResult(
+					{ name: `people-${domainA}-create-company` },
+					"company-a",
+				);
+				await m.mockStepResult(
+					{ name: `people-${domainA}-roster` },
+					{ candidates: [rosterCandidate], clayRecords: 5, costEntries: [] },
+				);
+				await m.mockStepResult(
+					{ name: `people-${domainA}-save` },
+					{ count: 1 },
+				);
+				await m.mockStepResult(
+					{ name: `people-${domainA}-spend` },
+					{ total: config.spend.perRunDollars },
+				);
+				await m.mockStepError(
+					{ name: `people-${domainB}-open` },
+					new NonRetryableError(
+						"a run at the spend ceiling must never touch the next domain",
+					),
+				);
 			});
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-empty_test", organizationId: "org-1" },
+				params: { domains: [domainA, domainB], organizationId: "org-1" },
 			});
 			await instance.waitForStatus("complete");
 
-			const output = await instance.getOutput();
-			expect(output).toEqual({
-				searched: 0,
-				skippedCompanies: 0,
-				peopleFound: 0,
-				costDollars: 0,
-				unknownDomains: [],
-				knownDomains: [],
-				capped: false,
-			});
+			const output = await summaryOf(instance);
+			expect(output.capped).toBe(true);
+			expect(output.companiesSearched).toBe(1);
+			expect(output.costDollars).toBe(config.spend.perRunDollars);
 		} finally {
 			await instance.dispose();
 		}
 	});
 });
 
-describe("FindPeopleWorkflow: domains and errors", () => {
-	it("resolves companies for a domains request and reports the domain that named no company", async () => {
-		const instanceId = "domains-batches-test";
+describe("FindPeopleWorkflow: a step that throws after the run opens", () => {
+	it("leaves the run row errored, with finished_at set, instead of running forever", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-close-errored-${crypto.randomUUID()}`,
+			"people workflow close errored test",
+		);
+		const domain = `close-errored-${crypto.randomUUID()}.example`;
+		const instanceId = `people_close_errored_${crypto.randomUUID()}`;
 		const instance = await introspectWorkflowInstance(
 			testEnv.FIND_PEOPLE,
 			instanceId,
 		);
 		try {
-			const target = testCompany({ domain: "target.com", name: "Target Co" });
-			const batchZero: FindPeopleResult = {
-				companies: [
-					{
-						domain: "target.com",
-						people: [],
-						apolloOnly: [],
-						reason: "no people found for this company",
-					},
-				],
-				searched: 1,
-				skippedCompanies: 0,
-				costDollars: 0.01,
-			};
-
 			await instance.modify(async (m) => {
 				await m.mockStepResult(
 					{ name: "load-companies" },
 					{
-						companies: [target],
-						icpId: "icp-domains",
-						unknownDomains: ["missing.com"],
-					},
-				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
-				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
-					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: 0,
-					},
-				);
-				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "save-people" }, {});
-			});
-
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: {
-					domains: ["target.com", "missing.com"],
-					organizationId: "org-1",
-				},
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await instance.getOutput();
-			expect(output).toEqual({
-				searched: 1,
-				skippedCompanies: 0,
-				peopleFound: 0,
-				costDollars: 0.01,
-				unknownDomains: ["missing.com"],
-				knownDomains: [],
-				capped: false,
-			});
-		} finally {
-			await instance.dispose();
-		}
-	});
-
-	it("errors rather than completing when the named run was never opened", async () => {
-		const instanceId = "unknown-run-test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
-		);
-		try {
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: {
-					runId: `companies_never-opened-${instanceId}`,
-					organizationId: "org-1",
-				},
-			});
-			await instance.waitForStatus("errored");
-		} finally {
-			await instance.dispose();
-		}
-	});
-});
-
-describe("FindPeopleWorkflow: skipping companies with already-known people", () => {
-	it("excludes a company already known and reports it separately from a truncated one", async () => {
-		const instanceId = "known-people-test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
-		);
-		try {
-			const known = testCompany({ domain: "known-co.com", name: "Known Co" });
-			const fresh = Array.from({ length: 5 }, (_, i) =>
-				testCompany({ domain: `fresh-${i}.com`, name: `Fresh ${i}` }),
-			);
-			const theOnlyMockedBatch: FindPeopleResult = {
-				companies: fresh.map((c) => ({
-					domain: c.domain,
-					people: [],
-					apolloOnly: [],
-					reason: "no people found for this company",
-				})),
-				searched: 5,
-				skippedCompanies: 0,
-				costDollars: 0.05,
-			};
-
-			await instance.modify(async (m) => {
-				await m.mockStepResult(
-					{ name: "load-companies" },
-					{
-						companies: [known, ...fresh],
-						icpId: "icp-1",
+						companies: [bareCompany(domain)],
+						icpId: null,
 						unknownDomains: [],
 					},
 				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
+				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
+				await m.mockStepError(
+					{ name: `people-${domain}-identity` },
+					new NonRetryableError(
+						"a step failure must close the run, not leave it running",
+					),
 				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
-					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: 0,
-					},
-				);
-				await m.mockStepResult({ name: "known-people" }, [known.domain]);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "people-batch-0" }, theOnlyMockedBatch);
-				await m.mockStepResult({ name: "save-people" }, {});
 			});
 
 			await testEnv.FIND_PEOPLE.create({
 				id: instanceId,
-				params: { runId: "companies_icp-1_test", organizationId: "org-1" },
+				params: { domains: [domain], organizationId: org.id },
 			});
-			await instance.waitForStatus("complete");
+			await instance.waitForStatus("errored");
 
-			const output = await instance.getOutput();
-			expect(output).toEqual({
-				searched: 5,
-				skippedCompanies: 0,
-				peopleFound: 0,
-				costDollars: 0.05,
-				unknownDomains: [],
-				knownDomains: ["known-co.com"],
-				capped: false,
-			});
+			const row = await findRun(testEnv, instanceId);
+			expect(row?.status).toBe("errored");
+			expect(row?.finishedAt).toBeInstanceOf(Date);
 		} finally {
 			await instance.dispose();
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, instanceId));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, org.id));
+			});
 		}
 	});
 });
 
-function testPerson(fullName: string): PersonCandidate {
+const CLAY_HEADERS = { "content-type": "application/json" };
+
+function clayResponse(body: unknown): Response {
+	return new Response(JSON.stringify(body), {
+		status: 200,
+		headers: CLAY_HEADERS,
+	});
+}
+
+function stubClayFetch(
+	rows: {
+		name: string;
+		url: string;
+		title: string;
+		company: string;
+	}[],
+): void {
+	let call = 0;
+	globalThis.fetch = async (input) => {
+		call += 1;
+		const path = new URL(String(input)).pathname;
+		if (path === "/public/v0/search/filters-mode") {
+			return clayResponse({ search_id: `search-${call}` });
+		}
+		return clayResponse({
+			data: rows.map((row) => ({
+				name: row.name,
+				url: row.url,
+				latest_experience_title: row.title,
+				latest_experience_company: row.company,
+				latest_experience_start_date: null,
+				location: null,
+			})),
+			has_more: false,
+			period_quota: { used: rows.length },
+		});
+	};
+}
+
+async function cleanupTargetRun(
+	organizationId: string,
+	runId: string,
+): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		const runCompanyRows = await connection
+			.select()
+			.from(runCompany)
+			.where(eq(runCompany.runId, runId));
+		const runCompanyIds = runCompanyRows.map((row) => row.id);
+		if (runCompanyIds.length > 0) {
+			await connection
+				.delete(evidence)
+				.where(inArray(evidence.subjectId, runCompanyIds));
+		}
+		await connection
+			.delete(person)
+			.where(eq(person.organizationId, organizationId));
+		await connection.delete(runCompany).where(eq(runCompany.runId, runId));
+		await connection
+			.delete(company)
+			.where(eq(company.organizationId, organizationId));
+		await connection.delete(run).where(eq(run.id, runId));
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, organizationId));
+	});
+}
+
+const CONFIRMED_VERDICT = {
+	verdict: "CONFIRMED",
+	evidence_url: "https://verifytarget.example/team",
+	evidence_quote: "Jordan Blake leads sales as VP Sales.",
+	evidence_kind: "first_party",
+	confidence: 0.9,
+};
+
+const UNKNOWN_VERDICT = {
+	verdict: "UNKNOWN",
+	evidence_url: null,
+	evidence_quote: null,
+	evidence_kind: null,
+	confidence: 0.1,
+};
+
+const CONTRADICTED_VERDICT = {
+	verdict: "CONTRADICTED",
+	evidence_url: null,
+	evidence_quote: null,
+	evidence_kind: null,
+	confidence: 0.2,
+};
+
+const AGGREGATOR_CONFIRMED_VERDICT = {
+	verdict: "CONFIRMED",
+	evidence_url: "https://peoplesite.example/jordan-blake",
+	evidence_quote: "Jordan Blake — VP Sales",
+	evidence_kind: "aggregator",
+	confidence: 0.5,
+};
+
+function targetCandidate(
+	id: number,
+	name: string,
+	title: string,
+	url: string,
+): {
+	id: number;
+	name: string;
+	title: string;
+	company: string;
+	url: string;
+	location: null;
+	since: null;
+	seenBy: string[];
+} {
 	return {
-		fullName,
-		linkedinUrl: `https://linkedin.com/in/${fullName.toLowerCase()}`,
-		title: "VP of Sales",
-		rawTitle: "VP of Sales",
+		id,
+		name,
+		title,
+		company: "Verify Target Co",
+		url,
 		location: null,
-		employment: [],
-		entity: {
-			fullName,
-			currentTitle: "VP of Sales",
-			currentCompany: null,
-			location: null,
-		},
-		result: {
-			id: null,
-			url: `https://linkedin.com/in/${fullName.toLowerCase()}`,
-			title: fullName,
-			publishedDate: null,
-			score: null,
+		since: null,
+		seenBy: ["clay:c-suite"],
+	};
+}
+
+function fakeWorkflowStep(overrides: Map<string, unknown>): WorkflowStep {
+	async function runNamed(
+		name: string,
+		second: unknown,
+		third: unknown,
+	): Promise<unknown> {
+		if (overrides.has(name)) {
+			const value = overrides.get(name);
+			if (value instanceof Error) throw value;
+			return value;
+		}
+		const callback = typeof second === "function" ? second : third;
+		if (typeof callback !== "function") {
+			throw new Error(`fake step: no callback for ${name}`);
+		}
+		const ctx: WorkflowStepContext = {
+			step: { name, count: 0 },
+			attempt: 1,
+			config: {},
+		};
+		return callback(ctx);
+	}
+	return {
+		do: runNamed,
+		sleep: async () => undefined,
+		sleepUntil: async () => undefined,
+		waitForEvent: async () => {
+			throw new Error("fake step: waitForEvent not implemented");
 		},
 	};
 }
 
-describe("FindPeopleWorkflow: the summary output", () => {
-	it("counts every person found across companies, without carrying the row arrays", async () => {
-		const instanceId = "people-found-test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
-		);
-		try {
-			const companies = [
-				testCompany({ domain: "one.com", name: "One Co" }),
-				testCompany({ domain: "two.com", name: "Two Co" }),
-			];
-			const batchZero: FindPeopleResult = {
-				companies: [
+function targetRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
 					{
-						domain: "one.com",
-						people: [testPerson("Jane Doe"), testPerson("Jo Roe")],
-						apolloOnly: [],
-						reason: null,
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
 					},
 					{
-						domain: "two.com",
-						people: [testPerson("Sam Lee")],
-						apolloOnly: [],
-						reason: null,
+						candidate: targetCandidate(
+							1,
+							"Casey Doe",
+							"Director Sales",
+							"https://linkedin.com/in/casey-doe",
+						),
+						basis: "inferred_workflow_owner",
 					},
 				],
-				searched: 2,
-				skippedCompanies: 0,
-				costDollars: 0.02,
-			};
-
-			await instance.modify(async (m) => {
-				await m.mockStepResult(
-					{ name: "load-companies" },
-					{ companies, icpId: "icp-1", unknownDomains: [] },
-				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
-				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
-					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: 0,
-					},
-				);
-				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "save-people" }, {});
-			});
-
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: { runId: "companies_icp-1_test", organizationId: "org-1" },
-			});
-			await instance.waitForStatus("complete");
-
-			const output = await instance.getOutput();
-			expect(output).toEqual({
-				searched: 2,
-				skippedCompanies: 0,
-				peopleFound: 3,
-				costDollars: 0.02,
-				unknownDomains: [],
-				knownDomains: [],
-				capped: false,
-			});
-		} finally {
-			await instance.dispose();
-		}
-	});
-});
-
-describe("FindPeopleWorkflow: the per-run spend ceiling", () => {
-	it("counts what the plan cost against the ceiling, not only what the batches cost", async () => {
-		const instanceId = "people-plan-ceiling-test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
-		);
-		try {
-			const companies = Array.from({ length: 10 }, (_, i) =>
-				testCompany({ domain: `plan-co-${i}.com`, name: `Plan Co ${i}` }),
-			);
-			const planCost = config.spend.perRunDollars;
-			const batchZero: FindPeopleResult = {
-				companies: companies.slice(0, 5).map((company) => ({
-					domain: company.domain,
-					people: [],
-					apolloOnly: [],
-					reason: null,
-				})),
-				searched: 5,
-				skippedCompanies: 0,
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
 				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: CONFIRMED_VERDICT },
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-quote`,
+			{ found: true, reason: "found", costEntries: [] },
+		],
+		[`people-${domain}-verify-1-start`, { id: "agent-run-1" }],
+		[
+			`people-${domain}-verify-1-poll-1`,
+			{
+				run: { status: "completed", output: UNKNOWN_VERDICT },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+async function assertVerifiedTargetRun(
+	organizationId: string,
+	runId: string,
+): Promise<void> {
+	const storedPeople = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection
+				.select()
+				.from(person)
+				.where(eq(person.organizationId, organizationId)),
+	);
+	expect(
+		storedPeople.filter(
+			(row: Person) =>
+				row.linkedinUrl === "https://linkedin.com/in/jordan-blake",
+		),
+	).toHaveLength(1);
+	expect(
+		storedPeople.some(
+			(row: Person) => row.linkedinUrl === "https://linkedin.com/in/casey-doe",
+		),
+	).toBe(false);
+
+	const runCompanyRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection.select().from(runCompany).where(eq(runCompany.runId, runId)),
+	);
+	const runCompanyRow = runCompanyRows[0];
+	if (!runCompanyRow) throw new Error("expected a run_company row");
+
+	const evidenceRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection
+				.select()
+				.from(evidence)
+				.where(eq(evidence.subjectId, runCompanyRow.id)),
+	);
+	const kinds = evidenceRows.map((row: Evidence) => row.kind);
+	expect(kinds.filter((kind: string) => kind === "identity")).toHaveLength(2);
+	expect(kinds.filter((kind: string) => kind === "roster")).toHaveLength(16);
+	expect(kinds).toContain("select");
+	expect(kinds.filter((kind: string) => kind === "verify-start")).toHaveLength(
+		2,
+	);
+	expect(kinds.filter((kind: string) => kind === "verify-poll")).toHaveLength(
+		2,
+	);
+	const quoteRows = evidenceRows.filter(
+		(row: Evidence) => row.kind === "verify-quote",
+	);
+	expect(quoteRows).toHaveLength(1);
+	expect(JSON.parse(quoteRows[0]?.value ?? "")).toEqual({
+		url: "https://verifytarget.example/team",
+		found: true,
+		reason: "found",
+	});
+}
+
+describe("FindPeopleWorkflow: a target run", () => {
+	it("stores only verified target picks and all replies", async () => {
+		const domain = `verify-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-verify-${crypto.randomUUID()}`,
+			"people workflow verify test",
+		);
+		const runId = `people_verify_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+				{
+					name: "Casey Doe",
+					url: "https://linkedin.com/in/casey-doe",
+					title: "Director Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(targetRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
 			};
 
-			await instance.modify(async (m) => {
-				await m.mockStepResult(
-					{ name: "load-companies" },
-					{ companies, icpId: "icp-1", unknownDomains: [] },
-				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
-				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
-					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: planCost,
-					},
-				);
-				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "save-people" }, {});
-			});
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
 
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: {
-					runId: "companies_icp-1_plan-ceiling",
-					organizationId: "org-1",
-				},
-			});
-			await instance.waitForStatus("complete");
+			expect(result.outcome.verified).toBe(1);
+			expect(result.outcome.roster).toBe(0);
+			expect(result.outcome.unresolvedDomain).toBeNull();
 
-			const output = await instance.getOutput();
-			expect(output).toMatchObject({
-				searched: 5,
-				capped: true,
-				costDollars: planCost + 0.01,
-			});
+			await assertVerifiedTargetRun(org.id, runId);
 		} finally {
-			await instance.dispose();
+			await cleanupTargetRun(org.id, runId);
 		}
 	});
 });
 
-describe("FindPeopleWorkflow: a batch that crosses the ceiling", () => {
-	it("stops after the batch that crossed the ceiling and reports the run as capped", async () => {
-		const instanceId = "people-spend-ceiling-test";
-		const instance = await introspectWorkflowInstance(
-			testEnv.FIND_PEOPLE,
-			instanceId,
+function contradictedRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: CONTRADICTED_VERDICT },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a contradicted verdict", () => {
+	it("stores no person for a candidate the agent contradicts", async () => {
+		const domain = `contradicted-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-contradicted-${crypto.randomUUID()}`,
+			"people workflow contradicted test",
 		);
+		const runId = `people_contradicted_${crypto.randomUUID()}`;
 		try {
-			const companies = Array.from({ length: 10 }, (_, i) =>
-				testCompany({ domain: `co-${i}.com`, name: `Co ${i}` }),
-			);
-			const overTheCeiling = config.spend.perRunDollars + 0.01;
-			const batchZero: FindPeopleResult = {
-				companies: companies.slice(0, 5).map((company) => ({
-					domain: company.domain,
-					people: [],
-					apolloOnly: [],
-					reason: null,
-				})),
-				searched: 5,
-				skippedCompanies: 0,
-				costDollars: overTheCeiling,
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(contradictedRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
 			};
 
-			await instance.modify(async (m) => {
-				await m.mockStepResult(
-					{ name: "load-companies" },
-					{ companies, icpId: "icp-1", unknownDomains: [] },
-				);
-				await m.mockStepResult(
-					{ name: "load-icp" },
-					{ doc: icp, organizationId: "org-1" },
-				);
-				await m.mockStepResult(
-					{ name: "people-plan" },
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(0);
+			const storedPeople = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(person)
+						.where(eq(person.organizationId, org.id)),
+			);
+			expect(storedPeople).toHaveLength(0);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function pollErrorRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
 					{
-						titles: ["VP of Sales"],
-						userLocation: null,
-						costDollars: 0,
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
 					},
-				);
-				await m.mockStepResult({ name: "known-people" }, []);
-				await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
-				await m.mockStepResult({ name: "close-run" }, { id: "x" });
-				await m.mockStepResult({ name: "people-batch-0" }, batchZero);
-				await m.mockStepResult({ name: "save-people" }, {});
-			});
+					{
+						candidate: targetCandidate(
+							1,
+							"Casey Doe",
+							"Director Sales",
+							"https://linkedin.com/in/casey-doe",
+						),
+						basis: "inferred_workflow_owner",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			new NonRetryableError("verify agent run exhausted its poll budget"),
+		],
+		[`people-${domain}-verify-1-start`, { id: "agent-run-1" }],
+		[
+			`people-${domain}-verify-1-poll-1`,
+			{
+				run: { status: "completed", output: CONFIRMED_VERDICT },
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-1-quote`,
+			{ found: true, reason: "found", costEntries: [] },
+		],
+	]);
+}
 
-			await testEnv.FIND_PEOPLE.create({
-				id: instanceId,
-				params: { runId: "companies_icp-1_spend", organizationId: "org-1" },
+describe("FindPeopleWorkflow: a pick whose poll step fails", () => {
+	it("drops that pick, keeps the company's other picks, and lets the run continue to the next company", async () => {
+		const domainA = `poll-error-a-${crypto.randomUUID()}.example`;
+		const domainB = `poll-error-b-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-poll-error-${crypto.randomUUID()}`,
+			"people workflow poll error test",
+		);
+		const runId = `people_poll_error_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
 			});
-			await instance.waitForStatus("complete");
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
 
-			expect(await instance.getOutput()).toEqual({
-				searched: 5,
-				skippedCompanies: 0,
-				peopleFound: 0,
-				costDollars: overTheCeiling,
-				unknownDomains: [],
-				knownDomains: [],
-				capped: true,
+			const overrides = new Map<string, unknown>([
+				...pollErrorRunOverrides(domainA),
+				[
+					`people-${domainB}-select`,
+					{ picks: [], droppedIds: [], reply: { picks: [] }, costDollars: 0 },
+				],
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(overrides),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runCompanies(
+				ctx,
+				[bareCompany(domainA), bareCompany(domainB)],
+				0,
+			);
+
+			expect(result.companiesSearched).toBe(2);
+			expect(result.peopleVerified).toBe(1);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			const domainARow = runCompanyRows.find((row) => row.domain === domainA);
+			if (!domainARow) {
+				throw new Error("expected a run_company row for the failing domain");
+			}
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidence)
+						.where(eq(evidence.subjectId, domainARow.id)),
+			);
+			expect(evidenceRows.some((row) => row.kind === "verify-error")).toBe(
+				true,
+			);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+const UNKNOWN_VERDICT_WITH_URL = {
+	verdict: "UNKNOWN",
+	evidence_url: "https://verifytarget.example/unclear",
+	evidence_quote: "an ambiguous mention of the role",
+	evidence_kind: null,
+	confidence: 0.3,
+};
+
+function unknownVerdictWithUrlOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: UNKNOWN_VERDICT_WITH_URL },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+async function evidenceRowsForRun(runId: string): Promise<Evidence[]> {
+	const runCompanyRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection.select().from(runCompany).where(eq(runCompany.runId, runId)),
+	);
+	const runCompanyRow = runCompanyRows[0];
+	if (!runCompanyRow) throw new Error("expected a run_company row");
+	return withConnection(testEnv, "direct", db, (connection) =>
+		connection
+			.select()
+			.from(evidence)
+			.where(eq(evidence.subjectId, runCompanyRow.id)),
+	);
+}
+
+describe("FindPeopleWorkflow: an unknown verdict's reported URL", () => {
+	it("keeps the agent's reported evidence_url on the stored verdict even though the pick is not verified", async () => {
+		const domain = `unknown-url-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-unknown-url-${crypto.randomUUID()}`,
+			"people workflow unknown url test",
+		);
+		const runId = `people_unknown_url_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(unknownVerdictWithUrlOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+			expect(result.outcome.verified).toBe(0);
+
+			const evidenceRows = await evidenceRowsForRun(runId);
+			const pollRow = evidenceRows.find((row) => row.kind === "verify-poll");
+			if (!pollRow) throw new Error("expected a verify-poll evidence row");
+			expect(JSON.parse(pollRow.value ?? "").evidence_url).toBe(
+				UNKNOWN_VERDICT_WITH_URL.evidence_url,
+			);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function stubClayRejectFetch(): { runCalls: number } {
+	const calls = { runCalls: 0 };
+	globalThis.fetch = async (input) => {
+		const path = new URL(String(input)).pathname;
+		if (path === "/public/v0/search/filters-mode") {
+			return clayResponse({ search_id: "search-rejected" });
+		}
+		calls.runCalls += 1;
+		return new Response(
+			JSON.stringify({ error: "invalid company_identifier" }),
+			{ status: 400, headers: CLAY_HEADERS },
+		);
+	};
+	return calls;
+}
+
+describe("FindPeopleWorkflow: a Clay-rejected domain", () => {
+	it("writes identity: unresolved and lists the domain as unknown, with no roster call", async () => {
+		const domain = "notacompany.example";
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-reject-${crypto.randomUUID()}`,
+			"people workflow reject test",
+		);
+		const runId = `people_reject_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			const calls = stubClayRejectFetch();
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(new Map()),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runCompanies(ctx, [bareCompany(domain)], 0);
+
+			expect(result.unknownDomains).toEqual([domain]);
+			expect(result.companiesSearched).toBe(1);
+			expect(result.peopleVerified).toBe(0);
+			expect(result.peopleRoster).toBe(0);
+			expect(calls.runCalls).toBe(1);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			expect(runCompanyRows).toHaveLength(1);
+			expect(runCompanyRows[0]?.identity).toBe("unresolved");
+			expect(runCompanyRows[0]?.companyId).toBeNull();
+
+			const companyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(company)
+						.where(eq(company.organizationId, org.id)),
+			);
+			expect(companyRows).toHaveLength(0);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function wrongCompanyRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: AGGREGATOR_CONFIRMED_VERDICT },
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-index`,
+			{
+				found: true,
+				employer: "A Totally Different Company",
+				reply: "{}",
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-agree`,
+			{
+				label: "DIFFERENT",
+				reply: { employer: "DIFFERENT" },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
+	it("does not verify a candidate the second opinion says works at a different company", async () => {
+		const domain = `wrong-company-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-wrong-company-${crypto.randomUUID()}`,
+			"people workflow wrong company test",
+		);
+		const runId = `people_wrong_company_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(wrongCompanyRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(0);
+			const storedPeople = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(person)
+						.where(eq(person.organizationId, org.id)),
+			);
+			expect(storedPeople).toHaveLength(0);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			const runCompanyRow = runCompanyRows[0];
+			if (!runCompanyRow) throw new Error("expected a run_company row");
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidence)
+						.where(eq(evidence.subjectId, runCompanyRow.id)),
+			);
+			const agreeRow = evidenceRows.find((row) => row.kind === "verify-agree");
+			if (!agreeRow) throw new Error("expected verify-agree evidence");
+			expect(JSON.parse(agreeRow.value)).toEqual({
+				employer: "DIFFERENT",
 			});
 		} finally {
-			await instance.dispose();
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function nullSelectRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{ picks: [], droppedIds: [], reply: null, costDollars: 0 },
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a null selector reply", () => {
+	it("picks nobody but still records one select evidence row", async () => {
+		const domain = `null-select-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-null-select-${crypto.randomUUID()}`,
+			"people workflow null select test",
+		);
+		const runId = `people_null_select_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(nullSelectRunOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(0);
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			const runCompanyRow = runCompanyRows[0];
+			if (!runCompanyRow) throw new Error("expected a run_company row");
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidence)
+						.where(eq(evidence.subjectId, runCompanyRow.id)),
+			);
+			const selectRows = evidenceRows.filter((row) => row.kind === "select");
+			expect(selectRows).toHaveLength(1);
+			expect(selectRows[0]?.value).toBe("null");
+		} finally {
+			await cleanupTargetRun(org.id, runId);
 		}
 	});
 });

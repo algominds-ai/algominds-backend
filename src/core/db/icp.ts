@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { DbEnv } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	IcpConnection,
@@ -8,7 +8,7 @@ import type {
 } from "@/core/db/queries";
 import type { Icp, NewIcp } from "@/core/db/schema";
 import { icp, run } from "@/core/db/schema";
-import type { IcpDoc, IcpSeller } from "@/core/synthesize";
+import type { IcpBuyer, IcpDoc, IcpSeller } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 
 export async function loadIcp(
@@ -16,18 +16,16 @@ export async function loadIcp(
 	icpId: string,
 	buildDb: DbFactory<IcpConnection> = db,
 ): Promise<Icp | undefined> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select()
-		.from(icp)
-		.where(eq(icp.id, icpId))
-		.limit(1);
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection.select().from(icp).where(eq(icp.id, icpId)).limit(1),
+	);
 	return rows[0];
 }
 
 export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 	description: string;
 	seller?: IcpSeller | null;
+	buyer?: IcpBuyer | null;
 };
 
 /** Inserts the profile and returns the stored row, on whichever connection the caller is already inside. */
@@ -38,6 +36,7 @@ async function insertIcp(
 	const doc: IcpDoc = IcpDocSchema.parse({
 		description: input.description,
 		seller: input.seller ?? null,
+		buyer: input.buyer ?? null,
 	});
 	const rows = await connection
 		.insert(icp)
@@ -56,19 +55,24 @@ export async function saveOnboardedIcp(
 	env: DbEnv,
 	input: NewIcpInput & { runId: string; costDollars: number },
 ): Promise<string> {
-	return db(env, "cached").transaction(async (tx) => {
-		const row = await insertIcp(tx, input);
-		await tx
-			.update(run)
-			.set({
-				status: "complete",
-				costDollars: input.costDollars,
-				icpId: row.id,
-				finishedAt: new Date(),
-			})
-			.where(eq(run.id, input.runId));
-		return row.id;
-	});
+	const connection = db(env, "cached");
+	try {
+		return await connection.transaction(async (tx) => {
+			const row = await insertIcp(tx, input);
+			await tx
+				.update(run)
+				.set({
+					status: "complete",
+					costDollars: input.costDollars,
+					icpId: row.id,
+					finishedAt: new Date(),
+				})
+				.where(eq(run.id, input.runId));
+			return row.id;
+		});
+	} finally {
+		await connection.$client.end();
+	}
 }
 
 /** Stores the whole ideal customer profile document, description and seller block alike. */
@@ -77,5 +81,7 @@ export async function createIcp(
 	input: NewIcpInput,
 	buildDb: DbFactory<IcpInsertConnection> = db,
 ): Promise<Icp> {
-	return insertIcp(buildDb(env, "cached"), input);
+	return withConnection(env, "cached", buildDb, (connection) =>
+		insertIcp(connection, input),
+	);
 }

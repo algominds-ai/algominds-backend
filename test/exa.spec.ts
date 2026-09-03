@@ -1,7 +1,9 @@
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { CostLedger } from "../src/core/cost";
+import { exaContents } from "../src/core/providers/exa/contents";
 import type { ExaSearchRequest } from "../src/core/providers/exa/search";
 import { search } from "../src/core/providers/exa/search";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
@@ -21,7 +23,7 @@ type SuccessBodyOverrides = {
 	}>;
 };
 
-type FetchStub = { calls: number; init: RequestInit | undefined };
+type FetchStub = { calls: number; init: RequestInit | undefined; url: string };
 
 const originalFetch = globalThis.fetch;
 
@@ -58,10 +60,11 @@ function successBody(
 }
 
 function stubFetch(response: Response): FetchStub {
-	const stub: FetchStub = { calls: 0, init: undefined };
-	globalThis.fetch = async (_input, init) => {
+	const stub: FetchStub = { calls: 0, init: undefined, url: "" };
+	globalThis.fetch = async (input, init) => {
 		stub.calls += 1;
 		stub.init = init;
+		stub.url = String(input);
 		return response;
 	};
 	return stub;
@@ -195,6 +198,18 @@ describe("search cost reporting", () => {
 	});
 });
 
+describe("search under a hung connection", () => {
+	it("times out shared calls as unknown", async () => {
+		globalThis.fetch = async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		};
+
+		await expect(
+			search({ query: "GTM leads" }, exaEnv(), new CostLedger()),
+		).rejects.toThrow(RetryableProviderError);
+	});
+});
+
 describe("search summary parsing", () => {
 	it("yields a null summary for a result whose summary is not valid JSON, without failing the call", async () => {
 		stubFetch(
@@ -248,5 +263,77 @@ describe("search summary parsing", () => {
 
 		expect(typeof result.results[0]?.summary).toBe("object");
 		expect(result.results[0]?.summary).toEqual({ currentTitle: "VP of Sales" });
+	});
+});
+
+const ContentsRequestSchema = z.object({
+	urls: z.array(z.string()),
+	text: z.object({ maxCharacters: z.number() }),
+});
+
+describe("contents request shape", () => {
+	it("sends urls and a top-level text.maxCharacters, with x-api-key and never a bearer token", async () => {
+		const stub = stubFetch(
+			jsonResponse(200, {
+				requestId: "req-contents-1",
+				results: [{ url: "https://acme.example/team", text: "hello" }],
+				statuses: [{ id: "https://acme.example/team", status: "success" }],
+				costDollars: { total: 0.003 },
+			}),
+		);
+
+		await exaContents(
+			["https://acme.example/team"],
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(stub.url).toBe("https://api.exa.ai/contents");
+		const headers = new Headers(stub.init?.headers);
+		expect(headers.get("x-api-key")).toBe("test-exa-key");
+		expect(headers.get("authorization")).toBeNull();
+		const body = ContentsRequestSchema.parse(
+			JSON.parse(String(stub.init?.body)),
+		);
+		expect(body).toEqual({
+			urls: ["https://acme.example/team"],
+			text: { maxCharacters: 20_000 },
+		});
+	});
+});
+
+describe("contents error mapping and cost", () => {
+	it("raises RetryableProviderError on a 429", async () => {
+		stubFetch(
+			jsonResponse(429, { requestId: "req-429", message: "slow down" }),
+		);
+
+		await expect(
+			exaContents(["https://acme.example/team"], exaEnv(), new CostLedger()),
+		).rejects.toThrow(RetryableProviderError);
+	});
+
+	it("raises NonRetryableError on a malformed 200 body", async () => {
+		stubFetch(jsonResponse(200, { requestId: "req-bad", results: "nope" }));
+
+		await expect(
+			exaContents(["https://acme.example/team"], exaEnv(), new CostLedger()),
+		).rejects.toThrow(NonRetryableError);
+	});
+
+	it("banks costDollars.total into the ledger", async () => {
+		stubFetch(
+			jsonResponse(200, {
+				requestId: "req-contents-2",
+				results: [{ url: "https://acme.example/team", text: "hello" }],
+				statuses: [{ id: "https://acme.example/team", status: "success" }],
+				costDollars: { total: 0.003 },
+			}),
+		);
+		const ledger = new CostLedger();
+
+		await exaContents(["https://acme.example/team"], exaEnv(), ledger);
+
+		expect(ledger.total()).toBeCloseTo(0.003, 5);
 	});
 });

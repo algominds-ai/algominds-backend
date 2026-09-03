@@ -10,7 +10,7 @@ const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 const VerdictSchema = z.object({
 	index: z.number().int().nonnegative(),
 	keep: z.boolean(),
-	reason: z.string().optional(),
+	reason: z.string().nullable(),
 });
 
 export type Verdict = z.infer<typeof VerdictSchema>;
@@ -28,7 +28,7 @@ const JUDGE_INSTRUCTIONS = [
 	"You judge one batch of candidate companies against an ideal customer profile in a single",
 	"pass. For every row, by its index, decide whether it should keep going toward a campaign.",
 	"Return one verdict per row, in the same order, each carrying the row index and a keep",
-	"decision. Give a short reason only when you refuse a row. Omit the reason when you keep",
+	"decision. Give a short reason only when you refuse a row. Set reason to null when you keep",
 	"a row.",
 	"A row may carry the page its signal came from: `evidenceUrl`, `evidenceQuote` copied",
 	"word for word from that page, and `evidencePublisher` as the page names itself. When a",
@@ -68,7 +68,7 @@ function keepEveryGatedRow(
 	ledger: CostLedger,
 ): JudgeResult {
 	return {
-		verdicts: rows.map((_, index) => ({ index, keep: true })),
+		verdicts: rows.map((_, index) => ({ index, keep: true, reason: null })),
 		ledger,
 	};
 }

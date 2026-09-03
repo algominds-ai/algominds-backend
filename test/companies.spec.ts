@@ -1,6 +1,9 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
+import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { config } from "../src/config";
 import type {
 	FindCompaniesDeps,
@@ -22,6 +25,11 @@ import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 import type { Verdict } from "../src/core/companies/judge";
 import { CostLedger } from "../src/core/cost";
+import { organization } from "../src/core/db/auth-schema";
+import { db, withConnection } from "../src/core/db/client";
+import { organizationForSlug } from "../src/core/db/organizations";
+import { createIcp, findRun } from "../src/core/db/queries";
+import { icp as icpTable, run } from "../src/core/db/schema";
 import type { ExaAgentCompany } from "../src/core/providers/exa/agent";
 import type {
 	CompanyEntity,
@@ -39,6 +47,12 @@ const icp: IcpDoc = {
 	description:
 		"fintech companies at seed stage in San Francisco with a small team",
 };
+
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
 
 function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
 	return {
@@ -83,7 +97,13 @@ function entitylessResult(id: number): ExaResult {
 function testOptions(
 	overrides: Partial<FindCompaniesOptions> = {},
 ): FindCompaniesOptions {
-	return { icpId: "icp-1", env: testEnv, today: "2026-08-30", ...overrides };
+	return {
+		icpId: "icp-1",
+		organizationId: "org-1",
+		env: testEnv,
+		today: "2026-08-30",
+		...overrides,
+	};
 }
 
 function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
@@ -94,9 +114,7 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -141,9 +159,7 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 				eventWindowDays: null,
 				recencyDays: null,
 				source: "exa-search",
-				type: "fast",
 				agentEffort: "low",
-				additionalQueries: [],
 				userLocation: null,
 				countries: [],
 				minWorkforce: null,
@@ -179,13 +195,13 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 }
 
 function recordingRecentDomains(domains: string[] = []) {
-	const calls: Array<{ icpId: string; days: number }> = [];
+	const calls: Array<{ organizationId: string; days: number }> = [];
 	const recentDomains: FindCompaniesDeps["recentDomains"] = async (
 		_env,
-		icpId,
+		organizationId,
 		days,
 	) => {
-		calls.push({ icpId, days });
+		calls.push({ organizationId, days });
 		return domains;
 	};
 	return { recentDomains, calls };
@@ -424,12 +440,12 @@ describe("findCompanies — round-to-round behaviour", () => {
 });
 
 describe("findCompanies — dependency wiring", () => {
-	it("reads seen domains through the injected recentDomains dependency", async () => {
+	it("reads seen domains through the injected recentDomains dependency, scoped to the account", async () => {
 		const { search } = scriptedSearch([[goodResult("acme.com")]]);
 		const { synthesize } = scriptedSynthesize();
 		const { recentDomains, calls } = recordingRecentDomains(["known.com"]);
 
-		await findCompanies(icp, 1, testOptions({ icpId: "icp-42" }), {
+		await findCompanies(icp, 1, testOptions({ organizationId: "org-42" }), {
 			recentDomains,
 			synthesize,
 			search,
@@ -437,7 +453,12 @@ describe("findCompanies — dependency wiring", () => {
 			judge: scriptedJudge([]),
 		});
 
-		expect(calls).toEqual([{ icpId: "icp-42", days: 90 }]);
+		expect(calls).toEqual([
+			{
+				organizationId: "org-42",
+				days: config.companies.seenDomainsWindowDays,
+			},
+		]);
 	});
 
 	it("runs as a plain function call, with no Hono context and no WorkflowStep", async () => {
@@ -508,6 +529,7 @@ describe("findCompanies — capturing the vendor payload", () => {
 			kind: null,
 			publishedDate: null,
 			score: null,
+			evidenceCheck: null,
 		});
 	});
 
@@ -584,6 +606,7 @@ describe("findCompanies — captures across sources", () => {
 			Object.keys(entity()).sort(),
 		);
 		expect(capture ? Object.keys(capture.result).sort() : []).toEqual([
+			"evidenceCheck",
 			"id",
 			"kind",
 			"publishedDate",
@@ -611,6 +634,7 @@ describe("toCompanyData", () => {
 				kind: null,
 				publishedDate: null,
 				score: null,
+				evidenceCheck: null,
 			},
 			source,
 		};
@@ -1011,32 +1035,6 @@ describe("a round the vendor answers with nothing", () => {
 });
 
 describe("a round the filter refuses outright", () => {
-	it("tells the next round how old the pages the last one kept really were", async () => {
-		const { search } = scriptedSearch([
-			[
-				{ ...goodResult("alpha.com"), publishedDate: "2026-08-25" },
-				{ ...goodResult("beta.com"), publishedDate: "2026-08-20" },
-			],
-			[],
-		]);
-		const { synthesize, inputs } = scriptedSynthesize({
-			recency: "lately",
-			recencyDays: 180,
-		});
-
-		await findCompanies(icp, 10, testOptions(), {
-			recentDomains: recordingRecentDomains().recentDomains,
-			synthesize,
-			search,
-			gate,
-			judge: scriptedJudge([]),
-		});
-
-		const sent = inputs[1]?.feedback.join(" ") ?? "";
-		expect(sent).toContain("no older than 180 days");
-		expect(sent).toContain("5, 10 days old");
-	});
-
 	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
 		const { search } = scriptedSearch([
 			[
@@ -1117,9 +1115,7 @@ function reportFor(
 		eventWindowDays: null,
 		recencyDays: null,
 		source: plan.source,
-		type: plan.type,
 		agentEffort: plan.agentEffort,
-		additionalQueries: plan.additionalQueries,
 		found,
 		rejected,
 	};
@@ -1163,6 +1159,7 @@ describe("FindCompaniesWorkflow: the summary output", () => {
 							kind: null,
 							publishedDate: null,
 							score: null,
+							evidenceCheck: null,
 						},
 						source: "exa-search",
 					},
@@ -1298,6 +1295,55 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 	});
 });
 
+describe("FindCompaniesWorkflow: a round that throws after the run opens", () => {
+	it("leaves the run row errored, with finished_at set, instead of running forever", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`companies-workflow-close-errored-${crypto.randomUUID()}`,
+			"companies workflow close errored test",
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for the close-errored test",
+			domain: `close-errored-${crypto.randomUUID()}.internal`,
+			organizationId: org.id,
+		});
+		const instanceId = `companies_close_errored_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepError(
+					{ name: "round_1" },
+					new NonRetryableError(
+						"a step failure must close the run, not leave it running",
+					),
+				);
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: icpRow.id, count: 5 },
+			});
+			await instance.waitForStatus("errored");
+
+			const row = await findRun(testEnv, instanceId);
+			expect(row?.status).toBe("errored");
+			expect(row?.finishedAt).toBeInstanceOf(Date);
+		} finally {
+			await instance.dispose();
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, instanceId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, org.id));
+			});
+		}
+	});
+});
+
 describe("the status the workflow reports for the whole run", () => {
 	it("never reports empty for a run that saved a company in an earlier round", () => {
 		expect(finalStatus(2, 5, "empty")).toBe("short");
@@ -1339,7 +1385,6 @@ describe("a round reports the freshness it demanded", () => {
 		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
 		expect(without.recency).toBeNull();
 		expect(withWindow.source).toBe("exa-search");
-		expect(withWindow.type).toBe("fast");
 	});
 });
 
@@ -1366,5 +1411,184 @@ describe("the sort of page a company was proved by survives onto the saved row",
 		expect(result.captures["displaced.com"]?.result.kind).toBe(
 			"vendor-case-study",
 		);
+	});
+});
+
+const ContentsRequestSchema = z.object({ urls: z.array(z.string()) });
+
+function agentRow(domain: string, quote: string): ExaResult {
+	return {
+		...goodResult(domain),
+		evidenceUrl: `https://${domain}/careers`,
+		evidenceQuote: quote,
+	};
+}
+
+function exaOptions(): FindCompaniesOptions {
+	return testOptions({
+		env: { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } },
+	});
+}
+
+function contentsFetch(
+	byUrl: Record<string, { text: string } | { errorTag: string }>,
+): typeof fetch {
+	return async (_input, init) => {
+		const { urls } = ContentsRequestSchema.parse(
+			JSON.parse(String(init?.body)),
+		);
+		const results: { url: string; text: string }[] = [];
+		const statuses: (
+			| { id: string; status: "success" }
+			| { id: string; status: "error"; error: { tag: string } }
+		)[] = [];
+		for (const url of urls) {
+			const outcome = byUrl[url];
+			if (!outcome) throw new Error(`unexpected contents request for ${url}`);
+			if ("errorTag" in outcome) {
+				statuses.push({
+					id: url,
+					status: "error",
+					error: { tag: outcome.errorTag },
+				});
+				continue;
+			}
+			statuses.push({ id: url, status: "success" });
+			results.push({ url, text: outcome.text });
+		}
+		return new Response(
+			JSON.stringify({
+				requestId: "req-contents",
+				results,
+				statuses,
+				costDollars: { total: 0.003 },
+			}),
+			{ status: 200, headers: { "content-type": "application/json" } },
+		);
+	};
+}
+
+describe("a round that demanded proof checks its own evidence before the judge sees it", () => {
+	it("rejects a company whose evidence page truly does not exist, but keeps one whose page merely lacks the quote", async () => {
+		const good = agentRow("good.com", "Good Co is hiring now.");
+		const notFound = agentRow("missing404.com", "Missing Co is hiring now.");
+		const noQuote = agentRow("noquote.com", "No Quote Co is hiring now.");
+
+		globalThis.fetch = contentsFetch({
+			"https://good.com/careers": { text: "Good Co is hiring now." },
+			"https://missing404.com/careers": { errorTag: "CRAWL_NOT_FOUND" },
+			"https://noquote.com/careers": { text: "Nothing about hiring here." },
+		});
+
+		const { search } = scriptedSearch([[good, notFound, noQuote]]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 3, exaOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain).sort()).toEqual([
+			"good.com",
+			"noquote.com",
+		]);
+		expect(result.captures["good.com"]?.result.evidenceCheck).toBe("found");
+		expect(result.captures["noquote.com"]?.result.evidenceCheck).toBe(
+			"missing",
+		);
+		expect(
+			result.rejects.some((reject) => reject.reason === "CRAWL_NOT_FOUND"),
+		).toBe(true);
+	});
+
+	it("keeps a row whose evidence page refused the crawler, recording the tag as its evidence check", async () => {
+		const refused = agentRow("blocked.com", "Blocked Co is hiring now.");
+
+		globalThis.fetch = contentsFetch({
+			"https://blocked.com/careers": { errorTag: "SOURCE_NOT_AVAILABLE" },
+		});
+
+		const { search } = scriptedSearch([[refused]]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, exaOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["blocked.com"]);
+		expect(result.captures["blocked.com"]?.result.evidenceCheck).toBe(
+			"SOURCE_NOT_AVAILABLE",
+		);
+	});
+});
+
+describe("a round that demanded proof but never had it to check", () => {
+	it("rejects a company whose row carries no evidence quote at all", async () => {
+		const noQuoteAtAll: ExaResult = {
+			...goodResult("silent.com"),
+			evidenceUrl: "https://silent.com/careers",
+		};
+		globalThis.fetch = async () => {
+			throw new Error("no fetch should run for a row with no quote to check");
+		};
+
+		const { search } = scriptedSearch([[noQuoteAtAll]]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, exaOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies).toHaveLength(0);
+		expect(
+			result.rejects.some((reject) => reject.reason === "missing-required"),
+		).toBe(true);
+	});
+
+	it("never fetches a page for a round whose plan asked the agent for no proof", async () => {
+		globalThis.fetch = async () => {
+			throw new Error("no fetch should run when the plan asked for no proof");
+		};
+		const plain = goodResult("plain.com");
+
+		const { search } = scriptedSearch([[plain]]);
+		const { synthesize } = scriptedSynthesize({ source: "exa-agent" });
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(icp, 1, testOptions(), {
+			recentDomains,
+			synthesize,
+			search,
+			gate,
+			judge: scriptedJudge([]),
+		});
+
+		expect(result.companies.map((row) => row.domain)).toEqual(["plain.com"]);
 	});
 });

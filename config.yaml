@@ -11,17 +11,12 @@ limits:
   # How many companies a people run searches when the caller gives no
   # maxCompanies. The caller's own number always wins over this.
   defaultMaxCompaniesPerPeopleRun: 100
-  # Each company in a people run is its own paid search, so this one bounds
-  # real spend rather than just effort. Matches maxCompaniesPerRequest: one
-  # companies run can never hold more companies than that, so no people run
-  # needs to search wider than one full run.
-  # Structural bound only: a companies run can hold at most maxCompaniesPerRequest
-  # companies, so a people run over it cannot exceed that either. The spend
-  # ceiling is the tighter limit in practice. Measured at about $0.010 per
-  # company, 300 companies is roughly $3.00 against a $2.00 per-run ceiling, so
-  # a run this large stops on spend and reports capped. That is money winning
-  # over count, which is the intended order.
-  maxCompaniesPerPeopleRun: 300
+  # Each company in a people run is its own bounded step budget: one pick is at
+  # most 28 steps (a start, up to 24 polls, an index, an agree, a quote), six
+  # picks 168, and one company 175 with its seven fixed steps. Workflows
+  # declares a 25,000 step ceiling on FIND_PEOPLE, so this is the largest
+  # company count that arithmetic clears in every mode, roster included.
+  maxCompaniesPerPeopleRun: 100
   # The most rows GET /runs/{runId}/companies and GET /runs/{runId}/people
   # return in one page. A caller's own limit wins up to this; beyond it the
   # request is clamped and the response reports the limit actually used, so
@@ -54,16 +49,21 @@ companies:
   maxRounds: 3
   # Exa returns at most 100 records per call. Fewer makes the requested count unreachable.
   resultsPerRound: 100
-  # Candidates sent to the judge, as a multiple of the requested count.
-  judgeCandidateMultiple: 3
+  # Candidates sent to the judge, as a multiple of the requested count. Measured on
+  # two profiles: every judge refusal sat at rank nineteen or lower, so 2x candidates
+  # was never short a company the judge would have kept.
+  judgeCandidateMultiple: 2
   # How much of a company description reaches the judge.
   descriptionChars: 600
-  # Window for treating a domain as already seen.
-  seenDomainsWindowDays: 90
+  # Window for treating a domain as already seen: every company the account
+  # found in the trailing N days, across every profile it owns. Feeds both
+  # excludeDomains on the search request and the seen-domain gate.
+  seenDomainsWindowDays: 60
   # The source and the agent's effort are no longer set here. The synthesizer picks
   # both per round from the profile, because only it knows whether the profile asks
-  # for a recent event. Measured: "low" effort returns in about 5 seconds for $0.025.
-  # The vendor requires a beta request header for "max", which this client does not send.
+  # for a recent event. Its effort choice is limited to two values: "low", measured
+  # at about $0.025 and 5 seconds, and "medium", measured at about $0.10 and 2
+  # minutes. Higher levels exist on the vendor but are not offered to the model.
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
   # Polls allowed before a stuck exa-agent run is treated as failed. A run that
@@ -75,32 +75,13 @@ companies:
   exaAgentMaxPollAttempts: 60
 
 people:
-  # A company whose people were already found inside this window is not
-  # searched again. Companies have the same guard on their own domains
-  # (companies.seenDomainsWindowDays); people had none, so a repeat run paid a
-  # vendor search for someone already stored — the unique constraint on
-  # linkedin_url only discarded the duplicate row after the search was paid for.
-  seenPeopleWindowDays: 90
-  # People asked of Exa for one company. Every result is checked against the
-  # company's own Exa organization id, and a search for a title at a company
-  # name also returns people whose own name resembles it, so this is the pool
-  # the check draws from rather than the number of people expected. Measured
-  # across three companies: three results yielded five verified people for
-  # $0.007 a company, twenty five yielded fourteen for $0.022.
-  resultsPerCompany: 25
-  batchSize: 5
-  # Which vendor supplies raw people candidates before the Apollo coverage
-  # pass. exa-search is one fast, cheap /search call per company. exa-agent
-  # trades speed and cost for evidenced rows via Exa's /agent/runs, polled to
-  # completion, once per company in the batch.
-  peopleSource: exa-search
-  # Effort Exa's agent spends per run when peopleSource is exa-agent.
-  exaAgentEffort: low
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
   # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls
   # at 5 seconds is 2 minutes, well past the measured 5-second completion time.
   exaAgentMaxPollAttempts: 24
+  # Milliseconds before a Clay create or run fetch is treated as timed out.
+  clayFetchTimeoutMs: 30000
 
 enrich:
   batchSize: 5

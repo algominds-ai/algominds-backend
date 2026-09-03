@@ -1,18 +1,29 @@
 import { z } from "zod";
 import { CostLedger } from "@/core/cost";
 import { generateStructured, reasoningModel } from "@/core/model";
+import { CLAY_BANDS } from "@/core/providers/clay";
 
 export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
-/** `deep-lite` is absent on purpose: measured against `category: "company"` it returns pages with no company record, so every row falls at the filter. */
-export const SEARCH_TYPES = ["fast", "deep", "deep-reasoning"] as const;
-export const AGENT_EFFORTS = ["minimal", "low", "medium", "high"] as const;
+export const AGENT_EFFORTS = ["low", "medium"] as const;
 
-const DEEP_TYPES: ReadonlySet<string> = new Set(["deep", "deep-reasoning"]);
+/** The eight most senior bands, the default a buyer rubric searches with. */
+export const SENIOR_BANDS: readonly (typeof CLAY_BANDS)[number][] =
+	CLAY_BANDS.slice(0, 8);
 
-/** True when a search type runs the multi-step planner that `additionalQueries` feeds. */
-export function acceptsAdditionalQueries(type: string): boolean {
-	return DEEP_TYPES.has(type);
-}
+export const BandSchema = z.enum(CLAY_BANDS);
+
+export const IcpBuyerSchema = z.object({
+	rubric: z.string(),
+	bands: z.array(BandSchema),
+	keywordBands: z.array(
+		z.object({
+			band: BandSchema,
+			keywords: z.array(z.string()),
+		}),
+	),
+});
+
+export type IcpBuyer = z.infer<typeof IcpBuyerSchema>;
 
 export const IcpDocSchema = z.object({
 	description: z.string(),
@@ -23,6 +34,7 @@ export const IcpDocSchema = z.object({
 			competitorTest: z.string(),
 		})
 		.nullish(),
+	buyer: IcpBuyerSchema.nullish(),
 });
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
@@ -41,9 +53,7 @@ export type SearchPlan = {
 	eventWindowDays: number | null;
 	recencyDays: number | null;
 	source: (typeof SEARCH_SOURCES)[number];
-	type: (typeof SEARCH_TYPES)[number];
 	agentEffort: (typeof AGENT_EFFORTS)[number];
-	additionalQueries: string[];
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
@@ -59,23 +69,21 @@ export type SearchPlan = {
 const SearchPlanModelSchema = z.object({
 	query: z.string(),
 	angle: z.string(),
-	recency: z.string().nullish(),
+	recency: z.string().nullable(),
 	eventWindowDays: z.number().int().positive().nullable(),
 	recencyDays: z.number().int().positive().nullable(),
-	source: z.enum(SEARCH_SOURCES).nullish(),
-	type: z.enum(SEARCH_TYPES).nullish(),
-	agentEffort: z.enum(AGENT_EFFORTS).nullish(),
-	additionalQueries: z.array(z.string()).nullish(),
+	source: z.enum(SEARCH_SOURCES).nullable(),
+	agentEffort: z.enum(AGENT_EFFORTS).nullable(),
 	userLocation: z.string().nullable(),
 	countries: z.array(z.string()),
 	minWorkforce: z.number().nullable(),
 	maxWorkforce: z.number().nullable(),
-	minFoundedYear: z.number().nullish(),
-	maxFoundedYear: z.number().nullish(),
-	minRevenueAnnual: z.number().nullish(),
-	maxRevenueAnnual: z.number().nullish(),
-	minFundingTotal: z.number().nullish(),
-	maxFundingTotal: z.number().nullish(),
+	minFoundedYear: z.number().nullable(),
+	maxFoundedYear: z.number().nullable(),
+	minRevenueAnnual: z.number().nullable(),
+	maxRevenueAnnual: z.number().nullable(),
+	minFundingTotal: z.number().nullable(),
+	maxFundingTotal: z.number().nullable(),
 });
 
 export type SynthesizeResult = {
@@ -101,55 +109,26 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"null, because a limit nobody asked for refuses companies that fit.",
 	"`angle` names the slice of the market this round targets, for example the vertical, the",
 	"buyer, or the product shape.",
-	"`source` chooses where the round buys its candidates. `exa-search` is one call against",
-	"Exa's company index: a structured record for every company, carrying headcount,",
-	"country, revenue and funding, about a hundred of them in a second or two for a tenth",
-	"of the price. It holds no pages, no events and no dates. `exa-agent` searches the open",
-	"web and reads what it finds: the signal, the page that proves it, and the date printed",
-	"on that page. It takes minutes and costs far more. Choose the one that can answer the",
-	"round you are writing.",
-	"`type` chooses how hard the search itself works, and applies to `exa-search` only.",
-	"Measured on one profile asking for twenty five records: `fast` returned twenty five in",
-	"half a second, `deep` returned fifteen in four seconds, and `deep-reasoning` returned",
-	"twenty five in fourteen seconds and reached a different set of companies. Only `deep`",
-	"and `deep-reasoning` read `additionalQueries`. Choose `fast` unless the profile hides",
-	"several distinct kinds of company that one sentence cannot describe together, and then",
-	"choose `deep` and write the variations.",
-	"`additionalQueries` are extra query sentences the deep types run beside the main one.",
-	"Write one for each distinct direction the profile allows, for example a different",
-	"vertical or a different job the product does. Measured: three variations took one deep",
-	"search from fifteen records to twenty five, and twenty two of those twenty five",
-	"companies were ones the same search without variations never found. Leave the list",
-	"empty on `fast`, where the vendor accepts the field and ignores it.",
-	"`agentEffort` is how long `exa-agent` may work, and applies to `exa-agent` only.",
-	"Choose `medium`. Measured on the same profile and the same count, `medium` returned",
-	"evidence with a median age of thirty two days against `low`'s fifty three, both fully",
-	"inside the window the profile asked for, at indistinguishable cost. Raise it above",
-	"`medium` only when an earlier round on this run came back short of the count.",
-	"`eventWindowDays` is how far back the profile allows the event itself to have happened,",
-	"counted in days. `recencyDays` answers a different question: how old may the page",
-	"proving it be, and still show that this situation is live and worth acting on today?",
-	"Answer it for the angle this round targets, not for the profile as a whole.",
-	"A page that proves a situation is still live is almost always days or weeks old, not",
-	"months. An announcement from January does not show that January's event is still being",
-	"worked on today; a page published this month describing that work does. Ask what page",
-	"you would want to read before making the call today, and how old it could be before you",
-	"would stop trusting it. `eventWindowDays` may be a year while `recencyDays` is a few",
-	"weeks, and that is the normal case rather than a contradiction. The code refuses a page",
-	"older than `recencyDays`. A page carrying no date still reaches the judge, which decides",
-	"whether it proves the signal anyway, so a window costs you nothing in undated pages.",
-	"Leave both null only when `recency` is null.",
-	"`recency` carries the freshness the profile demands, written as its own sentences that",
-	"name each event and the window it must fall inside, for example a platform engineering",
-	"role posted in the last thirty days, or a postmortem published in the last ninety days.",
-	"Write every window as a span counted back from today, never as a fixed date.",
-	"A profile that lists events against windows — a licence announced in the last twelve",
-	"months, a funding round closed in the last hundred and twenty days, a role posted in",
-	"the last six — is asking for something recent, and those events are what `recency` is",
-	"for. Carry them into it. Leaving `recency` null there discards the whole reason a",
-	"company is worth reaching now, and sends the round to a source that holds no events.",
-	"Set `recency` to null only when the profile names no event at all, because a freshness",
-	"demand nobody made refuses companies that fit.",
+	"`source` is `exa-search` unless the event is the whole qualifier. `exa-search` reads",
+	"Exa's company index: a hundred structured company records in one second, no pages and",
+	"no dates. `exa-agent` reads the open web for the signal and the page proving it, at a",
+	"handful of companies in minutes. A profile that says what its companies are — industry,",
+	"size, place, book of business — and then adds recent events as reasons to call now is a",
+	"search round: the shape names the population and the events only order it. Choose",
+	"`exa-agent` only when no description of lasting shape could name this population and",
+	"only a page can tell a company in from one out.",
+	"`agentEffort` applies to `exa-agent` only: `low` for a population it can name without",
+	"digging, `medium` when the signal needs dated proof. Null means `medium`.",
+	"`recency`, `eventWindowDays` and `recencyDays` belong to an `exa-agent` round and are",
+	"all null on a search round, because the company index holds no pages and no dates.",
+	"On an agent round, `recency` names each event and the window it must fall inside,",
+	"written as spans counted back from today. `eventWindowDays` is how far back the event",
+	"itself may have happened. `recencyDays` answers a different question for the angle this",
+	"round targets: how old may the page proving it be and still show the situation is live",
+	"today? An announcement from January does not show January's work is still going on; a",
+	"page published this month describing it does. So `eventWindowDays` may be a year while",
+	"`recencyDays` is a few weeks. The code refuses a dated page older than `recencyDays`",
+	"and sends an undated one to the judge.",
 	"A paraphrase of an earlier query returns the same companies, so when earlier angles are",
 	"given, choose a genuinely different angle and write a query for it. Keep every constraint",
 	"of the profile true of that new angle.",
@@ -161,10 +140,6 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"somewhere else. Companies refused as not being a company at all mean the query read like",
 	"a topic rather than an organisation. Write the next query so the same reason cannot",
 	"apply again.",
-	"That report also says what the round's freshness demand bought: the window it asked",
-	"for, and how old the pages it kept really were. Pages far fresher than the window",
-	"allowed mean this market publishes faster than you assumed, so ask for less. A round",
-	"that kept nothing means evidence that fresh is scarce here, so ask for more.",
 ].join(" ");
 
 function synthesizePrompt(input: SynthesizeInput): string {
@@ -193,9 +168,7 @@ function templatePlan(icp: IcpDoc): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "medium",
-		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -254,7 +227,6 @@ function toBounds(output: SearchPlanModel): PlanBounds {
 }
 
 function toPlan(output: SearchPlanModel): SearchPlan {
-	const type = output.type ?? "fast";
 	return {
 		query: output.query,
 		angle: output.angle,
@@ -262,11 +234,7 @@ function toPlan(output: SearchPlanModel): SearchPlan {
 		eventWindowDays: output.eventWindowDays ?? null,
 		recencyDays: output.recencyDays ?? null,
 		source: output.source ?? "exa-search",
-		type,
 		agentEffort: output.agentEffort ?? "medium",
-		additionalQueries: acceptsAdditionalQueries(type)
-			? (output.additionalQueries ?? [])
-			: [],
 		...toBounds(output),
 	};
 }

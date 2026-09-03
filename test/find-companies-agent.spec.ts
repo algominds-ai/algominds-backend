@@ -2,8 +2,11 @@ import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "../src/config";
+import { buildAgentRunRequest } from "../src/core/companies/agent-search";
 import { CostLedger } from "../src/core/cost";
+import { buildVerdictRunRequest } from "../src/core/providers/exa/agent";
 import type { SearchPlan } from "../src/core/synthesize";
+import { AGENT_EFFORTS } from "../src/core/synthesize";
 import { agentSearch } from "../src/workflows/find-companies-agent";
 
 const originalFetch = globalThis.fetch;
@@ -20,9 +23,7 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 		eventWindowDays: null,
 		recencyDays: null,
 		source: "exa-search",
-		type: "fast",
 		agentEffort: "low",
-		additionalQueries: [],
 		userLocation: null,
 		countries: [],
 		minWorkforce: null,
@@ -48,7 +49,12 @@ function jsonResponse(body: unknown): Response {
 	});
 }
 
-type StartedRun = { query: string; systemPrompt: string; minItems: number };
+type StartedRun = {
+	query: string;
+	systemPrompt: string;
+	minItems: number;
+	maxItems: number;
+};
 
 function stubAgentCompanyFetch(): { started: StartedRun[] } {
 	const started: StartedRun[] = [];
@@ -59,6 +65,7 @@ function stubAgentCompanyFetch(): { started: StartedRun[] } {
 				query: String(body.query),
 				systemPrompt: String(body.systemPrompt),
 				minItems: Number(body.outputSchema?.properties?.companies?.minItems),
+				maxItems: Number(body.outputSchema?.properties?.companies?.maxItems),
 			});
 			return jsonResponse({ id: `run-${started.length}`, status: "running" });
 		}
@@ -73,6 +80,23 @@ function stubAgentCompanyFetch(): { started: StartedRun[] } {
 		});
 	};
 	return { started };
+}
+
+function stubAgentCompanyFetchReportingNull(): void {
+	globalThis.fetch = async (input, init) => {
+		if (init?.method === "POST") {
+			return jsonResponse({ id: "run-null-companies", status: "running" });
+		}
+		const id = String(input).split("/").pop();
+		return jsonResponse({
+			id,
+			object: "agent_run",
+			status: "completed",
+			stopReason: "schema_satisfied",
+			output: { text: "no companies matched", structured: { companies: null } },
+			costDollars: { total: 0.012, agentCompute: 0.012 },
+		});
+	};
 }
 
 function fakeWorkflowStep(): WorkflowStep {
@@ -204,6 +228,56 @@ describe("the company agent run asks for more candidates than the caller wants",
 	});
 });
 
+describe("the company agent run asks honestly, not for an exact count", () => {
+	it("asks the agent for up to the wanted count and caps the schema", async () => {
+		const { started } = stubAgentCompanyFetch();
+		const remaining = 5;
+
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: remaining,
+			today: "2026-08-30",
+			seller: null,
+		});
+		await search(
+			planFor("US managed service providers"),
+			{ query: "US managed service providers" },
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		const wanted = remaining * config.companies.judgeCandidateMultiple;
+		expect(started[0]?.query).toContain(`Return up to ${wanted} distinct`);
+		expect(started[0]?.query).not.toContain("exactly");
+		expect(started[0]?.maxItems).toBe(wanted);
+	});
+});
+
+describe("a round whose agent finds nothing counts as an empty round, not a failure", () => {
+	it("resolves to zero results and banks the run's cost, instead of throwing", async () => {
+		stubAgentCompanyFetchReportingNull();
+		const ledger = new CostLedger();
+
+		const search = agentSearch({
+			step: fakeWorkflowStep(),
+			round: 1,
+			remaining: 3,
+			today: "2026-08-30",
+			seller: null,
+		});
+		const result = await search(
+			planFor("payment platforms serving credit unions"),
+			{ query: "payment platforms serving credit unions" },
+			exaEnv(),
+			ledger,
+		);
+
+		expect(result.results).toEqual([]);
+		expect(ledger.total()).toBeCloseTo(0.012, 5);
+	});
+});
+
 describe("the round tells the agent which seller it prospects for", () => {
 	it("carries the profile's seller into the started run", async () => {
 		const { started } = stubAgentCompanyFetch();
@@ -228,5 +302,53 @@ describe("the round tells the agent which seller it prospects for", () => {
 
 		expect(started[0]?.systemPrompt).toContain("form3.tech");
 		expect(started[0]?.systemPrompt).toContain("Klarna");
+	});
+});
+
+describe("the request schema Exa's agent actually accepts", () => {
+	it("sends Exa an output schema with no $schema key and no pattern anywhere", () => {
+		const companyRequest = buildAgentRunRequest(
+			planFor("US managed service providers", {
+				recency: "a role posted in the last 30 days",
+				recencyDays: 30,
+			}),
+			15,
+			"2026-09-02",
+			null,
+		);
+		const companySchema = JSON.parse(
+			JSON.stringify(companyRequest.outputSchema),
+		);
+		expect(companySchema).not.toHaveProperty("$schema");
+		expect(JSON.stringify(companySchema)).not.toContain('"pattern"');
+		expect(companySchema.properties.companies.maxItems).toBe(15);
+
+		const verdictRequest = buildVerdictRunRequest({
+			name: "Jane Doe",
+			title: "VP of Sales",
+			company: "Acme",
+			domain: "acme.com",
+		});
+		const verdictSchema = JSON.parse(
+			JSON.stringify(verdictRequest.outputSchema),
+		);
+		expect(verdictSchema).not.toHaveProperty("$schema");
+		expect(JSON.stringify(verdictSchema)).not.toContain('"pattern"');
+	});
+});
+
+describe("the built request never asks the agent for effort above medium", () => {
+	it("carries only low or medium, the two values a plan can hold", () => {
+		expect(AGENT_EFFORTS).toEqual(["low", "medium"]);
+
+		for (const agentEffort of AGENT_EFFORTS) {
+			const request = buildAgentRunRequest(
+				planFor("US managed service providers", { agentEffort }),
+				5,
+				"2026-09-02",
+				null,
+			);
+			expect(request.effort).toBe(agentEffort);
+		}
 	});
 });

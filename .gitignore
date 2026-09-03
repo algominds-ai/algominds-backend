@@ -4,12 +4,15 @@ node_modules/
 !.env.example
 .dev.vars
 .dev.vars.*
-!.dev.vars.example
 .wrangler/
 dist/
 .DS_Store
 *.log
+.claude/worktrees/
 
 # only docs/solutions is tracked; plans, review findings and reports stay local
 docs/*
 !docs/solutions/
+
+# the probe kit, raw data and reports stay local; the method doc is the committed record
+docs/solutions/people-probe/

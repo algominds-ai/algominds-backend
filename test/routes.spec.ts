@@ -1,38 +1,48 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { exports, env as testEnv } from "cloudflare:workers";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import type { z } from "zod";
 import { createAuth } from "../src/auth";
 import { ORGANIZATION_KEY_CONFIG_ID } from "../src/auth-options";
 import { config } from "../src/config";
-import { db } from "../src/core/db/client";
+import { organization } from "../src/core/db/auth-schema";
+import { db, withConnection } from "../src/core/db/client";
 import {
 	createIcp,
 	openRun,
 	saveCompanies,
-	savePeople,
+	saveRunCompanies,
+	upsertPeople,
 } from "../src/core/db/queries";
-import { company, icp as icpTable, person, run } from "../src/core/db/schema";
+import {
+	company,
+	icp as icpTable,
+	person,
+	run,
+	runCompany,
+} from "../src/core/db/schema";
 import type { EnrichOutcome, EnrichSubject } from "../src/core/enrich";
-import { buildRunId, domainsScopeId, instanceExists } from "../src/http/jobs";
+import {
+	buildRunId,
+	domainsScopeId,
+	instanceExists,
+	onboardScopeId,
+} from "../src/http/jobs";
+import { onboardIcpSchema, peopleFindSchema } from "../src/http/schemas";
 import app from "../src/index";
 import { ONBOARD_STEPS } from "../src/workflows/onboard-icp";
 
 const BASE = "https://algo.test";
 const authedEnv: Env = testEnv;
 
-const ICP_A = "11111111-1111-4111-8111-111111111111";
-const FIXTURE_ICP_IDS: readonly string[] = [
-	ICP_A,
-	"55555555-5555-4555-8555-555555555555",
-	"66666666-6666-4666-8666-666666666666",
-	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-];
-const FIXTURE_RUN_IDS: readonly string[] = [
-	"companies_88888888-8888-4888-8888-888888888888_2026-08-27",
-	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
-	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
-];
+let ICP_A = "";
+let ICP_B = "";
+let ICP_C = "";
+let ICP_D = "";
+let RUN_COMPANIES_FIXTURE = "";
+let RUN_PEOPLE_FIXTURE_A = "";
+let RUN_PEOPLE_FIXTURE_B = "";
 
 let TOKEN = "";
 let CALLER_ORGANIZATION_ID = "";
@@ -72,18 +82,20 @@ async function issueKey(
  * reference stable ids while still passing the real ownership check.
  */
 async function seedIcpFixture(id: string): Promise<void> {
-	await db(testEnv, "cached")
-		.insert(icpTable)
-		.values({
-			id,
-			organizationId: CALLER_ORGANIZATION_ID,
-			domain: `routes-fixture-${id}`,
-			doc: { description: "fixture icp for routes route tests" },
-		})
-		.onConflictDoUpdate({
-			target: icpTable.id,
-			set: { organizationId: CALLER_ORGANIZATION_ID },
-		});
+	await withConnection(testEnv, "cached", db, (connection) =>
+		connection
+			.insert(icpTable)
+			.values({
+				id,
+				organizationId: CALLER_ORGANIZATION_ID,
+				domain: `routes-fixture-${id}`,
+				doc: { description: "fixture icp for routes route tests" },
+			})
+			.onConflictDoUpdate({
+				target: icpTable.id,
+				set: { organizationId: CALLER_ORGANIZATION_ID },
+			}),
+	);
 }
 
 /**
@@ -102,27 +114,46 @@ async function seedOwnedIcp(label: string): Promise<string> {
 
 /** Owns a fixed run id under the caller's organization, as a source run. */
 async function seedRunFixture(id: string): Promise<void> {
-	await db(testEnv, "cached")
-		.insert(run)
-		.values({
-			id,
-			organizationId: CALLER_ORGANIZATION_ID,
-			icpId: ICP_A,
-			capability: id.split("_")[0] ?? "companies",
-			status: "complete",
-		})
-		.onConflictDoUpdate({
-			target: run.id,
-			set: { organizationId: CALLER_ORGANIZATION_ID, icpId: ICP_A },
-		});
+	await withConnection(testEnv, "cached", db, (connection) =>
+		connection
+			.insert(run)
+			.values({
+				id,
+				organizationId: CALLER_ORGANIZATION_ID,
+				icpId: ICP_A,
+				capability: id.split("_")[0] ?? "companies",
+				status: "complete",
+			})
+			.onConflictDoUpdate({
+				target: run.id,
+				set: { organizationId: CALLER_ORGANIZATION_ID, icpId: ICP_A },
+			}),
+	);
 }
+
+let RUN_COMPANIES_FIXTURE_SCOPE = "";
 
 beforeAll(async () => {
 	const issued = await issueKey(`routes-caller-${crypto.randomUUID()}`);
 	TOKEN = issued.key;
 	CALLER_ORGANIZATION_ID = issued.organizationId;
-	for (const id of FIXTURE_ICP_IDS) await seedIcpFixture(id);
-	for (const id of FIXTURE_RUN_IDS) await seedRunFixture(id);
+
+	ICP_A = crypto.randomUUID();
+	ICP_B = crypto.randomUUID();
+	ICP_C = crypto.randomUUID();
+	ICP_D = crypto.randomUUID();
+	RUN_COMPANIES_FIXTURE_SCOPE = crypto.randomUUID();
+	RUN_COMPANIES_FIXTURE = buildRunId("companies", RUN_COMPANIES_FIXTURE_SCOPE);
+	RUN_PEOPLE_FIXTURE_A = buildRunId("people", crypto.randomUUID());
+	RUN_PEOPLE_FIXTURE_B = buildRunId("people", crypto.randomUUID());
+
+	for (const id of [ICP_A, ICP_B, ICP_C, ICP_D]) await seedIcpFixture(id);
+	for (const id of [
+		RUN_COMPANIES_FIXTURE,
+		RUN_PEOPLE_FIXTURE_A,
+		RUN_PEOPLE_FIXTURE_B,
+	])
+		await seedRunFixture(id);
 });
 
 async function publicCall(path: string, init?: RequestInit): Promise<Response> {
@@ -151,7 +182,7 @@ function authedGetInit(): RequestInit {
  */
 async function waitForRunVisible(
 	runId: string,
-	attempts = 20,
+	attempts = 40,
 ): Promise<Response> {
 	for (let attempt = 0; attempt < attempts; attempt++) {
 		const response = await authedCall(`/runs/${runId}`, authedGetInit());
@@ -161,17 +192,9 @@ async function waitForRunVisible(
 	return authedCall(`/runs/${runId}`, authedGetInit());
 }
 
-const SCOPES: readonly string[] = [
-	"11111111-1111-4111-8111-111111111111",
-	"55555555-5555-4555-8555-555555555555",
-	"66666666-6666-4666-8666-666666666666",
-	"77777777-7777-4777-8777-777777777777",
-	"88888888-8888-4888-8888-888888888888",
-	"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-	"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-	"people_99999999-9999-4999-8999-999999999999_2026-08-27",
-	"people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27",
-];
+function scopes(): readonly string[] {
+	return [ICP_A, ICP_B, ICP_C, ICP_D, RUN_COMPANIES_FIXTURE_SCOPE];
+}
 
 async function terminateRun(runId: string | undefined): Promise<void> {
 	if (runId === undefined) return;
@@ -194,7 +217,7 @@ async function terminateStartedRuns(): Promise<void> {
 		[testEnv.ENRICH, "enrich"],
 	];
 	for (const [binding, capability] of bindings) {
-		for (const scope of SCOPES) {
+		for (const scope of scopes()) {
 			const instance = await binding
 				.get(`${capability}_${scope}_${today}`)
 				.catch(() => null);
@@ -289,7 +312,7 @@ describe("bearer authentication", () => {
 
 describe("POST /companies/find", () => {
 	it("rejects a malformed body with the Zod issue list and creates no instance", async () => {
-		const icpId = "55555555-5555-4555-8555-555555555555";
+		const icpId = ICP_B;
 		const response = await authedCall(
 			"/companies/find",
 			postInit({ icpId, count: "five" }, TOKEN),
@@ -309,7 +332,7 @@ describe("POST /companies/find", () => {
 	});
 
 	it("returns 202 with a runId built from capability, icpId and today, and reports the run as new", async () => {
-		const icpId = "66666666-6666-4666-8666-666666666666";
+		const icpId = ICP_C;
 		const started = Date.now();
 
 		const response = await authedCall(
@@ -340,10 +363,7 @@ describe("POST /companies/find", () => {
 		);
 		const firstBody: { runId: string; status?: string } = await first.json();
 		const secondBody: { runId: string; status?: string } = await second.json();
-		const statusResponse = await authedCall(
-			`/runs/${secondBody.runId}`,
-			authedGetInit(),
-		);
+		const statusResponse = await waitForRunVisible(secondBody.runId);
 		await terminateRun(firstBody.runId);
 
 		expect(first.status).toBe(202);
@@ -355,7 +375,7 @@ describe("POST /companies/find", () => {
 	});
 
 	it("reports the existing run when a repeat arrives with a different count, instead of presenting the new count as accepted", async () => {
-		const icpId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+		const icpId = ICP_D;
 
 		const first = await authedCall(
 			"/companies/find",
@@ -407,10 +427,57 @@ describe("POST /companies/find: exclusions and the run id", () => {
 	});
 });
 
+async function expectedPeopleRunId(
+	rawBody: z.input<typeof peopleFindSchema>,
+): Promise<string> {
+	const parsed = peopleFindSchema.parse(rawBody);
+	const scopeId = await domainsScopeId(
+		[JSON.stringify(parsed)],
+		CALLER_ORGANIZATION_ID,
+	);
+	return buildRunId("people", scopeId);
+}
+
+/**
+ * Starts a people/find run whose companies are never actually searched, then
+ * confirms the run's own read route reports the buyer the request's target
+ * produced: the observable proof that the target reached the workflow.
+ */
+async function expectTargetDrivesBuyer(
+	rawBody: z.input<typeof peopleFindSchema>,
+): Promise<void> {
+	const runId = await expectedPeopleRunId(rawBody);
+	const instance = await introspectWorkflowInstance(testEnv.FIND_PEOPLE, runId);
+	try {
+		await instance.modify(async (m) => {
+			await m.mockStepResult(
+				{ name: "load-companies" },
+				{ companies: [], icpId: null, unknownDomains: [] },
+			);
+		});
+
+		const response = await authedCall("/people/find", postInit(rawBody, TOKEN));
+		const started: { runId?: string } = await response.json();
+		expect(response.status).toBe(202);
+		expect(started.runId).toBe(runId);
+
+		await instance.waitForStatus("complete");
+		const statusResponse = await authedCall(`/runs/${runId}`, authedGetInit());
+		const status: { summary?: { mode?: string; buyerSource?: string } } =
+			await statusResponse.json();
+		expect(statusResponse.status).toBe(200);
+		expect(status.summary?.mode).toBe("target");
+		expect(status.summary?.buyerSource).toBe("target");
+	} finally {
+		await instance.dispose();
+		await terminateRun(runId);
+	}
+}
+
 describe("POST /people/find and /enrich", () => {
-	it("starts a people/find run scoped by a companies runId", async () => {
-		const companiesRunId =
-			"companies_88888888-8888-4888-8888-888888888888_2026-08-27";
+	it("starts a people/find run scoped by a digest of the whole request", async () => {
+		const companiesRunId = RUN_COMPANIES_FIXTURE;
+		const expectedRunId = await expectedPeopleRunId({ runId: companiesRunId });
 
 		const response = await authedCall(
 			"/people/find",
@@ -418,13 +485,95 @@ describe("POST /people/find and /enrich", () => {
 		);
 		const body: { runId?: string; icpId?: string } = await response.json();
 		await terminateRun(body.runId);
-		const today = new Date().toISOString().slice(0, 10);
 
 		expect(response.status).toBe(202);
-		expect(body.runId).toBe(`people_${companiesRunId}_${today}`);
+		expect(body.runId).toBe(expectedRunId);
 		expect(body.icpId).toBeUndefined();
 	});
 
+	it("accepts both find-people entry shapes with an optional target, and lets the target drive who is searched", async () => {
+		await expectTargetDrivesBuyer({
+			runId: RUN_COMPANIES_FIXTURE,
+			target: ["VP Product"],
+		});
+		await expectTargetDrivesBuyer({
+			domains: [`target-shape-${crypto.randomUUID()}.example`],
+			icpId: ICP_A,
+			target: "the marketing team",
+		});
+	});
+});
+
+describe("POST /people/find: the job scope hashes the whole request", () => {
+	it("hashes the whole parsed request into the job scope, not just the run id or domain list", async () => {
+		const companiesRunId = RUN_COMPANIES_FIXTURE;
+		const base = { runId: companiesRunId, maxCompanies: 5 };
+
+		const first = await authedCall("/people/find", postInit(base, TOKEN));
+		const firstBody: { runId: string; status?: string } = await first.json();
+		expect(first.status).toBe(202);
+
+		const variants = [
+			{ ...base, maxCompanies: 6 },
+			{ ...base, target: ["Head of Growth"] },
+		];
+		const changedRunIds: string[] = [];
+		for (const variant of variants) {
+			const response = await authedCall(
+				"/people/find",
+				postInit(variant, TOKEN),
+			);
+			const body: { runId: string } = await response.json();
+			expect(body.runId).not.toBe(firstBody.runId);
+			changedRunIds.push(body.runId);
+			await terminateRun(body.runId);
+		}
+		expect(new Set(changedRunIds).size).toBe(variants.length);
+		await terminateRun(firstBody.runId);
+	});
+
+	it("rejects an oversized target list and a foreign icpId before a workflow starts", async () => {
+		const oversized = await authedCall(
+			"/people/find",
+			postInit(
+				{
+					runId: "companies_dd000000-0000-4000-8000-000000000000_2026-08-27",
+					target: Array.from({ length: 21 }, (_, i) => `Title ${i}`),
+				},
+				TOKEN,
+			),
+		);
+		expect(oversized.status).toBe(400);
+
+		const foreignOrganizationId = `foreign-org-${crypto.randomUUID()}`;
+		await withConnection(testEnv, "cached", db, (connection) =>
+			connection.insert(organization).values({
+				id: foreignOrganizationId,
+				name: "foreign org",
+				slug: foreignOrganizationId,
+				createdAt: new Date(),
+			}),
+		);
+		const foreignIcp = await createIcp(testEnv, {
+			description: "a profile owned by another organization",
+			domain: `foreign-${crypto.randomUUID()}.internal`,
+			organizationId: foreignOrganizationId,
+		});
+		const foreignRef = await authedCall(
+			"/people/find",
+			postInit(
+				{
+					domains: [`foreign-icp-${crypto.randomUUID()}.example`],
+					icpId: foreignIcp.id,
+				},
+				TOKEN,
+			),
+		);
+		expect(foreignRef.status).toBe(404);
+	});
+});
+
+describe("POST /people/find and /enrich", () => {
 	it("rejects a people/find body with neither runId nor domains", async () => {
 		const response = await authedCall("/people/find", postInit({}, TOKEN));
 		expect(response.status).toBe(400);
@@ -465,7 +614,7 @@ describe("POST /people/find and /enrich", () => {
 	});
 
 	it("starts an enrich run scoped by the people-find run it enriches, and resolves its actual subjects rather than just accepting the request", async () => {
-		const sourceRun = "people_99999999-9999-4999-8999-999999999999_2026-08-27";
+		const sourceRun = RUN_PEOPLE_FIXTURE_A;
 		const subjects: EnrichSubject[] = [
 			{
 				id: "person-route-test",
@@ -487,7 +636,7 @@ describe("POST /people/find and /enrich", () => {
 	});
 
 	it("rejects an enrich body with an unknown channel", async () => {
-		const sourceRun = "people_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa_2026-08-27";
+		const sourceRun = RUN_PEOPLE_FIXTURE_B;
 
 		const response = await authedCall(
 			"/enrich",
@@ -542,6 +691,84 @@ describe("GET /runs/:runId", () => {
 	});
 });
 
+describe("GET /runs/:runId, /companies, /people: cross-organization reads", () => {
+	it("refuses to read another organization's run, companies, and people", async () => {
+		const foreignOrganizationId = `foreign-org-${crypto.randomUUID()}`;
+		await withConnection(testEnv, "cached", db, (connection) =>
+			connection.insert(organization).values({
+				id: foreignOrganizationId,
+				name: "foreign org",
+				slug: foreignOrganizationId,
+				createdAt: new Date(),
+			}),
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for cross-organization read test",
+			domain: `cross-org-read-${crypto.randomUUID()}.internal`,
+			organizationId: foreignOrganizationId,
+		});
+		const runId = `companies_cross-org-read-${crypto.randomUUID()}`;
+		await openRun(testEnv, {
+			id: runId,
+			organizationId: foreignOrganizationId,
+			icpId: icpRow.id,
+			capability: "companies",
+			status: "complete",
+		});
+		const saved = await saveCompanies(testEnv, [
+			{
+				icpId: icpRow.id,
+				organizationId: foreignOrganizationId,
+				runId,
+				domain: `cross-org-read-${crypto.randomUUID()}.com`,
+				name: "Cross Org Co",
+			},
+		]);
+		const companyRow = saved[0];
+		if (!companyRow) throw new Error("seed produced no company");
+		await upsertPeople(testEnv, [
+			{
+				organizationId: foreignOrganizationId,
+				companyId: companyRow.id,
+				linkedinUrl: `https://linkedin.com/in/cross-org-${crypto.randomUUID()}`,
+				name: "Cross Org Person",
+				title: "VP of Sales",
+			},
+		]);
+
+		try {
+			const statusResponse = await authedCall(
+				`/runs/${runId}`,
+				authedGetInit(),
+			);
+			const companiesResponse = await authedCall(
+				`/runs/${runId}/companies`,
+				authedGetInit(),
+			);
+			const peopleResponse = await authedCall(
+				`/runs/${runId}/people`,
+				authedGetInit(),
+			);
+
+			expect(statusResponse.status).toBe(404);
+			expect(companiesResponse.status).toBe(404);
+			expect(peopleResponse.status).toBe(404);
+		} finally {
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection
+					.delete(person)
+					.where(eq(person.companyId, companyRow.id));
+				await connection.delete(company).where(eq(company.id, companyRow.id));
+				await connection.delete(run).where(eq(run.id, runId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, foreignOrganizationId));
+			});
+		}
+	});
+});
+
 type PageSeed = {
 	icpId: string;
 	runId: string;
@@ -573,6 +800,7 @@ async function seedRunWithCompanies(
 		testEnv,
 		Array.from({ length: companyCount }, (_, i) => ({
 			icpId: icpRow.id,
+			organizationId: CALLER_ORGANIZATION_ID,
 			runId,
 			domain: `${label}-${i}.com`,
 			name: `${label} Co ${i}`,
@@ -586,13 +814,14 @@ async function seedRunWithCompanies(
 }
 
 async function cleanupPageSeed(seed: PageSeed): Promise<void> {
-	const connection = db(testEnv, "direct");
-	await connection
-		.delete(person)
-		.where(inArray(person.companyId, seed.companyIds));
-	await connection.delete(company).where(eq(company.runId, seed.runId));
-	await connection.delete(run).where(eq(run.id, seed.runId));
-	await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection
+			.delete(person)
+			.where(inArray(person.companyId, seed.companyIds));
+		await connection.delete(company).where(eq(company.runId, seed.runId));
+		await connection.delete(run).where(eq(run.id, seed.runId));
+		await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+	});
 }
 
 type CompanyPageBody = {
@@ -708,7 +937,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 			if (!companyIdA || !companyIdB)
 				throw new Error("seed produced no company");
 
-			await savePeople(testEnv, [
+			await upsertPeople(testEnv, [
 				{
 					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdA,
@@ -717,7 +946,7 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 					title: "VP of Sales",
 				},
 			]);
-			await savePeople(testEnv, [
+			await upsertPeople(testEnv, [
 				{
 					organizationId: CALLER_ORGANIZATION_ID,
 					companyId: companyIdB,
@@ -742,6 +971,160 @@ describe("GET /runs/:runId/companies: the page-size ceiling", () => {
 		} finally {
 			await cleanupPageSeed(seedA);
 			await cleanupPageSeed(seedB);
+		}
+	});
+});
+
+type PeopleReportSeed = {
+	runId: string;
+	companyId: string;
+	resolvedDomain: string;
+	unresolvedDomain: string;
+};
+
+/**
+ * Seeds a people run's durable per-domain report directly: one resolved
+ * `run_company` row with its company and a verified person, and one
+ * unresolved row with no company, so the read routes can be checked without
+ * running the pipeline that would normally have produced them. The run and
+ * its company carry no profile, since none is needed to prove the report.
+ */
+async function seedPeopleReport(label: string): Promise<PeopleReportSeed> {
+	const runId = `people_${label}`;
+	const resolvedDomain = `${label}-resolved.com`;
+	const unresolvedDomain = `${label}-unresolved.example`;
+	await openRun(testEnv, {
+		id: runId,
+		organizationId: CALLER_ORGANIZATION_ID,
+		icpId: null,
+		capability: "people",
+		status: "running",
+	});
+	const saved = await saveCompanies(testEnv, [
+		{
+			icpId: null,
+			organizationId: CALLER_ORGANIZATION_ID,
+			runId,
+			domain: resolvedDomain,
+			name: `${label} Co`,
+		},
+	]);
+	const companyId = saved[0]?.id;
+	if (!companyId) throw new Error("seed produced no company");
+	await saveRunCompanies(testEnv, [
+		{
+			runId,
+			domain: resolvedDomain,
+			companyId,
+			identity: "domain",
+			mode: "target",
+			buyerSource: "target",
+			spendDollars: 0.12,
+			clayRecords: 5,
+			peopleVerified: 1,
+			peopleRoster: 0,
+		},
+		{
+			runId,
+			domain: unresolvedDomain,
+			companyId: null,
+			identity: "unresolved",
+			mode: null,
+			buyerSource: null,
+			spendDollars: 0,
+			clayRecords: 0,
+			peopleVerified: 0,
+			peopleRoster: 0,
+		},
+	]);
+	await upsertPeople(testEnv, [
+		{
+			organizationId: CALLER_ORGANIZATION_ID,
+			companyId,
+			linkedinUrl: `https://linkedin.com/in/${label}`,
+			name: "Report Person",
+			title: "VP of Sales",
+			data: {
+				status: "verified",
+				basis: "buyer fit",
+				seenBy: ["clay"],
+				since: null,
+				location: null,
+			},
+		},
+	]);
+	return {
+		runId,
+		companyId,
+		resolvedDomain,
+		unresolvedDomain,
+	};
+}
+
+async function cleanupPeopleReport(seed: PeopleReportSeed): Promise<void> {
+	await terminateRun(seed.runId);
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		await connection.delete(person).where(eq(person.companyId, seed.companyId));
+		await connection.delete(runCompany).where(eq(runCompany.runId, seed.runId));
+		await connection.delete(company).where(eq(company.runId, seed.runId));
+		await connection.delete(run).where(eq(run.id, seed.runId));
+	});
+}
+
+type PeopleReportCompanyRow = {
+	domain: string;
+	identity: string | null;
+	mode: string | null;
+	buyerSource: string | null;
+	spendDollars: number;
+	company: { id: string } | null;
+};
+
+async function expectCompaniesPageShowsBothRows(
+	seed: PeopleReportSeed,
+): Promise<void> {
+	const response = await authedCall(
+		`/runs/${seed.runId}/companies`,
+		authedGetInit(),
+	);
+	const body: { rows: PeopleReportCompanyRow[] } = await response.json();
+	expect(response.status).toBe(200);
+	const resolvedRow = body.rows.find(
+		(row) => row.domain === seed.resolvedDomain,
+	);
+	const unresolvedRow = body.rows.find(
+		(row) => row.domain === seed.unresolvedDomain,
+	);
+	expect(resolvedRow?.company?.id).toBe(seed.companyId);
+	expect(resolvedRow?.mode).toBe("target");
+	expect(resolvedRow?.buyerSource).toBe("target");
+	expect(resolvedRow?.spendDollars).toBeGreaterThan(0);
+	expect(unresolvedRow?.company).toBeNull();
+	expect(unresolvedRow?.identity).toBe("unresolved");
+}
+
+async function expectPeoplePageShowsVerifiedStatus(
+	seed: PeopleReportSeed,
+): Promise<void> {
+	const response = await authedCall(
+		`/runs/${seed.runId}/people`,
+		authedGetInit(),
+	);
+	const body: { rows: Array<{ data: { status: string } | null }> } =
+		await response.json();
+	expect(response.status).toBe(200);
+	expect(body.rows).toHaveLength(1);
+	expect(body.rows[0]?.data?.status).toBe("verified");
+}
+
+describe("GET /runs/:runId for a people run: the durable per-domain report", () => {
+	it("reads the durable people-run report", async () => {
+		const seed = await seedPeopleReport(`people-report-${crypto.randomUUID()}`);
+		try {
+			await expectCompaniesPageShowsBothRows(seed);
+			await expectPeoplePageShowsVerifiedStatus(seed);
+		} finally {
+			await cleanupPeopleReport(seed);
 		}
 	});
 });
@@ -798,7 +1181,7 @@ describe("a run whose state cannot be read is treated as still going", () => {
 describe("two callers racing to start the same run", () => {
 	it("answers both without an error, naming the same run", async () => {
 		const domain = `race-${crypto.randomUUID()}.example`;
-		const scopeId = await domainsScopeId([domain], CALLER_ORGANIZATION_ID);
+		const scopeId = await onboardScopeId({ domain }, CALLER_ORGANIZATION_ID);
 		const runId = buildRunId("onboarding", scopeId);
 		const instance = await introspectWorkflowInstance(
 			testEnv.ONBOARD_ICP,
@@ -843,4 +1226,170 @@ describe("two callers racing to start the same run", () => {
 			await instance.dispose();
 		}
 	});
+});
+
+async function expectedOnboardRunId(
+	rawBody: z.input<typeof onboardIcpSchema>,
+): Promise<string> {
+	const parsed = onboardIcpSchema.parse(rawBody);
+	const scopeId = await onboardScopeId(parsed, CALLER_ORGANIZATION_ID);
+	return buildRunId("onboarding", scopeId);
+}
+
+function sellerNote(label: string): string {
+	return `${label}-${"x".repeat(140)}`;
+}
+
+async function mockOnboardSuccess(
+	instance: Awaited<ReturnType<typeof introspectWorkflowInstance>>,
+	domain: string,
+	description: string,
+): Promise<void> {
+	await instance.modify(async (m) => {
+		await m.mockStepResult(
+			{ name: ONBOARD_STEPS.readSeller },
+			{ pages: [{ url: `https://${domain}/`, text: "" }], costDollars: 0.01 },
+		);
+		await m.mockStepResult(
+			{ name: ONBOARD_STEPS.writeProfile },
+			{
+				description,
+				seller: { domain, customers: [], competitorTest: "none" },
+				buyer: null,
+				wroteProfile: true,
+				costDollars: 0.01,
+			},
+		);
+	});
+}
+
+async function cleanupOnboardRuns(
+	runIds: readonly string[],
+	domain: string,
+): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		for (const runId of runIds) {
+			await connection.delete(run).where(eq(run.id, runId));
+		}
+		await connection
+			.delete(icpTable)
+			.where(
+				and(
+					eq(icpTable.organizationId, CALLER_ORGANIZATION_ID),
+					eq(icpTable.domain, domain),
+				),
+			);
+	});
+}
+
+async function expectDifferentNoteStartsNewRun(): Promise<void> {
+	const domain = `onboard-notediff-${crypto.randomUUID()}.example`;
+	const noteA = sellerNote("note-a");
+	const noteB = sellerNote("note-b");
+	const runIdA = await expectedOnboardRunId({ domain, note: noteA });
+	const runIdB = await expectedOnboardRunId({ domain, note: noteB });
+	expect(runIdA).not.toBe(runIdB);
+
+	const instanceA = await introspectWorkflowInstance(
+		testEnv.ONBOARD_ICP,
+		runIdA,
+	);
+	const instanceB = await introspectWorkflowInstance(
+		testEnv.ONBOARD_ICP,
+		runIdB,
+	);
+	try {
+		await mockOnboardSuccess(
+			instanceA,
+			domain,
+			"a profile written from note a",
+		);
+		await mockOnboardSuccess(
+			instanceB,
+			domain,
+			"a profile written from note b",
+		);
+
+		const first = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note: noteA }, TOKEN),
+		);
+		const firstBody: { runId?: string; status?: string } = await first.json();
+		const second = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note: noteB }, TOKEN),
+		);
+		const secondBody: { runId?: string; status?: string } = await second.json();
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(firstBody.runId).toBe(runIdA);
+		expect(second.status).toBe(202);
+		expect(secondBody.status).toBe("started");
+		expect(secondBody.runId).toBe(runIdB);
+		expect(secondBody.runId).not.toBe(firstBody.runId);
+
+		await instanceA.waitForStatus("complete");
+		await instanceB.waitForStatus("complete");
+
+		const rowA = await waitForRunVisible(runIdA);
+		const rowB = await waitForRunVisible(runIdB);
+		expect(rowA.status).toBe(200);
+		expect(rowB.status).toBe(200);
+	} finally {
+		await instanceA.dispose();
+		await instanceB.dispose();
+		await cleanupOnboardRuns([runIdA, runIdB], domain);
+	}
+}
+
+async function expectIdenticalRequestReturnsExisting(): Promise<void> {
+	const domain = `onboard-identical-${crypto.randomUUID()}.example`;
+	const note = sellerNote("identical-note");
+	const runId = await expectedOnboardRunId({ domain, note });
+
+	const instance = await introspectWorkflowInstance(testEnv.ONBOARD_ICP, runId);
+	try {
+		await mockOnboardSuccess(instance, domain, "a profile written once");
+
+		const first = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note }, TOKEN),
+		);
+		const firstBody: { runId?: string; status?: string } = await first.json();
+		await instance.waitForStatus("complete");
+
+		const second = await authedCall(
+			"/icp/onboard",
+			postInit({ domain, note }, TOKEN),
+		);
+		const secondBody: { runId?: string; status?: string } = await second.json();
+
+		expect(first.status).toBe(202);
+		expect(firstBody.status).toBe("started");
+		expect(firstBody.runId).toBe(runId);
+		expect(second.status).toBe(200);
+		expect(secondBody.status).toBe("existing");
+		expect(secondBody.runId).toBe(runId);
+
+		const icpRows = await withConnection(testEnv, "direct", db, (connection) =>
+			connection.select().from(icpTable).where(eq(icpTable.domain, domain)),
+		);
+		expect(icpRows).toHaveLength(1);
+	} finally {
+		await instance.dispose();
+		await cleanupOnboardRuns([runId], domain);
+	}
+}
+
+describe("POST /icp/onboard: the job scope hashes the whole request", () => {
+	it(
+		"starts a new run when a second onboarding request carries a different note the same day",
+		expectDifferentNoteStartsNewRun,
+	);
+
+	it(
+		"returns the existing run for a byte-identical onboarding request the same day",
+		expectIdenticalRequestReturnsExisting,
+	);
 });

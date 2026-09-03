@@ -1,10 +1,10 @@
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, gte } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
-import { companyExaId } from "@/core/companies/candidates";
+import { MAX_EXCLUDED_DOMAINS } from "@/core/companies/candidates";
 import { organization } from "@/core/db/auth-schema";
-import type { DbEnv, DbMode } from "@/core/db/client";
-import { db } from "@/core/db/client";
+import type { DbEnv, DbFactory } from "@/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 import type {
 	Company,
 	Evidence,
@@ -28,13 +28,11 @@ import {
 	round,
 	type run,
 } from "@/core/db/schema";
-import type { IcpDoc, IcpSeller } from "@/core/synthesize";
-import { IcpDocSchema } from "@/core/synthesize";
 
 export type Organization = typeof organization.$inferSelect;
 export type NewOrganization = typeof organization.$inferInsert;
 
-export type DbFactory<TConnection> = (env: DbEnv, mode: DbMode) => TConnection;
+export type { DbFactory };
 
 export interface SelectWhereConnection<TTable, TColumns, TRow> {
 	select(columns: TColumns): {
@@ -54,7 +52,7 @@ interface SelectLimitConnection<TTable, TRow> {
 	};
 }
 
-interface SelectAllWhereConnection<TTable, TRow> {
+export interface SelectAllWhereConnection<TTable, TRow> {
 	select(): {
 		from(table: TTable): {
 			where(condition: SQL | undefined): Promise<TRow[]>;
@@ -62,7 +60,7 @@ interface SelectAllWhereConnection<TTable, TRow> {
 	};
 }
 
-interface UpdateWhereConnection<TTable, TValues> {
+export interface UpdateWhereConnection<TTable, TValues> {
 	update(table: TTable): {
 		set(values: TValues): {
 			where(condition: SQL | undefined): Promise<never[]>;
@@ -88,7 +86,7 @@ interface InsertChain<TRow> {
 	};
 }
 
-interface InsertConnection<TTable, TNewRow, TRow> {
+export interface InsertConnection<TTable, TNewRow, TRow> {
 	insert(table: TTable): {
 		values(row: TNewRow): InsertChain<TRow>;
 		values(rows: TNewRow[]): InsertChain<TRow>;
@@ -118,11 +116,17 @@ export interface TransactableConnection {
 
 export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
 export type IcpInsertConnection = AppendConnection<typeof icp, NewIcp, Icp>;
-export type DomainsConnection = SelectWhereConnection<
-	typeof company,
-	{ domain: typeof company.domain },
-	{ domain: string }
->;
+export interface DomainsConnection {
+	select(columns: { domain: typeof company.domain }): {
+		from(table: typeof company): {
+			where(condition: SQL | undefined): {
+				orderBy(order: SQL): {
+					limit(count: number): Promise<{ domain: string }[]>;
+				};
+			};
+		};
+	};
+}
 export type EvidenceReadConnection = SelectOrderedConnection<
 	typeof evidence,
 	Evidence
@@ -166,21 +170,6 @@ export type OrganizationSpendConnection = SelectWhereConnection<
 	{ costDollars: typeof run.costDollars },
 	{ costDollars: number }
 >;
-export type CompanyRunRow = Pick<Company, "id" | "domain" | "name" | "data">;
-export type RunCompany = Pick<Company, "id" | "domain" | "name"> & {
-	exaId: string | null;
-};
-export type CompanyRunConnection = SelectWhereConnection<
-	typeof company,
-	{
-		id: typeof company.id;
-		domain: typeof company.domain;
-		name: typeof company.name;
-		data: typeof company.data;
-	},
-	CompanyRunRow
->;
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /** The instant `days` days before `now` (defaults to the current time). */
@@ -199,57 +188,39 @@ export async function organizationDomain(
 	organizationId: string,
 	buildDb: DbFactory<OrganizationSelectConnection> = db,
 ): Promise<string | null> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select()
-		.from(organization)
-		.where(eq(organization.id, organizationId));
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.select()
+			.from(organization)
+			.where(eq(organization.id, organizationId)),
+	);
 	return rows[0]?.domain ?? null;
 }
 
-/** Writes the profile and closes its run in one transaction, so a failure between them cannot leave a profile no run points at. Returns the new profile's id. */
-
-/** The id, domain, name, and saved Exa organization id of every company found in run `runId`. */
-export async function companiesForRun(
-	env: DbEnv,
-	runId: string,
-	buildDb: DbFactory<CompanyRunConnection> = db,
-): Promise<RunCompany[]> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select({
-			id: company.id,
-			domain: company.domain,
-			name: company.name,
-			data: company.data,
-		})
-		.from(company)
-		.where(eq(company.runId, runId));
-	return rows.map((row) => ({
-		id: row.id,
-		domain: row.domain,
-		name: row.name,
-		exaId: companyExaId(row.data),
-	}));
-}
-
 /**
- * Domains found for an ICP within the trailing `days` days, read through
- * the cache-disabled binding.
+ * Domains this account found within the trailing `days` days, across every
+ * profile it owns, most recent first and capped at the search contract's
+ * exclusion limit. Read through the cache-disabled binding.
  */
 export async function recentDomains(
 	env: DbEnv,
-	icpId: string,
+	organizationId: string,
 	days: number,
 	buildDb: DbFactory<DomainsConnection> = db,
 ): Promise<string[]> {
-	const connection = buildDb(env, "direct");
-	const rows = await connection
-		.select({ domain: company.domain })
-		.from(company)
-		.where(
-			and(eq(company.icpId, icpId), gte(company.foundAt, cutoffDate(days))),
-		);
+	const rows = await withConnection(env, "direct", buildDb, (connection) =>
+		connection
+			.select({ domain: company.domain })
+			.from(company)
+			.where(
+				and(
+					eq(company.organizationId, organizationId),
+					gte(company.foundAt, cutoffDate(days)),
+				),
+			)
+			.orderBy(desc(company.foundAt))
+			.limit(MAX_EXCLUDED_DOMAINS),
+	);
 	return rows.map((row) => row.domain);
 }
 
@@ -263,12 +234,13 @@ export async function saveRound(
 	row: NewRound,
 	buildDb: DbFactory<RoundInsertConnection> = db,
 ): Promise<Round[]> {
-	const connection = buildDb(env, "cached");
-	return connection
-		.insert(round)
-		.values([row])
-		.onConflictDoNothing({ target: [round.runId, round.ordinal] })
-		.returning();
+	return withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.insert(round)
+			.values([row])
+			.onConflictDoNothing({ target: [round.runId, round.ordinal] })
+			.returning(),
+	);
 }
 
 export type RoundSelectConnection = SelectAllWhereConnection<
@@ -282,8 +254,9 @@ export async function roundsForRun(
 	runId: string,
 	buildDb: DbFactory<RoundSelectConnection> = db,
 ): Promise<Round[]> {
-	const connection = buildDb(env, "cached");
-	return connection.select().from(round).where(eq(round.runId, runId));
+	return withConnection(env, "cached", buildDb, (connection) =>
+		connection.select().from(round).where(eq(round.runId, runId)),
+	);
 }
 
 export async function saveCompanies(
@@ -294,34 +267,17 @@ export async function saveCompanies(
 	if (rows.length === 0) {
 		return [];
 	}
-	const connection = buildDb(env, "cached");
 	const normalized = rows.map((row) => ({
 		...row,
 		domain: normalizeDomain(row.domain),
 	}));
-	return connection
-		.insert(company)
-		.values(normalized)
-		.onConflictDoNothing({ target: [company.icpId, company.domain] })
-		.returning();
-}
-
-export async function savePeople(
-	env: DbEnv,
-	rows: NewPerson[],
-	buildDb: DbFactory<PersonInsertConnection> = db,
-): Promise<Person[]> {
-	if (rows.length === 0) {
-		return [];
-	}
-	const connection = buildDb(env, "cached");
-	return connection
-		.insert(person)
-		.values(rows)
-		.onConflictDoNothing({
-			target: [person.organizationId, person.linkedinUrl],
-		})
-		.returning();
+	return withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.insert(company)
+			.values(normalized)
+			.onConflictDoNothing({ target: [company.icpId, company.domain] })
+			.returning(),
+	);
 }
 
 export async function appendEvidence(
@@ -332,8 +288,9 @@ export async function appendEvidence(
 	if (rows.length === 0) {
 		return [];
 	}
-	const connection = buildDb(env, "cached");
-	return connection.insert(evidence).values(rows).returning();
+	return withConnection(env, "cached", buildDb, (connection) =>
+		connection.insert(evidence).values(rows).returning(),
+	);
 }
 
 export async function latestEvidence(
@@ -342,13 +299,14 @@ export async function latestEvidence(
 	kind: string,
 	buildDb: DbFactory<EvidenceReadConnection> = db,
 ): Promise<Evidence | undefined> {
-	const connection = buildDb(env, "cached");
-	const rows = await connection
-		.select()
-		.from(evidence)
-		.where(and(eq(evidence.subjectId, subjectId), eq(evidence.kind, kind)))
-		.orderBy(desc(evidence.seenAt))
-		.limit(1);
+	const rows = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
+			.select()
+			.from(evidence)
+			.where(and(eq(evidence.subjectId, subjectId), eq(evidence.kind, kind)))
+			.orderBy(desc(evidence.seenAt))
+			.limit(1),
+	);
 	return rows[0];
 }
 
@@ -358,18 +316,19 @@ export async function deletePerson(
 	personId: string,
 	buildDb: DbFactory<TransactableConnection> = db,
 ): Promise<void> {
-	const connection = buildDb(env, "cached");
-	await connection.transaction(async (tx) => {
-		await tx
-			.delete(evidence)
-			.where(
-				and(
-					eq(evidence.subjectType, "person"),
-					eq(evidence.subjectId, personId),
-				),
-			);
-		await tx.delete(person).where(eq(person.id, personId));
-	});
+	await withConnection(env, "cached", buildDb, (connection) =>
+		connection.transaction(async (tx) => {
+			await tx
+				.delete(evidence)
+				.where(
+					and(
+						eq(evidence.subjectType, "person"),
+						eq(evidence.subjectId, personId),
+					),
+				);
+			await tx.delete(person).where(eq(person.id, personId));
+		}),
+	);
 }
 
 export {
@@ -379,7 +338,28 @@ export {
 	saveOnboardedIcp,
 } from "@/core/db/icp";
 export {
+	type PersonReadConnection,
+	type PersonUpdateConnection,
+	type PersonUpsertConnection,
+	upsertPeople,
+} from "@/core/db/people";
+export {
+	type CompanyCreateConnection,
+	type CompanyOfRun,
+	type CompanyRunConnection,
+	type CompanyRunRow,
+	companiesForRun,
+	createCompanyRow,
+	type RunCompanyInsertConnection,
+	type RunCompanyLookupConnection,
+	type RunCompanyPatch,
+	type RunCompanyUpdateConnection,
+	saveRunCompanies,
+	updateRunCompany,
+} from "@/core/db/run-companies";
+export {
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	findRun,
 	openRun,
