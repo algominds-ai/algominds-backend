@@ -56,6 +56,10 @@ export type RunCompanyInsertConnection = InsertConnection<
 	NewRunCompany,
 	RunCompany
 >;
+export type RunCompanyLookupConnection = SelectAllWhereConnection<
+	typeof runCompany,
+	RunCompany
+>;
 export type RunCompanyPatch = Partial<
 	Pick<
 		NewRunCompany,
@@ -136,43 +140,79 @@ export async function createCompanyRow(
 	buildDb: DbFactory<CompanyCreateConnection> = db,
 ): Promise<Company> {
 	const normalized = { ...row, domain: normalizeDomain(row.domain) };
-	return withConnection(env, "cached", buildDb, async (connection) => {
-		const inserted = await connection
+	const inserted = await withConnection(env, "cached", buildDb, (connection) =>
+		connection
 			.insert(company)
 			.values(normalized)
 			.onConflictDoNothing()
-			.returning();
-		const own = inserted[0];
-		if (own) return own;
-		const existing = await connection
+			.returning(),
+	);
+	const own = inserted[0];
+	if (own) return own;
+	const existing = await withConnection(env, "direct", buildDb, (connection) =>
+		connection
 			.select()
 			.from(company)
-			.where(companyIdentityCondition(normalized));
-		const found = existing[0];
-		if (!found) {
-			throw new Error(
-				`createCompanyRow: no row found for ${normalized.domain} after a no-op insert`,
-			);
-		}
-		return found;
-	});
+			.where(companyIdentityCondition(normalized)),
+	);
+	const found = existing[0];
+	if (!found) {
+		throw new Error(
+			`createCompanyRow: no row found for ${normalized.domain} after a no-op insert`,
+		);
+	}
+	return found;
 }
 
-/** Inserts one row per requested domain of a people run, skipping a domain the run already recorded. */
+async function existingRunCompany(
+	env: DbEnv,
+	row: NewRunCompany,
+	buildDb: DbFactory<RunCompanyLookupConnection>,
+): Promise<RunCompany> {
+	const existing = await withConnection(env, "direct", buildDb, (connection) =>
+		connection
+			.select()
+			.from(runCompany)
+			.where(
+				and(eq(runCompany.runId, row.runId), eq(runCompany.domain, row.domain)),
+			),
+	);
+	const found = existing[0];
+	if (!found) {
+		throw new Error(
+			`saveRunCompanies: no row found for ${row.domain} on run ${row.runId} after a no-op insert`,
+		);
+	}
+	return found;
+}
+
+/** Inserts one row per requested domain of a people run, and re-selects a domain the run already recorded rather than treating the conflict as a miss. */
 export async function saveRunCompanies(
 	env: DbEnv,
 	rows: NewRunCompany[],
-	buildDb: DbFactory<RunCompanyInsertConnection> = db,
+	buildDb: DbFactory<
+		RunCompanyInsertConnection & RunCompanyLookupConnection
+	> = db,
 ): Promise<RunCompany[]> {
 	if (rows.length === 0) {
 		return [];
 	}
-	return withConnection(env, "cached", buildDb, (connection) =>
+	const inserted = await withConnection(env, "cached", buildDb, (connection) =>
 		connection
 			.insert(runCompany)
 			.values(rows)
 			.onConflictDoNothing({ target: [runCompany.runId, runCompany.domain] })
 			.returning(),
+	);
+	if (inserted.length === rows.length) {
+		return inserted;
+	}
+	const byDomain = new Map(inserted.map((row) => [row.domain, row]));
+	return Promise.all(
+		rows.map(
+			(row) =>
+				byDomain.get(row.domain) ?? existingRunCompany(env, row, buildDb),
+		),
 	);
 }
 

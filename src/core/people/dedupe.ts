@@ -84,6 +84,7 @@ export function dedupe(rows: DedupeRow[]): Candidate[] {
 	const byUrl = new Map<string, MergedRow>();
 	const byName = new Map<string, MergedRow>();
 	for (const row of rows) {
+		if (!row.name) continue;
 		const url = canonicalLinkedinUrl(row.url);
 		const key = nameKey(row.name);
 		const existing = findExisting(byUrl, byName, url, key);

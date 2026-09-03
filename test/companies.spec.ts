@@ -1,5 +1,7 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
+import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { config } from "../src/config";
@@ -23,6 +25,11 @@ import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 import type { Verdict } from "../src/core/companies/judge";
 import { CostLedger } from "../src/core/cost";
+import { organization } from "../src/core/db/auth-schema";
+import { db, withConnection } from "../src/core/db/client";
+import { organizationForSlug } from "../src/core/db/organizations";
+import { createIcp, findRun } from "../src/core/db/queries";
+import { icp as icpTable, run } from "../src/core/db/schema";
 import type { ExaAgentCompany } from "../src/core/providers/exa/agent";
 import type {
 	CompanyEntity,
@@ -1284,6 +1291,55 @@ describe("FindCompaniesWorkflow: the per-run spend ceiling", () => {
 			});
 		} finally {
 			await instance.dispose();
+		}
+	});
+});
+
+describe("FindCompaniesWorkflow: a round that throws after the run opens", () => {
+	it("leaves the run row errored, with finished_at set, instead of running forever", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`companies-workflow-close-errored-${crypto.randomUUID()}`,
+			"companies workflow close errored test",
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for the close-errored test",
+			domain: `close-errored-${crypto.randomUUID()}.internal`,
+			organizationId: org.id,
+		});
+		const instanceId = `companies_close_errored_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepError(
+					{ name: "round_1" },
+					new NonRetryableError(
+						"a step failure must close the run, not leave it running",
+					),
+				);
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: icpRow.id, count: 5 },
+			});
+			await instance.waitForStatus("errored");
+
+			const row = await findRun(testEnv, instanceId);
+			expect(row?.status).toBe("errored");
+			expect(row?.finishedAt).toBeInstanceOf(Date);
+		} finally {
+			await instance.dispose();
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, instanceId));
+				await connection.delete(icpTable).where(eq(icpTable.id, icpRow.id));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, org.id));
+			});
 		}
 	});
 });

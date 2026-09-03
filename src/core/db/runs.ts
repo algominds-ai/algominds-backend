@@ -82,6 +82,24 @@ export async function closeRun(
 	);
 }
 
+/**
+ * Closes a run as `errored` with `finished_at` set, keeping whatever spend
+ * the run had already banked. A no-op when the run row was never opened.
+ */
+export async function closeErroredRun(
+	env: DbEnv,
+	runId: string,
+	buildDb: DbFactory<RunLookupConnection & RunUpdateConnection> = db,
+): Promise<void> {
+	const existing = await findRun(env, runId, buildDb);
+	await closeRun(
+		env,
+		runId,
+		{ status: "errored", costDollars: existing?.costDollars ?? 0 },
+		buildDb,
+	);
+}
+
 /** Midnight UTC on the day of `now` (defaults to the current time). */
 export function startOfUtcDay(now: Date = new Date()): Date {
 	return new Date(
