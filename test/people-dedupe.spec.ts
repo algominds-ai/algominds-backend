@@ -91,6 +91,36 @@ describe("dedupe", () => {
 		expect(result).toHaveLength(1);
 		expect(result[0]?.seenBy.sort()).toEqual(["clay:c-suite", "clay:vp"]);
 	});
+});
+
+describe("dedupe: nameless rows and id assignment", () => {
+	it("drops a row with no name, even one carrying its own linkedin url", () => {
+		const rows = [
+			{
+				name: null,
+				title: "Head of Compliance",
+				company: "Harbor Robotics",
+				url: "https://www.linkedin.com/in/nameless/",
+				location: null,
+				since: null,
+				source: "clay:head",
+			},
+			{
+				name: "Alice Alpha",
+				title: "CEO",
+				company: "Acme",
+				url: null,
+				location: null,
+				since: null,
+				source: "clay:founder",
+			},
+		];
+
+		const result = dedupe(rows);
+
+		expect(result).toHaveLength(1);
+		expect(result[0]?.name).toBe("Alice Alpha");
+	});
 
 	it("assigns ids as positions in the merged list", () => {
 		const rows = [

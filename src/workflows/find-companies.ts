@@ -20,6 +20,7 @@ import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
 import {
 	appendEvidence,
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	loadIcp,
 	openRun,
@@ -315,6 +316,20 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 	FindCompaniesPayload
 > {
 	override async run(
+		event: Readonly<WorkflowEvent<FindCompaniesPayload>>,
+		step: WorkflowStep,
+	): Promise<FindCompaniesSummary> {
+		try {
+			return await this.runToCompletion(event, step);
+		} catch (error) {
+			await step.do("close-errored", config.stepConfig.databaseCall, () =>
+				closeErroredRun(this.env, event.instanceId),
+			);
+			throw error;
+		}
+	}
+
+	private async runToCompletion(
 		event: Readonly<WorkflowEvent<FindCompaniesPayload>>,
 		step: WorkflowStep,
 	): Promise<FindCompaniesSummary> {

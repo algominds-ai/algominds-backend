@@ -9,7 +9,7 @@ import { config } from "../src/config";
 import { organization } from "../src/core/db/auth-schema";
 import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
-import { openRun } from "../src/core/db/queries";
+import { findRun, openRun } from "../src/core/db/queries";
 import type { Evidence, Person } from "../src/core/db/schema";
 import {
 	company,
@@ -132,6 +132,69 @@ describe("FindPeopleWorkflow: identity resolution", () => {
 			expect(output.capped).toBe(false);
 		} finally {
 			await instance.dispose();
+		}
+	});
+});
+
+describe("runOneCompany: an unresolved domain's Clay spend", () => {
+	it("banks the identity step's clay records and spend on the run_company row", async () => {
+		const domain = `unresolved-spend-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-unresolved-spend-${crypto.randomUUID()}`,
+			"people workflow unresolved spend test",
+		);
+		const runId = `people_unresolved_spend_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(
+					new Map([
+						[
+							`people-${domain}-identity`,
+							{
+								how: "unresolved",
+								clayRecords: 7,
+								costEntries: [
+									{ provider: "clay", op: "search", dollars: 0.03 },
+								],
+							},
+						],
+					]),
+				),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.unresolvedDomain).toBe(domain);
+			expect(result.costDollars).toBeCloseTo(0.03);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			expect(runCompanyRows[0]?.clayRecords).toBe(7);
+			expect(runCompanyRows[0]?.spendDollars).toBeCloseTo(0.03);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
 		}
 	});
 });
@@ -286,6 +349,59 @@ describe("FindPeopleWorkflow: the run spend ceiling", () => {
 	});
 });
 
+describe("FindPeopleWorkflow: a step that throws after the run opens", () => {
+	it("leaves the run row errored, with finished_at set, instead of running forever", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-close-errored-${crypto.randomUUID()}`,
+			"people workflow close errored test",
+		);
+		const domain = `close-errored-${crypto.randomUUID()}.example`;
+		const instanceId = `people_close_errored_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_PEOPLE,
+			instanceId,
+		);
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-companies" },
+					{
+						companies: [bareCompany(domain)],
+						icpId: null,
+						unknownDomains: [],
+					},
+				);
+				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
+				await m.mockStepError(
+					{ name: `people-${domain}-identity` },
+					new NonRetryableError(
+						"a step failure must close the run, not leave it running",
+					),
+				);
+			});
+
+			await testEnv.FIND_PEOPLE.create({
+				id: instanceId,
+				params: { domains: [domain], organizationId: org.id },
+			});
+			await instance.waitForStatus("errored");
+
+			const row = await findRun(testEnv, instanceId);
+			expect(row?.status).toBe("errored");
+			expect(row?.finishedAt).toBeInstanceOf(Date);
+		} finally {
+			await instance.dispose();
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, instanceId));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, org.id));
+			});
+		}
+	});
+});
+
 const CLAY_HEADERS = { "content-type": "application/json" };
 
 function clayResponse(body: unknown): Response {
@@ -419,7 +535,11 @@ function fakeWorkflowStep(overrides: Map<string, unknown>): WorkflowStep {
 		second: unknown,
 		third: unknown,
 	): Promise<unknown> {
-		if (overrides.has(name)) return overrides.get(name);
+		if (overrides.has(name)) {
+			const value = overrides.get(name);
+			if (value instanceof Error) throw value;
+			return value;
+		}
 		const callback = typeof second === "function" ? second : third;
 		if (typeof callback !== "function") {
 			throw new Error(`fake step: no callback for ${name}`);
@@ -696,6 +816,250 @@ describe("FindPeopleWorkflow: a contradicted verdict", () => {
 						.where(eq(person.organizationId, org.id)),
 			);
 			expect(storedPeople).toHaveLength(0);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function pollErrorRunOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+					{
+						candidate: targetCandidate(
+							1,
+							"Casey Doe",
+							"Director Sales",
+							"https://linkedin.com/in/casey-doe",
+						),
+						basis: "inferred_workflow_owner",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			new NonRetryableError("verify agent run exhausted its poll budget"),
+		],
+		[`people-${domain}-verify-1-start`, { id: "agent-run-1" }],
+		[
+			`people-${domain}-verify-1-poll-1`,
+			{
+				run: { status: "completed", output: CONFIRMED_VERDICT },
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-1-quote`,
+			{ found: true, reason: "found", costEntries: [] },
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: a pick whose poll step fails", () => {
+	it("drops that pick, keeps the company's other picks, and lets the run continue to the next company", async () => {
+		const domainA = `poll-error-a-${crypto.randomUUID()}.example`;
+		const domainB = `poll-error-b-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-poll-error-${crypto.randomUUID()}`,
+			"people workflow poll error test",
+		);
+		const runId = `people_poll_error_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const overrides = new Map<string, unknown>([
+				...pollErrorRunOverrides(domainA),
+				[
+					`people-${domainB}-select`,
+					{ picks: [], droppedIds: [], reply: { picks: [] }, costDollars: 0 },
+				],
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(overrides),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runCompanies(
+				ctx,
+				[bareCompany(domainA), bareCompany(domainB)],
+				0,
+			);
+
+			expect(result.companiesSearched).toBe(2);
+			expect(result.peopleVerified).toBe(1);
+
+			const runCompanyRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(runCompany)
+						.where(eq(runCompany.runId, runId)),
+			);
+			const domainARow = runCompanyRows.find((row) => row.domain === domainA);
+			if (!domainARow) {
+				throw new Error("expected a run_company row for the failing domain");
+			}
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidence)
+						.where(eq(evidence.subjectId, domainARow.id)),
+			);
+			expect(evidenceRows.some((row) => row.kind === "verify-error")).toBe(
+				true,
+			);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+const UNKNOWN_VERDICT_WITH_URL = {
+	verdict: "UNKNOWN",
+	evidence_url: "https://verifytarget.example/unclear",
+	evidence_quote: "an ambiguous mention of the role",
+	evidence_kind: null,
+	confidence: 0.3,
+};
+
+function unknownVerdictWithUrlOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-select`,
+			{
+				picks: [
+					{
+						candidate: targetCandidate(
+							0,
+							"Jordan Blake",
+							"VP Sales",
+							"https://linkedin.com/in/jordan-blake",
+						),
+						basis: "explicit_persona_match",
+					},
+				],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: UNKNOWN_VERDICT_WITH_URL },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+async function evidenceRowsForRun(runId: string): Promise<Evidence[]> {
+	const runCompanyRows = await withConnection(
+		testEnv,
+		"direct",
+		db,
+		(connection) =>
+			connection.select().from(runCompany).where(eq(runCompany.runId, runId)),
+	);
+	const runCompanyRow = runCompanyRows[0];
+	if (!runCompanyRow) throw new Error("expected a run_company row");
+	return withConnection(testEnv, "direct", db, (connection) =>
+		connection
+			.select()
+			.from(evidence)
+			.where(eq(evidence.subjectId, runCompanyRow.id)),
+	);
+}
+
+describe("FindPeopleWorkflow: an unknown verdict's reported URL", () => {
+	it("keeps the agent's reported evidence_url on the stored verdict even though the pick is not verified", async () => {
+		const domain = `unknown-url-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-unknown-url-${crypto.randomUUID()}`,
+			"people workflow unknown url test",
+		);
+		const runId = `people_unknown_url_${crypto.randomUUID()}`;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(unknownVerdictWithUrlOverrides(domain)),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+			expect(result.outcome.verified).toBe(0);
+
+			const evidenceRows = await evidenceRowsForRun(runId);
+			const pollRow = evidenceRows.find((row) => row.kind === "verify-poll");
+			if (!pollRow) throw new Error("expected a verify-poll evidence row");
+			expect(JSON.parse(pollRow.value ?? "").evidence_url).toBe(
+				UNKNOWN_VERDICT_WITH_URL.evidence_url,
+			);
 		} finally {
 			await cleanupTargetRun(org.id, runId);
 		}

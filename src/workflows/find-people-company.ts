@@ -141,11 +141,17 @@ async function markUnresolved(
 	ctx: CompanyLoopContext,
 	domain: string,
 	runCompanyId: string,
+	spend: { clayRecords: number; spendDollars: number },
 ): Promise<void> {
 	await ctx.step.do(
 		`people-${domain}-unresolved`,
 		config.stepConfig.databaseCall,
-		() => updateRunCompany(ctx.env, runCompanyId, { identity: "unresolved" }),
+		() =>
+			updateRunCompany(ctx.env, runCompanyId, {
+				identity: "unresolved",
+				clayRecords: spend.clayRecords,
+				spendDollars: spend.spendDollars,
+			}),
 	);
 }
 
@@ -212,7 +218,7 @@ async function runRosterStep(
 
 export async function recordCompanySpend(
 	ctx: CompanyLoopContext,
-	progress: CompanyProgress,
+	progress: Pick<CompanyProgress, "domain" | "spentSoFar" | "ledger">,
 ): Promise<number> {
 	const result = await ctx.step.do(
 		`people-${progress.domain}-spend`,
@@ -284,10 +290,18 @@ export async function runOneCompany(
 	const identity = await runIdentityStep(ctx, company, runCompanyId);
 	applyCostEntries(identity.costEntries, ledger);
 	if (identity.how === "unresolved") {
-		await markUnresolved(ctx, company.domain, runCompanyId);
+		await markUnresolved(ctx, company.domain, runCompanyId, {
+			clayRecords: identity.clayRecords,
+			spendDollars: ledger.total(),
+		});
+		const costDollars = await recordCompanySpend(ctx, {
+			domain: company.domain,
+			spentSoFar,
+			ledger,
+		});
 		return {
 			outcome: { verified: 0, roster: 0, unresolvedDomain: company.domain },
-			costDollars: spentSoFar,
+			costDollars,
 		};
 	}
 	const companyId = await ensureCompanyRow(

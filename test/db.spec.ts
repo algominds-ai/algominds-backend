@@ -10,6 +10,7 @@ import type { Db, DbEnv, DbMode } from "../src/core/db/client";
 import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {
+	CompanyCreateConnection,
 	CompanyInsertConnection,
 	CompanyRunConnection,
 	DbFactory,
@@ -23,12 +24,16 @@ import type {
 	OrganizationConnection,
 	OrganizationSpendConnection,
 	RoundInsertConnection,
+	RunCompanyInsertConnection,
+	RunCompanyLookupConnection,
+	RunLookupConnection,
 	RunOpenConnection,
 	RunUpdateConnection,
 	TransactableConnection,
 } from "../src/core/db/queries";
 import {
 	appendEvidence,
+	closeErroredRun,
 	closeRun,
 	companiesForRun,
 	createCompanyRow,
@@ -65,6 +70,7 @@ import type {
 	NewRun,
 	Person,
 	Run,
+	RunCompany,
 } from "../src/core/db/schema";
 import {
 	company,
@@ -1053,6 +1059,203 @@ describe("createCompanyRow", () => {
 			});
 			await cleanupOrganizations([org.id]);
 		}
+	});
+});
+
+describe("createCompanyRow: the fallback select's binding", () => {
+	it("re-selects a concurrently inserted row through the direct binding, never cached", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const existing = companyRow("company-1");
+		const modes: DbMode[] = [];
+		const buildDb: DbFactory<CompanyCreateConnection> = (_env, mode) => {
+			modes.push(mode);
+			return {
+				insert: () => ({
+					values: () => ({
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([]),
+						}),
+					}),
+				}),
+				select: () => ({
+					from: () => ({ where: () => Promise.resolve([existing]) }),
+				}),
+			};
+		};
+
+		const result = await createCompanyRow(
+			env,
+			{
+				organizationId: "org-1",
+				domain: "acme.com",
+				name: "Acme",
+				icpId: null,
+				runId: "run-1",
+			},
+			buildDb,
+		);
+
+		expect(result.id).toBe(existing.id);
+		expect(modes).toEqual(["cached", "direct"]);
+	});
+});
+
+function runCompanyRow(id: string): RunCompany {
+	return {
+		id,
+		runId: "run-1",
+		domain: "acme.com",
+		companyId: null,
+		identity: "unresolved",
+		mode: "roster",
+		buyerSource: "none",
+		spendDollars: 0,
+		clayRecords: 0,
+		peopleVerified: 0,
+		peopleRoster: 0,
+	};
+}
+
+describe("saveRunCompanies: a domain the run already recorded", () => {
+	it("re-selects the existing row through the direct binding instead of treating the conflict as a miss", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const existing = runCompanyRow("run-company-1");
+		const modes: DbMode[] = [];
+		const buildDb: DbFactory<
+			RunCompanyInsertConnection & RunCompanyLookupConnection
+		> = (_env, mode) => {
+			modes.push(mode);
+			return {
+				insert: () => ({
+					values: () => ({
+						onConflictDoNothing: () => ({
+							returning: () => Promise.resolve([]),
+						}),
+					}),
+				}),
+				select: () => ({
+					from: () => ({ where: () => Promise.resolve([existing]) }),
+				}),
+			};
+		};
+
+		const [result] = await saveRunCompanies(
+			env,
+			[
+				{
+					runId: "run-1",
+					domain: "acme.com",
+					companyId: null,
+					identity: null,
+					mode: "roster",
+					buyerSource: "none",
+				},
+			],
+			buildDb,
+		);
+
+		expect(result).toEqual(existing);
+		expect(modes).toEqual(["cached", "direct"]);
+	});
+
+	it("throws when the fallback select also finds nothing", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		const buildDb: DbFactory<
+			RunCompanyInsertConnection & RunCompanyLookupConnection
+		> = () => ({
+			insert: () => ({
+				values: () => ({
+					onConflictDoNothing: () => ({ returning: () => Promise.resolve([]) }),
+				}),
+			}),
+			select: () => ({
+				from: () => ({ where: () => Promise.resolve([]) }),
+			}),
+		});
+
+		await expect(
+			saveRunCompanies(
+				env,
+				[
+					{
+						runId: "run-1",
+						domain: "acme.com",
+						companyId: null,
+						identity: null,
+						mode: "roster",
+						buyerSource: "none",
+					},
+				],
+				buildDb,
+			),
+		).rejects.toThrow(/no row found/);
+	});
+});
+
+describe("closeErroredRun", () => {
+	it("closes the run as errored, keeping the spend already banked on the row", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let setValues:
+			| Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
+			| undefined;
+		const storedRun: Run = {
+			id: "run-1",
+			organizationId: "org-1",
+			icpId: null,
+			capability: "people",
+			status: "running",
+			costDollars: 2.5,
+			startedAt: new Date("2026-08-27T00:00:00.000Z"),
+			finishedAt: null,
+		};
+		const buildDb: DbFactory<
+			RunLookupConnection & RunUpdateConnection
+		> = () => ({
+			select: () => ({
+				from: () => ({
+					where: () => ({ limit: () => Promise.resolve([storedRun]) }),
+				}),
+			}),
+			update: () => ({
+				set: (values) => {
+					setValues = values;
+					return { where: () => Promise.resolve([]) };
+				},
+			}),
+		});
+
+		await closeErroredRun(env, "run-1", buildDb);
+
+		expect(setValues?.status).toBe("errored");
+		expect(setValues?.costDollars).toBe(2.5);
+		expect(setValues?.finishedAt).toBeInstanceOf(Date);
+	});
+
+	it("is a harmless no-op, at zero cost, for a run that was never opened", async () => {
+		const env = fakeEnv("postgres://cached", "postgres://direct");
+		let setValues:
+			| Partial<Pick<NewRun, "status" | "costDollars" | "finishedAt">>
+			| undefined;
+		const buildDb: DbFactory<
+			RunLookupConnection & RunUpdateConnection
+		> = () => ({
+			select: () => ({
+				from: () => ({
+					where: () => ({ limit: () => Promise.resolve([]) }),
+				}),
+			}),
+			update: () => ({
+				set: (values) => {
+					setValues = values;
+					return { where: () => Promise.resolve([]) };
+				},
+			}),
+		});
+
+		await closeErroredRun(env, "missing-run", buildDb);
+
+		expect(setValues?.status).toBe("errored");
+		expect(setValues?.costDollars).toBe(0);
 	});
 });
 

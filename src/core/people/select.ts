@@ -13,7 +13,7 @@ export const PERSONA_BASIS = PersonaBasisSchema.options;
 
 export type PersonaBasis = z.infer<typeof PersonaBasisSchema>;
 
-const MAX_PICKS = 6;
+export const MAX_PICKS = 6;
 
 function selectInstructions(): string {
 	return [

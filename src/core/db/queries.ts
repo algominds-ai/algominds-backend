@@ -355,6 +355,7 @@ export {
 	companiesForRun,
 	createCompanyRow,
 	type RunCompanyInsertConnection,
+	type RunCompanyLookupConnection,
 	type RunCompanyPatch,
 	type RunCompanyUpdateConnection,
 	saveRunCompanies,
@@ -362,6 +363,7 @@ export {
 } from "@/core/db/run-companies";
 export {
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	findRun,
 	openRun,

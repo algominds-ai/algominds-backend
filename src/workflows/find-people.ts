@@ -5,6 +5,7 @@ import { z } from "zod";
 import { config } from "@/config";
 import {
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	loadIcp,
 	openRun,
@@ -72,6 +73,20 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 	FindPeoplePayload
 > {
 	override async run(
+		event: Readonly<WorkflowEvent<FindPeoplePayload>>,
+		step: WorkflowStep,
+	): Promise<FindPeopleSummary> {
+		try {
+			return await this.runToCompletion(event, step);
+		} catch (error) {
+			await step.do("close-errored", config.stepConfig.databaseCall, () =>
+				closeErroredRun(this.env, event.instanceId),
+			);
+			throw error;
+		}
+	}
+
+	private async runToCompletion(
 		event: Readonly<WorkflowEvent<FindPeoplePayload>>,
 		step: WorkflowStep,
 	): Promise<FindPeopleSummary> {
