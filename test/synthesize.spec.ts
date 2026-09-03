@@ -32,6 +32,15 @@ function userContent(request: CapturedRequest | undefined): string {
 	return message.content;
 }
 
+function systemContent(request: CapturedRequest | undefined): string {
+	if (!request) throw new Error("expected a captured request");
+	const body = RequestBodySchema.parse(request.body);
+	const message = body.messages.find((entry) => entry.role === "system");
+	if (!message)
+		throw new Error("expected a system message in the request body");
+	return message.content;
+}
+
 function modelInBody(request: CapturedRequest | undefined): string {
 	if (!request) throw new Error("expected a captured request");
 	return RequestBodySchema.parse(request.body).model;
@@ -498,5 +507,21 @@ describe("the routing rule: a shape draw searches, an event draw calls the agent
 		);
 		expect(result.plan.eventWindowDays).toBe(365);
 		expect(result.plan.recencyDays).toBe(30);
+	});
+
+	it("tells the model to route a fact only public evidence can establish to the agent", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await runSynthesize();
+
+		const instructions = systemContent(gateway.calls[0]);
+		expect(instructions).toContain("a fact that only public evidence can");
+		expect(instructions).toContain(
+			"Choose it too when a hard gate names something",
+		);
+		expect(instructions).toContain(
+			"the shape alone cannot guarantee it: then `recency` names that evidence",
+		);
 	});
 });

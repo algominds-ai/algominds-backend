@@ -11,6 +11,7 @@ import {
 	uniqueIndex,
 	uuid,
 } from "drizzle-orm/pg-core";
+import { getDomain } from "tldts";
 import { organization } from "@/core/db/auth-schema";
 
 export const icp = pgTable(
@@ -194,13 +195,16 @@ export type Evidence = typeof evidence.$inferSelect;
 export type NewEvidence = typeof evidence.$inferInsert;
 
 /**
- * Lowercases a domain or URL and removes one leading `www.`. Does not
- * collapse to a registrable domain (see `docs/solutions/domain-normalization.md`).
+ * Lowercases a domain or URL and collapses it to its registrable domain
+ * (eTLD+1), subsuming `www.` and every other subdomain. A host with no
+ * registrable domain under the public suffix list — `localhost`, an address
+ * literal, a bare TLD — is returned as-is (see
+ * `docs/solutions/domain-normalization.md`).
  */
 export function normalizeDomain(input: string): string {
 	const url = new URL(input.includes("://") ? input : `https://${input}`);
 	const host = url.hostname.toLowerCase();
-	return host.startsWith("www.") ? host.slice(4) : host;
+	return getDomain(host) ?? host;
 }
 
 const IPV4_HOST = /^\d+(\.\d+)*$/;
