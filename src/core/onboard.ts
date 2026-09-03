@@ -7,7 +7,7 @@ import { sellerAngles } from "@/core/seller-angles";
 import type { IcpBuyer, IcpSeller } from "@/core/synthesize";
 import { IcpBuyerSchema } from "@/core/synthesize";
 
-export const NOTE_MAX_LENGTH = 2000;
+export const NOTE_MAX_LENGTH = 16000;
 /** A note only becomes the profile when the model writes nothing, and every later search runs from it, so it has to be long enough to describe a buyer. One run once stored a 39 character profile this way. */
 export const NOTE_MIN_LENGTH = 120;
 const SELLER_PAGE_LIMIT = 25;
