@@ -88,3 +88,11 @@ export const PROFILES: readonly Profile[] = [
 export function profileBySlug(slug: string): Profile | undefined {
 	return PROFILES.find((profile) => profile.slug === slug);
 }
+
+/** Every profile when `slug` is null, or the one profile it names; throws for a slug no profile carries. */
+export function profilesFor(slug: string | null): readonly Profile[] {
+	if (!slug) return PROFILES;
+	const profile = profileBySlug(slug);
+	if (!profile) throw new Error(`eval: unknown profile ${slug}`);
+	return [profile];
+}

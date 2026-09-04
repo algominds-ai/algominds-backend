@@ -17,7 +17,7 @@ describe("buildManifest", () => {
 			experiment: "abc123-baseline",
 			commit: "abc123",
 			arm: "baseline",
-			datasetSnapshotId: "snap-1",
+			datasetSnapshotIds: { mstone: "snap-1" },
 			configText: "companies:\n  maxRounds: 3\n",
 			scorerPrompts: { fitReading: "read the fit and explain why" },
 			resolvedModelIds: { reasoning: "gpt-5" },
@@ -35,6 +35,7 @@ describe("buildManifest", () => {
 		);
 		expect(manifest.winnerRule).toBe(WINNER_RULE);
 		expect(manifest.runIds.mstone).toEqual(["run-1", "run-2"]);
+		expect(manifest.datasetSnapshotIds.mstone).toBe("snap-1");
 	});
 
 	it("carries a different config hash for a config that changed by one byte", async () => {
@@ -44,7 +45,7 @@ describe("buildManifest", () => {
 			experiment: "e",
 			commit: "c",
 			arm: "a",
-			datasetSnapshotId: null,
+			datasetSnapshotIds: {},
 			configText: base.text,
 			scorerPrompts: {},
 			resolvedModelIds: {},
@@ -58,7 +59,7 @@ describe("buildManifest", () => {
 			experiment: "e",
 			commit: "c",
 			arm: "a",
-			datasetSnapshotId: null,
+			datasetSnapshotIds: {},
 			configText: changed.text,
 			scorerPrompts: {},
 			resolvedModelIds: {},

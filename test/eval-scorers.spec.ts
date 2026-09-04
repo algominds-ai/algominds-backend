@@ -1,5 +1,6 @@
 import type { Verdict } from "@eval/headline";
-import { gatesPass, qualifiedCoverage } from "@eval/scorers";
+import type { FitReading, ReadFit, UnlabelledCompany } from "@eval/scorers";
+import { fitReading, gatesPass, qualifiedCoverage } from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
 function verdict(overrides: Partial<Verdict> = {}): Verdict {
@@ -67,5 +68,42 @@ describe("qualifiedCoverage", () => {
 				output: { verdict: none, runId: "r", skipped: null },
 			}),
 		).toBeNull();
+	});
+});
+
+const COMPANY: UnlabelledCompany = {
+	domain: "a.com",
+	name: "A Inc",
+	description: "runs production Kubernetes",
+};
+
+function fakeReadFit(reading: FitReading): ReadFit {
+	return async () => reading;
+}
+
+describe("fitReading", () => {
+	it("scores fits as 1 and carries the model's own reason", async () => {
+		const result = await fitReading(
+			fakeReadFit({ verdict: "fits", reason: "matches the profile's shape" }),
+			COMPANY,
+		);
+		expect(result).toEqual({
+			domain: "a.com",
+			score: 1,
+			reason: "matches the profile's shape",
+		});
+	});
+
+	it("scores does-not-fit as 0 and unclear as 0.5", async () => {
+		const notFit = await fitReading(
+			fakeReadFit({ verdict: "does-not-fit", reason: "wrong industry" }),
+			COMPANY,
+		);
+		expect(notFit.score).toBe(0);
+		const unclear = await fitReading(
+			fakeReadFit({ verdict: "unclear", reason: "record is too thin" }),
+			COMPANY,
+		);
+		expect(unclear.score).toBe(0.5);
 	});
 });

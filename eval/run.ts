@@ -4,6 +4,7 @@ import type { ApiClient } from "@eval/api-client";
 import { startCompaniesRun, waitForRunTerminal } from "@eval/api-client";
 import type { SeededTrial } from "@eval/arm-db";
 import { bootstrapArmSchema, seedArmProfiles } from "@eval/arm-db";
+import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
 import { startDevServer } from "@eval/dev-server";
 import { computeVerdict } from "@eval/headline";
 import { readKeyFile } from "@eval/keys-io";
@@ -14,8 +15,9 @@ import {
 	MAX_PROFILE_SPEND_DOLLARS,
 	MAX_SPEND_DOLLARS,
 	MIN_TRIALS,
-	PROFILES,
+	type PROFILES,
 	profileBySlug,
+	profilesFor,
 } from "@eval/profiles";
 import {
 	readRequiresProvingPass,
@@ -47,11 +49,10 @@ export function parseArgs(argv: readonly string[]): RunArgs {
 	return { profile, arm, trials };
 }
 
-export function selectedProfiles(slug: string | null): typeof PROFILES {
-	if (!slug) return PROFILES;
-	const profile = profileBySlug(slug);
-	if (!profile) throw new Error(`eval: unknown profile ${slug}`);
-	return [profile];
+export function selectedProfiles(
+	slug: string | null,
+): readonly (typeof PROFILES)[number][] {
+	return profilesFor(slug);
 }
 
 export type Budget = { spent: number; perProfile: Record<string, number> };
@@ -83,6 +84,18 @@ function gitCommit(): string {
 	return execFileSync("git", ["rev-parse", "HEAD"], {
 		encoding: "utf8",
 	}).trim();
+}
+
+async function syncDatasetsFor(
+	profiles: typeof PROFILES,
+): Promise<Record<string, string | null>> {
+	const snapshotIds: Record<string, string | null> = {};
+	for (const profile of profiles) {
+		const key = readKeyFile(profile.slug, profile.icpId);
+		const synced = await syncKeyDataset(openKeyDataset(profile.slug), key);
+		snapshotIds[profile.slug] = synced.version;
+	}
+	return snapshotIds;
 }
 
 export type TrialCase = SeededTrial & { bars: ProfileBars };
@@ -182,6 +195,7 @@ type ManifestContext = {
 	startedAt: string;
 	budget: Budget;
 	rows: readonly { input: TrialCase; output: TrialOutput }[];
+	datasetSnapshotIds: Record<string, string | null>;
 };
 
 async function writeExperimentManifest(
@@ -191,7 +205,7 @@ async function writeExperimentManifest(
 		experiment: context.experiment,
 		commit: context.commit,
 		arm: context.arm,
-		datasetSnapshotId: null,
+		datasetSnapshotIds: context.datasetSnapshotIds,
 		configText: readFileSync("config.yaml", "utf8"),
 		scorerPrompts: {},
 		resolvedModelIds: {},
@@ -211,6 +225,7 @@ async function writeExperimentManifest(
 async function main(): Promise<void> {
 	const args = parseArgs(process.argv.slice(2));
 	const profiles = selectedProfiles(args.profile);
+	const datasetSnapshotIds = await syncDatasetsFor(profiles);
 	const { seeded, apiUrl, stop } = await setUpArm(args.arm, args.trials);
 	const cases = casesFor(seeded).filter((trial) =>
 		profiles.some((profile) => profile.slug === trial.slug),
@@ -240,6 +255,7 @@ async function main(): Promise<void> {
 			startedAt,
 			budget,
 			rows,
+			datasetSnapshotIds,
 		});
 		printVerdicts(rows);
 		console.log(`eval: total spend $${budget.spent.toFixed(4)}`);

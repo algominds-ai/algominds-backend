@@ -21,6 +21,7 @@
 		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
 		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs",
 		"eval:label": "bun eval/label.ts",
+		"eval:datasets": "bun eval/datasets.ts",
 		"eval": "bun eval/run.ts",
 		"schemas": "schemalint check-node --profile openai --source 'src/**/*.ts' --exclude 'src/core/providers/exa/*.ts' --exclude 'src/http/schemas.ts' --config package.json --format human"
 	},

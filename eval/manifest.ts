@@ -16,7 +16,7 @@ export type ManifestInput = {
 	experiment: string;
 	commit: string;
 	arm: string;
-	datasetSnapshotId: string | null;
+	datasetSnapshotIds: Readonly<Record<string, string | null>>;
 	configText: string;
 	scorerPrompts: Readonly<Record<string, string>>;
 	resolvedModelIds: Readonly<Record<string, string>>;
@@ -31,7 +31,7 @@ export type Manifest = {
 	experiment: string;
 	commit: string;
 	arm: string;
-	datasetSnapshotId: string | null;
+	datasetSnapshotIds: Readonly<Record<string, string | null>>;
 	configHash: string;
 	scorerPromptHashes: Record<string, string>;
 	resolvedModelIds: Record<string, string>;
@@ -64,7 +64,7 @@ export async function buildManifest(input: ManifestInput): Promise<Manifest> {
 		experiment: input.experiment,
 		commit: input.commit,
 		arm: input.arm,
-		datasetSnapshotId: input.datasetSnapshotId,
+		datasetSnapshotIds: { ...input.datasetSnapshotIds },
 		configHash: await sha256Hex(input.configText),
 		scorerPromptHashes: await hashEntries(input.scorerPrompts),
 		resolvedModelIds: { ...input.resolvedModelIds },
