@@ -26,56 +26,70 @@
 		],
 		"competitorTest": "A competitor sells vendor-agnostic identity-verification, KYC or age-assurance infrastructure into compliance, risk, legal and MLRO functions who need regulatory defensibility, not into growth or product teams optimizing signup conversion."
 	},
-	"description": "Ondato sells identity verification and age assurance as a conversion product: a 97% average pass rate, 30-second onboarding, 192 countries and 10,000+ document types. It fits consumer-facing digital businesses whose revenue depends on getting new users through signup: fintechs, neobanks and digital banks, payments companies and PSPs, lending and BNPL, trading and investment apps, crypto exchanges and wallets, and age-gated platforms such as adult content, gambling, gaming, social, dating, vaping and alcohol e-commerce. They serve consumers or SMBs in the United Kingdom, Ireland, the United States or Canada, and they qualify by disclosed revenue or funding raised, never by headcount: privately held, $2M to $250M raised or $1M to $150M revenue. Public companies and larger groups are named accounts, outside this motion.\n\nThe buyer is the growth side: the executives who own the signup funnel and are measured on conversion. Compliance-led buyers are not the target, and identity, KYC and age-verification vendors, compliance consultancies, agencies and non-profits are out of scope. A company is a target when a dated, public situation makes verification a launch or growth bottleneck: a new market entry or licence, a consumer product launch that needs signup verification, a fresh funding round with growth plans, users complaining about stuck verification, or age-assurance exposure under the UK Online Safety Act or US state age laws.",
+	"description": "Ondato sells identity verification and age assurance as a conversion product: a 97% average pass rate, 30-second onboarding, 192 countries and 10,000+ document types. It fits consumer-facing digital businesses whose revenue depends on getting new users through signup: fintechs, neobanks and digital banks, payments companies and PSPs, lending and BNPL, trading and investment apps, crypto exchanges and wallets, and age-gated platforms such as adult content, gambling, gaming, social, dating, vaping and alcohol e-commerce. They serve consumers or SMBs in the United Kingdom, Ireland, the United States or Canada. They are privately held and reachable for outbound: $2M to $250M raised or $1M to $150M in revenue; public companies and larger groups are named accounts outside this motion. Headcount never qualifies or disqualifies.\n\nThe buyer is the growth side: the executives who own the signup funnel and are measured on conversion. Compliance-led buyers are not the target, and identity, KYC and age-verification vendors, compliance consultancies, agencies and non-profits are out of scope. A dated, public situation is a bonus that shapes the message, never a condition of fit: a new market entry or licence, a consumer product launch that needs signup verification, a fresh funding round with growth plans, users complaining about stuck verification, or age-assurance exposure under the UK Online Safety Act or US state age laws.",
 	"requirements": [
 		{
 			"id": "r1",
 			"kind": "hard",
-			"text": "The company is headquartered in, or actively serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"text": "The company is headquartered in, or actively serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada."
 		},
 		{
 			"id": "r2",
 			"kind": "hard",
-			"text": "The company runs a high-volume digital consumer or SMB signup flow in fintech, neobanking, payments, lending, trading, crypto or an age-gated consumer platform, where identity or age verification sits inside onboarding.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"text": "The company runs a high-volume digital consumer or SMB signup flow in fintech, neobanking, digital banking, payments, lending, BNPL, trading, investing, crypto or an age-gated consumer platform, where identity or age verification sits inside onboarding."
 		},
 		{
 			"id": "r3",
 			"kind": "hard",
-			"text": "The company is not itself an identity-verification, KYC or age-verification vendor, a compliance consultancy, an agency or a non-profit.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"text": "The company is not itself an identity-verification, KYC or age-verification vendor, a compliance consultancy, an agency or a non-profit."
 		},
 		{
 			"id": "r4",
 			"kind": "hard",
-			"text": "The company is reachable for outbound: privately held, with total funding raised between $2M and $250M or disclosed annual revenue between $1M and $150M; headcount never qualifies or disqualifies it. A publicly listed company or one above those bands is a named account, not a target.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"text": "The company is privately held and reachable for outbound: total funding raised between $2M and $250M, or disclosed annual revenue between $1M and $150M. A publicly listed company, or one above those bands, is a named account, not a target. Headcount never qualifies or disqualifies."
 		},
 		{
 			"id": "r5",
-			"kind": "hard",
-			"text": "Within the last 12 months the company announced at least one of: a new market entry or a fresh banking, lending, e-money or payments licence going live in a new jurisdiction; a new consumer product, app, wallet, card, account type or trading feature that requires identity or age verification at signup; or, within the last 120 days, a funding round with stated user-growth or expansion plans.",
+			"kind": "soft",
 			"proof": "page",
-			"windowDays": 365
+			"windowDays": 365,
+			"text": "Within the last 12 months the company announced a new market entry, or a fresh banking, lending, e-money or payments licence going live in a new jurisdiction."
 		},
 		{
 			"id": "r6",
 			"kind": "soft",
-			"text": "The company's own users publicly complain, in app-store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup.",
 			"proof": "page",
-			"windowDays": 180
+			"windowDays": 365,
+			"text": "Within the last 12 months the company launched or announced a consumer product, app, wallet, card, account type or trading feature that requires identity or age verification at signup."
 		},
 		{
 			"id": "r7",
 			"kind": "soft",
-			"text": "The company is an age-gated platform serving UK or US users whose published compliance statement or enforcement coverage addresses the UK Online Safety Act's age-assurance duty or a US state age-verification law.",
 			"proof": "page",
-			"windowDays": 365
+			"windowDays": 120,
+			"text": "Within the last 120 days the company raised a funding round with stated user-growth or expansion plans."
+		},
+		{
+			"id": "r8",
+			"kind": "soft",
+			"proof": "page",
+			"windowDays": 180,
+			"text": "The company's own users publicly complain, in app-store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup."
+		},
+		{
+			"id": "r9",
+			"kind": "soft",
+			"proof": "page",
+			"windowDays": 365,
+			"text": "The company is an age-gated platform serving UK or US users whose published compliance statement or enforcement coverage addresses the UK Online Safety Act's age-assurance duty or a US state age-verification law."
 		}
 	]
 }
