@@ -22,10 +22,15 @@ export async function fallbackRoster(
 	const result = await getleadsDecisionMakers(ctx.env, domain).catch(
 		(error: unknown) => {
 			if (error instanceof RetryableProviderError) throw error;
-			return null;
+			return error instanceof Error ? error.message : String(error);
 		},
 	);
-	if (result === null) return [];
+	if (typeof result === "string") {
+		await appendEvidence(ctx.env, [
+			rawEvidenceRow(runCompanyId, "roster", "getleads", { error: result }),
+		]);
+		return [];
+	}
 	await appendEvidence(ctx.env, [
 		rawEvidenceRow(runCompanyId, "roster", "getleads", result.raw),
 	]);
