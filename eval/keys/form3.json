@@ -1,0 +1,126 @@
+{
+	"slug": "form3",
+	"icpId": "cf9f5feb-bdb7-43ab-8899-09f1e1fa468b",
+	"companies": {
+		"athenahealth.com": {
+			"label": null,
+			"name": "athenahealth",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"bmwgroup.com": {
+			"label": null,
+			"name": "BMW Group",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"bt.com": {
+			"label": null,
+			"name": "BT Group",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"cash.app": {
+			"label": null,
+			"name": "Cash App",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"datadoghq.com": {
+			"label": null,
+			"name": "Datadog",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"draftkings.com": {
+			"label": null,
+			"name": "DraftKings Inc.",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"expediagroup.com": {
+			"label": null,
+			"name": "Expedia Group",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"fanduel.com": {
+			"label": null,
+			"name": "FanDuel",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"hubspot.com": {
+			"label": null,
+			"name": "HubSpot",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"michelin.com": {
+			"label": null,
+			"name": "Michelin",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"millenniumbcp.pt": {
+			"label": null,
+			"name": "Millennium bcp",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"monzo.com": {
+			"label": null,
+			"name": "Monzo",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"postfinance.ch": {
+			"label": null,
+			"name": "PostFinance",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"roche.com": {
+			"label": null,
+			"name": "Roche",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"santander.com": {
+			"label": null,
+			"name": "Santander",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"spotify.com": {
+			"label": null,
+			"name": "Spotify",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"tubitv.com": {
+			"label": null,
+			"name": "Tubi",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"uber.com": {
+			"label": null,
+			"name": "Uber",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"wise.com": {
+			"label": null,
+			"name": "Wise",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		},
+		"zalando.com": {
+			"label": null,
+			"name": "Zalando",
+			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+		}
+	}
+}

@@ -1,0 +1,618 @@
+{
+	"slug": "mstone",
+	"icpId": "15ac4f10-20f3-4970-967e-a1882a57f28f",
+	"companies": {
+		"acenda.com.au": {
+			"label": null,
+			"name": "Acenda Life",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"afgonline.com.au": {
+			"label": null,
+			"name": "AFG",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"agl.com.au": {
+			"label": null,
+			"name": "AGL",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"aia.com.au": {
+			"label": null,
+			"name": "AIA Australia",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"aldicareers.com.au": {
+			"label": null,
+			"name": "ALDI Stores Australia",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"alintaenergy.com.au": {
+			"label": null,
+			"name": "Alinta Energy",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"allianz.com.au": {
+			"label": null,
+			"name": "Allianz Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"aurecongroup.com": {
+			"label": null,
+			"name": "Aurecon",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"ausnetservices.com.au": {
+			"label": null,
+			"name": "AusNet",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"australianretirementtrust.com.au": {
+			"label": null,
+			"name": "Australian Retirement Trust",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"australiansuper.com": {
+			"label": null,
+			"name": "AustralianSuper",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"australianunity.com.au": {
+			"label": null,
+			"name": "Australian Unity",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"aware.com.au": {
+			"label": null,
+			"name": "Aware Super",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"bankwest.com.au": {
+			"label": null,
+			"name": "Bankwest",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"bapcor.com.au": {
+			"label": null,
+			"name": "Bapcor Limited",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"bendigoadelaide.com.au": {
+			"label": null,
+			"name": "Bendigo Bank",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"beyondbank.com.au": {
+			"label": null,
+			"name": "Beyond Bank Australia",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"boq.com.au": {
+			"label": null,
+			"name": "BOQ Group",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"boral.com": {
+			"label": null,
+			"name": "Boral",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"bt.com.au": {
+			"label": null,
+			"name": "BT",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"built.com.au": {
+			"label": null,
+			"name": "Built",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"bunnings.com.au": {
+			"label": null,
+			"name": "Bunnings",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"carlislehomes.com.au": {
+			"label": null,
+			"name": "Carlisle Homes",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"carsales.com.au": {
+			"label": null,
+			"name": "carsales",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"cbussuper.com.au": {
+			"label": null,
+			"name": "Cbus Super Fund",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"chemistwarehouse.com.au": {
+			"label": null,
+			"name": "Chemist Warehouse",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"coates.com.au": {
+			"label": null,
+			"name": "Coates",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"colescareers.com.au": {
+			"label": null,
+			"name": "Coles Group",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"commbank.com.au": {
+			"label": null,
+			"name": "Commonwealth Bank",
+			"firstSeenRunId": "companies_dom-7f758a0ed8b3_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:17:13.302Z"
+		},
+		"commsec.com.au": {
+			"label": null,
+			"name": "CommSec",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"comparethemarket.com.au": {
+			"label": null,
+			"name": "Compare the Market Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"computershare.com": {
+			"label": null,
+			"name": "Computershare Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"costagroup.com.au": {
+			"label": null,
+			"name": "Costa",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"countryroadgroup.com.au": {
+			"label": null,
+			"name": "Country Road Group",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"cpbcon.com.au": {
+			"label": null,
+			"name": "CPB Contractors",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"cuscal.com": {
+			"label": null,
+			"name": "Cuscal Limited",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"davidjones.com.au": {
+			"label": null,
+			"name": "David Jones",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"dickerdata.com.au": {
+			"label": null,
+			"name": "Dicker Data",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"downergroup.com": {
+			"label": null,
+			"name": "Downer",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"easygo.io": {
+			"label": null,
+			"name": "Easygo",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"elders.com.au": {
+			"label": null,
+			"name": "Elders",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"energyq.com.au": {
+			"label": null,
+			"name": "Energy Queensland",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"engie.com.au": {
+			"label": null,
+			"name": "ENGIE AU",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"equifax.com.au": {
+			"label": null,
+			"name": "Equifax Australia",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"foxtelgroup.com.au": {
+			"label": null,
+			"name": "Foxtel Group",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"fredon.com.au": {
+			"label": null,
+			"name": "Fredon",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"glencore.ws": {
+			"label": null,
+			"name": "Glencore Australia",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"greatsouthernbank.com.au": {
+			"label": null,
+			"name": "Great Southern Bank",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"hansenyuncken.com.au": {
+			"label": null,
+			"name": "Hansen Yuncken",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"harrisfarm.com.au": {
+			"label": null,
+			"name": "Harris Farm Markets",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"hcf.com.au": {
+			"label": null,
+			"name": "HCF Australia",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"iberdrola.com.au": {
+			"label": null,
+			"name": "Iberdrola Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"ing.com.au": {
+			"label": null,
+			"name": "ING Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"inpex.com.au": {
+			"label": null,
+			"name": "INPEX Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"iress.com": {
+			"label": null,
+			"name": "Iress",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"ivegroup.com.au": {
+			"label": null,
+			"name": "IVE Group",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"kmart.com.au": {
+			"label": null,
+			"name": "Kmart Australia Limited",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"leidos.com": {
+			"label": null,
+			"name": "Leidos Australia",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"macmahon.com.au": {
+			"label": null,
+			"name": "Macmahon",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"mebank.com.au": {
+			"label": null,
+			"name": "ME Bank",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"meriton.com.au": {
+			"label": null,
+			"name": "Meriton Group",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"middys.com.au": {
+			"label": null,
+			"name": "Middy's Electrical",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"mitre10.com.au": {
+			"label": null,
+			"name": "Mitre 10 Australia",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"mycar.com.au": {
+			"label": null,
+			"name": "mycar",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"myer.com.au": {
+			"label": null,
+			"name": "MYER",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"nab.com.au": {
+			"label": null,
+			"name": "NAB",
+			"firstSeenRunId": "companies_dom-7f758a0ed8b3_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:17:13.302Z"
+		},
+		"nbn.com.au": {
+			"label": null,
+			"name": "nbn® Australia",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"ngmgroup.com.au": {
+			"label": null,
+			"name": "NGM Group",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"nib.com.au": {
+			"label": null,
+			"name": "nib Group",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"novigi.com.au": {
+			"label": null,
+			"name": "Novigi",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"optus.com.au": {
+			"label": null,
+			"name": "Optus",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"otr.com.au": {
+			"label": null,
+			"name": "OTR",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"peoplefirstbank.com.au": {
+			"label": null,
+			"name": "People First Bank",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"perpetual.com.au": {
+			"label": null,
+			"name": "Perpetual Limited",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"pharmacare.com.au": {
+			"label": null,
+			"name": "PharmaCare Laboratories",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"rabobank.com.au": {
+			"label": null,
+			"name": "Rabobank Australia",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"seek.com": {
+			"label": null,
+			"name": "SEEK",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"servicestream.com.au": {
+			"label": null,
+			"name": "Service Stream",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"shellenergy.com.au": {
+			"label": null,
+			"name": "Shell Energy Australia",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"sportsbet.com.au": {
+			"label": null,
+			"name": "Sportsbet",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"stan.com.au": {
+			"label": null,
+			"name": "Stan.",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"stanwell.com": {
+			"label": null,
+			"name": "Stanwell Corporation Limited",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"stgeorge.com.au": {
+			"label": null,
+			"name": "St.George Bank",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"suncorpbank.com.au": {
+			"label": null,
+			"name": "Suncorp Bank",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"suncorpgroup.com.au": {
+			"label": null,
+			"name": "Suncorp Group",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"superretailgroup.com.au": {
+			"label": null,
+			"name": "Super Retail Group",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"tabcorp.com.au": {
+			"label": null,
+			"name": "Tabcorp",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"thiess.com": {
+			"label": null,
+			"name": "Thiess",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"tpgtelecom.com.au": {
+			"label": null,
+			"name": "TPG Telecom",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"transurban.com": {
+			"label": null,
+			"name": "Transurban",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"ugllimited.com": {
+			"label": null,
+			"name": "UGL",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"uhg.com.au": {
+			"label": null,
+			"name": "UHG (Unified Healthcare Group)",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"unisuper.com.au": {
+			"label": null,
+			"name": "UniSuper",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"vanguard.com.au": {
+			"label": null,
+			"name": "Vanguard Australia",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"ventia.com": {
+			"label": null,
+			"name": "Ventia",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"vivaenergy.com.au": {
+			"label": null,
+			"name": "Viva Energy Australia",
+			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
+			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+		},
+		"wesfarmershealth.com.au": {
+			"label": null,
+			"name": "Wesfarmers Health",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"westpac.com.au": {
+			"label": null,
+			"name": "Westpac",
+			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
+			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+		},
+		"woolworths.com.au": {
+			"label": null,
+			"name": "Woolworths Supermarkets",
+			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
+			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+		},
+		"woolworthsgroup.com.au": {
+			"label": null,
+			"name": "Woolworths Group",
+			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+		},
+		"yancoal.com.au": {
+			"label": null,
+			"name": "Yancoal Australia Ltd",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		},
+		"zurich.com.au": {
+			"label": null,
+			"name": "Zurich Australia",
+			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
+			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+		}
+	}
+}

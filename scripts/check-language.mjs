@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
-const ROOTS = ["src", "test", "build", "scripts"];
+const ROOTS = ["src", "test", "build", "scripts", "eval"];
 const SELF = "scripts/check-language.mjs";
 const EXT = /\.(ts|tsx|mts|cts|mjs|js)$/;
 

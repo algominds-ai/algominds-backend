@@ -1,0 +1,120 @@
+{
+	"slug": "carta",
+	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
+	"companies": {
+		"01health.com": {
+			"label": null,
+			"name": "01Health",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"aegisai.ai": {
+			"label": null,
+			"name": "Aegis AI Security",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"arintra.com": {
+			"label": null,
+			"name": "Arintra",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"augustus.com": {
+			"label": null,
+			"name": "Augustus",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"axle.insure": {
+			"label": null,
+			"name": "Axle",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"beacon.security": {
+			"label": null,
+			"name": "Beacon Security",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"callosum.com": {
+			"label": null,
+			"name": "Callosum",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"cytix.io": {
+			"label": null,
+			"name": "Cytix",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"metriport.com": {
+			"label": null,
+			"name": "Metriport",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"mindgard.ai": {
+			"label": null,
+			"name": "Mindgard",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"nogginhq.com": {
+			"label": null,
+			"name": "Noggin HQ",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"norberthealth.com": {
+			"label": null,
+			"name": "Norbert Health",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"onoshealth.com": {
+			"label": null,
+			"name": "Onos Health",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"oreenergy.com": {
+			"label": null,
+			"name": "Ore Energy",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"poweredbylight.com": {
+			"label": null,
+			"name": "Light",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"quaise.com": {
+			"label": null,
+			"name": "Quaise Energy",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"smallest.ai": {
+			"label": null,
+			"name": "smallest.ai",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"takt.io": {
+			"label": null,
+			"name": "Takt",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		},
+		"velatir.com": {
+			"label": null,
+			"name": "Velatir",
+			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+		}
+	}
+}

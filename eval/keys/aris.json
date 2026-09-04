@@ -1,0 +1,498 @@
+{
+	"slug": "aris",
+	"icpId": "5e8ca999-8a24-442a-853b-23c11bfd5d05",
+	"companies": {
+		"align.com": {
+			"label": null,
+			"name": "Align",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"allitsupported.com": {
+			"label": null,
+			"name": "ALL I.T.",
+			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:46:26.095Z"
+		},
+		"americanitsolutions.com": {
+			"label": null,
+			"name": "American IT Solutions, Inc",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"apex-its.com": {
+			"label": null,
+			"name": "Apex IT Services",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"ascentient.com": {
+			"label": null,
+			"name": "Ascentient IT Support & Managed IT Services",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"asgct.com": {
+			"label": null,
+			"name": "ASG Information Technologies",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"boxit.net": {
+			"label": null,
+			"name": "boxIT, LLC",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"brite.com": {
+			"label": null,
+			"name": "Brite",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"bytesmanagedit.com": {
+			"label": null,
+			"name": "Bytes Managed IT & Cybersecurity",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"capstoneitservices.com": {
+			"label": null,
+			"name": "Capstone IT Services",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"ccsinet.com": {
+			"label": null,
+			"name": "CCSI - A Sourcepass Company",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"centerlogic.com": {
+			"label": null,
+			"name": "Centerlogic IT Services",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"circlemsp.com": {
+			"label": null,
+			"name": "Circle MSP",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"completetechnology.com": {
+			"label": null,
+			"name": "Complete Technology Services, LLC",
+			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
+			"lastSeenAt": "2026-09-03T04:45:52.758Z"
+		},
+		"compunet.biz": {
+			"label": null,
+			"name": "CompuNet, Inc.",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"comsolutionsusa.com": {
+			"label": null,
+			"name": "ComSolutions-Technical Services",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"coretechs.it": {
+			"label": null,
+			"name": "Coretechs",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"cortavo.com": {
+			"label": null,
+			"name": "Cortavo, Inc.",
+			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:41:21.709Z"
+		},
+		"csu-it.com": {
+			"label": null,
+			"name": "Computer Services Unlimited (CSU)",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"dartmsp.com": {
+			"label": null,
+			"name": "DART Tech",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"datastrike.com": {
+			"label": null,
+			"name": "DataStrike",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"dcsny.com": {
+			"label": null,
+			"name": "Delaney Computer Services, Inc.",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"dssitservices.com": {
+			"label": null,
+			"name": "DSS - IT & Cyber Security Management",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"e3itservices.com": {
+			"label": null,
+			"name": "E3 IT Services, LLC",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"elauwit.com": {
+			"label": null,
+			"name": "Elauwit Connection",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"elevancesystems.com": {
+			"label": null,
+			"name": "Elevance Systems, Inc.",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"enitechsolutions.com": {
+			"label": null,
+			"name": "Enitech",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"enkompas.com": {
+			"label": null,
+			"name": "enkompas Technology Solutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"entechus.com": {
+			"label": null,
+			"name": "Entech",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"epsilon-inc.com": {
+			"label": null,
+			"name": "Epsilon Inc., an AMERICAN SYSTEMS Company",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"everound.com": {
+			"label": null,
+			"name": "Everound",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"fastteks.com": {
+			"label": null,
+			"name": "Fast-teks On-Site Computer Services",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"ferrumit.com": {
+			"label": null,
+			"name": "Ferrum Technology Services, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"fidelisnw.com": {
+			"label": null,
+			"name": "Fidelis",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"fieldguide.it": {
+			"label": null,
+			"name": "FieldGuide IT",
+			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
+			"lastSeenAt": "2026-09-03T04:45:52.758Z"
+		},
+		"fusiontek.com": {
+			"label": null,
+			"name": "FusionTek",
+			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:41:21.709Z"
+		},
+		"goabacus.com": {
+			"label": null,
+			"name": "Abacus IT",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"goleadingit.com": {
+			"label": null,
+			"name": "LeadingIT",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"guideit.com": {
+			"label": null,
+			"name": "GuideIT",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"i-techsupport.com": {
+			"label": null,
+			"name": "i-Tech Support, Inc.",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"impacttg.com": {
+			"label": null,
+			"name": "IMPACT Technology Group",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"integrityts.com": {
+			"label": null,
+			"name": "Integrity Technology Solutions",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"intrascloudservices.com": {
+			"label": null,
+			"name": "Intras Cloud Services",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"intratem.com": {
+			"label": null,
+			"name": "IntraTEM",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"ispn.net": {
+			"label": null,
+			"name": "ISPN",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"iterogroup.com": {
+			"label": null,
+			"name": "Itero Group, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"itsolutions-inc.com": {
+			"label": null,
+			"name": "IT Solutions",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"jkconsulting.com": {
+			"label": null,
+			"name": "JK Technology Solutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"kbisp.com": {
+			"label": null,
+			"name": "Kinetix Solutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"linkamericanearshore.com": {
+			"label": null,
+			"name": "LinkAmerica Nearshore",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"magna5.com": {
+			"label": null,
+			"name": "Magna5",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"mybridgepoint.com": {
+			"label": null,
+			"name": "BridgePoint Technologies, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"ncs-online.com": {
+			"label": null,
+			"name": "Network Computer Solutions",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"netopsconsulting.com": {
+			"label": null,
+			"name": "NetOps Consulting",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"nettech.net": {
+			"label": null,
+			"name": "NetTech",
+			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
+			"lastSeenAt": "2026-09-03T04:45:52.758Z"
+		},
+		"newboldtech.com": {
+			"label": null,
+			"name": "NewBold Technologies",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+		},
+		"nsgllc.com": {
+			"label": null,
+			"name": "Network Solutions Group llc",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"olstechnology.com": {
+			"label": null,
+			"name": "OLS Technology",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"omegasystemscorp.com": {
+			"label": null,
+			"name": "Omega Systems",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+		},
+		"onediversified.com": {
+			"label": null,
+			"name": "Diversified",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+		},
+		"onwardtek.com": {
+			"label": null,
+			"name": "Onward Technologies, Inc.",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"optric.com": {
+			"label": null,
+			"name": "OPTRIC",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"osgusa.com": {
+			"label": null,
+			"name": "Outsource Solutions Group",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"paragusit.com": {
+			"label": null,
+			"name": "Paragus IT",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"readitech.com": {
+			"label": null,
+			"name": "ReadiTech",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"resultant.com": {
+			"label": null,
+			"name": "Resultant",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+		},
+		"riministreet.com": {
+			"label": null,
+			"name": "Rimini Street",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+		},
+		"rojoli.com": {
+			"label": null,
+			"name": "Rojoli Services, Inc.",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"rpmit.com": {
+			"label": null,
+			"name": "RPM Technologies, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"safepointit.com": {
+			"label": null,
+			"name": "SafePoint IT",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"saw.it": {
+			"label": null,
+			"name": "Server At Work, LLC",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"secur-serv.com": {
+			"label": null,
+			"name": "Secur-Serv",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+		},
+		"sharedit.com": {
+			"label": null,
+			"name": "Shared IT Inc",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"sourcepass.com": {
+			"label": null,
+			"name": "Sourcepass",
+			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:46:26.095Z"
+		},
+		"soutec-group.com": {
+			"label": null,
+			"name": "Soutec US",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+		},
+		"spartaserv.com": {
+			"label": null,
+			"name": "Sparta Services LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"strong-tech.com": {
+			"label": null,
+			"name": "Strong Technical Services",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"valortech.io": {
+			"label": null,
+			"name": "ValorTech | Managed IT & Cybersecurity",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+		},
+		"verito.com": {
+			"label": null,
+			"name": "Verito",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		},
+		"wheelhouseit.com": {
+			"label": null,
+			"name": "WheelHouse IT",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+		},
+		"xpertechs.com": {
+			"label": null,
+			"name": "XPERTECHS",
+			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:46:26.095Z"
+		},
+		"xsolutions.com": {
+			"label": null,
+			"name": "XSolutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+		}
+	}
+}
