@@ -133,6 +133,7 @@ export function profileReply(overrides: ProfileReplyOverrides = {}): string {
 				windowDays: null,
 			},
 		],
+		sizeBand: null,
 		...overrides,
 	});
 }
