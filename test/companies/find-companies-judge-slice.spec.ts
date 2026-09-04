@@ -197,19 +197,51 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 		),
 	};
 }
-describe("what one round hands the next when the judge never saw every candidate", () => {
-	it("excludes a domain that passed the filter but fell outside the judge's slice", async () => {
+describe("a round short of its count judges its next slice before a new round", () => {
+	it("judges the next slice instead of a new round, and still excludes the domains it never judged", async () => {
 		const round1 = Array.from({ length: 5 }, (_, i) =>
 			goodResult(`cand${i}.com`),
 		);
 		const { calls, result } = run(1, [round1, [goodResult("final.com")]], {
-			rejectsByCall: [[0, 1, 2], []],
+			rejectsByCall: [[0, 1], []],
 		});
 
-		await result;
+		const outcome = await result;
 
-		expect(calls[1]?.excludeDomains).toContain("cand3.com");
-		expect(calls[1]?.excludeDomains).toContain("cand4.com");
+		expect(outcome.rounds).toBe(1);
+		expect(calls).toHaveLength(1);
+		expect(outcome.companies[0]?.domain).toBe("cand2.com");
+		expect(outcome.seenDomains).toEqual(expect.arrayContaining(["cand4.com"]));
+	});
+
+	it("judges at most three slices in one round, however many candidates remain", async () => {
+		const round1 = Array.from({ length: 30 }, (_, i) =>
+			goodResult(`cand${i}.com`),
+		);
+		const refuseAll = [0, 1, 2, 3, 4, 5];
+		const { search } = scriptedSearch([round1, []]);
+		const { synthesize } = scriptedSynthesize();
+		let judgeCalls = 0;
+		const judge = scriptedJudge([refuseAll, refuseAll, refuseAll, refuseAll]);
+
+		const outcome = await findCompanies(
+			icp,
+			3,
+			testOptions(),
+			testDeps({
+				recentDomains: async () => [],
+				synthesize,
+				search,
+				gate,
+				judge: async (requirements, rows, env, evidence) => {
+					judgeCalls += 1;
+					return judge(requirements, rows, env, evidence);
+				},
+			}),
+		);
+
+		expect(judgeCalls).toBe(3);
+		expect(outcome.companies).toHaveLength(0);
 	});
 });
 

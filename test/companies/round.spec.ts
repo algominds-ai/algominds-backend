@@ -273,9 +273,9 @@ describe("proving runs before the judge, and every hard page requirement gets it
 		});
 		const deps: FindCompaniesDeps = {
 			...spy.deps,
-			prove: async (rows, requirement) => {
-				proveCalls.push(requirement.id);
-				const hit = hitFor(requirement.id);
+			prove: async (rows, demand) => {
+				proveCalls.push(demand.requirement.id);
+				const hit = hitFor(demand.requirement.id);
 				return rows.map((_candidate, index) => ({ index, hit }));
 			},
 		};
