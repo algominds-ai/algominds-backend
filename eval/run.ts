@@ -26,6 +26,8 @@ import {
 } from "@eval/read";
 import type { TrialOutput } from "@eval/scorers";
 import { CODE_SCORERS } from "@eval/scorers";
+import type { RunTraceMeta } from "@eval/trace";
+import { logTrace, traceCompaniesRun } from "@eval/trace";
 import { Eval } from "braintrust";
 import postgres from "postgres";
 
@@ -110,10 +112,33 @@ export function casesFor(seeded: readonly SeededTrial[]): TrialCase[] {
 
 type TrialResult = TrialOutput & { costDollars: number };
 
+type ArmIdentity = { arm: string; commit: string };
+
+/** Logs one trial's Braintrust trace, best-effort: a trace failure never fails the trial it describes. */
+async function traceTrial(
+	sql: postgres.Sql,
+	runId: string,
+	trial: TrialCase,
+	identity: ArmIdentity,
+): Promise<void> {
+	const meta: RunTraceMeta = {
+		profile: trial.slug,
+		arm: identity.arm,
+		trial: trial.trialIndex,
+		commit: identity.commit,
+	};
+	try {
+		await logTrace(await traceCompaniesRun(sql, runId, meta));
+	} catch (error) {
+		console.error(`eval: trace failed for ${runId}: ${String(error)}`);
+	}
+}
+
 async function runOneTrial(
 	client: ApiClient,
 	sql: postgres.Sql,
 	trial: TrialCase,
+	identity: ArmIdentity,
 ): Promise<TrialResult> {
 	const runId = await startCompaniesRun(client, trial.icpId, COMPANIES_PER_RUN);
 	await waitForRunTerminal(client, runId);
@@ -130,16 +155,22 @@ async function runOneTrial(
 		requiresProvingPass,
 		stored,
 	});
+	await traceTrial(sql, runId, trial, identity);
 	return { verdict, runId, skipped: null, costDollars: run.costDollars };
 }
 
 /** One trial's task: skip it without spending anything once the budget blocks it, otherwise start, wait, read back and score it, banking what it actually cost. */
-function buildTask(apiUrl: string, sql: postgres.Sql, budget: Budget) {
+function buildTask(
+	apiUrl: string,
+	sql: postgres.Sql,
+	budget: Budget,
+	identity: ArmIdentity,
+) {
 	return async (trial: TrialCase): Promise<TrialOutput> => {
 		const blocked = budgetBlock(budget, trial.slug);
 		if (blocked) return { verdict: null, runId: null, skipped: blocked };
 		const client: ApiClient = { baseUrl: apiUrl, apiKey: trial.apiKey };
-		const result = await runOneTrial(client, sql, trial);
+		const result = await runOneTrial(client, sql, trial, identity);
 		bankSpend(budget, trial.slug, result.costDollars);
 		return { verdict: result.verdict, runId: result.runId, skipped: null };
 	};
@@ -238,7 +269,7 @@ async function main(): Promise<void> {
 	try {
 		const result = await Eval("algo-backend", {
 			data: cases.map((trial) => ({ input: trial })),
-			task: buildTask(apiUrl, sql, budget),
+			task: buildTask(apiUrl, sql, budget, { arm: args.arm, commit }),
 			scores: CODE_SCORERS,
 			experimentName: experiment,
 			metadata: { commit, arm: args.arm },
