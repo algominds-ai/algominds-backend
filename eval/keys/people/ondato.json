@@ -1,0 +1,406 @@
+{
+	"slug": "ondato",
+	"icpId": "18c490ee-009d-44b8-afd3-e0103f5a1ae7",
+	"people": {
+		"https://linkedin.com/in/alberto-bassan-91aa8b2b": {
+			"label": null,
+			"name": "Alberto Bassan",
+			"title": "CEO Fanatics Latin America",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/aman-gupta-aa79424": {
+			"label": null,
+			"name": "Aman Gupta",
+			"title": "SVP Growth",
+			"company": "fanduel.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/andrew-biggs-b4681552": {
+			"label": null,
+			"name": "Andrew Biggs",
+			"title": "CEO, IG Securities",
+			"company": "ig.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/andrew-low-ah-kee-b112742": {
+			"label": null,
+			"name": "Andrew Low Ah Kee",
+			"title": "Chief Executive Officer | Fanatics Commerce",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/andyjsmart": {
+			"label": null,
+			"name": "Andy Smart",
+			"title": "Chief Product Officer",
+			"company": "monzo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/antoinelenel": {
+			"label": null,
+			"name": "Antoine Le Nel",
+			"title": "Global Chief Growth and Marketing Officer",
+			"company": "revolut.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/aonghus-o-maoilmhichil-538bb2139": {
+			"label": null,
+			"name": "Aonghus O Maoilmhichil",
+			"title": "Chief Revenue Officer",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/apeperjr": {
+			"label": null,
+			"name": "Alan Peper Jr",
+			"title": "Founder and CEO",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/art-jed-265b1511": {
+			"label": null,
+			"name": "Art JED",
+			"title": "Chief Executive Officer",
+			"company": "paymiq.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
+		"https://linkedin.com/in/bprafulkumar": {
+			"label": null,
+			"name": "Baiju Bhatt",
+			"title": "Founder & CEO",
+			"company": "robinhood.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/catherine-ferdon-1b93b422": {
+			"label": null,
+			"name": "Catherine Ferdon",
+			"title": "Chief Marketing Officer",
+			"company": "coinbase.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/coyneaj": {
+			"label": null,
+			"name": "AJ Coyne",
+			"title": "Chief Marketing Officer",
+			"company": "monzo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/diana-layfield-a677a0": {
+			"label": null,
+			"name": "Diana Layfield",
+			"title": "Group CEO",
+			"company": "monzo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/divesh-chandiramani-25358917": {
+			"label": null,
+			"name": "Divesh Chandiramani",
+			"title": "Head of Product - Investments",
+			"company": "ig.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/drmohamadsawwaf": {
+			"label": null,
+			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
+			"title": "Founder & Group Chief Executive Officer",
+			"company": "manzil.co",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/fernando-fanton-43641413": {
+			"label": null,
+			"name": "Fernando Fanton",
+			"title": "Chief Technology and Product Officer (CPTO)",
+			"company": "monzo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/gino-guatavita-7269139b": {
+			"label": null,
+			"name": "Gino Guatavita",
+			"title": "Co-Founder & President",
+			"company": "kontigo.lat",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
+		"https://linkedin.com/in/hazel-chi": {
+			"label": null,
+			"name": "Hazel Chi",
+			"title": "Head of Product, Fanatics App",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/jamie-gersch": {
+			"label": null,
+			"name": "Jamie Gersch",
+			"title": "Chief Marketing Officer & EVP, Fanatics Commerce",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/jdpmldn": {
+			"label": null,
+			"name": "JD Millwood",
+			"title": "Chief Product Officer",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/jeremi-gorman": {
+			"label": null,
+			"name": "Jeremi Gorman",
+			"title": "Chief Revenue Officer",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/jesus-castillo-81a58b186": {
+			"label": null,
+			"name": "Jesus Castillo",
+			"title": "CEO & Co-Founder",
+			"company": "kontigo.lat",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
+		"https://linkedin.com/in/jonathan-edson-ab63382": {
+			"label": null,
+			"name": "Jonathan Edson",
+			"title": "Senior Vice President Business Development",
+			"company": "fanduel.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/justin-tsai-b637011": {
+			"label": null,
+			"name": "Justin Tsai",
+			"title": "Chief Product Officer",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/kelly-cortina-b5101747": {
+			"label": null,
+			"name": "Kelly Cortina",
+			"title": "Chief Product Officer of Apparel & Headwear, SVP",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/kelly-g-882a63111": {
+			"label": null,
+			"name": "Kelly G.",
+			"title": "Chief Executive Officer Greater China",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/ken-turner-b00624": {
+			"label": null,
+			"name": "Ken Turner",
+			"title": "Chief Marketing Officer",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/lance-fensterman-01a9133": {
+			"label": null,
+			"name": "Lance Fensterman",
+			"title": "Chief Executive Officer, Fanatics Events",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/lorenzo-forte-41b25369": {
+			"label": null,
+			"name": "Lorenzo Forte",
+			"title": "Chief Executive Officer - Fanatics Italy",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/masaki-yamashita-95200555": {
+			"label": null,
+			"name": "Masaki Yamashita",
+			"title": "Chief Marketing Officer / Executive Officer",
+			"company": "ig.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/matthew-king-75590811": {
+			"label": null,
+			"name": "Matthew King",
+			"title": "Chief Executive Officer, Fanatics Betting & Gaming",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/michael-carney-6776991": {
+			"label": null,
+			"name": "Michael Carney",
+			"title": "CEO, Monzo Bank Europe",
+			"company": "monzo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/michael-vaughan-4a8355": {
+			"label": null,
+			"name": "Michael Vaughan",
+			"title": "CEO, IG US Holdings, parent of tastytrade, tastylive, tastyfx and tastycrypto",
+			"company": "ig.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/nickbelluk": {
+			"label": null,
+			"name": "Nick Bell",
+			"title": "Chief Executive Officer - Fanatics Collect",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/nickmellios": {
+			"label": null,
+			"name": "Nicolaos Mellios",
+			"title": "CEO",
+			"company": "blocpal.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
+		"https://linkedin.com/in/nstoronsky": {
+			"label": null,
+			"name": "Nik Storonsky",
+			"title": "Founder & CEO",
+			"company": "revolut.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/patrickrausch": {
+			"label": null,
+			"name": "Patrick Rausch",
+			"title": "Chief Marketing & Sales Officer, EMEA",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/peterlu92": {
+			"label": null,
+			"name": "Peter Lu",
+			"title": "Head of Product, US",
+			"company": "monzo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/scott-meadows-cfa-94a9b248": {
+			"label": null,
+			"name": "Scott Meadows, CFA",
+			"title": "Senior Director, Head of Business Development",
+			"company": "coinbase.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/selena-kalvaria-00830066": {
+			"label": null,
+			"name": "Selena Kalvaria",
+			"title": "Chief Marketing Officer, Betting & Gaming & Fanatics App",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/sharaz-hussain-183485133": {
+			"label": null,
+			"name": "Sharaz Hussain",
+			"title": "SEO/CEO (UAE)",
+			"company": "ig.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/sharon-manikon-deane-7a32ba8": {
+			"label": null,
+			"name": "Sharon Manikon-Deane",
+			"title": "MD, Product APAC & ME",
+			"company": "ig.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/susan-segal-6aa91b44": {
+			"label": null,
+			"name": "Susan Segal",
+			"title": "President and CEO",
+			"company": "robinhood.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/sychan82": {
+			"label": null,
+			"name": "SY C.",
+			"title": "Senior Director, Business Development and Strategic Partnerships",
+			"company": "metamask.io",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/timomall": {
+			"label": null,
+			"name": "Tim O'Malley",
+			"title": "Chief Digital Product Officer - Fanatics Collectibles",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/timvansamang": {
+			"label": null,
+			"name": "Tim Van Samang",
+			"title": "SVP of Digital Marketing",
+			"company": "blocpal.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
+		"https://linkedin.com/in/tomas-bartos": {
+			"label": null,
+			"name": "Tomas B.",
+			"title": "Chief Executive Officer",
+			"company": "peymo.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
+		"https://linkedin.com/in/tucker-kain-6ab5222": {
+			"label": null,
+			"name": "Tucker Kain",
+			"title": "Chief Strategy and Growth Officer",
+			"company": "fanaticsinc.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/vlad-tenev-7037591b": {
+			"label": null,
+			"name": "Vlad Tenev",
+			"title": "Co-Founder, Chairman, CEO",
+			"company": "robinhood.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04"
+		},
+		"https://linkedin.com/in/zeiadidris": {
+			"label": null,
+			"name": "Zeiad Idris",
+			"title": "Founder & CEO",
+			"company": "algbra.com",
+			"location": null,
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		}
+	}
+}
