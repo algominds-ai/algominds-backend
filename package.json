@@ -17,7 +17,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
-		"db:test:reset": "PGPASSWORD=postgres dropdb --if-exists -h localhost -p 5432 -U postgres algo_test && PGPASSWORD=postgres createdb -h localhost -p 5432 -U postgres algo_test && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/algo_test drizzle-kit migrate",
+		"db:test:reset": "PGPASSWORD=postgres dropdb --if-exists -h localhost -p 5432 -U postgres ${TEST_DB:-algo_test} && PGPASSWORD=postgres createdb -h localhost -p 5432 -U postgres ${TEST_DB:-algo_test} && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/${TEST_DB:-algo_test} drizzle-kit migrate",
 		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
 		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs",
 		"eval:label": "bun eval/label.ts",

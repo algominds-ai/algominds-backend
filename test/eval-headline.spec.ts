@@ -108,6 +108,12 @@ describe("computeVerdict", () => {
 		expect(verdict.gates.noDuplicateOrganisationGroup).toBe(false);
 	});
 
+	it("fails recordBoundsHold when a stored company carries no name", () => {
+		const built = input();
+		built.stored = [company({ name: null })];
+		expect(computeVerdict(built).gates.recordBoundsHold).toBe(false);
+	});
+
 	it("requires a citation, a quote and a found check only when the profile demands proof", () => {
 		const built = input({ requiresProvingPass: true });
 		const withoutProof = computeVerdict(built);

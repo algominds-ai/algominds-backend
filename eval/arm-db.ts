@@ -148,16 +148,17 @@ async function seedOneTrial(
 }
 
 /**
- * One trial's worth of organization, API key and frozen `icp` row for every
- * profile the eval measures, inserted fresh into `eval_<arm>`. The returned
- * `apiKey` values exist only in memory for the caller to use immediately —
- * never logged, never written to a file.
+ * The actual seeding work, against whatever already-migrated database
+ * `databaseUrl` names. Split from `seedArmProfiles` so a test can run it
+ * against the Workers vitest pool's own test database, which is already
+ * migrated, instead of needing `bootstrapArmSchema`'s `child_process` calls
+ * that pool cannot make.
  */
-export async function seedArmProfiles(
-	arm: string,
+export async function seedProfilesAt(
+	databaseUrl: string,
 	trials: number,
 ): Promise<SeededTrial[]> {
-	const client = postgres(armDatabaseUrl(arm), { max: 1 });
+	const client = postgres(databaseUrl, { max: 1 });
 	const connection = drizzle(client, { schema });
 	const auth = buildArmAuth(connection);
 	const seeded: SeededTrial[] = [];
@@ -171,4 +172,17 @@ export async function seedArmProfiles(
 		await client.end();
 	}
 	return seeded;
+}
+
+/**
+ * One trial's worth of organization, API key and frozen `icp` row for every
+ * profile the eval measures, inserted fresh into `eval_<arm>`. The returned
+ * `apiKey` values exist only in memory for the caller to use immediately —
+ * never logged, never written to a file.
+ */
+export function seedArmProfiles(
+	arm: string,
+	trials: number,
+): Promise<SeededTrial[]> {
+	return seedProfilesAt(armDatabaseUrl(arm), trials);
 }
