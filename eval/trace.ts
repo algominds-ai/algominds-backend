@@ -1,4 +1,6 @@
 import type { RunReport } from "@eval/headline";
+import type { KeyFile } from "@eval/label-core";
+import { emptyKeyFile } from "@eval/label-core";
 import { BRAINTRUST_PROJECT } from "@eval/profiles";
 import type {
 	CompanyTraceRecord,
@@ -7,6 +9,8 @@ import type {
 } from "@eval/read";
 import {
 	readCompanyTraceRecords,
+	readHardRecordRequirementTexts,
+	readRequiresProvingPass,
 	readRoundRefusals,
 	readRoundTraceRecords,
 	readRunReport,
@@ -16,8 +20,16 @@ import type {
 	PickTraceRecord,
 } from "@eval/read-people";
 import { readPeopleTraceRecords } from "@eval/read-people";
+import {
+	gateProven,
+	keyAccepted,
+	queryCarriesHardRequirements,
+	routeMatchesShape,
+	titleInBand,
+	verifiedTwoSources,
+} from "@eval/scorers";
 import type { Span } from "braintrust";
-import { initLogger } from "braintrust";
+import { currentSpan, initLogger } from "braintrust";
 import type { Sql } from "postgres";
 import postgres from "postgres";
 
@@ -32,6 +44,8 @@ export type SpanSpec = {
 	name: string;
 	input?: unknown;
 	output?: unknown;
+	expected?: string | null;
+	scores?: Record<string, number | null>;
 	metadata?: Record<string, SpanMetadataValue>;
 	children: SpanSpec[];
 };
@@ -77,11 +91,14 @@ function refusedSpan(refused: readonly RoundRefusalRow[]): SpanSpec {
 function roundSpan(
 	round: RoundTraceRecord,
 	refused: readonly RoundRefusalRow[],
+	requiresProvingPass: boolean,
+	hardRecordRequirementTexts: readonly string[],
 ): SpanSpec {
+	const query = round.plans[0]?.query ?? null;
 	return {
 		name: `round-${round.ordinal}`,
 		input: {
-			query: round.plans[0]?.query ?? null,
+			query,
 			angles: round.plans.map((plan) => plan.angle),
 			bounds: round.plans[0]
 				? {
@@ -92,13 +109,33 @@ function roundSpan(
 			countries: round.plans[0]?.countries ?? [],
 			route: round.route,
 		},
-		output: { funnel: round.funnel },
-		metadata: { ordinal: round.ordinal, seconds: round.seconds },
+		output: {
+			funnel: round.funnel,
+			carriesHardRequirements: query
+				? queryCarriesHardRequirements(query, hardRecordRequirementTexts)
+				: null,
+		},
+		scores: {
+			route_matches_shape: routeMatchesShape({
+				requiresProvingPass,
+				route: round.route,
+			}),
+		},
+		metadata: {
+			ordinal: round.ordinal,
+			seconds: round.seconds,
+			requiresProvingPass,
+		},
 		children: [judgeSpan(refused), refusedSpan(refused)],
 	};
 }
 
-function companySpan(company: CompanyTraceRecord): SpanSpec {
+function companySpan(
+	company: CompanyTraceRecord,
+	key: KeyFile,
+	requiresProvingPass: boolean,
+): SpanSpec {
+	const label = key.companies[company.domain]?.label ?? null;
 	return {
 		name: `company-${company.domain}`,
 		input: {
@@ -111,7 +148,16 @@ function companySpan(company: CompanyTraceRecord): SpanSpec {
 			evidenceCheck: company.evidenceCheck,
 			fitReason: company.fitReason,
 		},
-		metadata: { domain: company.domain },
+		expected: label,
+		scores: {
+			key_accepted: keyAccepted({ label }),
+			gate_proven: gateProven({
+				requiresProvingPass,
+				citedPage: company.citedPage,
+				evidenceCheck: company.evidenceCheck,
+			}),
+		},
+		metadata: { domain: company.domain, requiresProvingPass },
 		children: [],
 	};
 }
@@ -122,11 +168,23 @@ export type CompanyRunTraceInput = {
 	rounds: readonly RoundTraceRecord[];
 	refusalsByRound: ReadonlyMap<number, RoundRefusalRow[]>;
 	companies: readonly CompanyTraceRecord[];
+	key: KeyFile;
+	requiresProvingPass: boolean;
+	hardRecordRequirementTexts: readonly string[];
 };
 
 /** The whole span tree for one companies run, built purely from already-read data: no IO, so it is testable without Braintrust. */
 export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
-	const { run, meta, rounds, refusalsByRound, companies } = input;
+	const {
+		run,
+		meta,
+		rounds,
+		refusalsByRound,
+		companies,
+		key,
+		requiresProvingPass,
+		hardRecordRequirementTexts,
+	} = input;
 	return {
 		name: "companies-run",
 		metadata: {
@@ -138,9 +196,16 @@ export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
 		},
 		children: [
 			...rounds.map((round) =>
-				roundSpan(round, refusalsByRound.get(round.ordinal) ?? []),
+				roundSpan(
+					round,
+					refusalsByRound.get(round.ordinal) ?? [],
+					requiresProvingPass,
+					hardRecordRequirementTexts,
+				),
 			),
-			...companies.map(companySpan),
+			...companies.map((company) =>
+				companySpan(company, key, requiresProvingPass),
+			),
 		],
 	};
 }
@@ -155,6 +220,14 @@ function pickSpan(pick: PickTraceRecord, index: number): SpanSpec {
 			indexEmployer: pick.indexEmployer,
 			agreement: pick.agreement,
 			quoteCheck: pick.quoteCheck,
+		},
+		scores: {
+			title_in_band: titleInBand(pick.title),
+			verified_two_sources: verifiedTwoSources({
+				verdict: pick.verdict,
+				agreement: pick.agreement,
+				quoteCheckFound: pick.quoteCheck?.found ?? null,
+			}),
 		},
 		children: [],
 	};
@@ -190,21 +263,32 @@ export function buildPeopleRunTrace(input: PeopleRunTraceInput): SpanSpec {
 	};
 }
 
+export type CompanyScoringContext = { icpId: string; key: KeyFile };
+
 export async function traceCompaniesRun(
 	sql: Sql,
 	runId: string,
+	scoring: CompanyScoringContext,
 	meta: RunTraceMeta,
 ): Promise<SpanSpec> {
 	const run = await readRunReport(sql, runId);
 	const rounds = await readRoundTraceRecords(sql, runId, run.finishedAt);
 	const refusalsByRound = await readRoundRefusals(sql, runId);
 	const companies = await readCompanyTraceRecords(sql, runId);
+	const requiresProvingPass = await readRequiresProvingPass(sql, scoring.icpId);
+	const hardRecordRequirementTexts = await readHardRecordRequirementTexts(
+		sql,
+		scoring.icpId,
+	);
 	return buildCompanyRunTrace({
 		run,
 		meta,
 		rounds,
 		refusalsByRound,
 		companies,
+		key: scoring.key,
+		requiresProvingPass,
+		hardRecordRequirementTexts,
 	});
 }
 
@@ -232,13 +316,30 @@ function logChildren(span: Span, children: readonly SpanSpec[]): void {
 function childEvent(spec: SpanSpec): {
 	input: unknown;
 	output: unknown;
+	expected?: string | null;
+	scores?: Record<string, number | null>;
 	metadata?: Record<string, SpanMetadataValue>;
 } {
 	return {
 		input: spec.input,
 		output: spec.output,
+		...(spec.expected !== undefined ? { expected: spec.expected } : {}),
+		...(spec.scores ? { scores: spec.scores } : {}),
 		...(spec.metadata ? { metadata: spec.metadata } : {}),
 	};
+}
+
+/**
+ * Attaches this trace's own scores and every child span onto the
+ * currently active Braintrust span, rather than opening a new root — used
+ * inside `Eval()`'s task, whose per-case span already exists, so every
+ * scorer's score lands on the experiment alongside the round and company
+ * it scored.
+ */
+export function attachTraceToCurrentSpan(spec: SpanSpec): void {
+	const span = currentSpan();
+	span.log(childEvent(spec));
+	logChildren(span, spec.children);
 }
 
 /**
@@ -265,6 +366,15 @@ export async function logTrace(
 	await logger.flush();
 }
 
+async function manualIcpId(sql: Sql, runId: string): Promise<string> {
+	const rows = await sql`select icp_id as "icpId" from run where id = ${runId}`;
+	const icpId = rows[0]?.icpId;
+	if (typeof icpId !== "string") {
+		throw new Error(`eval: trace found no icp for run ${runId}`);
+	}
+	return icpId;
+}
+
 async function main(): Promise<void> {
 	const runId = process.argv[2];
 	if (!runId) throw new Error("eval: trace needs a run id");
@@ -277,7 +387,9 @@ async function main(): Promise<void> {
 		commit: "manual",
 	};
 	try {
-		await logTrace(await traceCompaniesRun(sql, runId, meta));
+		const icpId = await manualIcpId(sql, runId);
+		const scoring = { icpId, key: emptyKeyFile("manual", icpId) };
+		await logTrace(await traceCompaniesRun(sql, runId, scoring, meta));
 		if (peopleRunId)
 			await logTrace(await tracePeopleRun(sql, peopleRunId, meta));
 	} finally {

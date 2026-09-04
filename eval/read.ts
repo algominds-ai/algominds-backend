@@ -2,7 +2,7 @@ import type { RunReport, StoredCompanyRecord } from "@eval/headline";
 import { IcpDocSchema } from "@eval/icp-doc";
 import type { Sql } from "postgres";
 import { z } from "zod";
-import { hardPageRequirements } from "@/core/requirements";
+import { hardPageRequirements, hardRequirements } from "@/core/requirements";
 
 const RunRowSchema = z.object({
 	id: z.string(),
@@ -73,6 +73,20 @@ export async function readRequiresProvingPass(
 	if (!row) return false;
 	const parsed = IcpRowSchema.parse(row);
 	return hardPageRequirements(parsed.doc?.requirements ?? []).length > 0;
+}
+
+/** Every hard, record-proof requirement's own text, for `queryCarriesHardRequirements` to check a round's query against. */
+export async function readHardRecordRequirementTexts(
+	sql: Sql,
+	icpId: string,
+): Promise<string[]> {
+	const rows = await sql`select doc from icp where id = ${icpId}`;
+	const row = rows[0];
+	if (!row) return [];
+	const parsed = IcpRowSchema.parse(row);
+	return hardRequirements(parsed.doc?.requirements ?? [])
+		.filter((req) => req.proof === "record")
+		.map((req) => req.text);
 }
 
 export type RoundDiagnostic = {

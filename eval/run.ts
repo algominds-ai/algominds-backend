@@ -8,6 +8,7 @@ import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
 import { startDevServer } from "@eval/dev-server";
 import { computeVerdict } from "@eval/headline";
 import { readKeyFile } from "@eval/keys-io";
+import type { KeyFile } from "@eval/label-core";
 import { buildManifest } from "@eval/manifest";
 import type { ProfileBars } from "@eval/profiles";
 import {
@@ -27,7 +28,11 @@ import {
 import type { TrialOutput } from "@eval/scorers";
 import { CODE_SCORERS } from "@eval/scorers";
 import type { RunTraceMeta } from "@eval/trace";
-import { logTrace, traceCompaniesRun } from "@eval/trace";
+import {
+	attachTraceToCurrentSpan,
+	logTrace,
+	traceCompaniesRun,
+} from "@eval/trace";
 import { Eval } from "braintrust";
 import postgres from "postgres";
 
@@ -113,14 +118,22 @@ export function casesFor(seeded: readonly SeededTrial[]): TrialCase[] {
 type TrialResult = TrialOutput & { costDollars: number };
 
 type ArmIdentity = { arm: string; commit: string };
+type TrialKey = { trial: TrialCase; key: KeyFile };
 
-/** Logs one trial's Braintrust trace, best-effort: a trace failure never fails the trial it describes. */
+/**
+ * Logs one trial's Braintrust trace, best-effort: a trace failure never
+ * fails the trial it describes. Attaches the same span tree, with every
+ * code scorer's score, onto the current experiment span, and separately
+ * logs it to project logs so the run is also browsable outside any one
+ * experiment.
+ */
 async function traceTrial(
 	sql: postgres.Sql,
 	runId: string,
-	trial: TrialCase,
+	trialKey: TrialKey,
 	identity: ArmIdentity,
 ): Promise<void> {
+	const { trial, key } = trialKey;
 	const meta: RunTraceMeta = {
 		profile: trial.slug,
 		arm: identity.arm,
@@ -128,7 +141,14 @@ async function traceTrial(
 		commit: identity.commit,
 	};
 	try {
-		await logTrace(await traceCompaniesRun(sql, runId, meta));
+		const spec = await traceCompaniesRun(
+			sql,
+			runId,
+			{ icpId: trial.icpId, key },
+			meta,
+		);
+		attachTraceToCurrentSpan(spec);
+		await logTrace(spec);
 	} catch (error) {
 		console.error(`eval: trace failed for ${runId}: ${String(error)}`);
 	}
@@ -155,7 +175,7 @@ async function runOneTrial(
 		requiresProvingPass,
 		stored,
 	});
-	await traceTrial(sql, runId, trial, identity);
+	await traceTrial(sql, runId, { trial, key }, identity);
 	return { verdict, runId, skipped: null, costDollars: run.costDollars };
 }
 

@@ -70,3 +70,140 @@ export async function fitReading(
 		reason: reading.reason,
 	};
 }
+
+/**
+ * The hosted evaluators recorded against a companies/people run's trace
+ * span tree, deliverable 2 of `docs/solutions/eval.md`'s Braintrust packet.
+ * Every choice mapping a hosted evaluator uses lives here, in code, mirrored
+ * into the saved Braintrust function rather than defined only in the UI.
+ */
+export type KeyAcceptedInput = { label: string | null };
+
+/** 1 when the profile's key accepts this stored company, 0 when it rejects it, null when the key has not labelled it yet. Scope: a company span, `expected` carrying the key's own label. */
+export function keyAccepted(input: KeyAcceptedInput): number | null {
+	if (input.label === "accept") return 1;
+	if (input.label?.startsWith("reject:")) return 0;
+	return null;
+}
+
+export type GateProvenInput = {
+	requiresProvingPass: boolean;
+	citedPage: string | null;
+	evidenceCheck: string | null;
+};
+
+/** 1 when the profile demands a hard page requirement and this company's citation checked found, 0 when it demanded one and the check failed or is missing, null when the profile demands no hard page requirement at all. Scope: a company span. */
+export function gateProven(input: GateProvenInput): number | null {
+	if (!input.requiresProvingPass) return null;
+	return input.citedPage !== null && input.evidenceCheck === "found" ? 1 : 0;
+}
+
+export const ROUND_ROUTES = ["exa-search", "exa-agent"] as const;
+
+export type RouteMatchesShapeInput = {
+	requiresProvingPass: boolean;
+	route: string | null;
+};
+
+/** 1 when a round's route matches the shape its requirements demand: `exa-search` with no hard page requirement, `exa-agent` with one. Scope: a round span. */
+export function routeMatchesShape(input: RouteMatchesShapeInput): number {
+	if (input.route === null) return 0;
+	const isAgent = input.route === ROUND_ROUTES[1];
+	return isAgent === input.requiresProvingPass ? 1 : 0;
+}
+
+export const FIT_READING_EVAL_LABELS = [
+	"fits",
+	"does_not_fit",
+	"cannot_tell",
+] as const;
+
+export type FitReadingEvalLabel = (typeof FIT_READING_EVAL_LABELS)[number];
+
+/** The score `fit_reading` (the hosted LLM classifier, scope: a company span) maps each of its labels to: `fits` proves the company against the profile, `does_not_fit` refutes it, `cannot_tell` skips the row rather than guessing. */
+export const FIT_READING_EVAL_SCORE: Record<
+	FitReadingEvalLabel,
+	number | null
+> = {
+	fits: 1,
+	does_not_fit: 0,
+	cannot_tell: null,
+};
+
+export const REACHABILITY_LABELS = [
+	"inside_band",
+	"above_band",
+	"below_band",
+] as const;
+
+export const QUERY_QUALITY_LABELS = [
+	"describes_the_company",
+	"keyword_list",
+	"restates_profile",
+] as const;
+
+const REQUIREMENT_WORD_MIN_LENGTH = 4;
+
+function contentWords(text: string): string[] {
+	return text
+		.toLowerCase()
+		.split(/\W+/)
+		.filter((word) => word.length >= REQUIREMENT_WORD_MIN_LENGTH);
+}
+
+/**
+ * Whether `query` carries at least one content word (four letters or more)
+ * from every hard record-proof requirement's own text — a loose,
+ * deterministic stand-in for "the query does not drop a hard requirement",
+ * computed alongside `query_quality`'s LLM label rather than asked of the
+ * model. Scope: a round span.
+ */
+export function queryCarriesHardRequirements(
+	query: string,
+	hardRecordRequirementTexts: readonly string[],
+): boolean {
+	const lowerQuery = query.toLowerCase();
+	return hardRecordRequirementTexts.every((text) =>
+		contentWords(text).some((word) => lowerQuery.includes(word)),
+	);
+}
+
+const SENIOR_TITLE_WORDS = [
+	"chief",
+	"vp",
+	"vice president",
+	"head of",
+	"director",
+	"founder",
+	"president",
+	"owner",
+	"partner",
+];
+
+/** 1 when a pick's title reads as a senior decision-maker title, a loose keyword match; 0 otherwise. Scope: a pick span. */
+export function titleInBand(title: string | null): number {
+	if (!title) return 0;
+	const lower = title.toLowerCase();
+	return SENIOR_TITLE_WORDS.some((word) => lower.includes(word)) ? 1 : 0;
+}
+
+export type VerifiedTwoSourcesInput = {
+	verdict: string | null;
+	agreement: string | null;
+	quoteCheckFound: boolean | null;
+};
+
+/**
+ * 1 when at least two of a pick's three independent confirmation signals
+ * held — the verify agent's own `CONFIRMED` verdict, a cross-source
+ * employer agreement of `SAME`, and a quote check that found the cited
+ * quote on its page — 0 otherwise. Scope: a pick span.
+ */
+export function verifiedTwoSources(input: VerifiedTwoSourcesInput): number {
+	const signals = [
+		input.verdict === "CONFIRMED",
+		input.agreement === "SAME",
+		input.quoteCheckFound === true,
+	];
+	return signals.filter(Boolean).length >= 2 ? 1 : 0;
+}

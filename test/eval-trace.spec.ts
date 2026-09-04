@@ -1,5 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
 import type { RunReport } from "@eval/headline";
+import type { KeyFile } from "@eval/label-core";
+import { emptyKeyFile } from "@eval/label-core";
 import type { CompanyTraceRecord, RoundTraceRecord } from "@eval/read";
 import type { PeopleCompanyTraceRecord } from "@eval/read-people";
 import {
@@ -103,26 +105,56 @@ function company(
 	};
 }
 
+function keyFile(label: string | null): KeyFile {
+	const base = emptyKeyFile("mstone", "icp-1");
+	if (label === null) return base;
+	return {
+		...base,
+		companies: {
+			"good.com": {
+				label,
+				name: "Good Co",
+				firstSeenRunId: "run-0",
+				lastSeenAt: "2026-01-01T00:00:00.000Z",
+			},
+		},
+	};
+}
+
+const REFUSED_MAP = new Map([
+	[
+		1,
+		[
+			{
+				domain: "bad.com",
+				reason: "contradicts r1",
+				statuses: [{ id: "r1", status: "contradicted" }],
+			},
+		],
+	],
+]);
+
+type CompanyRunTraceOverrides = Partial<
+	Parameters<typeof buildCompanyRunTrace>[0]
+>;
+
+function companyRunTraceInput(overrides: CompanyRunTraceOverrides = {}) {
+	return {
+		run: run(),
+		meta: { profile: "mstone", arm: "baseline", trial: 0, commit: "abc123" },
+		rounds: [round()],
+		refusalsByRound: REFUSED_MAP,
+		companies: [company()],
+		key: keyFile("accept"),
+		requiresProvingPass: true,
+		hardRecordRequirementTexts: ["runs its own onboarding funnel"],
+		...overrides,
+	};
+}
+
 describe("buildCompanyRunTrace", () => {
 	it("names the root span and carries the run's own metadata", () => {
-		const trace = buildCompanyRunTrace({
-			run: run(),
-			meta: { profile: "mstone", arm: "baseline", trial: 0, commit: "abc123" },
-			rounds: [round()],
-			refusalsByRound: new Map([
-				[
-					1,
-					[
-						{
-							domain: "bad.com",
-							reason: "contradicts r1",
-							statuses: [{ id: "r1", status: "contradicted" }],
-						},
-					],
-				],
-			]),
-			companies: [company()],
-		});
+		const trace = buildCompanyRunTrace(companyRunTraceInput());
 		expect(trace.name).toBe("companies-run");
 		expect(trace.metadata).toMatchObject({
 			profile: "mstone",
@@ -136,26 +168,12 @@ describe("buildCompanyRunTrace", () => {
 	});
 
 	it("gives every round a judge child and a refused child carrying the round-refusals evidence", () => {
-		const trace = buildCompanyRunTrace({
-			run: run(),
-			meta: { profile: "mstone", arm: "baseline", trial: 0, commit: "abc123" },
-			rounds: [round()],
-			refusalsByRound: new Map([
-				[
-					1,
-					[
-						{
-							domain: "bad.com",
-							reason: "contradicts r1",
-							statuses: [{ id: "r1", status: "contradicted" }],
-						},
-					],
-				],
-			]),
-			companies: [],
-		});
+		const trace = buildCompanyRunTrace(
+			companyRunTraceInput({ companies: [], key: keyFile(null) }),
+		);
 		const roundSpan = trace.children.find((child) => child.name === "round-1");
 		expect(roundSpan).toBeDefined();
+		expect(roundSpan?.scores).toEqual({ route_matches_shape: 0 });
 		const judge = roundSpan?.children.find((child) => child.name === "judge");
 		expect(judge?.output).toEqual({
 			refused: [
@@ -175,13 +193,9 @@ describe("buildCompanyRunTrace", () => {
 	});
 
 	it("gives every stored company its own span carrying the cited page, quote and fit reason", () => {
-		const trace = buildCompanyRunTrace({
-			run: run(),
-			meta: { profile: "mstone", arm: "baseline", trial: 0, commit: "abc123" },
-			rounds: [],
-			refusalsByRound: new Map(),
-			companies: [company()],
-		});
+		const trace = buildCompanyRunTrace(
+			companyRunTraceInput({ rounds: [], refusalsByRound: new Map() }),
+		);
 		const companySpan = trace.children.find(
 			(child) => child.name === "company-good.com",
 		);
@@ -190,6 +204,8 @@ describe("buildCompanyRunTrace", () => {
 			evidenceCheck: "found",
 			fitReason: "matches the profile's shape",
 		});
+		expect(companySpan?.expected).toBe("accept");
+		expect(companySpan?.scores).toEqual({ key_accepted: 1, gate_proven: 1 });
 	});
 });
 
@@ -314,7 +330,7 @@ function companyFixtureRow(
 async function seedCompanyRunFixture(
 	env: DbEnv,
 	tracker: FixtureTracker,
-): Promise<string> {
+): Promise<{ runId: string; icpId: string }> {
 	const org = await organizationForSlug(
 		env,
 		`eval-trace-test-org-${crypto.randomUUID()}`,
@@ -325,6 +341,15 @@ async function seedCompanyRunFixture(
 		organizationId: org.id,
 		domain: "seller.example",
 		description: "sells onboarding software",
+		requirements: [
+			{
+				id: "r1",
+				text: "publishes a live hiring page for a head of onboarding",
+				kind: "hard",
+				proof: "page",
+				windowDays: null,
+			},
+		],
 	});
 	tracker.icpIds.push(icpRow.id);
 	const runId = `eval-trace-test-${crypto.randomUUID()}`;
@@ -340,21 +365,22 @@ async function seedCompanyRunFixture(
 	await appendEvidence(env, [roundRefusalsFixtureRow(runId)]);
 	await saveCompanies(env, [companyFixtureRow(runId, icpRow.id, org.id)]);
 	await closeRun(env, runId, { status: "complete", costDollars: 0.42 });
-	return runId;
+	return { runId, icpId: icpRow.id };
 }
 
 async function readCompaniesTraceSpec(
 	url: string,
 	runId: string,
+	icpId: string,
 ): Promise<Awaited<ReturnType<typeof traceCompaniesRun>>> {
 	const sql = postgres(url, { max: 1 });
 	try {
-		return await traceCompaniesRun(sql, runId, {
-			profile: "mstone",
-			arm: "baseline",
-			trial: 0,
-			commit: "abc123",
-		});
+		return await traceCompaniesRun(
+			sql,
+			runId,
+			{ icpId, key: keyFile("accept") },
+			{ profile: "mstone", arm: "baseline", trial: 0, commit: "abc123" },
+		);
 	} finally {
 		await sql.end();
 	}
@@ -419,12 +445,16 @@ describe("traceCompaniesRun + logTrace", () => {
 
 	it("rebuilds a span tree from a fixture run and logs it through Braintrust's own transport", async () => {
 		const url = testEnv.HYPERDRIVE_DIRECT.connectionString;
-		const runId = await seedCompanyRunFixture(fakeEnv(url), tracker);
-		const spec = await readCompaniesTraceSpec(url, runId);
+		const { runId, icpId } = await seedCompanyRunFixture(fakeEnv(url), tracker);
+		const spec = await readCompaniesTraceSpec(url, runId, icpId);
 		expect(spec.name).toBe("companies-run");
 		expect(spec.children.map((child) => child.name)).toEqual(
 			expect.arrayContaining(["round-1", "company-good.com"]),
 		);
+		const companySpan = spec.children.find(
+			(child) => child.name === "company-good.com",
+		);
+		expect(companySpan?.scores).toEqual({ key_accepted: 1, gate_proven: 1 });
 		await assertLoggedThroughTestTransport(spec);
 	});
 });

@@ -1,6 +1,16 @@
 import type { Verdict } from "@eval/headline";
 import type { FitReading, ReadFit, UnlabelledCompany } from "@eval/scorers";
-import { fitReading, gatesPass, qualifiedCoverage } from "@eval/scorers";
+import {
+	fitReading,
+	gateProven,
+	gatesPass,
+	keyAccepted,
+	qualifiedCoverage,
+	queryCarriesHardRequirements,
+	routeMatchesShape,
+	titleInBand,
+	verifiedTwoSources,
+} from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
 function verdict(overrides: Partial<Verdict> = {}): Verdict {
@@ -105,5 +115,148 @@ describe("fitReading", () => {
 			COMPANY,
 		);
 		expect(unclear.score).toBe(0.5);
+	});
+});
+
+describe("keyAccepted", () => {
+	it("scores 1 for a label the key accepted", () => {
+		expect(keyAccepted({ label: "accept" })).toBe(1);
+	});
+
+	it("scores 0 for any reject category", () => {
+		expect(keyAccepted({ label: "reject:too-small" })).toBe(0);
+	});
+
+	it("is null for a company the key has not labelled yet", () => {
+		expect(keyAccepted({ label: null })).toBeNull();
+	});
+});
+
+describe("gateProven", () => {
+	it("is null when the profile demands no hard page requirement", () => {
+		expect(
+			gateProven({
+				requiresProvingPass: false,
+				citedPage: null,
+				evidenceCheck: null,
+			}),
+		).toBeNull();
+	});
+
+	it("scores 1 when a required citation checked found", () => {
+		expect(
+			gateProven({
+				requiresProvingPass: true,
+				citedPage: "https://good.com/careers",
+				evidenceCheck: "found",
+			}),
+		).toBe(1);
+	});
+
+	it("scores 0 when a required citation is missing or did not check found", () => {
+		expect(
+			gateProven({
+				requiresProvingPass: true,
+				citedPage: null,
+				evidenceCheck: null,
+			}),
+		).toBe(0);
+		expect(
+			gateProven({
+				requiresProvingPass: true,
+				citedPage: "https://good.com/careers",
+				evidenceCheck: "missing",
+			}),
+		).toBe(0);
+	});
+});
+
+describe("routeMatchesShape", () => {
+	it("scores 1 for a search round when no hard page requirement is demanded", () => {
+		expect(
+			routeMatchesShape({ requiresProvingPass: false, route: "exa-search" }),
+		).toBe(1);
+	});
+
+	it("scores 1 for an agent round when a hard page requirement is demanded", () => {
+		expect(
+			routeMatchesShape({ requiresProvingPass: true, route: "exa-agent" }),
+		).toBe(1);
+	});
+
+	it("scores 0 when the route does not match the shape, or is unknown", () => {
+		expect(
+			routeMatchesShape({ requiresProvingPass: true, route: "exa-search" }),
+		).toBe(0);
+		expect(routeMatchesShape({ requiresProvingPass: false, route: null })).toBe(
+			0,
+		);
+	});
+});
+
+describe("queryCarriesHardRequirements", () => {
+	it("is true when the query carries a content word from every requirement", () => {
+		expect(
+			queryCarriesHardRequirements(
+				"fintechs hiring a head of onboarding in the united states",
+				["runs its own onboarding funnel"],
+			),
+		).toBe(true);
+	});
+
+	it("is false when a requirement's content words are all absent", () => {
+		expect(
+			queryCarriesHardRequirements("generic software companies", [
+				"runs its own onboarding funnel",
+			]),
+		).toBe(false);
+	});
+
+	it("is true when there are no hard requirements to carry", () => {
+		expect(queryCarriesHardRequirements("anything at all", [])).toBe(true);
+	});
+});
+
+describe("titleInBand", () => {
+	it("scores 1 for a senior title", () => {
+		expect(titleInBand("VP of Growth")).toBe(1);
+		expect(titleInBand("Head of Onboarding")).toBe(1);
+	});
+
+	it("scores 0 for a junior title or a missing one", () => {
+		expect(titleInBand("Onboarding Associate")).toBe(0);
+		expect(titleInBand(null)).toBe(0);
+	});
+});
+
+describe("verifiedTwoSources", () => {
+	it("scores 1 when at least two of the three signals held", () => {
+		expect(
+			verifiedTwoSources({
+				verdict: "CONFIRMED",
+				agreement: "SAME",
+				quoteCheckFound: false,
+			}),
+		).toBe(1);
+	});
+
+	it("scores 0 when only one signal held", () => {
+		expect(
+			verifiedTwoSources({
+				verdict: "CONFIRMED",
+				agreement: null,
+				quoteCheckFound: false,
+			}),
+		).toBe(0);
+	});
+
+	it("scores 0 when no signal held", () => {
+		expect(
+			verifiedTwoSources({
+				verdict: null,
+				agreement: null,
+				quoteCheckFound: null,
+			}),
+		).toBe(0);
 	});
 });
