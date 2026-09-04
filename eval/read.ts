@@ -155,9 +155,23 @@ const RejectedCountsSchema = z.object({
 	judge: z.number(),
 });
 
+/** `round.plan` as an array of every angle the round searched, normally already the shape `roundPlan` writes; a bare object is an older round's single-angle shape, wrapped here to the same array. */
+function toPlanArray(
+	value: SearchPlanTrace | SearchPlanTrace[],
+): SearchPlanTrace[] {
+	return Array.isArray(value) ? value : [value];
+}
+
+const RoundPlanSchema = z
+	.union([z.array(SearchPlanTraceSchema), SearchPlanTraceSchema])
+	.nullish()
+	.transform((value) =>
+		value === null || value === undefined ? value : toPlanArray(value),
+	);
+
 const RoundTraceRowSchema = z.object({
 	ordinal: z.number(),
-	plan: z.array(SearchPlanTraceSchema).nullish(),
+	plan: RoundPlanSchema,
 	found: z.number(),
 	rejected: RejectedCountsSchema.nullish(),
 	started_at: z.coerce.date(),

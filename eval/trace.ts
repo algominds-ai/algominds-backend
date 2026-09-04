@@ -9,13 +9,12 @@ import {
 	readRoundTraceRecords,
 	readRunReport,
 } from "@eval/read";
-import { readPeopleTraceRecords } from "@eval/read-people";
 import type {
 	RunTraceMeta,
 	SpanMetadataValue,
 	SpanSpec,
 } from "@eval/trace-spans";
-import { buildCompanyRunTrace, buildPeopleRunTrace } from "@eval/trace-spans";
+import { buildCompanyRunTrace } from "@eval/trace-spans";
 import type { Span } from "braintrust";
 import { currentSpan, initLogger } from "braintrust";
 import type { Sql } from "postgres";
@@ -23,12 +22,11 @@ import postgres from "postgres";
 
 export type {
 	CompanyRunTraceInput,
-	PeopleRunTraceInput,
 	RunTraceMeta,
 	SpanMetadataValue,
 	SpanSpec,
 } from "@eval/trace-spans";
-export { buildCompanyRunTrace, buildPeopleRunTrace } from "@eval/trace-spans";
+export { buildCompanyRunTrace } from "@eval/trace-spans";
 
 export type CompanyScoringContext = { icpId: string; key: KeyFile };
 
@@ -57,16 +55,6 @@ export async function traceCompaniesRun(
 		requiresProvingPass,
 		hardRecordRequirementTexts,
 	});
-}
-
-export async function tracePeopleRun(
-	sql: Sql,
-	runId: string,
-	meta: RunTraceMeta,
-): Promise<SpanSpec> {
-	const run = await readRunReport(sql, runId);
-	const companies = await readPeopleTraceRecords(sql, runId);
-	return buildPeopleRunTrace({ run, meta, companies });
 }
 
 function logChildren(span: Span, children: readonly SpanSpec[]): void {
@@ -145,7 +133,6 @@ async function manualIcpId(sql: Sql, runId: string): Promise<string> {
 async function main(): Promise<void> {
 	const runId = process.argv[2];
 	if (!runId) throw new Error("eval: trace needs a run id");
-	const peopleRunId = process.argv[3] ?? null;
 	const sql = postgres(process.env.DATABASE_URL ?? "", { max: 1 });
 	const meta: RunTraceMeta = {
 		profile: "manual",
@@ -157,8 +144,6 @@ async function main(): Promise<void> {
 		const icpId = await manualIcpId(sql, runId);
 		const scoring = { icpId, key: emptyKeyFile("manual", icpId) };
 		await logTrace(await traceCompaniesRun(sql, runId, scoring, meta));
-		if (peopleRunId)
-			await logTrace(await tracePeopleRun(sql, peopleRunId, meta));
 	} finally {
 		await sql.end();
 	}

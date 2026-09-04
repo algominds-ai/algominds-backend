@@ -5,17 +5,11 @@ import type {
 	RoundRefusalRow,
 	RoundTraceRecord,
 } from "@eval/read";
-import type {
-	PeopleCompanyTraceRecord,
-	PickTraceRecord,
-} from "@eval/read-people";
 import {
 	gateProven,
 	keyAccepted,
 	queryCarriesHardRequirements,
 	routeMatchesShape,
-	titleInBand,
-	verifiedTwoSources,
 } from "@eval/scorers";
 
 export type SpanMetadataValue =
@@ -250,58 +244,5 @@ export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
 			),
 			...companies.map((company) => companySpan(company, companyScoring)),
 		],
-	};
-}
-
-function pickSpan(pick: PickTraceRecord, index: number): SpanSpec {
-	return {
-		name: pick.name ? `pick-${pick.name}` : `pick-${index}`,
-		input: { name: pick.name, title: pick.title },
-		output: {
-			verified: pick.verified,
-			verdict: pick.verdict,
-			indexEmployer: pick.indexEmployer,
-			agreement: pick.agreement,
-			quoteCheck: pick.quoteCheck,
-		},
-		scores: {
-			title_in_band: titleInBand(pick.title),
-			verified_two_sources: verifiedTwoSources({
-				verdict: pick.verdict,
-				agreement: pick.agreement,
-				quoteCheckFound: pick.quoteCheck?.found ?? null,
-			}),
-		},
-		children: [],
-	};
-}
-
-function peopleCompanySpan(company: PeopleCompanyTraceRecord): SpanSpec {
-	return {
-		name: `company-${company.domain}`,
-		input: { identity: company.identity, mode: company.mode },
-		output: { rosterSize: company.rosterSize, pickCount: company.picks.length },
-		children: company.picks.map(pickSpan),
-	};
-}
-
-export type PeopleRunTraceInput = {
-	run: RunReport;
-	meta: RunTraceMeta;
-	companies: readonly PeopleCompanyTraceRecord[];
-};
-
-/** The whole span tree for one people run, built purely from already-read data. */
-export function buildPeopleRunTrace(input: PeopleRunTraceInput): SpanSpec {
-	const { run, meta, companies } = input;
-	return {
-		name: "people-run",
-		metadata: {
-			...meta,
-			count: companies.length,
-			costDollars: run.costDollars,
-			seconds: wallClockSeconds(run),
-		},
-		children: companies.map(peopleCompanySpan),
 	};
 }

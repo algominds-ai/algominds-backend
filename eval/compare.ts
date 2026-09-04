@@ -2,13 +2,13 @@ import { BRAINTRUST_PROJECT } from "@eval/profiles";
 import { initExperiment } from "braintrust";
 import { z } from "zod";
 
-export type MetricDiff = {
+type MetricDiff = {
 	current: number | null;
 	previous: number | null;
 	diff: number | null;
 };
 
-export type ProfileComparison = {
+type ProfileComparison = {
 	profile: string;
 	coverage: MetricDiff;
 	costPerCompany: MetricDiff;
@@ -17,7 +17,7 @@ export type ProfileComparison = {
 	disappeared: string[];
 };
 
-export type ExperimentProfileSnapshot = {
+type ExperimentProfileSnapshot = {
 	profile: string;
 	count: number;
 	costDollars: number;
@@ -48,7 +48,7 @@ function perCompany(total: number | null, count: number): number | null {
  * an error. Pure: no Braintrust IO, so this is the tested half of
  * deliverable 3's comparison.
  */
-export function diffProfiles(
+function diffProfiles(
 	current: readonly ExperimentProfileSnapshot[],
 	previous: readonly ExperimentProfileSnapshot[],
 ): ProfileComparison[] {
@@ -96,7 +96,7 @@ const ExperimentRowSchema = z.object({
 	scores: z.object({ qualified_coverage: z.number().nullish() }).optional(),
 });
 
-export type ExperimentRow = z.infer<typeof ExperimentRowSchema>;
+type ExperimentRow = z.infer<typeof ExperimentRowSchema>;
 
 function emptySnapshot(profile: string): ExperimentProfileSnapshot {
 	return {
@@ -143,7 +143,7 @@ function foldOneRow(
 }
 
 /** One `ExperimentProfileSnapshot` per profile, folded from the raw rows a fetched experiment carries — the root `companies-run` span for count/cost/seconds/coverage, and every `company-<domain>` span for the domain set. Pure, so it is tested without a live Braintrust connection. */
-export function snapshotsFromRows(
+function snapshotsFromRows(
 	rows: readonly unknown[],
 ): ExperimentProfileSnapshot[] {
 	const byProfile = new Map<string, ExperimentProfileSnapshot>();
@@ -158,7 +158,7 @@ export function snapshotsFromRows(
 }
 
 /** Every profile's snapshot read back from one already-logged experiment, opened read-only by name. */
-export async function snapshotsFromExperiment(
+async function snapshotsFromExperiment(
 	experimentName: string,
 ): Promise<ExperimentProfileSnapshot[]> {
 	const experiment = initExperiment(BRAINTRUST_PROJECT, {
@@ -179,7 +179,7 @@ const ListExperimentsResponseSchema = z.object({
  * previous experiment of the same arm" deliverable 3 compares against.
  * Null when this is the arm's first experiment.
  */
-export async function findPreviousExperimentName(
+async function findPreviousExperimentName(
 	arm: string,
 	excludeName: string,
 	apiKey: string,
@@ -203,7 +203,7 @@ export async function findPreviousExperimentName(
 	);
 }
 
-export type ExperimentComparison = {
+type ExperimentComparison = {
 	previousExperiment: string | null;
 	profiles: ProfileComparison[];
 };

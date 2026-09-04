@@ -8,8 +8,6 @@ import {
 	qualifiedCoverage,
 	queryCarriesHardRequirements,
 	routeMatchesShape,
-	titleInBand,
-	verifiedTwoSources,
 } from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
@@ -214,49 +212,5 @@ describe("queryCarriesHardRequirements", () => {
 
 	it("is true when there are no hard requirements to carry", () => {
 		expect(queryCarriesHardRequirements("anything at all", [])).toBe(true);
-	});
-});
-
-describe("titleInBand", () => {
-	it("scores 1 for a senior title", () => {
-		expect(titleInBand("VP of Growth")).toBe(1);
-		expect(titleInBand("Head of Onboarding")).toBe(1);
-	});
-
-	it("scores 0 for a junior title or a missing one", () => {
-		expect(titleInBand("Onboarding Associate")).toBe(0);
-		expect(titleInBand(null)).toBe(0);
-	});
-});
-
-describe("verifiedTwoSources", () => {
-	it("scores 1 when at least two of the three signals held", () => {
-		expect(
-			verifiedTwoSources({
-				verdict: "CONFIRMED",
-				agreement: "SAME",
-				quoteCheckFound: false,
-			}),
-		).toBe(1);
-	});
-
-	it("scores 0 when only one signal held", () => {
-		expect(
-			verifiedTwoSources({
-				verdict: "CONFIRMED",
-				agreement: null,
-				quoteCheckFound: false,
-			}),
-		).toBe(0);
-	});
-
-	it("scores 0 when no signal held", () => {
-		expect(
-			verifiedTwoSources({
-				verdict: null,
-				agreement: null,
-				quoteCheckFound: null,
-			}),
-		).toBe(0);
 	});
 });
