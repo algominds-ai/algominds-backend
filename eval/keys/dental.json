@@ -92,6 +92,23 @@
 				"fitReason": "369 staff, Pittsburgh US, operates dental group partnering with affiliated dentists."
 			}
 		},
+		"parkdental.com": {
+			"label": null,
+			"name": "Park Dental",
+			"firstSeenRunId": "companies_14deaf65-de47-45a2-8b5c-9f44e90cfc5d_2026-09-04",
+			"lastSeenAt": "2026-09-04T12:24:37.623Z",
+			"record": {
+				"industry": null,
+				"description": "Park Dental is a dental group practice with over 50 practice locations throughout the Twin Cities, greater Minnesota, and western Wisconsin. The group's mission for over 50 years is to provide a lifetime of dental health through quality, patient-centered care.",
+				"workforceTotal": 323,
+				"country": "United States",
+				"foundedYear": 1972,
+				"citedPage": "https://parkdental.com/",
+				"citedDate": "2026-06-26T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "Headcount 323, Minneapolis US, dental group practice with 50+ locations satisfies all three requirements."
+			}
+		},
 		"prosmile.com": {
 			"label": "accept",
 			"name": "ProSmile",
