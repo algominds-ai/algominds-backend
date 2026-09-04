@@ -1,6 +1,7 @@
 import postgres from "postgres";
 
 const TEST_DATABASE_URL =
+	process.env.TEST_DATABASE_URL ??
 	"postgresql://postgres:postgres@localhost:5432/algo_test";
 
 /**
