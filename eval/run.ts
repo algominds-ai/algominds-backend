@@ -156,24 +156,26 @@ async function setUpArm(arm: string, trials: number): Promise<ArmSetup> {
 	return { seeded, apiUrl: server.url, stop: server.stop };
 }
 
+function verdictLine(input: TrialCase, output: TrialOutput): string | null {
+	const label = `${input.slug} t${input.trialIndex}`;
+	if (!output) return `${label}: no output (the trial threw)`;
+	if (output.skipped) return `${label}: skipped (${output.skipped})`;
+	const verdict = output.verdict;
+	if (!verdict) return null;
+	return (
+		`${label}: ${verdict.allGatesPass ? "PASS" : "FAIL"} gates, ` +
+		`coverage ${verdict.qualifiedCoverage ?? "n/a"}, ` +
+		`$${(verdict.costPerStoredCompany ?? 0).toFixed(3)}/company, ` +
+		`${(verdict.secondsPerStoredCompany ?? 0).toFixed(1)}s/company`
+	);
+}
+
 function printVerdicts(
 	rows: readonly { input: TrialCase; output: TrialOutput }[],
 ): void {
 	for (const { input, output } of rows) {
-		if (output.skipped) {
-			console.log(
-				`${input.slug} t${input.trialIndex}: skipped (${output.skipped})`,
-			);
-			continue;
-		}
-		const verdict = output.verdict;
-		if (!verdict) continue;
-		console.log(
-			`${input.slug} t${input.trialIndex}: ${verdict.allGatesPass ? "PASS" : "FAIL"} gates, ` +
-				`coverage ${verdict.qualifiedCoverage ?? "n/a"}, ` +
-				`$${(verdict.costPerStoredCompany ?? 0).toFixed(3)}/company, ` +
-				`${(verdict.secondsPerStoredCompany ?? 0).toFixed(1)}s/company`,
-		);
+		const line = verdictLine(input, output);
+		if (line) console.log(line);
 	}
 }
 

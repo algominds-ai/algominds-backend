@@ -131,7 +131,7 @@ async function seedOneTrial(
 			name: "eval",
 		},
 	});
-	const icpId = trialIndex === 0 ? profile.icpId : crypto.randomUUID();
+	const icpId = crypto.randomUUID();
 	await connection.insert(icp).values({
 		id: icpId,
 		organizationId: org.id,

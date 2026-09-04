@@ -41,7 +41,7 @@ describe("seedProfilesAt", () => {
 		}
 	});
 
-	it("seeds one organization, api key and icp row per profile per trial, with a distinct icp id per trial", async () => {
+	it("seeds one organization, api key and icp row per profile per trial, with a fresh icp id for every trial", async () => {
 		const seeded = await seedProfilesAt(
 			testEnv.HYPERDRIVE_DIRECT.connectionString,
 			2,
@@ -57,8 +57,8 @@ describe("seedProfilesAt", () => {
 			expect(trials).toHaveLength(2);
 			const first = trials.find((trial) => trial.trialIndex === 0);
 			const second = trials.find((trial) => trial.trialIndex === 1);
-			expect(first?.icpId).toBe(profile.icpId);
-			expect(second?.icpId).not.toBe(profile.icpId);
+			expect(first?.icpId).not.toBe(profile.icpId);
+			expect(second?.icpId).not.toBe(first?.icpId);
 			expect(new Set(trials.map((trial) => trial.organizationId)).size).toBe(2);
 			for (const trial of trials) {
 				expect(trial.apiKey.length).toBeGreaterThan(0);

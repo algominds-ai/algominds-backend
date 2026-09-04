@@ -1,0 +1,29 @@
+{
+	"experiment": "cf20d7e6759f-baseline",
+	"commit": "cf20d7e6759fda9b366d2c6c48566328f2720942",
+	"arm": "baseline",
+	"datasetSnapshotIds": {
+		"mstone": "1000197804246894571",
+		"aris": "1000197804247090748",
+		"form3": "1000197804247351519",
+		"carta": "1000197804247417981",
+		"dental": null,
+		"hvac": null
+	},
+	"configHash": "830c4ef1587b526a40ae637535db1f5ac1786ebca39e3ac3686e53217e985782",
+	"scorerPromptHashes": {},
+	"resolvedModelIds": {},
+	"runIds": {},
+	"startedAt": "2026-09-04T09:11:44.738Z",
+	"finishedAt": "2026-09-04T09:34:07.778Z",
+	"totalSpendDollars": 0,
+	"perProfileSpendDollars": {
+		"mstone": 0,
+		"aris": 0,
+		"form3": 0,
+		"carta": 0,
+		"dental": 0,
+		"hvac": 0
+	},
+	"winnerRule": "An arm wins a profile when every correctness gate holds; among arms that clear the gates, higher qualified coverage wins, then lower cost per stored company, then fewer seconds per stored company. Declared before any arm runs; never chosen after seeing the numbers."
+}
