@@ -1,6 +1,6 @@
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	buildAgentRunRequest,
 	toExaSearchResult,
@@ -48,6 +48,7 @@ const originalFetch = globalThis.fetch;
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	vi.unstubAllGlobals();
 });
 
 function exaEnv(): Env {
@@ -69,6 +70,28 @@ function stubFetch(response: Response): FetchStub {
 		return response;
 	};
 	return stub;
+}
+
+function sequenceFetch(responses: readonly Response[]): FetchStub {
+	const stub: FetchStub = { calls: 0, init: undefined };
+	globalThis.fetch = async (_input, init) => {
+		const response = responses[stub.calls] ?? responses[responses.length - 1];
+		stub.calls += 1;
+		stub.init = init;
+		if (!response) throw new Error("sequenceFetch: no response configured");
+		return response;
+	};
+	return stub;
+}
+
+function stubSleep(): { waits: number[] } {
+	const waits: number[] = [];
+	vi.stubGlobal("setTimeout", (callback: () => void, ms: number) => {
+		waits.push(ms);
+		callback();
+		return 0;
+	});
+	return { waits };
 }
 
 type AgentCompanyFixture = { name?: string; website?: string };
@@ -161,11 +184,13 @@ describe("agent run start request shape", () => {
 	});
 });
 
-describe("agent run error mapping", () => {
-	it("raises RetryableProviderError on a 429", async () => {
-		stubFetch(
+describe("agent run 429 retry", () => {
+	it("raises RetryableProviderError after a second 429", async () => {
+		const calls = sequenceFetch([
 			jsonResponse(429, { requestId: "req-429", message: "slow down" }),
-		);
+			jsonResponse(429, { requestId: "req-429-again", message: "slow down" }),
+		]);
+		stubSleep();
 
 		await expect(
 			startAgentRun(
@@ -179,8 +204,55 @@ describe("agent run error mapping", () => {
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
+		expect(calls.calls).toBe(2);
 	});
 
+	it("waits once for Retry-After then returns the retry's 200, with two fetches", async () => {
+		const calls = sequenceFetch([
+			new Response(null, { status: 429, headers: { "retry-after": "2" } }),
+			jsonResponse(200, { id: "run-after-retry", status: "running" }),
+		]);
+		const sleeps = stubSleep();
+
+		const result = await startAgentRun(
+			buildAgentRunRequest({
+				plan: planFor("GTM leads"),
+				count: 5,
+				today: "2026-08-30",
+				seller: null,
+				excludeDomains: [],
+			}),
+			exaEnv(),
+		);
+
+		expect(calls.calls).toBe(2);
+		expect(sleeps.waits).toEqual([2000]);
+		expect(result.id).toBe("run-after-retry");
+	});
+
+	it("caps a Retry-After above the configured maximum", async () => {
+		sequenceFetch([
+			new Response(null, { status: 429, headers: { "retry-after": "3600" } }),
+			jsonResponse(200, { id: "run-capped", status: "running" }),
+		]);
+		const sleeps = stubSleep();
+
+		await startAgentRun(
+			buildAgentRunRequest({
+				plan: planFor("GTM leads"),
+				count: 5,
+				today: "2026-08-30",
+				seller: null,
+				excludeDomains: [],
+			}),
+			exaEnv(),
+		);
+
+		expect(sleeps.waits).toEqual([5000]);
+	});
+});
+
+describe("agent run error mapping", () => {
 	it("raises NonRetryableError on a 400", async () => {
 		stubFetch(
 			jsonResponse(400, { requestId: "req-400", message: "bad request" }),

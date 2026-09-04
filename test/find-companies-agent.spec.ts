@@ -238,6 +238,83 @@ describe("one agent round fans out across the angles the planner wrote", () => {
 	});
 });
 
+describe("the poll interval scales with the angles in flight", () => {
+	function stubAgentCompanyPolling(completeAfterPolls: number): void {
+		const pollCounts = new Map<string, number>();
+		let nextId = 0;
+		globalThis.fetch = async (input, init) => {
+			if (init?.method === "POST") {
+				const id = `run-${nextId}`;
+				nextId += 1;
+				pollCounts.set(id, 0);
+				return jsonResponse({ id, status: "running" });
+			}
+			const id = String(input).split("/").pop() ?? "";
+			const count = (pollCounts.get(id) ?? 0) + 1;
+			pollCounts.set(id, count);
+			if (count < completeAfterPolls) {
+				return jsonResponse({ id, status: "running" });
+			}
+			return jsonResponse({
+				id,
+				object: "agent_run",
+				status: "completed",
+				stopReason: "schema_satisfied",
+				output: { text: "done", structured: { companies: [] } },
+				costDollars: { total: 0.01, agentCompute: 0.01 },
+			});
+		};
+	}
+
+	function sleepCapturingStep(): {
+		step: WorkflowStep;
+		waits: { name: string; duration: string }[];
+	} {
+		const base = fakeWorkflowStep();
+		const waits: { name: string; duration: string }[] = [];
+		const step: WorkflowStep = {
+			do: base.do,
+			sleepUntil: base.sleepUntil,
+			waitForEvent: base.waitForEvent,
+			sleep: async (name, duration) => {
+				waits.push({ name: String(name), duration: String(duration) });
+			},
+		};
+		return { step, waits };
+	}
+
+	it("polls a twelve-angle fan-out every 30 seconds instead of the base 5", async () => {
+		stubAgentCompanyPolling(2);
+		const { step, waits } = sleepCapturingStep();
+		const fanout = fanoutFor(step);
+		const plans = Array.from({ length: 12 }, (_, index) =>
+			planFor(`angle ${index}`),
+		);
+
+		await fanout(plans, [], exaEnv(), new CostLedger());
+
+		const pollWaits = waits.filter((wait) => wait.name.includes("-wait-"));
+		expect(pollWaits.length).toBeGreaterThan(0);
+		for (const wait of pollWaits) {
+			expect(wait.duration).toBe("30 seconds");
+		}
+	});
+
+	it("keeps a single-angle round at the base 5 seconds", async () => {
+		stubAgentCompanyPolling(2);
+		const { step, waits } = sleepCapturingStep();
+		const fanout = fanoutFor(step);
+
+		await fanout([planFor("angle one")], [], exaEnv(), new CostLedger());
+
+		const pollWaits = waits.filter((wait) => wait.name.includes("-wait-"));
+		expect(pollWaits.length).toBeGreaterThan(0);
+		for (const wait of pollWaits) {
+			expect(wait.duration).toBe("5 seconds");
+		}
+	});
+});
+
 describe("a round whose agent finds nothing counts as an empty round, not a failure", () => {
 	it("resolves to zero results and banks the run's cost, instead of throwing", async () => {
 		stubAgentCompanyFetchReportingNull();

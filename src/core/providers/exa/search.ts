@@ -1,13 +1,7 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
-import {
-	EXA_FETCH_TIMEOUT_MS,
-	extractRequestId,
-	readJson,
-	throwForStatus,
-} from "@/core/providers/exa/http";
-import { RetryableProviderError } from "@/core/providers/waterfall";
+import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 
 const JsonValueSchema = z.json();
 
@@ -350,22 +344,16 @@ export async function search(
 	const validated = ExaSearchRequestSchema.parse(req);
 	rejectEntityIndexFilters(validated);
 	const apiKey = await env.EXA_API_KEY.get();
-	let response: Response;
-	try {
-		response = await fetch("https://api.exa.ai/search", {
+	const body = await exaFetch(
+		"https://api.exa.ai/search",
+		{
 			method: "POST",
 			headers: { "x-api-key": apiKey, "content-type": "application/json" },
 			body: JSON.stringify(validated),
-			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
-		});
-	} catch (error) {
-		if (error instanceof DOMException && error.name === "TimeoutError") {
-			throw new RetryableProviderError("Exa search request timed out");
-		}
-		throw error;
-	}
-	const body = await readJson(response);
-	if (!response.ok) throwForStatus("Exa", response.status, body);
+		},
+		"Exa",
+		"Exa search request timed out",
+	);
 	const parsed = parseResponse(body);
 	const { total, ...rest } = parsed.costDollars;
 	ledger.reported("exa", "search", total, flattenCost(rest));

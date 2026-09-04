@@ -23,6 +23,22 @@ const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
 const COMPANIES_PER_ANGLE = config.companies.companiesPerAngle;
 const START_STAGGER_MS = config.companies.agentStartStaggerMs;
+const POLL_BUDGET_PER_SECOND = config.companies.exaPollBudgetPerSecond;
+
+/**
+ * Seconds between polls for one angle of a fan-out carrying `anglesInFlight`
+ * angles, scaled up so the whole fan-out spends at most
+ * `exaPollBudgetPerSecond` poll requests a second. A single-angle round keeps
+ * `exaAgentPollIntervalSeconds` unchanged.
+ */
+function scaledPollIntervalSeconds(anglesInFlight: number): number {
+	return Math.max(
+		POLL_INTERVAL_SECONDS,
+		Math.ceil(
+			(anglesInFlight * POLL_INTERVAL_SECONDS) / POLL_BUDGET_PER_SECOND,
+		),
+	);
+}
 
 export type AgentSearchInput = {
 	step: WorkflowStep;
@@ -35,6 +51,7 @@ type AngleInput = {
 	input: AgentSearchInput;
 	plan: SearchPlan;
 	slot: number;
+	anglesInFlight: number;
 	excludeDomains: readonly string[];
 };
 
@@ -50,7 +67,7 @@ async function runAngle(
 	env: Env,
 	ledger: CostLedger,
 ): Promise<ExaAgentCompany[]> {
-	const { input, plan, slot, excludeDomains } = angle;
+	const { input, plan, slot, anglesInFlight, excludeDomains } = angle;
 	const { step, round, today, seller } = input;
 	const name = `round_${round}-angle_${slot}`;
 	if (slot > 0) {
@@ -80,7 +97,7 @@ async function runAngle(
 			step,
 			name,
 			id,
-			intervalSeconds: POLL_INTERVAL_SECONDS,
+			intervalSeconds: scaledPollIntervalSeconds(anglesInFlight),
 			maxAttempts: MAX_POLL_ATTEMPTS,
 		},
 		ledger,
@@ -102,9 +119,14 @@ export function agentFanout(
 	input: AgentSearchInput,
 ): FindCompaniesDeps["agentRound"] {
 	return async (plans, excludeDomains, env, ledger) => {
+		const anglesInFlight = plans.length;
 		const perAngle = await Promise.all(
 			plans.map((plan, slot) =>
-				runAngle({ input, plan, slot, excludeDomains }, env, ledger),
+				runAngle(
+					{ input, plan, slot, anglesInFlight, excludeDomains },
+					env,
+					ledger,
+				),
 			),
 		);
 		return toExaSearchResult(`round_${input.round}-fanout`, perAngle.flat());

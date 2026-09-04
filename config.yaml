@@ -98,6 +98,12 @@ companies:
   # count row in a single prompt was measured at 130 seconds across two attempts and timed out
   # once; slicing into batches this size keeps each call inside model.timeoutMs below.
   judgeBatchSize: 15
+  # Cap on the single wait after an Exa 429, whether from Retry-After or the
+  # one-second default used when Exa sends no header.
+  exaRetryAfterMaxMs: 5000
+  # Poll requests the whole angle fan-out may spend per second; a round's poll
+  # interval scales up with the angles in flight to stay under this.
+  exaPollBudgetPerSecond: 2
 
 people:
   # Seconds between polls of a running exa-agent run.

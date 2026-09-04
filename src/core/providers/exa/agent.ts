@@ -1,17 +1,11 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
-import {
-	EXA_FETCH_TIMEOUT_MS,
-	extractRequestId,
-	readJson,
-	throwForStatus,
-} from "@/core/providers/exa/http";
+import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 import {
 	CompanyRecordSchema,
 	nullableString,
 } from "@/core/providers/exa/search";
-import { RetryableProviderError } from "@/core/providers/waterfall";
 
 const JsonValueSchema = z.json();
 
@@ -148,22 +142,12 @@ function agentCostDetail(
 
 async function exaAgentFetch(path: string, env: Env, init?: RequestInit) {
 	const apiKey = await env.EXA_API_KEY.get();
-	let response: Response;
-	try {
-		response = await fetch(`https://api.exa.ai/agent/runs${path}`, {
-			...init,
-			headers: { ...init?.headers, "x-api-key": apiKey },
-			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
-		});
-	} catch (error) {
-		if (error instanceof DOMException && error.name === "TimeoutError") {
-			throw new RetryableProviderError("Exa agent request timed out");
-		}
-		throw error;
-	}
-	const body = await readJson(response);
-	if (!response.ok) throwForStatus("Exa agent", response.status, body);
-	return body;
+	return exaFetch(
+		`https://api.exa.ai/agent/runs${path}`,
+		{ ...init, headers: { ...init?.headers, "x-api-key": apiKey } },
+		"Exa agent",
+		"Exa agent request timed out",
+	);
 }
 
 /**

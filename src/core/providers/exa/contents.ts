@@ -1,13 +1,7 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
-import {
-	EXA_FETCH_TIMEOUT_MS,
-	extractRequestId,
-	readJson,
-	throwForStatus,
-} from "@/core/providers/exa/http";
-import { RetryableProviderError } from "@/core/providers/waterfall";
+import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 
 const EXA_CONTENTS_MAX_CHARACTERS = 20_000;
 
@@ -68,25 +62,19 @@ export async function exaContents(
 	ledger: CostLedger,
 ): Promise<ExaContentsResult> {
 	const apiKey = await env.EXA_API_KEY.get();
-	let response: Response;
-	try {
-		response = await fetch("https://api.exa.ai/contents", {
+	const body = await exaFetch(
+		"https://api.exa.ai/contents",
+		{
 			method: "POST",
 			headers: { "x-api-key": apiKey, "content-type": "application/json" },
 			body: JSON.stringify({
 				urls,
 				text: { maxCharacters: EXA_CONTENTS_MAX_CHARACTERS },
 			}),
-			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
-		});
-	} catch (error) {
-		if (error instanceof DOMException && error.name === "TimeoutError") {
-			throw new RetryableProviderError("Exa contents request timed out");
-		}
-		throw error;
-	}
-	const body = await readJson(response);
-	if (!response.ok) throwForStatus("Exa contents", response.status, body);
+		},
+		"Exa contents",
+		"Exa contents request timed out",
+	);
 	const parsed = parseResponse(body);
 	ledger.reported("exa", "contents", parsed.costDollars.total);
 	return {

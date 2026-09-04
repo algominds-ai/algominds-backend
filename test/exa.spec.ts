@@ -1,7 +1,8 @@
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { backfillRecords } from "../src/core/companies/record";
 import { CostLedger } from "../src/core/cost";
 import { exaContents } from "../src/core/providers/exa/contents";
 import type { ExaSearchRequest } from "../src/core/providers/exa/search";
@@ -29,7 +30,29 @@ const originalFetch = globalThis.fetch;
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	vi.unstubAllGlobals();
 });
+
+function stubSleep(): { waits: number[] } {
+	const waits: number[] = [];
+	vi.stubGlobal("setTimeout", (callback: () => void, ms: number) => {
+		waits.push(ms);
+		callback();
+		return 0;
+	});
+	return { waits };
+}
+
+function sequenceFetch(responses: readonly Response[]): { calls: number } {
+	const stub = { calls: 0 };
+	globalThis.fetch = async () => {
+		const response = responses[stub.calls] ?? responses[responses.length - 1];
+		stub.calls += 1;
+		if (!response) throw new Error("sequenceFetch: no response configured");
+		return response;
+	};
+	return stub;
+}
 
 function exaEnv(): Env {
 	return { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } };
@@ -116,14 +139,17 @@ describe("search request shape", () => {
 });
 
 describe("search error mapping", () => {
-	it("raises RetryableProviderError on a 429", async () => {
-		stubFetch(
+	it("raises RetryableProviderError after a second 429", async () => {
+		const calls = sequenceFetch([
 			jsonResponse(429, { requestId: "req-429", message: "slow down" }),
-		);
+			jsonResponse(429, { requestId: "req-429-again", message: "slow down" }),
+		]);
+		stubSleep();
 
 		await expect(
 			search({ query: "GTM leads" }, exaEnv(), new CostLedger()),
 		).rejects.toThrow(RetryableProviderError);
+		expect(calls.calls).toBe(2);
 	});
 
 	it("raises NonRetryableError on a 400", async () => {
@@ -156,6 +182,72 @@ describe("search error mapping", () => {
 		await expect(
 			search({ query: "GTM leads" }, exaEnv(), new CostLedger()),
 		).rejects.toThrow(/req-fail-500/);
+	});
+});
+
+describe("Exa 429 retry", () => {
+	it("waits once for Retry-After then returns the retry's 200, with two fetches", async () => {
+		const calls = sequenceFetch([
+			new Response(null, { status: 429, headers: { "retry-after": "2" } }),
+			jsonResponse(200, successBody({ requestId: "req-after-retry" })),
+		]);
+		const sleeps = stubSleep();
+
+		const result = await search(
+			{ query: "GTM leads" },
+			exaEnv(),
+			new CostLedger(),
+		);
+
+		expect(calls.calls).toBe(2);
+		expect(sleeps.waits).toEqual([2000]);
+		expect(result.requestId).toBe("req-after-retry");
+	});
+
+	it("caps a Retry-After above the configured maximum", async () => {
+		sequenceFetch([
+			new Response(null, { status: 429, headers: { "retry-after": "3600" } }),
+			jsonResponse(200, successBody()),
+		]);
+		const sleeps = stubSleep();
+
+		await search({ query: "GTM leads" }, exaEnv(), new CostLedger());
+
+		expect(sleeps.waits).toEqual([5000]);
+	});
+});
+
+describe("company record backfill waits between concurrency slices", () => {
+	it("waits one second between slices when more than one is needed", async () => {
+		globalThis.fetch = async () =>
+			jsonResponse(200, {
+				requestId: "req-backfill",
+				costDollars: { total: 0 },
+				results: [],
+			});
+		const sleeps = stubSleep();
+		const domains = Array.from(
+			{ length: 7 },
+			(_, index) => `company-${index}.com`,
+		);
+
+		await backfillRecords(domains, exaEnv(), new CostLedger());
+
+		expect(sleeps.waits).toEqual([1000]);
+	});
+
+	it("never waits when every domain fits in one slice", async () => {
+		globalThis.fetch = async () =>
+			jsonResponse(200, {
+				requestId: "req-one-slice",
+				costDollars: { total: 0 },
+				results: [],
+			});
+		const sleeps = stubSleep();
+
+		await backfillRecords(["a.com", "b.com"], exaEnv(), new CostLedger());
+
+		expect(sleeps.waits).toEqual([]);
 	});
 });
 
@@ -303,14 +395,17 @@ describe("contents request shape", () => {
 });
 
 describe("contents error mapping and cost", () => {
-	it("raises RetryableProviderError on a 429", async () => {
-		stubFetch(
+	it("raises RetryableProviderError after a second 429", async () => {
+		const calls = sequenceFetch([
 			jsonResponse(429, { requestId: "req-429", message: "slow down" }),
-		);
+			jsonResponse(429, { requestId: "req-429-again", message: "slow down" }),
+		]);
+		stubSleep();
 
 		await expect(
 			exaContents(["https://acme.example/team"], exaEnv(), new CostLedger()),
 		).rejects.toThrow(RetryableProviderError);
+		expect(calls.calls).toBe(2);
 	});
 
 	it("raises NonRetryableError on a malformed 200 body", async () => {

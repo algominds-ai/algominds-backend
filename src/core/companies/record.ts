@@ -6,6 +6,12 @@ import { search } from "@/core/providers/exa/search";
 
 const { provingConcurrency: LOOKUP_CONCURRENCY } = config.companies;
 
+const SLICE_WAIT_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * One company's own record from Exa's organization index. The reply is kept
  * only when the record it returns is for the domain that was asked for:
@@ -44,7 +50,8 @@ export type BackfilledRecord = {
 
 /**
  * Looks up the vendor's own company record for every domain an agent round
- * returned, `provingConcurrency` at a time under Exa's rate limit, so the
+ * returned, `provingConcurrency` at a time under Exa's rate limit, waiting
+ * one second between slices whenever there is more than one, so the
  * profile's headcount, country and revenue bounds are applied to the vendor's
  * figures rather than to numbers the agent wrote about itself.
  */
@@ -55,6 +62,7 @@ export async function backfillRecords(
 ): Promise<BackfilledRecord[]> {
 	const filled: BackfilledRecord[] = [];
 	for (let at = 0; at < domains.length; at += LOOKUP_CONCURRENCY) {
+		if (at > 0) await sleep(SLICE_WAIT_MS);
 		const slice = domains.slice(at, at + LOOKUP_CONCURRENCY);
 		const found = await Promise.all(
 			slice.map(async (domain) => ({

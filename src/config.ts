@@ -32,6 +32,8 @@ export const config = {
 		provingResults: 3,
 		contentsMaxCharacters: 10000,
 		judgeBatchSize: 15,
+		exaRetryAfterMaxMs: 5000,
+		exaPollBudgetPerSecond: 2,
 	},
 	people: {
 		exaAgentPollIntervalSeconds: 5,
