@@ -30,13 +30,13 @@ export type KeyEntry = z.infer<typeof KeyEntrySchema>;
 
 export const KeyFileSchema = z.object({
 	slug: z.string(),
-	icpId: z.string().nullable(),
+	icpId: z.string(),
 	companies: z.record(z.string(), KeyEntrySchema),
 });
 
 export type KeyFile = z.infer<typeof KeyFileSchema>;
 
-export function emptyKeyFile(slug: string, icpId: string | null): KeyFile {
+export function emptyKeyFile(slug: string, icpId: string): KeyFile {
 	return { slug, icpId, companies: {} };
 }
 

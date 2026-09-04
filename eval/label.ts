@@ -1,11 +1,9 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
+import { keyPath, readKeyFile, writeKeyFile } from "@eval/keys-io";
 import type { CompanyDetail, KeyFile, StoredCompany } from "@eval/label-core";
 import {
-	emptyKeyFile,
 	formatCompanyDetail,
 	isValidLabel,
-	KeyFileSchema,
 	mergeStoredCompanies,
 	sortedKeyFile,
 	unlabelledDomains,
@@ -14,8 +12,6 @@ import { profileBySlug } from "@eval/profiles";
 import type { Sql } from "postgres";
 import postgres from "postgres";
 import { z } from "zod";
-
-const KEYS_DIR = "eval/keys";
 
 const CompanyRowSchema = z.object({
 	domain: z.string(),
@@ -41,20 +37,6 @@ const CompanyRowSchema = z.object({
 });
 
 type CompanyRow = z.infer<typeof CompanyRowSchema>;
-
-function keyPath(slug: string): string {
-	return `${KEYS_DIR}/${slug}.json`;
-}
-
-function readKeyFile(slug: string, icpId: string | null): KeyFile {
-	const path = keyPath(slug);
-	if (!existsSync(path)) return emptyKeyFile(slug, icpId);
-	return KeyFileSchema.parse(JSON.parse(readFileSync(path, "utf8")));
-}
-
-function writeKeyFile(key: KeyFile): void {
-	writeFileSync(keyPath(key.slug), `${JSON.stringify(key, null, "\t")}\n`);
-}
 
 async function fetchCompanyRows(
 	sql: Sql,
@@ -139,11 +121,6 @@ async function labelProfile(slug: string, seedOnly: boolean): Promise<void> {
 	const profile = profileBySlug(slug);
 	if (!profile) throw new Error(`eval:label unknown profile ${slug}`);
 	let key = readKeyFile(profile.slug, profile.icpId);
-	if (profile.icpId === null) {
-		writeKeyFile(sortedKeyFile(key));
-		console.log(`${slug}: not onboarded yet, wrote an empty key file`);
-		return;
-	}
 	const databaseUrl = process.env.DATABASE_URL;
 	if (!databaseUrl) throw new Error("eval:label DATABASE_URL is not set");
 	const sql = postgres(databaseUrl, { max: 1 });

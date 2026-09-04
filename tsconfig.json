@@ -17,6 +17,7 @@
 		"skipLibCheck": true,
 		"noEmit": true,
 		"isolatedModules": true,
+		"resolveJsonModule": true,
 		"paths": { "@/*": ["./src/*"], "@eval/*": ["./eval/*"] }
 	},
 	"include": [
