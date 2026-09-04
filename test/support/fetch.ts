@@ -54,6 +54,7 @@ export type ExaPersonResultSpec = {
 	name: string;
 	currentTitle: string | null;
 	currentCompany: string | null;
+	currentCompanyId?: string | null;
 	location?: string | null;
 };
 
@@ -79,13 +80,38 @@ export function exaPeopleSearchResponse(
 							{
 								title: person.currentTitle,
 								dates: { to: null },
-								company: { id: null, name: person.currentCompany },
+								company: {
+									id: person.currentCompanyId ?? null,
+									name: person.currentCompany,
+								},
 							},
 						],
 					},
 				},
 			],
 		})),
+	});
+}
+
+/** An Exa `/search` company-category reply carrying one company result named by `id`, or none when `id` is null. */
+export function exaCompanySearchResponse(
+	id: string | null,
+	costTotal = 0.005,
+): Response {
+	return jsonResponse({
+		requestId: "req-company",
+		costDollars: { total: costTotal },
+		results:
+			id === null
+				? []
+				: [
+						{
+							id,
+							url: "https://example.com",
+							title: "Example",
+							entities: [{ type: "company", properties: { name: "Example" } }],
+						},
+					],
 	});
 }
 
