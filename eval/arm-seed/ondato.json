@@ -31,65 +31,65 @@
 		{
 			"id": "r1",
 			"kind": "hard",
+			"text": "The company is headquartered in, or actively serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada.",
 			"proof": "record",
-			"windowDays": null,
-			"text": "The company is headquartered in, or actively serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada."
+			"windowDays": null
 		},
 		{
 			"id": "r2",
 			"kind": "hard",
+			"text": "The company runs a high-volume digital consumer or SMB self-serve signup flow in fintech, neobanking, digital banking, payments, lending, BNPL, trading, investing, crypto or an age-gated consumer platform, where identity or age verification sits inside onboarding. A company that serves only businesses, institutions or partners through sales-led onboarding, or whose record shows no self-serve signup, does not qualify.",
 			"proof": "record",
-			"windowDays": null,
-			"text": "The company runs a high-volume digital consumer or SMB signup flow in fintech, neobanking, digital banking, payments, lending, BNPL, trading, investing, crypto or an age-gated consumer platform, where identity or age verification sits inside onboarding."
+			"windowDays": null
 		},
 		{
 			"id": "r3",
 			"kind": "hard",
+			"text": "The company is not itself an identity-verification, KYC or age-verification vendor, a compliance consultancy, an agency or a non-profit.",
 			"proof": "record",
-			"windowDays": null,
-			"text": "The company is not itself an identity-verification, KYC or age-verification vendor, a compliance consultancy, an agency or a non-profit."
+			"windowDays": null
 		},
 		{
 			"id": "r4",
 			"kind": "hard",
+			"text": "The company is privately held and reachable for outbound: total funding raised between $2M and $250M, or disclosed annual revenue between $1M and $150M. A company whose record shows neither a funding figure nor a revenue figure does not qualify. A publicly listed company, or one above those bands, is a named account, not a target. Headcount never qualifies or disqualifies.",
 			"proof": "record",
-			"windowDays": null,
-			"text": "The company is privately held and reachable for outbound: total funding raised between $2M and $250M, or disclosed annual revenue between $1M and $150M. A publicly listed company, or one above those bands, is a named account, not a target. Headcount never qualifies or disqualifies."
+			"windowDays": null
 		},
 		{
 			"id": "r5",
 			"kind": "soft",
+			"text": "Within the last 12 months the company announced a new market entry, or a fresh banking, lending, e-money or payments licence going live in a new jurisdiction.",
 			"proof": "page",
-			"windowDays": 365,
-			"text": "Within the last 12 months the company announced a new market entry, or a fresh banking, lending, e-money or payments licence going live in a new jurisdiction."
+			"windowDays": 365
 		},
 		{
 			"id": "r6",
 			"kind": "soft",
+			"text": "Within the last 12 months the company launched or announced a consumer product, app, wallet, card, account type or trading feature that requires identity or age verification at signup.",
 			"proof": "page",
-			"windowDays": 365,
-			"text": "Within the last 12 months the company launched or announced a consumer product, app, wallet, card, account type or trading feature that requires identity or age verification at signup."
+			"windowDays": 365
 		},
 		{
 			"id": "r7",
 			"kind": "soft",
+			"text": "Within the last 120 days the company raised a funding round with stated user-growth or expansion plans.",
 			"proof": "page",
-			"windowDays": 120,
-			"text": "Within the last 120 days the company raised a funding round with stated user-growth or expansion plans."
+			"windowDays": 120
 		},
 		{
 			"id": "r8",
 			"kind": "soft",
+			"text": "The company's own users publicly complain, in app-store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup.",
 			"proof": "page",
-			"windowDays": 180,
-			"text": "The company's own users publicly complain, in app-store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup."
+			"windowDays": 180
 		},
 		{
 			"id": "r9",
 			"kind": "soft",
+			"text": "The company is an age-gated platform serving UK or US users whose published compliance statement or enforcement coverage addresses the UK Online Safety Act's age-assurance duty or a US state age-verification law.",
 			"proof": "page",
-			"windowDays": 365,
-			"text": "The company is an age-gated platform serving UK or US users whose published compliance statement or enforcement coverage addresses the UK Online Safety Act's age-assurance duty or a US state age-verification law."
+			"windowDays": 365
 		}
 	]
 }

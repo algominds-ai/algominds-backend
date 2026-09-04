@@ -7,6 +7,7 @@
 			"name": "Coinbase",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "the cited article names Coinbase as '(NASDAQ: COIN)', a publicly listed company, outside the privately-held requirement in r4",
 			"record": {
 				"industry": "Digital investing",
 				"description": "Founded in June of 2012, Coinbase is a digital currency wallet and platform where merchants and consumers can transact with new digital currencies like bitcoin, ethereum, and litecoin. Our vision is to bring more innovation, efficiency, and equality of opportunity to the world by building an open financial system. Our first step on that journey is making digital currency accessible and approachable for everyone. Two principles guide our efforts. First, be the most trusted company in our domain. Second, create user-focused products that are easier and more intuitive to use.",
@@ -17,32 +18,32 @@
 				"citedDate": "2026-08-06",
 				"quote": "Coinbase (NASDAQ: COIN) launched 24/5 UK stock trading on August 6, 2026, allowing eligible UK users to trade nearly 4,000 US equities with zero commissions and fractional investing starting at $1.",
 				"fitReason": "US crypto trading platform with disclosed revenue; evidence shows new UK market entry for stock trading."
-			},
-			"note": "the cited article names Coinbase as '(NASDAQ: COIN)', a publicly listed company, outside the privately-held requirement in r4"
+			}
 		},
 		"fanaticsinc.com": {
 			"label": "reject:unreachable",
 			"name": "Fanatics",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "the record describes a company with over 22,000 global employees, hundreds of sports-property partnerships and multiple business lines, far above the $250M-raised/$150M-revenue reachable band in r4",
 			"record": {
 				"industry": "Online gambling",
-				"description": "Fanatics is committed to relentlessly enhancing the fan experience. As a leading global sports platform, Fanatics allows fans to buy, bet, and collect while engaging with sports in deeper, more immersive ways. \n\nFanatics is redefining how fans connect with their favorite teams and players. Through its businesses\u2014Fanatics Commerce, Fanatics Collectibles, Fanatics Betting & Gaming, Fanatics Events, Fanatics Markets, and Fanatics Studios\u2014the company has built a powerful, integrated ecosystem. By bringing together licensed fan gear, physical and digital trading cards, live events, and more, Fanatics delivers personalized experiences to over 100 million fans worldwide.\n\nFanatics currently holds partnerships with over 900 sports properties, including professional and college teams, leagues, players\u2019 associations, and retail partners. Fanatics also partners with over 5,000 athletes and celebrities, including 250 exclusive partnerships, and has over 2,000 retail locations. Beyond these partnerships, Fanatics has its own powerhouse team of more than 22,000 global employees.",
+				"description": "Fanatics is committed to relentlessly enhancing the fan experience. As a leading global sports platform, Fanatics allows fans to buy, bet, and collect while engaging with sports in deeper, more immersive ways. \n\nFanatics is redefining how fans connect with their favorite teams and players. Through its businesses—Fanatics Commerce, Fanatics Collectibles, Fanatics Betting & Gaming, Fanatics Events, Fanatics Markets, and Fanatics Studios—the company has built a powerful, integrated ecosystem. By bringing together licensed fan gear, physical and digital trading cards, live events, and more, Fanatics delivers personalized experiences to over 100 million fans worldwide.\n\nFanatics currently holds partnerships with over 900 sports properties, including professional and college teams, leagues, players’ associations, and retail partners. Fanatics also partners with over 5,000 athletes and celebrities, including 250 exclusive partnerships, and has over 2,000 retail locations. Beyond these partnerships, Fanatics has its own powerhouse team of more than 22,000 global employees.",
 				"workforceTotal": 6505,
 				"country": "United States",
 				"foundedYear": 2011,
 				"citedPage": "https://www.fanaticsinc.com/press-releases/fanatics-to-acquire-exchange-and-clearinghouse-from-bgc-parties-to-partner-on-prediction-markets",
 				"citedDate": "2026-07-27T00:00:00.000Z",
-				"quote": "Fanatics, a global sports platform, and BGC Group Inc, (Nasdaq: BGC) (\u201cBGC\u201d), a leading global brokerage and financial technology company servicing financial markets, announced today that they have entered into an agreement for Fanatics to acquire Water Street Labs, LLC and CX Clearinghouse L.P. from BGC. The acquisition of Water Street Labs, a Commodity Futures Trading Commission (CFTC) registered Designated Contract Market (DCM), and CX Clearinghouse, L.P., a CFTC registered Derivatives Clearing Organization (DCO), will enable Fanatics to offer its own federally regulated prediction market exchange and expand its prediction market offerings on Fanatics Markets.\n...\nWith its own exchange and clearinghouse, Fanatics Markets will own its full prediction markets infrastructure, combining its proven expertise in building and scaling consumer-facing platforms with the freedom to directly list and clear prediction markets across an expanding opportunity set to Fanatics\u2019 highly engaged customer base. By harnessing BGC\u2019s expertise in institutional market infrastructure, liquidity, and trading, Fanatics Markets will connect retail-focused prediction markets with the institutional marketplace for the first time.\n...\nIn addition,\n...\nwill partner to deliver new\n...\ndata in this\n...\nasset class with\n...\ncontributing its established\n...\ndata and analytics capabilities\n...\nFanatics Markets is available on iOS, Android and on the web in 23 states and four U.S territories. Since its debut in December of last year, Fanatics Markets has ushered in a new era of loyalty and rewards with the introduction of FanCash and Fanatics ONE - giving customers an experience where trades can earn rewards. Fanatics Markets also introduced Combos, FanViz and consumer protections that equip customers with Risk Management tools to help manage exposure, trade responsibly and make informed trading decisions.",
+				"quote": "Fanatics, a global sports platform, and BGC Group Inc, (Nasdaq: BGC) (“BGC”), a leading global brokerage and financial technology company servicing financial markets, announced today that they have entered into an agreement for Fanatics to acquire Water Street Labs, LLC and CX Clearinghouse L.P. from BGC. The acquisition of Water Street Labs, a Commodity Futures Trading Commission (CFTC) registered Designated Contract Market (DCM), and CX Clearinghouse, L.P., a CFTC registered Derivatives Clearing Organization (DCO), will enable Fanatics to offer its own federally regulated prediction market exchange and expand its prediction market offerings on Fanatics Markets.\n...\nWith its own exchange and clearinghouse, Fanatics Markets will own its full prediction markets infrastructure, combining its proven expertise in building and scaling consumer-facing platforms with the freedom to directly list and clear prediction markets across an expanding opportunity set to Fanatics’ highly engaged customer base. By harnessing BGC’s expertise in institutional market infrastructure, liquidity, and trading, Fanatics Markets will connect retail-focused prediction markets with the institutional marketplace for the first time.\n...\nIn addition,\n...\nwill partner to deliver new\n...\ndata in this\n...\nasset class with\n...\ncontributing its established\n...\ndata and analytics capabilities\n...\nFanatics Markets is available on iOS, Android and on the web in 23 states and four U.S territories. Since its debut in December of last year, Fanatics Markets has ushered in a new era of loyalty and rewards with the introduction of FanCash and Fanatics ONE - giving customers an experience where trades can earn rewards. Fanatics Markets also introduced Combos, FanViz and consumer protections that equip customers with Risk Management tools to help manage exposure, trade responsibly and make informed trading decisions.",
 				"fitReason": "US sports betting/prediction market platform with disclosed revenue; announcement shows new regulated exchange launch."
-			},
-			"note": "the record describes a company with over 22,000 global employees, hundreds of sports-property partnerships and multiple business lines, far above the $250M-raised/$150M-revenue reachable band in r4"
+			}
 		},
 		"fanduel.com": {
 			"label": "reject:unreachable",
 			"name": "FanDuel",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "FanDuel is wholly owned by the publicly listed Flutter Entertainment, outside the privately-held requirement in r4",
 			"record": {
 				"industry": "Online gambling",
 				"description": "Online sportsbook, casino, daily fantasy sports, horse-racing and prediction-markets operator owned by Flutter Entertainment.",
@@ -51,34 +52,68 @@
 				"foundedYear": 2009,
 				"citedPage": "https://fanduel.com/about/news/fanduel-expands-canadian-footprint-with-planned-alberta-market-entry",
 				"citedDate": "2026-07-08",
-				"quote": "Toronto \u2013 July 8: FanDuel, North America\u2019s #1 Casino and Sportsbook, is excited to bring Albertans an industry-leading product on July 13, pending regulatory approval.",
+				"quote": "Toronto – July 8: FanDuel, North America’s #1 Casino and Sportsbook, is excited to bring Albertans an industry-leading product on July 13, pending regulatory approval.",
 				"fitReason": "US/Canada sportsbook with disclosed revenue; evidence shows new Alberta market entry."
-			},
-			"note": "FanDuel is wholly owned by the publicly listed Flutter Entertainment, outside the privately-held requirement in r4"
+			}
 		},
 		"ig.com": {
 			"label": "reject:unreachable",
 			"name": "IG",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "the cited press release names IG as '(LSE: IGG), a FTSE 100 company', a publicly listed company, outside the privately-held requirement in r4",
 			"record": {
 				"industry": "Retail investing",
-				"description": "We provide fast and flexible access to over 17,000 financial markets \u2013 including indices, shares, forex and commodities \u2013 through our award-winning range of platforms and apps. \n \nEstablished in 1974 as the world\u2019s first financial spread betting firm, we\u2019re the world\u2019s No.1 provider of CFDs and spread betting* and a global leader in forex. We also offer an execution-only share dealing service in the UK, Ireland, Germany, Austria and the Netherlands. \n\nOur range of affordable, fully managed investment portfolios rounds out our comprehensive offering to investors and active traders. Through our low fees and smart price-sourcing technology, we help traders keep their costs down. Spread bets and CFDs are complex instruments and come with a high risk of losing money rapidly due to leverage. 70% of retail investor accounts lose money when trading spread bets and CFDs with this provider\u2020. \n\nYou should consider whether you understand how spread bets and CFDs work, and whether you can afford to take the high risk of losing your money. Professional clients can lose more than they deposit. \n\n* Based on revenue excluding FX (published financial statements, February 2024). \n\u2020 For the 12 months preceding 1 July 2024.",
+				"description": "We provide fast and flexible access to over 17,000 financial markets – including indices, shares, forex and commodities – through our award-winning range of platforms and apps. \n \nEstablished in 1974 as the world’s first financial spread betting firm, we’re the world’s No.1 provider of CFDs and spread betting* and a global leader in forex. We also offer an execution-only share dealing service in the UK, Ireland, Germany, Austria and the Netherlands. \n\nOur range of affordable, fully managed investment portfolios rounds out our comprehensive offering to investors and active traders. Through our low fees and smart price-sourcing technology, we help traders keep their costs down. Spread bets and CFDs are complex instruments and come with a high risk of losing money rapidly due to leverage. 70% of retail investor accounts lose money when trading spread bets and CFDs with this provider†. \n\nYou should consider whether you understand how spread bets and CFDs work, and whether you can afford to take the high risk of losing your money. Professional clients can lose more than they deposit. \n\n* Based on revenue excluding FX (published financial statements, February 2024). \n† For the 12 months preceding 1 July 2024.",
 				"workforceTotal": 221,
 				"country": "United Kingdom",
 				"foundedYear": 1974,
 				"citedPage": "https://www.ig.com/uk/media-centre/press-release-overview/ig-launches-commission-free-investing-in-ireland-giving-retail-i",
 				"citedDate": "2025-11-05T00:00:00.000Z",
-				"quote": "## IG launches commission-free investing in Ireland giving retail investors access to over 11,000 stocks and ETFs\n...\n5 November 2025, Dublin - Investment and trading platform IG (LSE: IGG), a FTSE 100 company, has launched commission-free investing in Ireland, expanding its services to meet a growing demand from retail investors. IG is now the joint most competitively priced investment platform in the Irish market, combining zero commission with a low 0.15% FX fee and access to global markets.\n...\nIrish customers can invest in more than 11,000 stocks and exchange-traded funds (ETFs) on global markets, whilst benefitting from IG\u2019s range of trading and investment tools. They will also be able to access 24/5 trading on the most popular US stocks alongside IG\u2019s interest-on-cash offer, which matches the ECB base rate, currently at 2%. IG applies a total FX transaction fee of just 0.15%, further boosting its value proposition for Irish investors.\n...\nFounded in 1974, IG already offers Irish customers a range of trading products through its web and app platforms, including spread betting and CFDs. Share-trading and ETFs will now be fully integrated into the platform, simplifying the investment journey for customers and providing a more complete experience.\n...\nThe launch reflects a growing appetite among Irish retail investors to take greater control of their financial future. While the market has seen a surge in participation in recent years, investors have faced limited choice and higher fees compared with other markets. IG aims to change that by offering a low-cost, comprehensive platform suitable for investors and traders at a time of increased interest in investment, particularly among younger demographics.\n...\nIG\u2019s entry into Ireland comes at a timely moment, following October\u2019s Budget 2026, which introduced a modest but welcome reduction in Capital Gains Tax on ETFs from 41% to 38%. The Government has also signalled its intention to make further positive reforms in the coming years to support and encourage retail investing.\n...\nMichael Healy, UK and Ireland Managing Director at IG: \"For too long, Irish retail investors have faced limited choice and punitive fees. With interest in investing growing rapidly in Ireland, we want to give consumers the ability to access global markets through a comprehensive, low-cost platform.\n...\n\u201cOur commission-free shares and ETF offering provides access to over 11,000 assets and a full suite of investment tools, helping people take greater control of their financial future. And this is just the start - we\u2019re continuing to develop new products and features to further improve the investing experience for Irish customers. We see significant growth potential and we\u2019re excited to help more people build their wealth. We also welcome the measures to reduce CGT on ETFs in Budget 2026 and the broader signals that point to a more investor-friendly policy environment in the years ahead.\"",
+				"quote": "## IG launches commission-free investing in Ireland giving retail investors access to over 11,000 stocks and ETFs\n...\n5 November 2025, Dublin - Investment and trading platform IG (LSE: IGG), a FTSE 100 company, has launched commission-free investing in Ireland, expanding its services to meet a growing demand from retail investors. IG is now the joint most competitively priced investment platform in the Irish market, combining zero commission with a low 0.15% FX fee and access to global markets.\n...\nIrish customers can invest in more than 11,000 stocks and exchange-traded funds (ETFs) on global markets, whilst benefitting from IG’s range of trading and investment tools. They will also be able to access 24/5 trading on the most popular US stocks alongside IG’s interest-on-cash offer, which matches the ECB base rate, currently at 2%. IG applies a total FX transaction fee of just 0.15%, further boosting its value proposition for Irish investors.\n...\nFounded in 1974, IG already offers Irish customers a range of trading products through its web and app platforms, including spread betting and CFDs. Share-trading and ETFs will now be fully integrated into the platform, simplifying the investment journey for customers and providing a more complete experience.\n...\nThe launch reflects a growing appetite among Irish retail investors to take greater control of their financial future. While the market has seen a surge in participation in recent years, investors have faced limited choice and higher fees compared with other markets. IG aims to change that by offering a low-cost, comprehensive platform suitable for investors and traders at a time of increased interest in investment, particularly among younger demographics.\n...\nIG’s entry into Ireland comes at a timely moment, following October’s Budget 2026, which introduced a modest but welcome reduction in Capital Gains Tax on ETFs from 41% to 38%. The Government has also signalled its intention to make further positive reforms in the coming years to support and encourage retail investing.\n...\nMichael Healy, UK and Ireland Managing Director at IG: \"For too long, Irish retail investors have faced limited choice and punitive fees. With interest in investing growing rapidly in Ireland, we want to give consumers the ability to access global markets through a comprehensive, low-cost platform.\n...\n“Our commission-free shares and ETF offering provides access to over 11,000 assets and a full suite of investment tools, helping people take greater control of their financial future. And this is just the start - we’re continuing to develop new products and features to further improve the investing experience for Irish customers. We see significant growth potential and we’re excited to help more people build their wealth. We also welcome the measures to reduce CGT on ETFs in Budget 2026 and the broader signals that point to a more investor-friendly policy environment in the years ahead.\"",
 				"fitReason": "UK trading platform with disclosed revenue; Nov 2025 press release confirms new market entry into Ireland."
-			},
-			"note": "the cited press release names IG as '(LSE: IGG), a FTSE 100 company', a publicly listed company, outside the privately-held requirement in r4"
+			}
+		},
+		"koyoloans.com": {
+			"label": null,
+			"name": "Koyo",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "We do things differently around here. Only relying on credit checks is old fashioned, unfair and ineffective. So we thought we’d shake things up a bit.\n\nWe're hiring! See our jobs board for latest roles. \n\nKoyo was founded in 2018, on the principle that people should be treated fairly when it comes to credit. Most other lenders make decisions based on data from credit scoring agencies which can be months out-of-date. Our goal is to disrupt this archaic way of lending, by offering competitively priced credit through the innovative use of technology. ",
+				"workforceTotal": 2,
+				"country": "United Kingdom",
+				"foundedYear": 2018,
+				"citedPage": "https://koyoloans.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK lending fintech with revenue and funding within target bands, offering consumer credit products."
+			}
+		},
+		"kroo.com": {
+			"label": null,
+			"name": "Kroo Bank",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "Kroo is a bank with a conscience. A bank built to change banking. For good. Forever. That’s built for today’s culture. And fit for today’s climate. A bank for good. Where people, planet, and profit can peacefully coexist.\n\nApply today for a feature-packed online current account.\n",
+				"workforceTotal": 145,
+				"country": "United Kingdom",
+				"foundedYear": 2016,
+				"citedPage": "https://kroo.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "London-based digital bank for consumers; no financial data to verify funding or revenue range."
+			}
 		},
 		"manzil.co": {
 			"label": "accept",
 			"name": "Manzil",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "24 staff, Canada, a halal trading and investment platform within the reachable funding band; the US market launch is a bonus signal, not a condition, under the revised ruling",
 			"record": {
 				"industry": "Retail investing",
 				"description": "Ethically-Conscious Products, Halal Financing & Investment Solutions.\n\nManzil's mission is to help ethically-conscious people balance their financial needs with their ethical and spiritual obligations.\n\nAt Manzil, you can choose between halal financing for your home or halal investment solutions to create Shariah Compliant wealth.",
@@ -89,17 +124,17 @@
 				"citedDate": "2026-07-14",
 				"quote": "Manzil has officially launched self-directed halal stock trading south of the border in what the Toronto-based Islamic FinTech startup claims marks a North American first.",
 				"fitReason": "Toronto-based halal investing platform with funding raised; evidence shows new US market launch of stock trading."
-			},
-			"note": "24 staff, Canada, a halal trading and investment platform within the reachable funding band; the US market launch is a bonus signal, not a condition, under the revised ruling"
+			}
 		},
 		"metamask.io": {
 			"label": "reject:unreachable",
 			"name": "MetaMask",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "MetaMask's parent Consensys raised a $450M Series D in 2022 alone, already past the $250M ceiling in r4, regardless of the new card-product signal",
 			"record": {
 				"industry": "Crypto payments",
-				"description": "\ud83e\udd8a The world\u2019s leading crypto wallet.\n\nNeed help? Visit http://support.metamask.io \ud83e\udde1",
+				"description": "🦊 The world’s leading crypto wallet.\n\nNeed help? Visit http://support.metamask.io 🧡",
 				"workforceTotal": 85,
 				"country": "United States",
 				"foundedYear": 2016,
@@ -107,14 +142,31 @@
 				"citedDate": "2026-02-26",
 				"quote": "Enrollment in the card program requires identity verification and compliance checks in line with applicable financial regulations.",
 				"fitReason": "US crypto wallet with disclosed revenue; evidence shows new card product requiring identity verification."
-			},
-			"note": "MetaMask's parent Consensys raised a $450M Series D in 2022 alone, already past the $250M ceiling in r4, regardless of the new card-product signal"
+			}
+		},
+		"monolith.xyz": {
+			"label": null,
+			"name": "Monolith",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "Hi, we’re Monolith. Our goal is to pioneer making it easy, safe & fun to grow money, using the power of decentralised technology.\n\nWe’re a high-performance team of around 30 people. We have freedom and responsibility, a culture that encourages innovation, offers ownership and embraces knowledge sharing. We have big plans to grow!\n\nDue to the pandemic we’re working entirely remotely. When it’s safe to do so we’re looking forward to folks collaborating in person again — but remote is totally cool too!\n\nWe’re committed to building a product that people want, and we can’t do it without having the best team.\n\nIntroduce yourself if you would like to help us build the future!\n",
+				"workforceTotal": 3,
+				"country": "United Kingdom",
+				"foundedYear": 2017,
+				"citedPage": "https://monolith.xyz/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK decentralized finance platform for consumers, revenue and funding both within target bands."
+			}
 		},
 		"monzo.com": {
 			"label": "reject:unreachable",
 			"name": "Monzo",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "Monzo has raised far more than the $250M ceiling in r4, a scaled UK neobank now well above the reachable band regardless of its Ireland-launch signal",
 			"record": {
 				"industry": "Consumer banking",
 				"description": "Hi, we're Monzo. We're a bank that lives on your phone.",
@@ -125,44 +177,162 @@
 				"citedDate": "2026-04-14",
 				"quote": "Monzo said it is officially launching on Tuesday in the Republic after 100,000 customers signed up to a user waiting list.",
 				"fitReason": "Same Monzo record with revenue disclosed and Ireland launch evidence."
-			},
-			"note": "Monzo has raised far more than the $250M ceiling in r4, a scaled UK neobank now well above the reachable band regardless of its Ireland-launch signal"
+			}
+		},
+		"nofrixion.com": {
+			"label": null,
+			"name": "NoFrixion",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "Eliminate manual processes, spreadsheets and banking portals, with the power of a single regulated platform. We make the tools; you control your banking.",
+				"workforceTotal": 20,
+				"country": "Ireland",
+				"foundedYear": 2020,
+				"citedPage": "https://nofrixion.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Dublin fintech automating banking processes for businesses; no clear consumer signup flow; revenue/funding fit band."
+			}
+		},
+		"paymiq.com": {
+			"label": null,
+			"name": "PAYMIQ",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "PAYMIQ is a global fintech brand operated by PAYMIQ Inc. (USA), leading a group of licensed financial entities:\n\t•\t🇺🇸 PAYMIQ MONEY WY INC. — U.S. Money Services Business (MSB) under FinCEN (#31000296998899)\n\t•\t🇨🇦 PAYMIQ Financial Group Ltd. — licensed by FINTRAC Canada (M21430455)\n\t•\t🇵🇱 PAYMIQ Europe Sp. z o.o. — registered with KNF Poland as a Small Payment Institution (MIP141/2022)\n\nOur mission is to deliver a modern, compliant, and digital-native financial ecosystem for users worldwide — bridging fiat and crypto flows seamlessly.\n\n⸻\n\nCurrent product base:\n\t•\tMulti-currency IBANs (personal & business)\n\t•\tSEPA, SWIFT, and international payments\n\t•\tTransparent FX exchange\n\t•\tCrypto on-ramp/off-ramp for BTC, ETH, USDT (pilot stage)\n\t•\tRemote onboarding and KYC via biometric verification\n\t•\tMobile & web banking (iOS / Android)\n\t•\tGlobal 24/7 support\n\n⸻\n\nFuture roadmap:\n\t•\tFull-stack crypto trading for top digital assets\n\t•\tEmbedded compliance toolkit (sanctions, travel rule, chain analysis)\n\t•\tWhite-label API platform for fintechs & crypto PSPs\n\t•\tIssuance of virtual/physical debit cards\n\t•\tMerchant acquiring & settlement services\n\t•\tLaunch of PMQ token and Paymiq stablecoin\n\t•\tTokenization of real-world assets (RWA) for direct investment\n\t•\tDeep integration with DeFi platforms and Web3 wallets\n\t•\tSetup of EU/UK EMI-licensed regulated entity\n\n⸻\n\nPAYMIQ combines fiat infrastructure with native digital asset rails — enabling neobanks, exchanges, and institutional clients to move capital securely across traditional and blockchain networks.",
+				"workforceTotal": 2,
+				"country": "United States",
+				"foundedYear": 2021,
+				"citedPage": "https://paymiq.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "US/Canada-licensed crypto-fintech bridging fiat and digital assets; funding fits target band."
+			}
+		},
+		"peymo.com": {
+			"label": null,
+			"name": "Peymo Ltd.",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "582M+ people own crypto — but less than 0.1% can spend it in real life.\nPeymo is the AI‑first hybrid banking platform that closes this gap.\n\nWe bring crypto into everyday life by combining a non‑custodial crypto architecture, global stablecoin payments, and multi‑provider fiat rails into one unified financial infrastructure. Peymo enables consumers to pay instantly — and lets merchants accept crypto without volatility, chargebacks, or banking barriers.\n\nWhat Peymo delivers: \n• Instant in‑store & online crypto payments (QR, NFC, checkout)\n• Non‑custodial wallets with on‑device security\n• Hybrid crypto‑to‑fiat settlement with real‑time clearing\n• Global stablecoin payments (send / spend / receive / instantly)\n• IBAN accounts & multi‑currency banking via regulated partners\n• AI‑driven onboarding, compliance & support \n• Modular APIs for fintechs, platforms, iGaming, and high‑risk industries\n\nWhy it matters: \nMillions hold digital assets, but merchants lack the tools, banking access, or compliance infrastructure to accept them. Peymo removes all friction — no POS terminal, no local bank, no volatility — just instant settlement and lower fees.\n\nOur mission: \nBridge the global gap between crypto owners and the real world — and make digital money usable everywhere.\n\nContact: info@peymo.com\nWebsite: peymo.com",
+				"workforceTotal": 1,
+				"country": "United Kingdom",
+				"foundedYear": 2022,
+				"citedPage": "https://peymo.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK-based crypto/payments platform for consumers with funding $5.6M fits size and scope requirements."
+			}
 		},
 		"revolut.com": {
 			"label": "reject:unreachable",
 			"name": "Revolut",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "the record describes 10,000+ staff and 70+ million customers, far above the $250M-raised/$150M-revenue reachable band in r4, and the record's own fitReason notes the cited quote is generic onboarding language with no qualifying new-market, product or funding announcement",
 			"record": {
 				"industry": "Consumer banking",
-				"description": "People deserve more from their money. More visibility, more control, and more freedom. Since 2015, Revolut has been on a mission to deliver just that. Our powerhouse of products help our 70+ million customers get more from their money every day.\n\nAs we continue our lightning-fast growth,\u200c 2 things are essential to our success: our people and our culture. In recognition of our outstanding employee experience, we've been certified as a Great Place to Work\u2122.\n\nSo far, we have 10,000+ people working around the world, from our offices and remotely, to help us achieve our mission. And we're looking for more brilliant people. People who love building great products, redefining success, and turning the complexity of a chaotic world into the simplicity of a beautiful solution.",
+				"description": "People deserve more from their money. More visibility, more control, and more freedom. Since 2015, Revolut has been on a mission to deliver just that. Our powerhouse of products help our 70+ million customers get more from their money every day.\n\nAs we continue our lightning-fast growth,‌ 2 things are essential to our success: our people and our culture. In recognition of our outstanding employee experience, we've been certified as a Great Place to Work™.\n\nSo far, we have 10,000+ people working around the world, from our offices and remotely, to help us achieve our mission. And we're looking for more brilliant people. People who love building great products, redefining success, and turning the complexity of a chaotic world into the simplicity of a beautiful solution.",
 				"workforceTotal": 12564,
 				"country": "United Kingdom",
 				"foundedYear": 2015,
 				"citedPage": "https://www.revolut.com/en-PL/news/revolut_files_u_s_bank_charter_application_names_new_u_s_ceo/",
 				"citedDate": "2026-03-05",
-				"quote": "You\u2019ll also need to take a selfie during signup to verify your identity and help keep your account secure.",
+				"quote": "You’ll also need to take a selfie during signup to verify your identity and help keep your account secure.",
 				"fitReason": "UK neobank with disclosed revenue; onboarding quote shows verification but no recent new-market or product announcement."
-			},
-			"note": "the record describes 10,000+ staff and 70+ million customers, far above the $250M-raised/$150M-revenue reachable band in r4, and the record's own fitReason notes the cited quote is generic onboarding language with no qualifying new-market, product or funding announcement"
+			}
 		},
 		"robinhood.com": {
 			"label": "reject:unreachable",
 			"name": "Robinhood",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
+			"note": "Robinhood is a publicly listed company (NASDAQ: HOOD), outside the privately-held requirement in r4",
 			"record": {
 				"industry": "Financial services",
-				"description": "Trade. Invest. Earn.\u00a0\n\nrbnhd.co/social_media_disclosures",
+				"description": "Trade. Invest. Earn. \n\nrbnhd.co/social_media_disclosures",
 				"workforceTotal": 2955,
 				"country": "United States",
 				"foundedYear": 2013,
 				"citedPage": "https://robinhood.com/ca/en/support/articles/claim-your-robinhood-account/",
 				"citedDate": "2026-06-01T00:00:00.000Z",
-				"quote": "If you currently use a WonderFi app (like Bitbuy or Coinsquare), your eligible crypto account will be moved to Robinhood Canada over a series of phases.\n...\nWe\u2019re working with WonderFi to move most eligible customers and assets to Robinhood Canada while keeping your account safe and compliant with Canadian regulations.\n...\n- You have an active, funded crypto account in good standing\n- Your coins and account type are supported at Robinhood Canada\n- You meet Canadian KYC, suitability, and residency requirements\n...\nYou\u2019ll get email and in\u2011app notifications from Coinsquare Capital Markets Ltd (CCML)/Bitbuy and Robinhood when it\u2019s your turn to move or if your account isn\u2019t eligible.\n...\n- Supported coins and cash balances\n- - Supported crypto positions and CAD balances will be automatically available through into the Robinhood Canada platform. Your coins stay invested during the move.\n...\n- Personal and profile information\n- - Key profile details (such as name, address, contact info, and suitability answers) are copied over so you don\u2019t have to start from scratch. You may be asked to review or update this information in Robinhood later for regulatory refreshes.\n...\nlimits and protections\n- - Canadian crypto investment limits and investor classifications continue to apply after you move to the Robinhood platform.What does not move (or may change)\n...\n1. Log in to the WonderFi app (such as Coinsquare/Bitbuy)\n2. When your account is ready, you\u2019ll see a banner or prompt inviting you to move to Robinhood\n3. Tap the prompt to go to the Robinhood Canada app download page\n...\n1. Download the Robinhood app from the Canadian app store\n2. Open the app and enter the email you use with your existing account\n3. Robinhood will recognize you as an existing Coinsquare/Bitbuy customer and start a custom onboarding flow\n...\n- Verify your identity (for example, with a selfie and/or ID check)\n- Set a new Robinhood password\n...\n- After your identity and account are confirmed, your supported Coinsquare assets and CAD balances will be accessed through the Robinhood platform\n- Once the transitionis complete, you\u2019ll see your crypto positions and cash in the Robinhood app and can start trading under Robinhood Canada platform\n...\n- Your Coinsquare/Bitbuy app will enter read\u2011only mode once your account is marked ready to move. You\u2019ll be able to log in, but not place new trades, deposits, or withdrawals.\n- All of your open positions will be cancelled\n- You\u2019ll still be able to view past transactions, historical statements, and tax documents there for a period of time, even after you start using Robinhood.\n- After the move is complete, WonderFi expects to fully shut down the legacy apps.\n...\nThe move is being rolled out gradually:\n...\n- You might see friends or other customers move before you. That\u2019s expected and part of a phased plan based on account characteristics like balance, assets, and KYC status.\n- If you\u2019re not yet eligible, you\u2019ll see a \u201cnot yet\u201d or \u201ccoming soon\u201d message and will get an email when it\u2019s your turn.\n- Eventually, all customers will be moved over to the Robinhood app. Any remaining supported assets from Coinsquare/Bitbuy will be transitioned to the Robinhood app so you can continue to access your funds and trade.",
+				"quote": "If you currently use a WonderFi app (like Bitbuy or Coinsquare), your eligible crypto account will be moved to Robinhood Canada over a series of phases.\n...\nWe’re working with WonderFi to move most eligible customers and assets to Robinhood Canada while keeping your account safe and compliant with Canadian regulations.\n...\n- You have an active, funded crypto account in good standing\n- Your coins and account type are supported at Robinhood Canada\n- You meet Canadian KYC, suitability, and residency requirements\n...\nYou’ll get email and in‑app notifications from Coinsquare Capital Markets Ltd (CCML)/Bitbuy and Robinhood when it’s your turn to move or if your account isn’t eligible.\n...\n- Supported coins and cash balances\n- - Supported crypto positions and CAD balances will be automatically available through into the Robinhood Canada platform. Your coins stay invested during the move.\n...\n- Personal and profile information\n- - Key profile details (such as name, address, contact info, and suitability answers) are copied over so you don’t have to start from scratch. You may be asked to review or update this information in Robinhood later for regulatory refreshes.\n...\nlimits and protections\n- - Canadian crypto investment limits and investor classifications continue to apply after you move to the Robinhood platform.What does not move (or may change)\n...\n1. Log in to the WonderFi app (such as Coinsquare/Bitbuy)\n2. When your account is ready, you’ll see a banner or prompt inviting you to move to Robinhood\n3. Tap the prompt to go to the Robinhood Canada app download page\n...\n1. Download the Robinhood app from the Canadian app store\n2. Open the app and enter the email you use with your existing account\n3. Robinhood will recognize you as an existing Coinsquare/Bitbuy customer and start a custom onboarding flow\n...\n- Verify your identity (for example, with a selfie and/or ID check)\n- Set a new Robinhood password\n...\n- After your identity and account are confirmed, your supported Coinsquare assets and CAD balances will be accessed through the Robinhood platform\n- Once the transitionis complete, you’ll see your crypto positions and cash in the Robinhood app and can start trading under Robinhood Canada platform\n...\n- Your Coinsquare/Bitbuy app will enter read‑only mode once your account is marked ready to move. You’ll be able to log in, but not place new trades, deposits, or withdrawals.\n- All of your open positions will be cancelled\n- You’ll still be able to view past transactions, historical statements, and tax documents there for a period of time, even after you start using Robinhood.\n- After the move is complete, WonderFi expects to fully shut down the legacy apps.\n...\nThe move is being rolled out gradually:\n...\n- You might see friends or other customers move before you. That’s expected and part of a phased plan based on account characteristics like balance, assets, and KYC status.\n- If you’re not yet eligible, you’ll see a “not yet” or “coming soon” message and will get an email when it’s your turn.\n- Eventually, all customers will be moved over to the Robinhood app. Any remaining supported assets from Coinsquare/Bitbuy will be transitioned to the Robinhood app so you can continue to access your funds and trade.",
 				"fitReason": "US trading platform expanding into Canada with new onboarding requiring identity verification."
-			},
-			"note": "Robinhood is a publicly listed company (NASDAQ: HOOD), outside the privately-held requirement in r4"
+			}
+		},
+		"stream.money": {
+			"label": null,
+			"name": "Stream.Money",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "Stream Money is a regulated fintech company and licensed EU Virtual Asset Service Provider, as well as a registered Money Services Business (MSB) in Canada, delivering compliant infrastructure for global payments and digital asset services.\n\nBuilt with regulation at its core, Stream Money enables enterprises to move fiat and digital assets seamlessly across borders through a modular, API-driven platform aligned with Europe’s MiCA framework and North American compliance standards. Its Payments Orchestration layer connects merchants to banks, acquirers, gateways and payment service providers worldwide, simplifying complex payment stacks while supporting expansion into emerging and high-growth markets across Asia, Africa and Latin America.\n\nStream Money provides institutional-grade digital asset and FX execution, offering deep liquidity access, competitive pricing and advanced execution strategies to support efficient on-ramp and off-ramp flows. These services are designed to meet the governance, transparency and risk management expectations of regulated institutions and enterprise clients.\n\nThe platform integrates regulated digital asset custody, enabling secure asset safeguarding in line with statutory requirements, alongside capabilities such as dynamic currency conversion, digital asset settlement, real-time transaction intelligence, automated reconciliation, and PCI-DSS-aligned security.\n\nBy combining EU VASP compliance with our Canadian MSB registration, Stream Money delivers a trusted transatlantic regulatory footprint, empowering global merchants, fintechs and platforms across eCommerce, marketplaces, iGaming and enterprise payments to scale with confidence and regulatory certainty.",
+				"workforceTotal": 25,
+				"country": "United Kingdom",
+				"foundedYear": 2021,
+				"citedPage": "https://stream.money/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK/Canada fintech providing B2B payments orchestration to merchants; no clear consumer signup flow or financial data."
+			}
+		},
+		"xoala.com": {
+			"label": null,
+			"name": "XOALA",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "𝗫𝗼𝗮𝗹𝗮 is a neobank, fully regulated, all-in-one financial platform providing corporate banking, global payments, acquiring, and cryptocurrency solutions through a single unified portal. Built for financial institutions, brokers, crypto firms, iGaming companies, and global businesses, Xoala eliminates the need for multiple banking and payment partners.\n\nRegulated as an EMI in Sweden, a principal member of Visa and Mastercard, and operating under multiple crypto licenses, Xoala delivers secure and compliant access to dedicated named IBANs, multi-currency accounts, and local and international payment rails, including USD (𝗦𝗪𝗜𝗙𝗧), EUR (𝗦𝗘𝗣𝗔 𝗜𝗻𝘀𝘁𝗮𝗻𝘁), GBP (𝗙𝗮𝘀𝘁𝗲𝗿 𝗣𝗮𝘆𝗺𝗲𝗻𝘁𝘀/𝗖𝗛𝗔𝗣𝗦), and local 𝗔𝗘𝗗 via the 𝗨𝗔𝗘𝗧𝗙𝗦 𝗡𝗲𝘁𝘄𝗼𝗿𝗸.\n\nXoala supports both B2B operational accounts and C2B client accounts, enabling businesses to accept payments, manage client funds, convert across 𝟮𝟬+ 𝗰𝘂𝗿𝗿𝗲𝗻𝗰𝗶𝗲𝘀, and move money seamlessly. Corporate debit cards are available for global expense management.\n\nThrough its integrated crypto on- and off-ramps, Xoala supports 𝟭𝟬+ 𝗰𝗿𝘆𝗽𝘁𝗼𝗰𝘂𝗿𝗿𝗲𝗻𝗰𝗶𝗲𝘀 with dedicated, non-changing wallets, instant transfers, seamless crypto-to-fiat conversion, and a proprietary crypto checkout that settles directly into Xoala accounts. 𝗖𝗿𝘆𝗽𝘁𝗼 𝘄𝗮𝗹𝗹𝗲𝘁𝘀 and 𝗜𝗕𝗔𝗡𝘀 are managed side-by-side in one platform.\n\nXoala also provides 𝗩𝗶𝘀𝗮 and 𝗠𝗮𝘀𝘁𝗲𝗿𝗰𝗮𝗿𝗱 acquiring for low, medium, and high-risk industries, alternative payment methods across LATAM, Africa, and Asia, and integrations with leading aggregators such as 𝗣𝗿𝗮𝘅𝗶𝘀 and 𝗕𝗿𝗶𝗱𝗴𝗲𝗿𝗣𝗮𝘆. A 𝘄𝗵𝗶𝘁𝗲-𝗹𝗮𝗯𝗲𝗹 𝗱𝗲𝗯𝗶𝘁 𝗰𝗮𝗿𝗱 𝗽𝗿𝗼𝗴𝗿𝗮𝗺 allows businesses to issue branded cards and mobile apps for payouts and withdrawals.\n\nOne platform. Banking, Crypto & Acquiring: 𝗔𝗹𝗹 𝗶𝗻 𝗼𝗻𝗲 𝗽𝗹𝗮𝗰𝗲.",
+				"workforceTotal": 56,
+				"country": "United Kingdom",
+				"foundedYear": 2024,
+				"citedPage": "https://xoala.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK-based neobank serving businesses/institutions; unclear if it runs a consumer signup flow; funding fits band."
+			}
+		},
+		"ziglu.io": {
+			"label": null,
+			"name": "Ziglu",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "Traditional and digital currency managed seamlessly in one app. Money, done differently. The app you have been waiting for, with a use-anywhere card for spending (and lots of other services) coming soon. \n\n",
+				"workforceTotal": 6,
+				"country": "United Kingdom",
+				"foundedYear": 2018,
+				"citedPage": "https://ziglu.io/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK fintech app with card/crypto services, revenue and funding within target bands, not a compliance vendor."
+			}
+		},
+		"zopa.com": {
+			"label": null,
+			"name": "Zopa Bank",
+			"firstSeenRunId": "companies_dom-10a35a7db3f1_2026-09-04",
+			"lastSeenAt": "2026-09-04T18:07:36.549Z",
+			"record": {
+				"industry": null,
+				"description": "We’re Zopa, and we want to make money work better for you.\n\nOur diverse team is united in their mission of creating simple, fair and honest financial products that have the customer’s needs at their heart. We’re proud that this dedication is reflected in our excellent rating on TrustPilot.\n\nWe’ve always been unapologetically honest with our customers, and value the same in return. Their feedback helps us shape what we build, so we can provide a bank fit for today, and for the future.\n\nWe’re not the new kids on the block though - we’ve been a pioneering force in finance for 16 years. In 2005, we built the first ever peer-to-peer (P2P) lending company, giving our customers access to loans built for real-life and intelligent investments backed by cutting-edge tech. In 2020, we launched Zopa Bank, meaning we could offer more – like fixed term savings backed by FSCS protection and a credit card to help customers take control of their finances.\n\nWe’ve lent out over £6 billion and are proud to have made money work better for over half a million people across the UK, whether they were looking to borrow or save.",
+				"workforceTotal": 797,
+				"country": "United Kingdom",
+				"foundedYear": 2005,
+				"citedPage": "https://zopa.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK digital bank serving consumers; no funding or revenue figures given to confirm financial band."
+			}
 		}
 	}
 }
