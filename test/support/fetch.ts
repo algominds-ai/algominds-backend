@@ -168,28 +168,6 @@ function clayCreateFilters(init: RequestInit | undefined): ClayCreateFilters {
 	return body.filters;
 }
 
-/** Stubs `globalThis.fetch` as Clay's create-then-run search, answering each call with the next of `responses` (repeating the last), and recording every create call's filters. */
-export function stubClaySequence(responses: readonly Response[]): {
-	calls: number;
-	creates: ClayCreateFilters[];
-} {
-	const creates: ClayCreateFilters[] = [];
-	const state = { calls: 0, creates };
-	let step = 0;
-	globalThis.fetch = async (input, init) => {
-		state.calls += 1;
-		const path = new URL(String(input)).pathname;
-		if (path === "/public/v0/search/filters-mode") {
-			state.creates.push(clayCreateFilters(init));
-		}
-		const response = responses[step] ?? responses.at(-1);
-		step += 1;
-		if (!response) throw new Error("stubClaySequence: no response scripted");
-		return response;
-	};
-	return state;
-}
-
 /** Stubs `globalThis.fetch` as Clay's create-then-run search, recording every create call's filters and answering every run with an empty page. */
 export function stubClayCreateCapture(): {
 	creates: ClayCreateFilters[];
@@ -329,8 +307,10 @@ export function stubSleep(): { waits: number[] } {
 export type ClaySequenceStep = { response: Response } | { throwTimeout: true };
 
 export type ClaySequenceCalls = {
+	calls: number;
 	runCalls: number;
 	inits: (RequestInit | undefined)[];
+	creates: ClayCreateFilters[];
 };
 
 function isClayCreateCall(input: unknown): boolean {
@@ -338,11 +318,23 @@ function isClayCreateCall(input: unknown): boolean {
 }
 
 /** Stubs `globalThis.fetch` as one Clay create-then-run sequence, counting only the run calls and recording every init. */
-export function stubClaySequence(steps: ClaySequenceStep[]): ClaySequenceCalls {
-	const calls: ClaySequenceCalls = { runCalls: 0, inits: [] };
+export function stubClaySequence(
+	input: readonly (ClaySequenceStep | Response)[],
+): ClaySequenceCalls {
+	const steps: ClaySequenceStep[] = input.map((entry) =>
+		entry instanceof Response ? { response: entry } : entry,
+	);
+	const calls: ClaySequenceCalls = {
+		calls: 0,
+		runCalls: 0,
+		inits: [],
+		creates: [],
+	};
 	let step = 0;
 	globalThis.fetch = async (input, init) => {
+		calls.calls += 1;
 		calls.inits.push(init);
+		if (isClayCreateCall(input)) calls.creates.push(clayCreateFilters(init));
 		const current = steps[step] ?? steps[steps.length - 1];
 		step += 1;
 		if (!isClayCreateCall(input)) calls.runCalls += 1;
