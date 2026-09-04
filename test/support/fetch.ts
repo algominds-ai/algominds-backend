@@ -38,9 +38,45 @@ export function requestedEmail(init: RequestInit | undefined): string {
 
 const ContentsRequestSchema = z.object({ urls: z.array(z.string()) });
 
-type ContentsOutcome = { text: string } | { errorTag: string };
+type ContentsOutcome =
+	| { text: string }
+	| { errorTag: string }
+	| { absent: true };
 
-/** The Exa `/contents` endpoint, answering only the urls named in `byUrl`; any other url throws. */
+type ContentsStatus =
+	| { id: string; status: "success" }
+	| { id: string; status: "error"; error: { tag: string } };
+
+type ContentsEntry = {
+	status: ContentsStatus | null;
+	result: { url: string; text: string } | null;
+};
+
+/** One url's contribution to the `/contents` reply: null status and result when it is `absent`, an error status when the crawl failed, else a success status and its text. */
+function contentsEntry(url: string, outcome: ContentsOutcome): ContentsEntry {
+	if ("absent" in outcome) return { status: null, result: null };
+	if ("errorTag" in outcome) {
+		return {
+			status: { id: url, status: "error", error: { tag: outcome.errorTag } },
+			result: null,
+		};
+	}
+	return {
+		status: { id: url, status: "success" },
+		result: { url, text: outcome.text },
+	};
+}
+
+function resolveContentsOutcome(
+	byUrl: Record<string, ContentsOutcome>,
+	url: string,
+): ContentsOutcome {
+	const outcome = byUrl[url];
+	if (!outcome) throw new Error(`unexpected contents request for ${url}`);
+	return outcome;
+}
+
+/** The Exa `/contents` endpoint, answering only the urls named in `byUrl`; an `absent` entry is requested but left out of the reply entirely, and any url missing from `byUrl` throws. */
 export function exaContentsFetch(
 	byUrl: Record<string, ContentsOutcome>,
 ): typeof fetch {
@@ -48,32 +84,56 @@ export function exaContentsFetch(
 		const { urls } = ContentsRequestSchema.parse(
 			JSON.parse(String(init?.body)),
 		);
-		const results: { url: string; text: string }[] = [];
-		const statuses: (
-			| { id: string; status: "success" }
-			| { id: string; status: "error"; error: { tag: string } }
-		)[] = [];
-		for (const url of urls) {
-			const outcome = byUrl[url];
-			if (!outcome) throw new Error(`unexpected contents request for ${url}`);
-			if ("errorTag" in outcome) {
-				statuses.push({
-					id: url,
-					status: "error",
-					error: { tag: outcome.errorTag },
-				});
-				continue;
-			}
-			statuses.push({ id: url, status: "success" });
-			results.push({ url, text: outcome.text });
-		}
+		const entries = urls.map((url) =>
+			contentsEntry(url, resolveContentsOutcome(byUrl, url)),
+		);
 		return jsonResponse({
 			requestId: "req-contents",
-			results,
-			statuses,
+			results: entries.flatMap((entry) => entry.result ?? []),
+			statuses: entries.flatMap((entry) => entry.status ?? []),
 			costDollars: { total: 0.003 },
 		});
 	};
+}
+
+export type ExaAgentRunScript = {
+	completeAfterPolls?: number;
+	structured: unknown;
+	costDollars?: { total: number; agentCompute?: number };
+};
+
+/** An Exa agent-run `fetch`: a POST starts a run and is recorded, a GET polls it, completing after `completeAfterPolls` polls (default one) with `structured` as its output. */
+export function fakeExaAgentRun(script: ExaAgentRunScript): {
+	fetch: typeof fetch;
+	started: { body: unknown }[];
+} {
+	const started: { body: unknown }[] = [];
+	const pollCounts = new Map<string, number>();
+	const completeAfter = script.completeAfterPolls ?? 1;
+	let nextId = 0;
+	const handler: typeof fetch = async (input, init) => {
+		if (init?.method === "POST") {
+			const body = JSON.parse(String(init.body));
+			started.push({ body });
+			const id = `run-${nextId}`;
+			nextId += 1;
+			pollCounts.set(id, 0);
+			return jsonResponse({ id, status: "running" });
+		}
+		const id = String(input).split("/").pop() ?? "";
+		const count = (pollCounts.get(id) ?? 0) + 1;
+		pollCounts.set(id, count);
+		if (count < completeAfter) return jsonResponse({ id, status: "running" });
+		return jsonResponse({
+			id,
+			object: "agent_run",
+			status: "completed",
+			stopReason: "schema_satisfied",
+			output: { text: "done", structured: script.structured },
+			costDollars: script.costDollars ?? { total: 0.01, agentCompute: 0.01 },
+		});
+	};
+	return { fetch: handler, started };
 }
 
 /** A completed Exa agent run polling the person the enrich waterfall expects, overridable per field. */
@@ -157,13 +217,14 @@ export type CapturedRequest = { url: string; headers: Headers; body: unknown };
 export type ScriptedReply = {
 	content: string;
 	finishReason?: "stop" | "length";
-	cost?: number;
+	cost?: number | null;
 	model?: string;
 };
 
-/** The AI Gateway's OpenAI-compatible chat-completion reply, carrying the scripted content and cost. */
+/** The AI Gateway's OpenAI-compatible chat-completion reply, carrying the scripted content and cost. A `cost` of `null` omits `usage.cost` entirely, for the reply shape a real gateway response sometimes carries. */
 export function chatCompletionResponse(reply: ScriptedReply): Response {
 	const model = reply.model ?? "deepseek/deepseek-v4-flash-0731";
+	const cost = reply.cost === undefined ? 0.000003 : reply.cost;
 	const payload = {
 		id: "chatcmpl-test",
 		model,
@@ -177,7 +238,7 @@ export function chatCompletionResponse(reply: ScriptedReply): Response {
 		usage: {
 			prompt_tokens: 30,
 			completion_tokens: 12,
-			cost: reply.cost ?? 0.000003,
+			...(cost === null ? {} : { cost }),
 		},
 	};
 	return new Response(JSON.stringify(payload), {
@@ -213,4 +274,27 @@ export function fakeGateway(responses: readonly Response[]): {
 		return response;
 	};
 	return { fetch: handler, calls };
+}
+
+/** An AI Gateway `fetch` that records every request but never resolves on its own, so a test can flush pending calls before choosing the order each one completes in. */
+export function deferredGateway(): {
+	fetch: typeof fetch;
+	calls: CapturedRequest[];
+	resolvers: Array<(response: Response) => void>;
+} {
+	const calls: CapturedRequest[] = [];
+	const resolvers: Array<(response: Response) => void> = [];
+	const handler: typeof fetch = (input, init) => {
+		const body =
+			typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
+		calls.push({
+			url: String(input),
+			headers: new Headers(init?.headers),
+			body,
+		});
+		return new Promise<Response>((resolve) => {
+			resolvers.push(resolve);
+		});
+	};
+	return { fetch: handler, calls, resolvers };
 }

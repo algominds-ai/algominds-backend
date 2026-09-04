@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { FindCompaniesReject } from "../src/core/companies/candidates";
-import { roundRefusalsEvidenceRow } from "../src/core/companies/rows";
+import type { FindCompaniesReject } from "@/core/companies/candidates";
+import { roundRefusalsEvidenceRow } from "@/core/companies/rows";
 
 function judgeReject(
 	overrides: Partial<FindCompaniesReject> = {},
@@ -37,15 +37,12 @@ describe("roundRefusalsEvidenceRow", () => {
 		});
 	});
 
-	it("drops a reject the judge never produced, since it carries no statuses to report", () => {
-		const row = roundRefusalsEvidenceRow("run-1", 1, [
+	it("drops a reject the judge never produced, since it carries no statuses to report, and reports null for a round that refused nothing", () => {
+		const noStatuses = roundRefusalsEvidenceRow("run-1", 1, [
 			{ domain: "a.com", reason: "missing-required", stage: "filter" },
 		]);
+		expect(noStatuses).toBeNull();
 
-		expect(row).toBeNull();
-	});
-
-	it("is null for a round that refused nothing at the judge", () => {
 		expect(roundRefusalsEvidenceRow("run-1", 1, [])).toBeNull();
 	});
 
