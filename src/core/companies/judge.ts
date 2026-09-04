@@ -9,6 +9,7 @@ import type { Requirement } from "@/core/requirements";
 import {
 	hardPageRequirements,
 	hardRequirements,
+	mustBeProven,
 	requirementLine,
 } from "@/core/requirements";
 
@@ -275,7 +276,7 @@ function unprovenRequirement(
 	verdict: Verdict | undefined,
 ): Requirement | null {
 	return (
-		hardPageRequirements(requirements).find(
+		mustBeProven(requirements).find(
 			(req) => statusOf(verdict, req.id) !== "proven",
 		) ?? null
 	);
@@ -308,6 +309,9 @@ function refusalReason(
 	const bad = contradictedRequirement(requirements, verdict);
 	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);
+	if (missing?.proof === "record") {
+		return `the record does not establish ${missing.id}: ${detail}`;
+	}
 	return `no page proved ${missing?.id ?? "a required signal"}: ${detail}`;
 }
 

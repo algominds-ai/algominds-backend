@@ -31,37 +31,39 @@
 		{
 			"id": "r1",
 			"kind": "hard",
+			"text": "The company is headquartered in, or serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada.",
 			"proof": "record",
-			"windowDays": null,
-			"text": "The company is headquartered in, or serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada."
+			"windowDays": null
 		},
 		{
 			"id": "r2",
 			"kind": "hard",
+			"text": "The company runs a high-volume consumer or SMB self-serve signup in fintech, neobanking, payments, lending, trading, crypto or an age-gated consumer platform. A company that serves only businesses through sales-led onboarding, or whose record shows no self-serve signup, does not qualify.",
 			"proof": "record",
 			"windowDays": null,
-			"text": "The company runs a high-volume consumer or SMB self-serve signup in fintech, neobanking, payments, lending, trading, crypto or an age-gated consumer platform. A company that serves only businesses through sales-led onboarding, or whose record shows no self-serve signup, does not qualify."
+			"strict": true
 		},
 		{
 			"id": "r3",
 			"kind": "hard",
+			"text": "The company is not a verification vendor, a compliance consultancy, an agency or a non-profit.",
 			"proof": "record",
-			"windowDays": null,
-			"text": "The company is not a verification vendor, a compliance consultancy, an agency or a non-profit."
+			"windowDays": null
 		},
 		{
 			"id": "r4",
 			"kind": "hard",
+			"text": "The company is privately held with $2M to $250M raised or $1M to $150M revenue. A record with neither figure, a public company, or one above the band does not qualify.",
 			"proof": "record",
 			"windowDays": null,
-			"text": "The company is privately held with $2M to $250M raised or $1M to $150M revenue. A record with neither figure, a public company, or one above the band does not qualify."
+			"strict": true
 		},
 		{
 			"id": "r5",
 			"kind": "soft",
+			"text": "Within the last 12 months: a new market entry or licence; a consumer product launch that needs signup verification; a funding round in the last 120 days; users complaining about stuck verification; or an age-assurance statement under the UK Online Safety Act or a US state law.",
 			"proof": "page",
-			"windowDays": 365,
-			"text": "Within the last 12 months: a new market entry or licence; a consumer product launch that needs signup verification; a funding round in the last 120 days; users complaining about stuck verification; or an age-assurance statement under the UK Online Safety Act or a US state law."
+			"windowDays": 365
 		}
 	]
 }
