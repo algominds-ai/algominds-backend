@@ -53,10 +53,7 @@ async function runSelect(
 		`people-${progress.domain}-select`,
 		config.stepConfig.paidCall,
 		() => {
-			const description =
-				ctx.buyer.buyerSource === "captured"
-					? (ctx.profile?.description ?? null)
-					: null;
+			const description = ctx.profile?.description ?? null;
 			return selectBuyers(
 				{ description, buyer: ctx.buyer, candidates },
 				ctx.env,

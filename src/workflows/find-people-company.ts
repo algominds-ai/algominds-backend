@@ -18,6 +18,11 @@ import { seniorRoster } from "@/core/people/roster";
 import { rawEvidenceRow, toNewPerson } from "@/core/people/rows";
 import type { IcpDoc } from "@/core/synthesize";
 import { applyCostEntries } from "@/workflows/agent-poll";
+import {
+	fallbackRoster,
+	rescueUnresolved,
+	skipFailedCompany,
+} from "@/workflows/find-people-rescue";
 import type { TargetCompany } from "@/workflows/find-people-target";
 import { runBuyerMode } from "@/workflows/find-people-verify";
 
@@ -83,7 +88,7 @@ async function openCompanyRow(
 	);
 }
 
-type IdentityStepResult =
+export type IdentityStepResult =
 	| {
 			how: "domain" | "linkedin";
 			identifier: string;
@@ -207,8 +212,12 @@ async function runRosterStep(
 					rawEvidenceRow(runCompanyId, "roster", "clay", body),
 				),
 			);
+			const candidates =
+				result.candidates.length > 0
+					? result.candidates
+					: await fallbackRoster(ctx, domain, runCompanyId);
 			return {
-				candidates: result.candidates,
+				candidates,
 				clayRecords: result.quotaUsed,
 				costEntries: ledger.toJSON().entries,
 			};
@@ -289,7 +298,11 @@ export async function runOneCompany(
 	const ledger = new CostLedger();
 	const identity = await runIdentityStep(ctx, company, runCompanyId);
 	applyCostEntries(identity.costEntries, ledger);
-	if (identity.how === "unresolved") {
+	const rescued =
+		identity.how === "unresolved"
+			? await rescueUnresolved(ctx, company, runCompanyId, identity)
+			: null;
+	if (identity.how === "unresolved" && rescued === null) {
 		await markUnresolved(ctx, company.domain, runCompanyId, {
 			clayRecords: identity.clayRecords,
 			spendDollars: ledger.total(),
@@ -304,23 +317,33 @@ export async function runOneCompany(
 			costDollars,
 		};
 	}
+	const resolved =
+		identity.how === "unresolved"
+			? {
+					how: "domain" as const,
+					identifier: company.domain,
+					name: company.name,
+				}
+			: identity;
 	const companyId = await ensureCompanyRow(
 		ctx,
 		company,
 		runCompanyId,
-		identity,
+		resolved,
 	);
-	const roster = await runRosterStep(
-		ctx,
-		company.domain,
-		identity.identifier,
-		runCompanyId,
-	);
+	const roster =
+		rescued ??
+		(await runRosterStep(
+			ctx,
+			company.domain,
+			resolved.identifier,
+			runCompanyId,
+		));
 	applyCostEntries(roster.costEntries, ledger);
 	const progress: CompanyProgress = {
 		domain: company.domain,
 		companyId,
-		companyName: identity.name ?? company.name ?? company.domain,
+		companyName: resolved.name ?? company.name ?? company.domain,
 		runCompanyId,
 		spentSoFar,
 		clayRecords: identity.clayRecords + roster.clayRecords,
@@ -367,7 +390,11 @@ export async function runCompanies(
 		const batchStart = costDollars;
 		const batch = companies.slice(start, start + batchSize);
 		const results = await Promise.all(
-			batch.map((company) => runOneCompany(ctx, company, batchStart)),
+			batch.map((company) =>
+				runOneCompany(ctx, company, batchStart).catch((error: unknown) =>
+					skipFailedCompany(ctx, company, batchStart, error),
+				),
+			),
 		);
 		for (const result of results) {
 			companiesSearched += 1;

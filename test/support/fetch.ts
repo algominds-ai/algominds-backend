@@ -568,3 +568,9 @@ export function deferredGateway(): {
 	};
 	return { fetch: handler, calls, resolvers };
 }
+
+/** Points `fetch` at a GetLeads decision-makers reply carrying `contacts`. */
+export function stubGetleadsFetch(contacts: unknown[]): void {
+	globalThis.fetch = async () =>
+		jsonResponse({ ok: "True", contacts, query_credits_used: "1" });
+}

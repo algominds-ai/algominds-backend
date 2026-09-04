@@ -2,13 +2,15 @@ import { describe, expect, it } from "vitest";
 import { resolveBuyer } from "@/core/people/buyer";
 import type { CompanyLoopContext } from "@/workflows/find-people-company";
 import { runCompanies, runOneCompany } from "@/workflows/find-people-company";
+import { rescueUnresolved } from "@/workflows/find-people-rescue";
 import { fakeSecretEnv } from "../support/env";
-import { stubClayRejectFetch } from "../support/fetch";
+import { stubClayRejectFetch, stubGetleadsFetch } from "../support/fetch";
 import { fakeWorkflowStep } from "../support/step";
 import {
 	bareCompany,
 	cleanupPeopleRun,
 	companyRowsFor,
+	evidenceRowsFor,
 	runCompanyRowsFor,
 	type SeededPeopleRun,
 	seedPeopleRun,
@@ -33,7 +35,7 @@ describe("runOneCompany: an unresolved domain's Clay spend", () => {
 		const domain = `unresolved-spend-${crypto.randomUUID()}.example`;
 		const seed = await seedPeopleRun("unresolved-spend");
 		try {
-			const overrides = new Map([
+			const overrides = new Map<string, unknown>([
 				[
 					`people-${domain}-identity`,
 					{
@@ -42,6 +44,7 @@ describe("runOneCompany: an unresolved domain's Clay spend", () => {
 						costEntries: [{ provider: "clay", op: "search", dollars: 0.03 }],
 					},
 				],
+				[`people-${domain}-rescue`, null],
 			]);
 
 			const result = await runOneCompany(
@@ -83,6 +86,92 @@ describe("FindPeopleWorkflow: a Clay-rejected domain", () => {
 			expect(runCompanyRows[0]?.identity).toBe("unresolved");
 			expect(runCompanyRows[0]?.companyId).toBeNull();
 			expect(await companyRowsFor(seed.org.id)).toHaveLength(0);
+		} finally {
+			await cleanupPeopleRun(seed);
+		}
+	});
+});
+
+const STEVE = {
+	first_name: "Steve",
+	last_name: "Apostolopoulos",
+	job_title: "Co Founder and President",
+	person_linkedin_url: "https://www.linkedin.com/in/steve-a",
+	person_city: "Toronto",
+	person_country_name: "Canada",
+};
+
+async function rescue(seed: SeededPeopleRun, domain: string) {
+	const ctx: CompanyLoopContext = {
+		...contextFor(seed, new Map()),
+		env: fakeSecretEnv({ GL_API_KEY: "test-gl-key" }),
+	};
+	return rescueUnresolved(ctx, bareCompany(domain), crypto.randomUUID(), {
+		how: "unresolved",
+		clayRecords: 2,
+		costEntries: [],
+	});
+}
+
+describe("a domain Clay cannot resolve is rescued from GetLeads", () => {
+	const originalFetch = globalThis.fetch;
+
+	it("returns the GetLeads decision makers as the roster", async () => {
+		const seed = await seedPeopleRun("rescue");
+		try {
+			stubGetleadsFetch([STEVE]);
+			const rescued = await rescue(seed, "caary.com");
+			expect(rescued?.candidates.map((c) => c.name)).toEqual([
+				"Steve Apostolopoulos",
+			]);
+			expect(rescued?.clayRecords).toBe(2);
+		} finally {
+			globalThis.fetch = originalFetch;
+			await cleanupPeopleRun(seed);
+		}
+	});
+
+	it("returns null when GetLeads holds nobody either", async () => {
+		const seed = await seedPeopleRun("rescue-nobody");
+		try {
+			stubGetleadsFetch([]);
+			expect(await rescue(seed, "nobody.example")).toBeNull();
+		} finally {
+			globalThis.fetch = originalFetch;
+			await cleanupPeopleRun(seed);
+		}
+	});
+});
+
+describe("one company's failure never ends the run", () => {
+	it("records the failed company as run evidence, reports it unresolved, and runs the next company", async () => {
+		const broken = `broken-${crypto.randomUUID()}.example`;
+		const next = `next-${crypto.randomUUID()}.example`;
+		const seed = await seedPeopleRun("skip-failed");
+		try {
+			const overrides = new Map<string, unknown>([
+				[`people-${broken}-open`, new Error("Model call timed out twice")],
+				[
+					`people-${next}-identity`,
+					{ how: "unresolved", clayRecords: 0, costEntries: [] },
+				],
+				[`people-${next}-rescue`, null],
+			]);
+
+			const result = await runCompanies(
+				contextFor(seed, overrides),
+				[bareCompany(broken), bareCompany(next)],
+				0,
+			);
+
+			expect(result.companiesSearched).toBe(2);
+			expect(result.unknownDomains).toEqual(
+				expect.arrayContaining([broken, next]),
+			);
+			const evidence = await evidenceRowsFor(seed.runId);
+			const failure = evidence.find((row) => row.kind === "company-error");
+			expect(failure?.value).toContain(broken);
+			expect(failure?.value).toContain("Model call timed out twice");
 		} finally {
 			await cleanupPeopleRun(seed);
 		}
