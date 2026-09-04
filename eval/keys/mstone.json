@@ -1172,6 +1172,23 @@
 				"fitReason": "2892 staff, $3B revenue, Docklands HQ; retail department store, not staffing or reseller."
 			}
 		},
+		"myob.com": {
+			"label": null,
+			"name": "MYOB",
+			"firstSeenRunId": "companies_c498fc3c-4f31-46a4-a091-003aa8b8cc48_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:22:16.355Z",
+			"record": {
+				"industry": null,
+				"description": "Whether you're just starting out, or running an established enterprise, you can manage your entire business with MYOB.\n\nOne business management platform, with all your key workflows – from finance and supply chain to employee and project management – MYOB saves you time and money.\n\nWherever your business is headed, MYOB adapts to meet your changing needs. Whilst providing the visibility and confidence you need to make better, more informed decisions.\n\nUnleash your business’s potential, with MYOB.",
+				"workforceTotal": 1343,
+				"country": "Australia",
+				"foundedYear": 1991,
+				"citedPage": "https://myob.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MYOB is a software platform company, not staffing/IT reseller, meeting the r4 requirement."
+			}
+		},
 		"nab.com.au": {
 			"label": "accept",
 			"name": "NAB",
@@ -1262,6 +1279,23 @@
 				"fitReason": "Sydney-based tech partner with 307 staff; revenue unknown, no evidence of contractor-hiring authority."
 			}
 		},
+		"nri-anz.com": {
+			"label": null,
+			"name": "NRI Australia & New Zealand",
+			"firstSeenRunId": "companies_0838b9cf-89a9-4965-b074-bc87b7de7d8c_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:23:32.068Z",
+			"record": {
+				"industry": null,
+				"description": "As a trusted end-to-end digital partner, we design, build, and manage IT solutions that turn bold visions into reality and set new standards of excellence for our clients.\n\n\nWe’re part of Nomura Research Institute (NRI), a Tokyo-listed consultancy with a 60-year legacy, combining scale, innovation, and resilience of a global powerhouse, paired with the agility, care and understanding of a local partner.\n\n\nTrust is the foundation of every transformation we lead. Aligning closely to our clients’ goals, we combine deep expertise with a commitment to quality, delivering impactful solutions. From advisory services combining strategy with impact across IT, AI, change, and transformative projects, to enterprise grade implementation services across all major technology platforms, through to on-going managed services, NRI helps you move faster, work smarter, and lead with confidence.\n\n\nAt NRI, we deliver transformative digital solutions, helping organisations like yours thrive. As an end-to-end provider, we offer technology consulting, tailored solutions, and managed services. With 27 years of Australian expertise and the backing of our Japanese parent company, with a $13B market cap, we're the trusted partner for businesses and government. Let's discuss how we can partner to help you achieve your goals.",
+				"workforceTotal": 576,
+				"country": "Australia",
+				"foundedYear": 1965,
+				"citedPage": "https://nri-anz.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Sydney HQ shown; employee count given but no revenue figure to confirm r1; no data on tech budget or exclusion status."
+			}
+		},
 		"optus.com.au": {
 			"label": "accept",
 			"name": "Optus",
@@ -1332,6 +1366,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "Perpetual is an ASX-listed Sydney financial services firm with 904 staff and $1.3B revenue, fitting the profile well."
+			}
+		},
+		"pexa-group.com": {
+			"label": null,
+			"name": "PEXA",
+			"firstSeenRunId": "companies_c498fc3c-4f31-46a4-a091-003aa8b8cc48_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:22:16.355Z",
+			"record": {
+				"industry": null,
+				"description": "PEXA Group is a world-leading property insights solutions business, and a licenced operator of Australia’s largest Electronic Lodgement Network, PEXA Exchange. \n\nSince 2013, PEXA Exchange has facilitated more than 20 million property settlements in Australia. In 2022, PEXA launched in the UK.",
+				"workforceTotal": 326,
+				"country": "Australia",
+				"foundedYear": 2010,
+				"citedPage": "https://pexa-group.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "PEXA operates a property settlement platform, not a staffing or IT reseller firm."
 			}
 		},
 		"pharmacare.com.au": {

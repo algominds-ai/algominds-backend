@@ -1388,6 +1388,23 @@
 				"fitReason": null
 			}
 		},
+		"tks.la": {
+			"label": null,
+			"name": "TurnKey Solutions, LLC",
+			"firstSeenRunId": "companies_7ffbbb23-b77e-4bdf-859b-d4c980c33248_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:24:57.368Z",
+			"record": {
+				"industry": null,
+				"description": "Founded in Baton Rouge in 1999, Turn Key Solutions began with a simple but powerful idea: businesses deserve IT partners who take responsibility, not ones who point fingers when things go wrong.\n\nWhat started as conversations between friends and coworkers frustrated by unaccountable vendors quickly became a company built around ownership, integrity, and results. From day one, we’ve adopted a methodical, ethical approach to doing business, with a 100% commitment to our clients’ success.\nSince 2005, we’ve developed deep expertise in healthcare IT. Today, more than half of our clients are in the healthcare industry, supported by a team recognized for their knowledge of healthcare technology, security, and compliance.\n\nIn addition to healthcare, we proudly support organizations in industrial, manufacturing, and financial services industries where uptime, security, and reliability are critical. Across all sectors we serve, our focus remains the same: stable systems, strong security, and technology that support real business outcomes.\n\nBacked by strong expertise in PCI, HIPAA, and HITECH, we help organizations build secure, compliant IT environments that go beyond requirements and support confident, efficient operations.\n\nAt Turn Key Solutions, we don’t just manage technology; we stand behind IT.\nLearn more at www.TKS.LA or call 225 751 4444.",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://tks.la/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 12 employees in Baton Rouge, US, client‑focused ownership language, not staffing‑type."
+			}
+		},
 		"valortech.io": {
 			"label": "accept",
 			"name": "ValorTech | Managed IT & Cybersecurity",
