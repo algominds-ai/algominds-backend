@@ -3,496 +3,578 @@
 	"icpId": "5e8ca999-8a24-442a-853b-23c11bfd5d05",
 	"companies": {
 		"align.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Align",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "align.com is Align Technology, the Invisalign maker, a large enterprise with its own internal IT and talent-acquisition function, not an MSP"
 		},
 		"allitsupported.com": {
 			"label": null,
 			"name": "ALL I.T.",
 			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:46:26.095Z"
+			"lastSeenAt": "2026-09-03T01:46:26.095Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"americanitsolutions.com": {
 			"label": null,
 			"name": "American IT Solutions, Inc",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"apex-its.com": {
 			"label": null,
 			"name": "Apex IT Services",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"ascentient.com": {
 			"label": null,
 			"name": "Ascentient IT Support & Managed IT Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"asgct.com": {
 			"label": null,
 			"name": "ASG Information Technologies",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"boxit.net": {
 			"label": null,
 			"name": "boxIT, LLC",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"brite.com": {
 			"label": null,
 			"name": "Brite",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: a single-word brand with no identifiable business model from name alone"
 		},
 		"bytesmanagedit.com": {
 			"label": null,
 			"name": "Bytes Managed IT & Cybersecurity",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"capstoneitservices.com": {
 			"label": null,
 			"name": "Capstone IT Services",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"ccsinet.com": {
-			"label": null,
+			"label": "same-as:sourcepass.com",
 			"name": "CCSI - A Sourcepass Company",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "the company's own name, 'CCSI - A Sourcepass Company', states it was acquired by Sourcepass"
 		},
 		"centerlogic.com": {
 			"label": null,
 			"name": "Centerlogic IT Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"circlemsp.com": {
 			"label": null,
 			"name": "Circle MSP",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"completetechnology.com": {
 			"label": null,
 			"name": "Complete Technology Services, LLC",
 			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
-			"lastSeenAt": "2026-09-03T04:45:52.758Z"
+			"lastSeenAt": "2026-09-03T04:45:52.758Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"compunet.biz": {
 			"label": null,
 			"name": "CompuNet, Inc.",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"comsolutionsusa.com": {
 			"label": null,
 			"name": "ComSolutions-Technical Services",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"coretechs.it": {
 			"label": null,
 			"name": "Coretechs",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: the .it domain could be an Italian company or a US company's wordplay domain, and headcount is unknown"
 		},
 		"cortavo.com": {
 			"label": null,
 			"name": "Cortavo, Inc.",
 			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:41:21.709Z"
+			"lastSeenAt": "2026-09-03T00:41:21.709Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"csu-it.com": {
 			"label": null,
 			"name": "Computer Services Unlimited (CSU)",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"dartmsp.com": {
 			"label": null,
 			"name": "DART Tech",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"datastrike.com": {
 			"label": null,
 			"name": "DataStrike",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		},
 		"dcsny.com": {
 			"label": null,
 			"name": "Delaney Computer Services, Inc.",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: the ny in the domain suggests a New York-based IT services firm, but headcount is unknown"
 		},
 		"dssitservices.com": {
 			"label": null,
 			"name": "DSS - IT & Cyber Security Management",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"e3itservices.com": {
 			"label": null,
 			"name": "E3 IT Services, LLC",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"elauwit.com": {
 			"label": null,
 			"name": "Elauwit Connection",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: Elauwit Connection provides managed broadband and Wi-Fi to residential communities, an adjacent but not clearly matching business model"
 		},
 		"elevancesystems.com": {
 			"label": null,
 			"name": "Elevance Systems, Inc.",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"enitechsolutions.com": {
 			"label": null,
 			"name": "Enitech",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"enkompas.com": {
 			"label": null,
 			"name": "enkompas Technology Solutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"entechus.com": {
 			"label": null,
 			"name": "Entech",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"epsilon-inc.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Epsilon Inc., an AMERICAN SYSTEMS Company",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "Epsilon Inc. names itself 'an AMERICAN SYSTEMS Company', a federal systems-engineering contractor, not a commercial client-facing MSP"
 		},
 		"everound.com": {
 			"label": null,
 			"name": "Everound",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		},
 		"fastteks.com": {
 			"label": null,
 			"name": "Fast-teks On-Site Computer Services",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: Fast-teks is a franchised on-site computer-repair brand, and whether this listing is the franchisor or a small single-operator franchisee cannot be told from the name"
 		},
 		"ferrumit.com": {
 			"label": null,
 			"name": "Ferrum Technology Services, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"fidelisnw.com": {
 			"label": null,
 			"name": "Fidelis",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"fieldguide.it": {
 			"label": null,
 			"name": "FieldGuide IT",
 			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
-			"lastSeenAt": "2026-09-03T04:45:52.758Z"
+			"lastSeenAt": "2026-09-03T04:45:52.758Z",
+			"note": "undecidable: the .it domain could be Italian or a US wordplay domain, and headcount is unknown"
 		},
 		"fusiontek.com": {
 			"label": null,
 			"name": "FusionTek",
 			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:41:21.709Z"
+			"lastSeenAt": "2026-09-03T00:41:21.709Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"goabacus.com": {
 			"label": null,
 			"name": "Abacus IT",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"goleadingit.com": {
 			"label": null,
 			"name": "LeadingIT",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"guideit.com": {
 			"label": null,
 			"name": "GuideIT",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"i-techsupport.com": {
 			"label": null,
 			"name": "i-Tech Support, Inc.",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"impacttg.com": {
 			"label": null,
 			"name": "IMPACT Technology Group",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"integrityts.com": {
 			"label": null,
 			"name": "Integrity Technology Solutions",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"intrascloudservices.com": {
 			"label": null,
 			"name": "Intras Cloud Services",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"intratem.com": {
 			"label": null,
 			"name": "IntraTEM",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: IntraTEM reads as a telecom-expense-management specialist rather than a general MSP, an adjacent but uncertain fit"
 		},
 		"ispn.net": {
 			"label": null,
 			"name": "ISPN",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: ISPN may itself sell white-label NOC and help-desk services to other MSPs rather than to end-business clients directly, an unclear fit against the buyer test"
 		},
 		"iterogroup.com": {
 			"label": null,
 			"name": "Itero Group, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"itsolutions-inc.com": {
 			"label": null,
 			"name": "IT Solutions",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"jkconsulting.com": {
 			"label": null,
 			"name": "JK Technology Solutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: the consulting framing could mean project-based work without a managed-services book of business"
 		},
 		"kbisp.com": {
 			"label": null,
 			"name": "Kinetix Solutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		},
 		"linkamericanearshore.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "LinkAmerica Nearshore",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "LinkAmerica Nearshore's own name signals a nearshore staffing and outsourcing delivery model rather than a direct client-facing MSP"
 		},
 		"magna5.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Magna5",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "Magna5 is a known US managed-IT, security and UCaaS provider headquartered in Pennsylvania, well past the 10-person floor"
 		},
 		"mybridgepoint.com": {
 			"label": null,
 			"name": "BridgePoint Technologies, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"ncs-online.com": {
 			"label": null,
 			"name": "Network Computer Solutions",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"netopsconsulting.com": {
 			"label": null,
 			"name": "NetOps Consulting",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: the consulting framing could mean project-based work without a managed-services book of business"
 		},
 		"nettech.net": {
 			"label": null,
 			"name": "NetTech",
 			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
-			"lastSeenAt": "2026-09-03T04:45:52.758Z"
+			"lastSeenAt": "2026-09-03T04:45:52.758Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"newboldtech.com": {
 			"label": null,
 			"name": "NewBold Technologies",
 			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
-			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"nsgllc.com": {
 			"label": null,
 			"name": "Network Solutions Group llc",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"olstechnology.com": {
 			"label": null,
 			"name": "OLS Technology",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"omegasystemscorp.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Omega Systems",
 			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
-			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Omega Systems is a known US managed-security and IT services provider serving regulated industries, well past the 10-person floor"
 		},
 		"onediversified.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Diversified",
 			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
-			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Diversified is a large US audio-visual and managed-technology integrator serving stadiums and corporate campuses, well past the 10-person floor"
 		},
 		"onwardtek.com": {
 			"label": null,
 			"name": "Onward Technologies, Inc.",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"optric.com": {
 			"label": null,
 			"name": "OPTRIC",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		},
 		"osgusa.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Outsource Solutions Group",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "Outsource Solutions Group's own name signals a BPO/staffing outsourcing model rather than a direct client-facing MSP"
 		},
 		"paragusit.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Paragus IT",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "Paragus IT (Paragus Strategic IT) is a known regional US MSP based in Massachusetts, well past the 10-person floor"
 		},
 		"readitech.com": {
 			"label": null,
 			"name": "ReadiTech",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"resultant.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Resultant",
 			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
-			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Resultant is a project-based data and technology consultancy formed from Fusion Alliance and Bernard Health, not a managed-services delivery firm"
 		},
 		"riministreet.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Rimini Street",
 			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
-			"lastSeenAt": "2026-09-02T22:37:35.195Z"
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Rimini Street is a NASDAQ-listed US third-party enterprise software support company serving external clients, well past the 10-person floor"
 		},
 		"rojoli.com": {
 			"label": null,
 			"name": "Rojoli Services, Inc.",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		},
 		"rpmit.com": {
 			"label": null,
 			"name": "RPM Technologies, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"safepointit.com": {
 			"label": null,
 			"name": "SafePoint IT",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"saw.it": {
 			"label": null,
 			"name": "Server At Work, LLC",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: the .it domain is a wordplay on the name, and the company's actual country and headcount are unknown"
 		},
 		"secur-serv.com": {
 			"label": null,
 			"name": "Secur-Serv",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
-			"lastSeenAt": "2026-09-03T00:00:49.971Z"
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"sharedit.com": {
 			"label": null,
 			"name": "Shared IT Inc",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"sourcepass.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Sourcepass",
 			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:46:26.095Z"
+			"lastSeenAt": "2026-09-03T01:46:26.095Z",
+			"note": "Sourcepass is a well-documented, private-equity-backed US MSP consolidation platform headquartered in New York, well past the 10-person floor"
 		},
 		"soutec-group.com": {
 			"label": null,
 			"name": "Soutec US",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:47:49.445Z"
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "undecidable: 'Soutec US' suggests a US operating entity of a wider group, but headcount for that entity is unknown"
 		},
 		"spartaserv.com": {
 			"label": null,
 			"name": "Sparta Services LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"strong-tech.com": {
 			"label": null,
 			"name": "Strong Technical Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"valortech.io": {
 			"label": null,
 			"name": "ValorTech | Managed IT & Cybersecurity",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:02:58.904Z"
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
 		},
 		"verito.com": {
 			"label": null,
 			"name": "Verito",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		},
 		"wheelhouseit.com": {
-			"label": null,
+			"label": "accept",
 			"name": "WheelHouse IT",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
-			"lastSeenAt": "2026-09-03T00:52:48.886Z"
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "WheelHouse IT is a known US MSP based in Florida, well past the 10-person floor"
 		},
 		"xpertechs.com": {
-			"label": null,
+			"label": "accept",
 			"name": "XPERTECHS",
 			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
-			"lastSeenAt": "2026-09-03T01:46:26.095Z"
+			"lastSeenAt": "2026-09-03T01:46:26.095Z",
+			"note": "XPERTECHS is a known US MSP based in the Baltimore, Maryland area, well past the 10-person floor"
 		},
 		"xsolutions.com": {
 			"label": null,
 			"name": "XSolutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:28:21.351Z"
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: no known public record of this company's business model, headcount, or country"
 		}
 	}
 }
