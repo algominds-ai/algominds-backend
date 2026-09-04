@@ -7,56 +7,56 @@
 			"name": "01Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"aegisai.ai": {
 			"label": null,
 			"name": "Aegis AI Security",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"arintra.com": {
 			"label": null,
 			"name": "Arintra",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "Arintra is a medical-coding AI startup this reviewer has some recollection of, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"augustus.com": {
 			"label": null,
 			"name": "Augustus",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"axle.insure": {
 			"label": null,
 			"name": "Axle",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"beacon.security": {
 			"label": null,
 			"name": "Beacon Security",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"callosum.com": {
 			"label": null,
 			"name": "Callosum",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"cytix.io": {
 			"label": null,
 			"name": "Cytix",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "Cytix is a UK offensive-security startup this reviewer recalls raising a round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"helcim.com": {
 			"label": null,
@@ -71,11 +71,12 @@
 				"foundedYear": 2006,
 				"citedPage": "https://www.helcim.com/company/helcim-raises-series-c/",
 				"quote": "We've just raised a $53 million Series C, and we want to share what it means for the future of Helcim and the merchants who trust us every day.",
-				"fitReason": "Helcim is Calgary payments operating company, 143 employees, raised $53M Series C; private venture‑backed firm."
-			}
+				"fitReason": "Helcim is Calgary payments operating company, 143 employees, raised $53M Series C; private venture\u2011backed firm."
+			},
+			"note": "undecidable: the cited page and quote name a priced round but carry no date, so recency within the 90-day window ending 2026-09-03 cannot be confirmed"
 		},
 		"kord.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Kord",
 			"firstSeenRunId": "companies_a840cd9b-3c9b-4be8-81ee-a13bf39a6857_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:40:51.022Z",
@@ -86,61 +87,62 @@
 				"country": "United Kingdom",
 				"foundedYear": 2020,
 				"citedPage": "https://tech.eu/2026/07/08/kord-secures-ps64m-to-unify-onboarding-compliance-and-payments/",
-				"quote": "UK fintech Kord, the end-to-end platform making onboarding clients, identity verification and payment processing simpler and more secure, has raised £6.4 million in a Series A funding round.",
+				"quote": "UK fintech Kord, the end-to-end platform making onboarding clients, identity verification and payment processing simpler and more secure, has raised \u00a36.4 million in a Series A funding round.",
 				"fitReason": "Kord is a UK fintech operating company, 21 employees, raised Series A; private venture-backed startup."
-			}
+			},
+			"note": "the cited tech.eu article's own URL is dated 2026-07-08, within 90 days of 2026-09-03, and its quote names a \u00a36.4M Series A; 21 staff, UK, venture-backed operating company"
 		},
 		"metriport.com": {
 			"label": null,
 			"name": "Metriport",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "Metriport is a health-data interoperability startup this reviewer recalls raising a seed round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"mindgard.ai": {
 			"label": null,
 			"name": "Mindgard",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "Mindgard is a UK AI-security-testing startup this reviewer recalls raising seed funding before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"nogginhq.com": {
 			"label": null,
 			"name": "Noggin HQ",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "this may be the established Noggin critical-event-management software company rather than an early-stage startup, which this reviewer cannot confirm from the name alone, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"norberthealth.com": {
 			"label": null,
 			"name": "Norbert Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"onoshealth.com": {
 			"label": null,
 			"name": "Onos Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"oreenergy.com": {
 			"label": null,
 			"name": "Ore Energy",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"poweredbylight.com": {
 			"label": null,
 			"name": "Light",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently",
+			"note": "undecidable: the cited page and quote name a priced round but carry no date, so recency within the 90-day window ending 2026-09-03 cannot be confirmed",
 			"record": {
 				"industry": "Energy technology",
-				"description": "Light turns power into a platform. We help leading brands—like solar providers, automakers, and home platforms—offer embedded, branded electricity plans to their customers. Our partners are reshaping how people experience energy, unlocking better customer experiences or the full potential of products like batteries, EVs, and other smart devices.\n\nWe’re bringing together the best builders in tech and energy, backed by top investors and angels. Based in Austin, TX, we’re not just building a better utility—we’re redefining what a power company can be.",
+				"description": "Light turns power into a platform. We help leading brands\u2014like solar providers, automakers, and home platforms\u2014offer embedded, branded electricity plans to their customers. Our partners are reshaping how people experience energy, unlocking better customer experiences or the full potential of products like batteries, EVs, and other smart devices.\n\nWe\u2019re bringing together the best builders in tech and energy, backed by top investors and angels. Based in Austin, TX, we\u2019re not just building a better utility\u2014we\u2019re redefining what a power company can be.",
 				"workforceTotal": 28,
 				"country": "United States",
 				"foundedYear": 2023,
@@ -154,21 +156,21 @@
 			"name": "Quaise Energy",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "Quaise Energy is a deep-tech geothermal-drilling startup this reviewer recalls already raising a Series B before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"smallest.ai": {
 			"label": null,
 			"name": "smallest.ai",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "smallest.ai is a voice-AI startup this reviewer recalls raising a seed round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"takt.io": {
 			"label": null,
 			"name": "Takt",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "undecidable: no record was stored for this domain, so a priced round, its date, headcount, and country cannot be checked against the requirements"
 		},
 		"telli.com": {
 			"label": null,
@@ -182,25 +184,26 @@
 				"country": "Germany",
 				"foundedYear": 2024,
 				"citedPage": "https://www.telli.com/articles/telli-raises-15m-seed-to-put-ai-agents-in-charge-of-customer-ops",
-				"quote": "Exclusive: Berlin’s telli raises $15M seed to put AI agents in charge of customer ops, backed by redalpine, Cherry, and YC",
+				"quote": "Exclusive: Berlin\u2019s telli raises $15M seed to put AI agents in charge of customer ops, backed by redalpine, Cherry, and YC",
 				"fitReason": "Berlin operating company, 23 employees, announced $15M seed backed by VCs and YC, matches all core criteria."
-			}
+			},
+			"note": "undecidable: the cited page and quote name a priced round but carry no date, so recency within the 90-day window ending 2026-09-03 cannot be confirmed"
 		},
 		"velatir.com": {
 			"label": null,
 			"name": "Velatir",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently",
+			"note": "undecidable: the cited page and quote name a priced round but carry no date, so recency within the 90-day window ending 2026-09-03 cannot be confirmed",
 			"record": {
 				"industry": "AI governance",
-				"description": "Enabling European businesses to lead, not just follow the AI revolution, with speed, resilience and integrity. \n\nEurope is at a crossroads. To remain competitive on the global stage, our industries must adopt AI at scale, but they must do so responsibly. \n\nAt Velatir, we are the bridge between \"potential\" and \"production.\" We are building the infrastructure for European AI adoption. We aren't just building a company; we are building European resilience.",
+				"description": "Enabling European businesses to lead, not just follow the AI revolution, with speed, resilience and integrity.\u00a0\n\nEurope is at a crossroads. To remain competitive on the global stage, our industries must adopt AI at scale, but they must do so responsibly. \n\nAt Velatir, we are the bridge between \"potential\" and \"production.\" We are building the infrastructure for European AI adoption. We aren't just building a company; we are building European resilience.",
 				"workforceTotal": 23,
 				"country": "Denmark",
 				"foundedYear": 2025,
 				"citedPage": "https://www.linkedin.com/posts/velatir_today-were-excited-to-announce-our-5m-seed-activity-7496083605782249472-cNy-",
-				"quote": "Today we're excited to announce our €5M seed round.",
-				"fitReason": "Danish AI governance startup, 23 employees, announced €5M seed round, meets location, size and funding requirements."
+				"quote": "Today we're excited to announce our \u20ac5M seed round.",
+				"fitReason": "Danish AI governance startup, 23 employees, announced \u20ac5M seed round, meets location, size and funding requirements."
 			}
 		},
 		"velocity.xyz": {
@@ -210,14 +213,15 @@
 			"lastSeenAt": "2026-09-04T10:40:51.022Z",
 			"record": {
 				"industry": "Payments infrastructure",
-				"description": "Move and manage capital seamlessly across banks, blockchains, and borders. \n\nVelocity is an enterprise-first platform that combines the programmability of stablecoins with the rigour of traditional finance — solving real-world challenges in cross-border settlement, liquidity, and treasury.",
+				"description": "Move and manage capital seamlessly across banks, blockchains, and borders. \n\nVelocity is an enterprise-first platform that combines the programmability of stablecoins with the rigour of traditional finance \u2014 solving real-world challenges in cross-border settlement, liquidity, and treasury.",
 				"workforceTotal": 30,
 				"country": "United Kingdom",
 				"foundedYear": 2025,
 				"citedPage": "https://www.linkedin.com/posts/velocityxyz_today-were-excited-to-share-that-velocity-activity-7482776219197976577-GUmj",
-				"quote": "Today, we’re excited to share that Velocity has raised a $38 million Series A.",
-				"fitReason": "Velocity is London payments‑infra operating company, 30 employees, raised $38M Series A; private venture‑backed startup."
-			}
+				"quote": "Today, we\u2019re excited to share that Velocity has raised a $38 million Series A.",
+				"fitReason": "Velocity is London payments\u2011infra operating company, 30 employees, raised $38M Series A; private venture\u2011backed startup."
+			},
+			"note": "undecidable: the cited page and quote name a priced round but carry no date, so recency within the 90-day window ending 2026-09-03 cannot be confirmed"
 		}
 	}
 }
