@@ -3,7 +3,7 @@
 	"icpId": "cf9f5feb-bdb7-43ab-8899-09f1e1fa468b",
 	"companies": {
 		"athenahealth.com": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "athenahealth",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
@@ -38,7 +38,7 @@
 			"note": "Datadog is a US SaaS company of roughly 5,000-6,000 employees whose own engineering blog and conference talks are a well-known public record of running production Kubernetes at scale"
 		},
 		"draftkings.com": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "DraftKings Inc.",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
@@ -52,7 +52,7 @@
 			"note": "Expedia Group employs well over 15,000 people worldwide, past the 10,000-employee named-account boundary"
 		},
 		"fanduel.com": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "FanDuel",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
@@ -73,7 +73,7 @@
 			"note": "Michelin employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"millenniumbcp.pt": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "Millennium bcp",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
@@ -87,7 +87,7 @@
 			"note": "Monzo is a UK challenger bank of roughly 3,000-4,000 employees and one of the most publicly documented Kubernetes case studies in banking, with multiple conference talks on its microservice architecture"
 		},
 		"postfinance.ch": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "PostFinance",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
@@ -115,7 +115,7 @@
 			"note": "Spotify is a Swedish (Nordics) company of roughly 9,000 employees and a famous public Kubernetes case study, having given multiple KubeCon talks on its own migration"
 		},
 		"tubitv.com": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "Tubi",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
@@ -129,7 +129,7 @@
 			"note": "Uber employs well over 30,000 people worldwide, far past the 10,000-employee named-account boundary, regardless of its own well-known cloud-native infrastructure"
 		},
 		"wise.com": {
-			"label": "reject:no-evidence",
+			"label": null,
 			"name": "Wise",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
