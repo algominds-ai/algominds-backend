@@ -14,63 +14,63 @@
 			"name": "ALL I.T.",
 			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:46:26.095Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"americanitsolutions.com": {
 			"label": null,
 			"name": "American IT Solutions, Inc",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"apex-its.com": {
 			"label": null,
 			"name": "Apex IT Services",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"ascentient.com": {
 			"label": null,
 			"name": "Ascentient IT Support & Managed IT Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"asgct.com": {
 			"label": null,
 			"name": "ASG Information Technologies",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"boxit.net": {
 			"label": null,
 			"name": "boxIT, LLC",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"brite.com": {
 			"label": null,
 			"name": "Brite",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: a single-word brand with no identifiable business model from name alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"bytesmanagedit.com": {
 			"label": null,
 			"name": "Bytes Managed IT & Cybersecurity",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"capstoneitservices.com": {
 			"label": null,
 			"name": "Capstone IT Services",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"ccsinet.com": {
 			"label": "same-as:sourcepass.com",
@@ -80,11 +80,11 @@
 			"note": "the company's own name, 'CCSI - A Sourcepass Company', states it was acquired by Sourcepass"
 		},
 		"centerlogic.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Centerlogic IT Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"note": "Centerlogic's own description says it acts as an outsourced IT department for clients (an MSP model), 32 staff, US",
 			"record": {
 				"industry": null,
 				"description": "Centerlogic, Inc. (formerly Evosus Solutions, Inc.) acts as an outsourced IT (information technology) department which reports to an administrative or technical contact within your company. We support infrastructures as simple as a single computer, to those as complex as multiple-site, multiple-server networks. We design, implement and support a wide variety of hardware, software, and services and will assist you in making IT decisions that best benefit your organization.\n\nWe provide the following services:\n\nManaged Services, Virtualization, IT Projects and Support, IT Support Desk, Cloud Computing, Cybersecurity, Disaster Recovery, Virus Protection, Windows 365, Microsoft Update Management, Virus/Spyware Removal & Remediation, and Wireless Solutions. ",
@@ -101,52 +101,52 @@
 			"name": "Circle MSP",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"completetechnology.com": {
 			"label": null,
 			"name": "Complete Technology Services, LLC",
 			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
 			"lastSeenAt": "2026-09-03T04:45:52.758Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"compunet.biz": {
 			"label": null,
 			"name": "CompuNet, Inc.",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"comsolutionsusa.com": {
 			"label": null,
 			"name": "ComSolutions-Technical Services",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"coretechs.it": {
 			"label": null,
 			"name": "Coretechs",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: the .it domain could be an Italian company or a US company's wordplay domain, and headcount is unknown"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"cortavo.com": {
 			"label": null,
 			"name": "Cortavo, Inc.",
 			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:41:21.709Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"csu-it.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Computer Services Unlimited (CSU)",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"note": "Computer Services Unlimited is a US managed-IT, cybersecurity and cloud provider for small and mid-sized businesses, 14 staff",
 			"record": {
 				"industry": null,
-				"description": "Computer Services Unlimited (CSU) is a technology solutions provider specializing in Managed IT, Cybersecurity, IT Consulting, Data Backup & Disaster Recovery, Cloud Services and more. The company was founded in 2004 to fill an ever-growing demand for cost effective solutions that enable small and mid-sized businesses to operate at the level of a large corporation with a dedicated IT department.\n\nThe biggest difference between what other companies offer and what CSU provides to our clients is Customer Service! Everything that we do revolves around Customer Service and a proactive custom approach to every clients’ unique needs. We do not sell cookie cutter solutions with an emphasis on quantity to make money. Our emphasis is on Quality! We want our customers to think of CSU as an extension of their full-time staff but at a fraction of the cost.\n",
+				"description": "Computer Services Unlimited (CSU) is a technology solutions provider specializing in Managed IT, Cybersecurity, IT Consulting, Data Backup & Disaster Recovery, Cloud Services and more. The company was founded in 2004 to fill an ever-growing demand for cost effective solutions that enable small and mid-sized businesses to operate at the level of a large corporation with a dedicated IT department.\n\nThe biggest difference between what other companies offer and what CSU provides to our clients is Customer Service! Everything that we do revolves around Customer Service and a proactive custom approach to every clients\u2019 unique needs. We do not sell cookie cutter solutions with an emphasis on quantity to make money. Our emphasis is on Quality! We want our customers to think of CSU as an extension of their full-time staff but at a fraction of the cost.\n",
 				"workforceTotal": 14,
 				"country": "United States",
 				"foundedYear": 2004,
@@ -160,35 +160,35 @@
 			"name": "DART Tech",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"datastrike.com": {
 			"label": null,
 			"name": "DataStrike",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"dcsny.com": {
 			"label": null,
 			"name": "Delaney Computer Services, Inc.",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: the ny in the domain suggests a New York-based IT services firm, but headcount is unknown"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"dssitservices.com": {
 			"label": null,
 			"name": "DSS - IT & Cyber Security Management",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"e3itservices.com": {
-			"label": null,
+			"label": "accept",
 			"name": "E3 IT Services, LLC",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"note": "E3 IT Services is a US managed-IT partner with 10 staff; the requirement excludes only companies under 10, so 10 clears the floor",
 			"record": {
 				"industry": null,
 				"description": "E3 IT Services is an established technology partner helping organizations across Central and South Jersey, Philadelphia, and Delaware move from constant IT frustration to Technology Peace of Mind. \n\nFor more than 30 years, we have helped leadership teams eliminate disruptions, gain control over technology costs, and use IT as a reliable foundation for growth.\n\nWe achieve this by focusing on three things that most IT providers miss. First, we create clear business value by aligning every technology decision to measurable business outcomes. Second, we build predictable, secure technology environments that prevent problems instead of reacting to them. Third, we act as a true strategic partner, helping leaders plan, prioritize, and confidently use technology to support where the business is going next.\n\nOur clients rely on us not just to manage systems, but to remove risk, restore confidence, and make technology an asset instead of a daily concern.\n",
@@ -205,35 +205,35 @@
 			"name": "Elauwit Connection",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: Elauwit Connection provides managed broadband and Wi-Fi to residential communities, an adjacent but not clearly matching business model"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"elevancesystems.com": {
 			"label": null,
 			"name": "Elevance Systems, Inc.",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"enitechsolutions.com": {
 			"label": null,
 			"name": "Enitech",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"enkompas.com": {
 			"label": null,
 			"name": "enkompas Technology Solutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"entechus.com": {
 			"label": null,
 			"name": "Entech",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"epsilon-inc.com": {
 			"label": "reject:excluded-type",
@@ -247,24 +247,24 @@
 			"name": "Everound",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"fastteks.com": {
 			"label": null,
 			"name": "Fast-teks On-Site Computer Services",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: Fast-teks is a franchised on-site computer-repair brand, and whether this listing is the franchisor or a small single-operator franchisee cannot be told from the name"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"ferrumit.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Ferrum Technology Services, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"note": "Ferrum's own description calls it a Nationwide Managed Services Provider, 11 staff, US",
 			"record": {
 				"industry": null,
-				"description": "Ferrum is a fully managed IT partner serving clients nationwide from our offices in Elgin, IL and Palm Springs, CA. We specialize in helping organizations modernize operations and accelerate innovation through proactive IT services, intelligent automation, custom application development, Generative AI integration, and technology-driven process improvement.\n\nOur world-class service delivery team is at the center of everything we do—ensuring seamless onboarding, consistent execution, and a superior client experience at every step. By constantly evaluating and advancing our internal systems, we deliver solutions that meet today’s demands while preparing businesses for tomorrow’s opportunities.\n\nFerrum empowers clients to operate smarter, scale faster, and stay ahead in an ever-evolving digital landscape.\n\nFerrum is a Nationwide Managed Services Provider based in Elgin, IL. Services include Managed IT, Help Desk, Cybersecurity, Cloud & Hybrid Infrastructure, Customer Experience (CX), Unified Communications, Business Continuity, Application Development, Mobility and IoT.\n\nOur world-class customer service and unique partnership approach are a step above the rest, with proactive, personalized computer & network solutions that minimize downtime and maximize productivity. Ferrum is ready with the support and expertise to keep you focused on running your business.",
+				"description": "Ferrum is a fully managed IT partner serving clients nationwide from our offices in Elgin, IL and Palm Springs, CA. We specialize in helping organizations modernize operations and accelerate innovation through proactive IT services, intelligent automation, custom application development, Generative AI integration, and technology-driven process improvement.\n\nOur world-class service delivery team is at the center of everything we do\u2014ensuring seamless onboarding, consistent execution, and a superior client experience at every step. By constantly evaluating and advancing our internal systems, we deliver solutions that meet today\u2019s demands while preparing businesses for tomorrow\u2019s opportunities.\n\nFerrum empowers clients to operate smarter, scale faster, and stay ahead in an ever-evolving digital landscape.\n\nFerrum is a Nationwide Managed Services Provider based in Elgin, IL. Services include Managed IT, Help Desk, Cybersecurity, Cloud & Hybrid Infrastructure, Customer Experience (CX), Unified Communications, Business Continuity, Application Development, Mobility and IoT.\n\nOur world-class customer service and unique partnership approach are a step above the rest, with proactive, personalized computer & network solutions that minimize downtime and maximize productivity. Ferrum is ready with the support and expertise to keep you focused on running your business.",
 				"workforceTotal": 11,
 				"country": "United States",
 				"foundedYear": 2007,
@@ -278,112 +278,112 @@
 			"name": "Fidelis",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"fieldguide.it": {
 			"label": null,
 			"name": "FieldGuide IT",
 			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
 			"lastSeenAt": "2026-09-03T04:45:52.758Z",
-			"note": "undecidable: the .it domain could be Italian or a US wordplay domain, and headcount is unknown"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"fusiontek.com": {
 			"label": null,
 			"name": "FusionTek",
 			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:41:21.709Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"goabacus.com": {
 			"label": null,
 			"name": "Abacus IT",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"goleadingit.com": {
 			"label": null,
 			"name": "LeadingIT",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"guideit.com": {
 			"label": null,
 			"name": "GuideIT",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"i-techsupport.com": {
 			"label": null,
 			"name": "i-Tech Support, Inc.",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"impacttg.com": {
 			"label": null,
 			"name": "IMPACT Technology Group",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"integrityts.com": {
 			"label": null,
 			"name": "Integrity Technology Solutions",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"intrascloudservices.com": {
 			"label": null,
 			"name": "Intras Cloud Services",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"intratem.com": {
 			"label": null,
 			"name": "IntraTEM",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: IntraTEM reads as a telecom-expense-management specialist rather than a general MSP, an adjacent but uncertain fit"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"ispn.net": {
 			"label": null,
 			"name": "ISPN",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: ISPN may itself sell white-label NOC and help-desk services to other MSPs rather than to end-business clients directly, an unclear fit against the buyer test"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"iterogroup.com": {
 			"label": null,
 			"name": "Itero Group, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"itsolutions-inc.com": {
 			"label": null,
 			"name": "IT Solutions",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"jkconsulting.com": {
 			"label": null,
 			"name": "JK Technology Solutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: the consulting framing could mean project-based work without a managed-services book of business"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"kbisp.com": {
 			"label": null,
 			"name": "Kinetix Solutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"linkamericanearshore.com": {
 			"label": "reject:excluded-type",
@@ -404,24 +404,24 @@
 			"name": "BridgePoint Technologies, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"ncs-online.com": {
 			"label": null,
 			"name": "Network Computer Solutions",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"netopsconsulting.com": {
-			"label": null,
+			"label": "accept",
 			"name": "NetOps Consulting",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: the consulting framing could mean project-based work without a managed-services book of business",
+			"note": "NetOps' own description says it provides managed services to businesses across many verticals despite the consulting name, 11 staff, US",
 			"record": {
 				"industry": null,
-				"description": "NetOps was founded from the ground up to provide managed services to businesses in many verticals.  Drawing upon its expertise in IT services and management, NetOps supports clients in the fulfillment of a wide range of discrete, mission critical projects and ongoing business requirements.",
+				"description": "NetOps was founded from the ground up to provide managed services to businesses in many verticals.\u00a0 Drawing upon its expertise in IT services and management, NetOps supports clients in the fulfillment of a wide range of discrete, mission critical projects and ongoing business requirements.",
 				"workforceTotal": 11,
 				"country": "United States",
 				"foundedYear": 2007,
@@ -435,28 +435,28 @@
 			"name": "NetTech",
 			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
 			"lastSeenAt": "2026-09-03T04:45:52.758Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"newboldtech.com": {
 			"label": null,
 			"name": "NewBold Technologies",
 			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
 			"lastSeenAt": "2026-09-02T22:37:35.195Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"nsgllc.com": {
 			"label": null,
 			"name": "Network Solutions Group llc",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"olstechnology.com": {
 			"label": null,
 			"name": "OLS Technology",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"omegasystemscorp.com": {
 			"label": "accept",
@@ -477,14 +477,14 @@
 			"name": "Onward Technologies, Inc.",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"optric.com": {
 			"label": null,
 			"name": "OPTRIC",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"osgusa.com": {
 			"label": "reject:excluded-type",
@@ -505,7 +505,7 @@
 			"name": "ReadiTech",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"resultant.com": {
 			"label": "reject:excluded-type",
@@ -526,28 +526,28 @@
 			"name": "Rojoli Services, Inc.",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"rpmit.com": {
 			"label": null,
 			"name": "RPM Technologies, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"safepointit.com": {
 			"label": null,
 			"name": "SafePoint IT",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"saw.it": {
-			"label": null,
+			"label": "accept",
 			"name": "Server At Work, LLC",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: the .it domain is a wordplay on the name, and the company's actual country and headcount are unknown",
+			"note": "Server At Work's own description calls it a SOC 2 audited IT MSP serving SMBs, 12 staff, US",
 			"record": {
 				"industry": null,
 				"description": "Server At Work is a SOC 2 audited IT MSP with offices in Austin, TX and Lake Charles, LA. We help SMBs grow their businesses through efficient IT operations while integrating compliance solutions to meet insurance, regulatory, and client requirements.\n\nOur services range from complete IT management to co-managed IT solutions for companies with internal IT resources.\n\nOur philosophy at Server At Work is to operate as an IT partner with our clients. At all levels of IT service we provide our clients with direct, personable resources to help co-manage technology environments and provide business-friendly solutions.",
@@ -564,14 +564,14 @@
 			"name": "Secur-Serv",
 			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
 			"lastSeenAt": "2026-09-03T00:00:49.971Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"sharedit.com": {
 			"label": null,
 			"name": "Shared IT Inc",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"sourcepass.com": {
 			"label": "accept",
@@ -585,35 +585,35 @@
 			"name": "Soutec US",
 			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:47:49.445Z",
-			"note": "undecidable: 'Soutec US' suggests a US operating entity of a wider group, but headcount for that entity is unknown"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"spartaserv.com": {
 			"label": null,
 			"name": "Sparta Services LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"strong-tech.com": {
 			"label": null,
 			"name": "Strong Technical Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"valortech.io": {
 			"label": null,
 			"name": "ValorTech | Managed IT & Cybersecurity",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"verito.com": {
 			"label": null,
 			"name": "Verito",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		},
 		"wheelhouseit.com": {
 			"label": "accept",
@@ -634,7 +634,7 @@
 			"name": "XSolutions",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: no known public record of this company's business model, headcount, or country"
+			"note": "undecidable: no record was stored for this domain, so business model, headcount, and US location cannot be checked against the requirements"
 		}
 	}
 }
