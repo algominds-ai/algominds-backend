@@ -74,6 +74,40 @@
 				"fitReason": "93 staff in Orlando FL, offers commercial and residential HVAC, not residential-only."
 			}
 		},
+		"issmechanical.com": {
+			"label": null,
+			"name": "ISS Mechanical",
+			"firstSeenRunId": "companies_ef326d80-10ae-4001-95f6-cab732c79cdf_2026-09-04",
+			"lastSeenAt": "2026-09-04T12:05:59.162Z",
+			"record": {
+				"industry": null,
+				"description": "ISS Mechanical is a \"Service First\" Mechanical and Plumbing Contractor. We specialize in the service, maintenance, repair and replacement of air conditioning, chillers, controls and refrigeration equipment for existing Commercial, Healthcare and Industrial Facilities. Our service area is Central Florida. With offices in Orlando and Tampa we are able to provide mission critical and emergency service to facilities throughout Central Florida.",
+				"workforceTotal": 25,
+				"country": "United States",
+				"foundedYear": 2003,
+				"citedPage": "https://issmechanical.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Apopka FL, 25 staff, mechanical/plumbing contractor specializing in commercial HVAC service and repair."
+			}
+		},
+		"miinclp.com": {
+			"label": null,
+			"name": "MIINC Mechanical Contractors",
+			"firstSeenRunId": "companies_4c04ba2c-f056-45b2-acf1-7ac77eb23d2f_2026-09-04",
+			"lastSeenAt": "2026-09-04T12:06:35.321Z",
+			"record": {
+				"industry": null,
+				"description": "MIINC is a trusted mechanical contractor with a reputation for successfully planning, completing, and servicing highly-complex commercial and industrial projects throughout North Texas and nationwide. We have a history of handling jobs that other contractors can’t do or won’t touch. MIINC takes on work of any size or complexity, from design to installation or maintenance, and no challenge is too great. Yet, more than a company with a crew of skilled tradesmen, the true value of MIINC is partnering with a contractor that goes the extra mile to ensure every project is a mutual success.\n\nOur mastery of mechanical craftsmanship is only surpassed by our mastery of service. Over the last four decades, we have been the preferred service provider for some of the largest companies and brands in the US.",
+				"workforceTotal": 59,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://miinclp.com/",
+				"citedDate": "2026-06-25T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "Description calls it a mechanical contractor in Dallas, TX; no explicit HVAC line-of-business mention."
+			}
+		},
 		"msifla.com": {
 			"label": "accept",
 			"name": "EMCOR Services  MSI - Mechanical Services",
