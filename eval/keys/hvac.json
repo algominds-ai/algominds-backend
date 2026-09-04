@@ -1,5 +1,54 @@
 {
 	"slug": "hvac",
 	"icpId": "bad48334-f775-4e9a-9032-9d51a16f2f1d",
-	"companies": {}
+	"companies": {
+		"ccmech.com": {
+			"label": null,
+			"name": "Capital City Mechanical Services, LLC",
+			"firstSeenRunId": "companies_4cee7d2d-fbf6-4027-ad27-c50effb16e35_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:43:54.749Z",
+			"record": {
+				"industry": null,
+				"description": "Capital City Mechanical Services, LLC is located in Peachtree Corners, Georgia, Metro Atlanta Area.\nA full-Service HVAC, Mechanical Provider. We service, maintain and install Rooftops, Split Systems, Chillers, Boilers, Cooling Towers and more!\n\nAt Capital City, our customers come first! We consider it our responsibility to provide the best possible service to our customers. We strive to achieve and maintain optimum efficiency through our HVAC Mechanical Services.\nOur technicians are knowledgeable, friendly and trustworthy. ",
+				"workforceTotal": 21,
+				"country": "United States",
+				"foundedYear": 1990,
+				"citedPage": "https://ccmech.com/",
+				"quote": null,
+				"fitReason": "Peachtree Corners, GA, 21 staff, full-service commercial HVAC mechanical provider servicing rooftops, chillers, boilers."
+			}
+		},
+		"msifla.com": {
+			"label": null,
+			"name": "EMCOR Services  MSI - Mechanical Services",
+			"firstSeenRunId": "companies_4cee7d2d-fbf6-4027-ad27-c50effb16e35_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:43:54.749Z",
+			"record": {
+				"industry": null,
+				"description": "EMCOR Services MSI is one of the region’s largest and most respected, award winning commercial HVAC service operations, a trusted member of our industry and community for over 46 years.\n\nMSI manufactures and prefabricates projects of all types and complexity, quickly and cost effectively. Our self performing, fully integrated mechanical, heating, ventilating, and air conditioning services position MSI to control quality, schedule and budgets. MSI designs, builds, operates and maintains mechanical systems in a wide variety of applications and markets including: Hospitals, Data Centers and Bio-Medical Laboratories, Universities, Commercial Office Buildings and Public Sector.\n\nOur emphasis is on our client’s Return on Investments by reducing the “Total Ownership Costs”® through energy and environmentally conscious design, self performance, predictive maintenance services and Fast Trac® execution.\n\nOur commitment to quality begins with our people. Each year our associates participate in OEM and in-house training initiatives for personal and professional development. Our customer’s Return on Investments begins with our commitments and investments in time and capital that ensures our skilled craftsmen receive the training they need to provide our customers with the best possible service at the least possible cost. ",
+				"workforceTotal": 55,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://msifla.com/",
+				"quote": null,
+				"fitReason": "Orlando, FL, 55 staff, self-performing commercial HVAC service operation despite some manufacturing/prefab work."
+			}
+		},
+		"thermalconcepts.com": {
+			"label": null,
+			"name": "Thermal Concepts, LLC",
+			"firstSeenRunId": "companies_4cee7d2d-fbf6-4027-ad27-c50effb16e35_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:43:54.749Z",
+			"record": {
+				"industry": null,
+				"description": "Thermal Concepts, LLC is a leading provider of comprehensive HVAC and controls solutions in the Southeastern United States. \n\nFounded in 1983 by the Maurer Family, Thermal Concepts has been providing innovative and sustainable HVAC and controls solutions to commercial clients in the Southeastern United States for over 40 years.\n\nAs a client-centric organization, we prioritize operational excellence, focusing on enhancing profitability and driving growth through strategic initiatives such as increased service revenue, improved labor utilization, and the adoption of advanced technologies like QR code asset tracking and data analytics.\n\nThermal Concepts, LLC is committed to exceeding client expectations and maintaining our position as a leader in the HVAC and controls industry. \n\nFor more company information and career opportunities, call us at 1-800-953-2503 or visit us at www.thermalconcepts.com. \n",
+				"workforceTotal": 64,
+				"country": "United States",
+				"foundedYear": 1983,
+				"citedPage": "https://thermalconcepts.com/",
+				"quote": null,
+				"fitReason": "Davie, FL HQ, 64 staff, commercial HVAC and controls solutions for commercial clients."
+			}
+		}
+	}
 }

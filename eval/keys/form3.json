@@ -14,7 +14,17 @@
 			"name": "BMW Group",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "BMW Group employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
+			"note": "BMW Group employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
+			"record": {
+				"industry": "Automotive manufacturing",
+				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world’s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was € 10.2 billion on revenues amounting to € 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group’s corporate strategy and covers all products – from the supply chain through production to the end of their useful life. ",
+				"workforceTotal": 33715,
+				"country": "Germany",
+				"foundedYear": 1916,
+				"citedPage": "https://aws.amazon.com/blogs/industries/transforming-the-bmw-connected-vehicle-backend-with-karpenter/",
+				"quote": "Today, the BMW Connected Vehicle backend operates as a highly complex, high-performance service mesh comprising more than 375 Amazon Elastic Kubernetes Service (EKS) clusters that process over 12 billion requests and 145TB of data traffic daily across 4 AWS Regions.",
+				"fitReason": "Automotive manufacturer with 33,715 employees in Germany; evidence shows large-scale multi-region EKS/service mesh operations."
+			}
 		},
 		"bt.com": {
 			"label": "reject:unreachable",
@@ -30,12 +40,44 @@
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
 			"note": "undecidable: Cash App is a product of Block Inc., whose total headcount sits close enough to the 10,000-employee reachable boundary that it cannot be placed confidently on either side"
 		},
+		"clear.bank": {
+			"label": null,
+			"name": "ClearBank",
+			"firstSeenRunId": "companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:34:58.519Z",
+			"record": {
+				"industry": null,
+				"description": "Leading brands – from fintechs and banks to digital asset platforms and large-scale corporates – use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
+				"workforceTotal": 552,
+				"country": "United Kingdom",
+				"foundedYear": 2015,
+				"citedPage": "https://clear.bank/learn/case-studies/how-clearbank-processes-20-million-payments-a-month-up-from-8-000-with-platform-built-on-azure",
+				"quote": null,
+				"fitReason": "Regulated UK bank, 552 staff, in-house infra teams, over 25% of infrastructure on AKS Kubernetes; no cert-management evidence."
+			}
+		},
 		"datadoghq.com": {
 			"label": "accept",
 			"name": "Datadog",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
 			"note": "Datadog is a US SaaS company of roughly 5,000-6,000 employees whose own engineering blog and conference talks are a well-known public record of running production Kubernetes at scale"
+		},
+		"dexcom.com": {
+			"label": null,
+			"name": "Dexcom",
+			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:38:22.053Z",
+			"record": {
+				"industry": "Medical devices",
+				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people’s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
+				"workforceTotal": 5024,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://chkk.io/blog/case-study-dexcom",
+				"quote": "Dexcom Cloud Engineering runs a platform on GKE supporting hundreds of developers and thousands of applications.",
+				"fitReason": "Medical device maker with GKE-based cloud engineering team; headcount and location fit, but no PKI or downtime-reporting evidence."
+			}
 		},
 		"draftkings.com": {
 			"label": null,
@@ -86,6 +128,22 @@
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
 			"note": "Monzo is a UK challenger bank of roughly 3,000-4,000 employees and one of the most publicly documented Kubernetes case studies in banking, with multiple conference talks on its microservice architecture"
 		},
+		"okta.com": {
+			"label": null,
+			"name": "Okta",
+			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:38:22.053Z",
+			"record": {
+				"industry": null,
+				"description": "Okta secures AI.\n\nOkta is The World’s Identity Company. Freeing everyone to safely use any technology—anywhere, on any device or app.",
+				"workforceTotal": 5328,
+				"country": "United States",
+				"foundedYear": 2009,
+				"citedPage": "https://www.okta.com/sites/default/files/2024-11/How%20Okta%20Builds%20and%20Runs%20Scalable%20Infrastructure%20%281%29.pdf",
+				"quote": null,
+				"fitReason": "Okta is a large SaaS identity firm with in-house teams running Kubernetes; no evidence on cert-lifecycle delegation."
+			}
+		},
 		"postfinance.ch": {
 			"label": null,
 			"name": "PostFinance",
@@ -107,12 +165,44 @@
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
 			"note": "Santander Group employs well over 200,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
+		"sectigo.com": {
+			"label": null,
+			"name": "Sectigo",
+			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:38:22.053Z",
+			"record": {
+				"industry": null,
+				"description": "Expired certificates shouldn’t be the reason your business goes down. Sectigo is the industry’s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
+				"workforceTotal": 508,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://www.sectigo.com/blog/how-lets-encrypt-runs-ct-logs",
+				"quote": null,
+				"fitReason": "Sectigo, ~508 staff, runs its own Kubernetes CT-log infra in-house; vertical fit and internal PKI governance not shown."
+			}
+		},
 		"spotify.com": {
 			"label": "accept",
 			"name": "Spotify",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
 			"note": "Spotify is a Swedish (Nordics) company of roughly 9,000 employees and a famous public Kubernetes case study, having given multiple KubeCon talks on its own migration"
+		},
+		"traderepublic.com": {
+			"label": null,
+			"name": "Trade Republic",
+			"firstSeenRunId": "companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:34:58.519Z",
+			"record": {
+				"industry": null,
+				"description": "What does your Bank offer? ",
+				"workforceTotal": 729,
+				"country": "Germany",
+				"foundedYear": 2015,
+				"citedPage": "https://engineering.traderepublic.com/scaling-batch-jobs-for-reliable-and-efficient-processing-da6242cdb9f9",
+				"quote": null,
+				"fitReason": "Berlin fintech bank, 729 staff, engineering blog shows Kubernetes CronJobs and distributed processing; no cert-lifecycle evidence found."
+			}
 		},
 		"tubitv.com": {
 			"label": null,

@@ -58,6 +58,38 @@
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
 			"note": "Cytix is a UK offensive-security startup this reviewer recalls raising a round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
+		"helcim.com": {
+			"label": null,
+			"name": "Helcim",
+			"firstSeenRunId": "companies_a840cd9b-3c9b-4be8-81ee-a13bf39a6857_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:40:51.022Z",
+			"record": {
+				"industry": "Small-business payments",
+				"description": "Helcim provides Canadian & American businesses an opportunity to accept credit card payments at affordable & transparent rates. A wide range of online, ecommerce, cloud-based, mobile & retail payment platforms allows Helcim to offer a total payments solution. The lack of cancellation fees, no monthly minimums & the removal of long-term contracts have made Helcim the preferred choice for credit card processing.\n\nIt's the fair & transparent pricing structures that help Helcim build long-term relationships with each of our merchants, clients & partners.",
+				"workforceTotal": 143,
+				"country": "Canada",
+				"foundedYear": 2006,
+				"citedPage": "https://www.helcim.com/company/helcim-raises-series-c/",
+				"quote": "We've just raised a $53 million Series C, and we want to share what it means for the future of Helcim and the merchants who trust us every day.",
+				"fitReason": "Helcim is Calgary payments operating company, 143 employees, raised $53M Series C; private venture‑backed firm."
+			}
+		},
+		"kord.com": {
+			"label": null,
+			"name": "Kord",
+			"firstSeenRunId": "companies_a840cd9b-3c9b-4be8-81ee-a13bf39a6857_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:40:51.022Z",
+			"record": {
+				"industry": "Financial services",
+				"description": "The gap between client identity and client money is where most regulated firms encounter fraud and money laundering risk. On top of the increasing regulatory scrutiny imposed on firms, this creates a serious burden that manual and disconnected checks can simply no longer meet.\n\nBut by verifying and securing both on the same identity-bound rails, Kord creates a closed loop that eliminates this gap, and reduces risk to your firm and your clients.\n\nIt unites everything regulated firms need to identify and verify clients, safeguard and move their money, and create evidence-based audit trails on one platform:\n\n- Client due diligence: identity verification, AML, KYC, and PEPs and sanctions screening\n- Source of funds and source of wealth through open banking\n- Biometric ID verification to meet the Safe Harbour standard\n- Enhanced data insights from HM Land Registry and credit reference agencies\n- Instant, secure payments\n- Third-party managed accounts for client money\n- Fraud prevention and reporting\n\nThis allows you to replace manual processes and disconnected platforms with a closed loop, where trust and verification are built on defensible, evidenced, identity-bound rails.\n\nProtect your clients, meet your regulatory obligations, remove the risk of fraud, and build trust without friction.",
+				"workforceTotal": 21,
+				"country": "United Kingdom",
+				"foundedYear": 2020,
+				"citedPage": "https://tech.eu/2026/07/08/kord-secures-ps64m-to-unify-onboarding-compliance-and-payments/",
+				"quote": "UK fintech Kord, the end-to-end platform making onboarding clients, identity verification and payment processing simpler and more secure, has raised £6.4 million in a Series A funding round.",
+				"fitReason": "Kord is a UK fintech operating company, 21 employees, raised Series A; private venture-backed startup."
+			}
+		},
 		"metriport.com": {
 			"label": null,
 			"name": "Metriport",
@@ -105,7 +137,17 @@
 			"name": "Light",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently",
+			"record": {
+				"industry": "Energy technology",
+				"description": "Light turns power into a platform. We help leading brands—like solar providers, automakers, and home platforms—offer embedded, branded electricity plans to their customers. Our partners are reshaping how people experience energy, unlocking better customer experiences or the full potential of products like batteries, EVs, and other smart devices.\n\nWe’re bringing together the best builders in tech and energy, backed by top investors and angels. Based in Austin, TX, we’re not just building a better utility—we’re redefining what a power company can be.",
+				"workforceTotal": 28,
+				"country": "United States",
+				"foundedYear": 2023,
+				"citedPage": "https://www.poweredbylight.com/press/light-raises-46-million-to-scale-the-power-company-for-embedded-electricity",
+				"quote": "Light, the power company enabling embedded electricity products for businesses, today announced $46 million in Series A funding led by Matrix and joined by Activate Capital and existing investors including Spark Capital, Mischief, Gigascale Capital, MCJ and BoxGroup.",
+				"fitReason": "Austin energy startup, 28 employees, $46M Series A led by Matrix, venture-backed, satisfies all core criteria."
+			}
 		},
 		"quaise.com": {
 			"label": null,
@@ -128,12 +170,54 @@
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
 			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
+		"telli.com": {
+			"label": null,
+			"name": "telli",
+			"firstSeenRunId": "companies_32704e11-45fe-48e4-9d8d-803130cfd67a_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:42:47.515Z",
+			"record": {
+				"industry": "Customer operations",
+				"description": "AI phone calls that convert",
+				"workforceTotal": 23,
+				"country": "Germany",
+				"foundedYear": 2024,
+				"citedPage": "https://www.telli.com/articles/telli-raises-15m-seed-to-put-ai-agents-in-charge-of-customer-ops",
+				"quote": "Exclusive: Berlin’s telli raises $15M seed to put AI agents in charge of customer ops, backed by redalpine, Cherry, and YC",
+				"fitReason": "Berlin operating company, 23 employees, announced $15M seed backed by VCs and YC, matches all core criteria."
+			}
+		},
 		"velatir.com": {
 			"label": null,
 			"name": "Velatir",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
+			"note": "no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently",
+			"record": {
+				"industry": "AI governance",
+				"description": "Enabling European businesses to lead, not just follow the AI revolution, with speed, resilience and integrity. \n\nEurope is at a crossroads. To remain competitive on the global stage, our industries must adopt AI at scale, but they must do so responsibly. \n\nAt Velatir, we are the bridge between \"potential\" and \"production.\" We are building the infrastructure for European AI adoption. We aren't just building a company; we are building European resilience.",
+				"workforceTotal": 23,
+				"country": "Denmark",
+				"foundedYear": 2025,
+				"citedPage": "https://www.linkedin.com/posts/velatir_today-were-excited-to-announce-our-5m-seed-activity-7496083605782249472-cNy-",
+				"quote": "Today we're excited to announce our €5M seed round.",
+				"fitReason": "Danish AI governance startup, 23 employees, announced €5M seed round, meets location, size and funding requirements."
+			}
+		},
+		"velocity.xyz": {
+			"label": null,
+			"name": "Velocity",
+			"firstSeenRunId": "companies_a840cd9b-3c9b-4be8-81ee-a13bf39a6857_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:40:51.022Z",
+			"record": {
+				"industry": "Payments infrastructure",
+				"description": "Move and manage capital seamlessly across banks, blockchains, and borders. \n\nVelocity is an enterprise-first platform that combines the programmability of stablecoins with the rigour of traditional finance — solving real-world challenges in cross-border settlement, liquidity, and treasury.",
+				"workforceTotal": 30,
+				"country": "United Kingdom",
+				"foundedYear": 2025,
+				"citedPage": "https://www.linkedin.com/posts/velocityxyz_today-were-excited-to-share-that-velocity-activity-7482776219197976577-GUmj",
+				"quote": "Today, we’re excited to share that Velocity has raised a $38 million Series A.",
+				"fitReason": "Velocity is London payments‑infra operating company, 30 employees, raised $38M Series A; private venture‑backed startup."
+			}
 		}
 	}
 }

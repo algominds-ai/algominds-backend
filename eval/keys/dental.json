@@ -1,5 +1,54 @@
 {
 	"slug": "dental",
 	"icpId": "4213915c-0b0c-43f0-bd4a-5379e3a0a594",
-	"companies": {}
+	"companies": {
+		"lonepeakdentalgroup.com": {
+			"label": null,
+			"name": "Lone Peak Dental Group",
+			"firstSeenRunId": "companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:43:07.739Z",
+			"record": {
+				"industry": null,
+				"description": "Lone Peak Dental Group is a Dental Service Organization that supports specialty dental offices in pediatric & orthodontics. Our unique approach of Partner-Doctor model allows the doctors to own a significant portion of their practice, while controlling 100% of the clinical aspect. \n\nUnlike other DSOs, our Partner-Doctors work with the Lone Peak management team and are part of the decision making process for their practice. \n\nThe management team is located in Denver, Colorado at the Smile Center. They provide high quality services through our subject matter experts in non-clinical operations. This includes: accounting and finance, legal, human resources, marketing, compliance, IT and recruiting. \n\nOur support team ensures the growth of each of our dental practices through a proactive, honest, and responsive approach. Our partner-doctors and practices can rest assured knowing that the Smile Center is ready to help them run a successful dental office.\n",
+				"workforceTotal": 71,
+				"country": "United States",
+				"foundedYear": 2003,
+				"citedPage": "https://lonepeakdentalgroup.com/",
+				"quote": null,
+				"fitReason": "71 staff, Denver US, a Dental Service Organization supporting specialty offices."
+			}
+		},
+		"mortensondentalpartners.com": {
+			"label": null,
+			"name": "Mortenson Dental Partners",
+			"firstSeenRunId": "companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:43:07.739Z",
+			"record": {
+				"industry": null,
+				"description": "Mortenson Dental Partners (MDP) is one of the largest groups of employee-owned dental practices in the United States. Beginning as a single practice in 1979, the company has grown to include over 140 practices across nine states, employing over 1,800 team members and welcoming nearly one million patient visits each year. With services ranging from general and pediatric dentistry to orthodontics and oral surgery, we believe in offering high-quality dental care and serving our patients with courtesy and respect.\n\nMDP's values were built on a foundation of love for one another, regardless of race, color, national origin, sexual orientation, gender identity or expression, age, religion or other attributes. We are committed to a workplace that fully represents the communities we serve.\n\nPlease visit www.MortensonDentalPartners.com to learn more and see a complete list of our existing groups.",
+				"workforceTotal": 290,
+				"country": "United States",
+				"foundedYear": 1979,
+				"citedPage": "https://mortensondentalpartners.com/",
+				"quote": null,
+				"fitReason": "290 staff, US-based, operates 140+ dental practices as a group."
+			}
+		},
+		"prosmile.com": {
+			"label": null,
+			"name": "ProSmile",
+			"firstSeenRunId": "companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
+			"lastSeenAt": "2026-09-04T10:43:07.739Z",
+			"record": {
+				"industry": null,
+				"description": "OUR STORY\nProSmile’s story began in 1998 with the formation of Allied Dental, which brought together multiple dental offices across New Jersey. By 2017, Allied had expanded into Maryland and Pennsylvania. In 2020, Allied Dental merged with Dental Health Associates, founded by Dr. Amish Patel, to create ProSmile. Under the leadership of Bharat Rana as CEO, the organization quickly grew, reaching 79 locations within a year and becoming the largest multi-specialty dental group in New Jersey, Pennsylvania, and Maryland. Today, under the leadership of CEO Andrew Shafran, ProSmile continues to expand its reach and strengthen its commitment to providing high-quality, patient-centered dental care across the region.\n\nWHO WE ARE\nThe largest multi-specialty dental group in NJ, MD, PA, VA, IN, WI, MI & IL.\n\nOUR MISSION\nTo build great smiles by providing support services through mentorship, leadership, and engagement.\n\nCORE VALUES\nSupport - We make a difference. \nMentor - We guide growth. \nInspire - We do the right thing. \nLead - We treat others how we want to be treated.\nEngage - We are here to stay! Team members and patients remain engaged throughout their journey.\n\n“At ProSmile, we don’t just support dental practices—we empower people to create brighter futures, one smile at a time. Through compassionate care, dedicated mentorship, and a commitment to growth, we’re building a community where excellence thrives and every patient feels seen, valued, and cared for.”\n– Andrew Shafran, CEO",
+				"workforceTotal": 74,
+				"country": "United States",
+				"foundedYear": 2020,
+				"citedPage": "https://prosmile.com/",
+				"quote": null,
+				"fitReason": "74 staff, Woodbridge US, largest multi-specialty dental group in region."
+			}
+		}
+	}
 }

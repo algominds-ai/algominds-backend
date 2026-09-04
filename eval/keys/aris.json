@@ -84,7 +84,17 @@
 			"name": "Centerlogic IT Services",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"record": {
+				"industry": null,
+				"description": "Centerlogic, Inc. (formerly Evosus Solutions, Inc.) acts as an outsourced IT (information technology) department which reports to an administrative or technical contact within your company. We support infrastructures as simple as a single computer, to those as complex as multiple-site, multiple-server networks. We design, implement and support a wide variety of hardware, software, and services and will assist you in making IT decisions that best benefit your organization.\n\nWe provide the following services:\n\nManaged Services, Virtualization, IT Projects and Support, IT Support Desk, Cloud Computing, Cybersecurity, Disaster Recovery, Virus Protection, Windows 365, Microsoft Update Management, Virus/Spyware Removal & Remediation, and Wireless Solutions. ",
+				"workforceTotal": 32,
+				"country": "United States",
+				"foundedYear": 2001,
+				"citedPage": "https://centerlogic.com/",
+				"quote": null,
+				"fitReason": "Outsourced IT department with 32 employees in the US; no info on staffing-firm buyer type."
+			}
 		},
 		"circlemsp.com": {
 			"label": null,
@@ -133,7 +143,17 @@
 			"name": "Computer Services Unlimited (CSU)",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"record": {
+				"industry": null,
+				"description": "Computer Services Unlimited (CSU) is a technology solutions provider specializing in Managed IT, Cybersecurity, IT Consulting, Data Backup & Disaster Recovery, Cloud Services and more. The company was founded in 2004 to fill an ever-growing demand for cost effective solutions that enable small and mid-sized businesses to operate at the level of a large corporation with a dedicated IT department.\n\nThe biggest difference between what other companies offer and what CSU provides to our clients is Customer Service! Everything that we do revolves around Customer Service and a proactive custom approach to every clients’ unique needs. We do not sell cookie cutter solutions with an emphasis on quantity to make money. Our emphasis is on Quality! We want our customers to think of CSU as an extension of their full-time staff but at a fraction of the cost.\n",
+				"workforceTotal": 14,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://csu-it.com/",
+				"quote": null,
+				"fitReason": "CSU is a US-based managed IT provider with 14 staff serving external clients, matching MSP criteria."
+			}
 		},
 		"dartmsp.com": {
 			"label": null,
@@ -168,7 +188,17 @@
 			"name": "E3 IT Services, LLC",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"record": {
+				"industry": null,
+				"description": "E3 IT Services is an established technology partner helping organizations across Central and South Jersey, Philadelphia, and Delaware move from constant IT frustration to Technology Peace of Mind. \n\nFor more than 30 years, we have helped leadership teams eliminate disruptions, gain control over technology costs, and use IT as a reliable foundation for growth.\n\nWe achieve this by focusing on three things that most IT providers miss. First, we create clear business value by aligning every technology decision to measurable business outcomes. Second, we build predictable, secure technology environments that prevent problems instead of reacting to them. Third, we act as a true strategic partner, helping leaders plan, prioritize, and confidently use technology to support where the business is going next.\n\nOur clients rely on us not just to manage systems, but to remove risk, restore confidence, and make technology an asset instead of a daily concern.\n",
+				"workforceTotal": 10,
+				"country": "United States",
+				"foundedYear": 1987,
+				"citedPage": "https://e3itservices.com/",
+				"quote": null,
+				"fitReason": "E3 IT Services is a US MSP with exactly 10 employees, borderline for the 'more than 10' threshold."
+			}
 		},
 		"elauwit.com": {
 			"label": null,
@@ -231,7 +261,17 @@
 			"name": "Ferrum Technology Services, LLC",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone"
+			"note": "undecidable: name reads as a US IT-services or MSP business, but headcount and US location cannot be confirmed from name and domain alone",
+			"record": {
+				"industry": null,
+				"description": "Ferrum is a fully managed IT partner serving clients nationwide from our offices in Elgin, IL and Palm Springs, CA. We specialize in helping organizations modernize operations and accelerate innovation through proactive IT services, intelligent automation, custom application development, Generative AI integration, and technology-driven process improvement.\n\nOur world-class service delivery team is at the center of everything we do—ensuring seamless onboarding, consistent execution, and a superior client experience at every step. By constantly evaluating and advancing our internal systems, we deliver solutions that meet today’s demands while preparing businesses for tomorrow’s opportunities.\n\nFerrum empowers clients to operate smarter, scale faster, and stay ahead in an ever-evolving digital landscape.\n\nFerrum is a Nationwide Managed Services Provider based in Elgin, IL. Services include Managed IT, Help Desk, Cybersecurity, Cloud & Hybrid Infrastructure, Customer Experience (CX), Unified Communications, Business Continuity, Application Development, Mobility and IoT.\n\nOur world-class customer service and unique partnership approach are a step above the rest, with proactive, personalized computer & network solutions that minimize downtime and maximize productivity. Ferrum is ready with the support and expertise to keep you focused on running your business.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2007,
+				"citedPage": "https://ferrumit.com/",
+				"quote": null,
+				"fitReason": "Managed IT provider with 11 employees in Chicago, US; staffing-firm distinction not addressed."
+			}
 		},
 		"fidelisnw.com": {
 			"label": null,
@@ -378,7 +418,17 @@
 			"name": "NetOps Consulting",
 			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
 			"lastSeenAt": "2026-09-03T00:52:48.886Z",
-			"note": "undecidable: the consulting framing could mean project-based work without a managed-services book of business"
+			"note": "undecidable: the consulting framing could mean project-based work without a managed-services book of business",
+			"record": {
+				"industry": null,
+				"description": "NetOps was founded from the ground up to provide managed services to businesses in many verticals.  Drawing upon its expertise in IT services and management, NetOps supports clients in the fulfillment of a wide range of discrete, mission critical projects and ongoing business requirements.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2007,
+				"citedPage": "https://netopsconsulting.com/",
+				"quote": null,
+				"fitReason": "NetOps is a US MSP with 11 employees providing managed services to external business clients."
+			}
 		},
 		"nettech.net": {
 			"label": null,
@@ -497,7 +547,17 @@
 			"name": "Server At Work, LLC",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: the .it domain is a wordplay on the name, and the company's actual country and headcount are unknown"
+			"note": "undecidable: the .it domain is a wordplay on the name, and the company's actual country and headcount are unknown",
+			"record": {
+				"industry": null,
+				"description": "Server At Work is a SOC 2 audited IT MSP with offices in Austin, TX and Lake Charles, LA. We help SMBs grow their businesses through efficient IT operations while integrating compliance solutions to meet insurance, regulatory, and client requirements.\n\nOur services range from complete IT management to co-managed IT solutions for companies with internal IT resources.\n\nOur philosophy at Server At Work is to operate as an IT partner with our clients. At all levels of IT service we provide our clients with direct, personable resources to help co-manage technology environments and provide business-friendly solutions.",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 2012,
+				"citedPage": "https://saw.it/",
+				"quote": null,
+				"fitReason": "MSP with 12 US-based employees serving SMB IT clients; no evidence on staffing-firm distinction."
+			}
 		},
 		"secur-serv.com": {
 			"label": null,
