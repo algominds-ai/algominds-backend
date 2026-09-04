@@ -2,6 +2,40 @@
 	"slug": "hvac",
 	"icpId": "bad48334-f775-4e9a-9032-9d51a16f2f1d",
 	"companies": {
+		"acisinc.com": {
+			"label": null,
+			"name": "ACIS - Air Conditioning Innovative Solutions, Inc.",
+			"firstSeenRunId": "companies_39398fee-c37d-4825-b191-67502a28df65_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:12:04.602Z",
+			"record": {
+				"industry": null,
+				"description": "Air-Conditioning Innovative Solutions serves Dallas, Fort Worth, Houston and Austin with commercial HVAC services. ACIS can work with you on any of your HVAC needs including but not limited to rooftop units, air and water cooled chillers, air movement, environmental control (computer room), hydronic systems and equipment reliability.\n\nThe combined experience of our staff is second to none. With our project and service teams we can take any project from inception to completion including design and construction. After completion of the project, we provide custom maintenance programs to insure the proper operation of all mechanical systems.\n\nWhen time is critical, our large fleet of fully-equipped service vehicles is available 24 hours a day to respond to emergency situations.\n\n#acisinc #trades #hvac #hvacservices #hvactechs #tradespeople #buildingautomation #datacenter",
+				"workforceTotal": 75,
+				"country": "United States",
+				"foundedYear": 2002,
+				"citedPage": "https://acisinc.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "75-staff McKinney, TX company explicitly serves Texas cities with commercial HVAC services."
+			}
+		},
+		"amsco-ac.com": {
+			"label": null,
+			"name": "Air Mechanical & Service Corp.",
+			"firstSeenRunId": "companies_39398fee-c37d-4825-b191-67502a28df65_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:12:04.602Z",
+			"record": {
+				"industry": null,
+				"description": "Air Mechanical and Service Corp. (AMSCO) was founded in 1982 as a full service HVAC Mechanical Contractor and Service Company. Since its inception we have grown to become a multifaceted corporation to include: HVAC Mechanical Contractor, General Contractor and Construction Manager with significant resources.",
+				"workforceTotal": 21,
+				"country": "United States",
+				"foundedYear": 1982,
+				"citedPage": "https://amsco-ac.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "21-staff Tampa, FL HVAC Mechanical Contractor and General Contractor fits size, location, and commercial line."
+			}
+		},
 		"ccmech.com": {
 			"label": "accept",
 			"name": "Capital City Mechanical Services, LLC",
@@ -20,6 +54,23 @@
 				"fitReason": "Peachtree Corners, GA, 21 staff, full-service commercial HVAC mechanical provider servicing rooftops, chillers, boilers."
 			}
 		},
+		"energyair.com": {
+			"label": null,
+			"name": "Energy Air, Inc.",
+			"firstSeenRunId": "companies_64207d19-9348-422b-9d50-8f6950203546_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:12:42.112Z",
+			"record": {
+				"industry": null,
+				"description": "Energy Air, Inc. is a leading heating, ventilation, and air conditioning company that’s been in business since 1976.\n\nWe consistently rank as one of the top specialty contractors in the state of Florida. Our services include commercial and residential HVAC system design and installation, service/repair, replacements/retrofits and planned maintenance. We have a bonding capacity in excess of $90 million and are experienced with projects in all major market segments, including education, healthcare, hospitality/entertainment, retail, office, multi-family/mixed-use, religious, industrial and residential. We self-perform the entire HVAC scope of work and prefabricate ductwork, sheet metal and piping at our 55,000-square-foot, in-house fabrication facility. We have a robust safety and training program and in-house BIM/3D modeling capabilities.\n\nContact us today to learn more: https://energyair.com",
+				"workforceTotal": 93,
+				"country": "United States",
+				"foundedYear": 1976,
+				"citedPage": "https://energyair.com/",
+				"citedDate": "2026-06-26T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "93 staff in Orlando FL, offers commercial and residential HVAC, not residential-only."
+			}
+		},
 		"msifla.com": {
 			"label": "accept",
 			"name": "EMCOR Services  MSI - Mechanical Services",
@@ -36,6 +87,23 @@
 				"citedDate": "2026-06-25T00:00:00.000Z",
 				"quote": null,
 				"fitReason": "Orlando, FL, 55 staff, self-performing commercial HVAC service operation despite some manufacturing/prefab work."
+			}
+		},
+		"pagemech.com": {
+			"label": null,
+			"name": "Page Mechanical Group, LLC.",
+			"firstSeenRunId": "companies_39398fee-c37d-4825-b191-67502a28df65_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:12:04.602Z",
+			"record": {
+				"industry": null,
+				"description": "ABOUT US\r\nPage Mechanical Group has been Serving the Construction Industry in Southwest Florida since 1985. PMG provides a full array of Plumbing and Mechanical Services in all types of Commercial Building Applications including Educational, Healthcare (AHCA), Municipal, Correctional, Sports Arenas, Offices, and Industrial. \r\n\r\nWe continuously strive for improvement in the Design, Engineering, Installation, Operation and Service of Heating, Cooling, and Refrigeration Systems. Our knowledgeable team is dedicated to supporting our customers needs from design and Installation to service and technical support.\r\n\r\nFOCUS\r\nPMG is focused on developing client relationships based on performance, trust, and value. Our business is built on repeat clients, focused on developing trade partners that focus on finding solutions.\r\n\r\nSAFETY\r\nOSHA 30 training is required for all management and supervision.\r\nOSHA 10 training is required for all field staff.\r\n\r\n\r\nGREEN SOLUTIONS\r\nLEED and energy efficient solutions\r\nPMG is committed to going green - as demonstrated by our USGBC Membership \r\n\r\nGREEN SERVICES\r\nAssistance with LEED Certification\r\nStrategic Energy Planning\r\nEnergy Benchmarking Reports\r\nEnergy Audits\r\nIndoor Air Quality Management\r\nEmergency Back-Up Power\r\nDesign and Implementation of Clean & Efficient Water Systems\r\nDesign and Implementation of Recycling and Waste Management Systems\r\nAlternative Energy Solutions\r\nCommissioning",
+				"workforceTotal": 32,
+				"country": "United States",
+				"foundedYear": 1985,
+				"citedPage": "https://pagemech.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "32-staff Fort Myers, FL firm provides commercial mechanical/HVAC services across many building types."
 			}
 		},
 		"thermalconcepts.com": {

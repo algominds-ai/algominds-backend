@@ -2,6 +2,23 @@
 	"slug": "dental",
 	"icpId": "4213915c-0b0c-43f0-bd4a-5379e3a0a594",
 	"companies": {
+		"advantagedental.com": {
+			"label": null,
+			"name": "Advantage Dental+",
+			"firstSeenRunId": "companies_3c6c8f63-7eda-4546-8ba7-b1efce7676db_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:10:50.528Z",
+			"record": {
+				"industry": null,
+				"description": "Advantage Dental and affiliated practices are bound by a mission: To improve the oral health of all. Comprised of 70+ practices, over 200 providers and more than 800 support employees throughout six states, our network of practices provide care to over a quarter of a million patients annually. \n\nAdvantage Dental and affiliated practices across the United States are working to revolutionize oral health care for all. To do this, we take a unique, industry-leading approach to care delivery by creating lasting healthy outcomes through positive dental experiences. We call this all-in approach Preventistry®.\n\nTogether we are creating confident smiles across the nation\n",
+				"workforceTotal": 170,
+				"country": "United States",
+				"foundedYear": 1994,
+				"citedPage": "https://advantagedental.com/",
+				"citedDate": "2026-06-22T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "170 staff, Nashville US, runs 70+ dental practices with providers and support staff."
+			}
+		},
 		"lonepeakdentalgroup.com": {
 			"label": "accept",
 			"name": "Lone Peak Dental Group",
@@ -36,6 +53,23 @@
 				"citedDate": "2026-06-25T00:00:00.000Z",
 				"quote": null,
 				"fitReason": "290 staff, US-based, operates 140+ dental practices as a group."
+			}
+		},
+		"nadentalgroup.com": {
+			"label": null,
+			"name": "North American Dental Group (NADG)",
+			"firstSeenRunId": "companies_3c6c8f63-7eda-4546-8ba7-b1efce7676db_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:10:50.528Z",
+			"record": {
+				"industry": null,
+				"description": "North American Dental Group is a premier dental group with a commitment to industry-leading service and care for EVERY PATIENT, EVERY VISIT. \n\nWe have a true partnership with our affiliated dentists enabling them to focus on what they do best and love most… dentistry. With our patient-centric approach, our mission is to serve our doctors and their clinical support teams so they have clinical autonomy to provide the very best treatment focused on EMPATHY, COMPASSION and CARE. \n\nWe provide comprehensive support to 230+ dental practices with the understanding that it requires the efforts of everyone to achieve our goals for patient care.\n\nFor more information, please visit our website at www.nadentalgroup.com\n",
+				"workforceTotal": 369,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://nadentalgroup.com/",
+				"citedDate": "2026-06-29T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "369 staff, Pittsburgh US, operates dental group partnering with affiliated dentists."
 			}
 		},
 		"prosmile.com": {
