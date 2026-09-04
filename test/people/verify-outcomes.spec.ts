@@ -123,7 +123,7 @@ describe("FindPeopleWorkflow: a target run", () => {
 			expect(JSON.parse(quoteRows[0]?.value ?? "")).toEqual({
 				runCompanyId: runCompanyRow.id,
 				body: {
-					url: "https://verifytarget.example/team",
+					url: "https://news.example/jordan-blake-joins-as-vp-sales",
 					found: true,
 					reason: "found",
 				},

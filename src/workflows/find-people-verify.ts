@@ -250,7 +250,7 @@ async function verifyPick(pick: PickContext): Promise<PickOutcome> {
 			(ledger) => getAgentVerdictRun(start.id, pick.ctx.env, ledger),
 		);
 		const evidence: PickEvidence[] = [{ kind: "verify-start", body: start }];
-		const classification = classifyVerdict(verdict);
+		const classification = classifyVerdict(verdict, pick.progress.domain);
 		let verified = classification === "verified";
 		if (classification === "needs_index") {
 			const opinion = await secondOpinion(pick, pollLedger);
