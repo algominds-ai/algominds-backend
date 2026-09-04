@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RATES } from "../src/core/rates";
+import { RATES } from "@/core/rates";
 
 describe("RATES", () => {
 	it("prices Findymail's search credits and verifier credits as two separate pools", () => {
