@@ -15,7 +15,7 @@ CREATE TABLE "company" (
 CREATE TABLE "evidence" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"subject_type" text NOT NULL,
-	"subject_id" uuid NOT NULL,
+	"subject_id" text NOT NULL,
 	"kind" text NOT NULL,
 	"value" text NOT NULL,
 	"source" text NOT NULL,

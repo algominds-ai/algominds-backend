@@ -16,15 +16,12 @@ function judgeReject(
 
 describe("roundRefusalsEvidenceRow", () => {
 	it("carries every refused row's domain, reason and the judge's statuses", () => {
-		const row = roundRefusalsEvidenceRow(
-			"icp-1",
-			"companies_icp-1_2026-09-03",
-			2,
-			[judgeReject()],
-		);
+		const row = roundRefusalsEvidenceRow("companies_icp-1_2026-09-03", 2, [
+			judgeReject(),
+		]);
 
 		expect(row?.subjectType).toBe("run");
-		expect(row?.subjectId).toBe("icp-1");
+		expect(row?.subjectId).toBe("companies_icp-1_2026-09-03");
 		expect(row?.kind).toBe("round-refusals");
 		const parsed: unknown = JSON.parse(String(row?.value));
 		expect(parsed).toEqual({
@@ -41,7 +38,7 @@ describe("roundRefusalsEvidenceRow", () => {
 	});
 
 	it("drops a reject the judge never produced, since it carries no statuses to report", () => {
-		const row = roundRefusalsEvidenceRow("icp-1", "run-1", 1, [
+		const row = roundRefusalsEvidenceRow("run-1", 1, [
 			{ domain: "a.com", reason: "missing-required", stage: "filter" },
 		]);
 
@@ -49,7 +46,7 @@ describe("roundRefusalsEvidenceRow", () => {
 	});
 
 	it("is null for a round that refused nothing at the judge", () => {
-		expect(roundRefusalsEvidenceRow("icp-1", "run-1", 1, [])).toBeNull();
+		expect(roundRefusalsEvidenceRow("run-1", 1, [])).toBeNull();
 	});
 
 	it("bounds the stored value to 20 KB even for a very large refusal list", () => {
@@ -57,7 +54,7 @@ describe("roundRefusalsEvidenceRow", () => {
 			judgeReject({ domain: `refused-${index}.com` }),
 		);
 
-		const row = roundRefusalsEvidenceRow("icp-1", "run-1", 1, rejects);
+		const row = roundRefusalsEvidenceRow("run-1", 1, rejects);
 
 		expect(row?.value.length).toBeLessThanOrEqual(20_000);
 	});

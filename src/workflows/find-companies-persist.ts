@@ -88,7 +88,7 @@ type PersistRoundInput = {
 
 /** Banks what one round spent and what it did, in one durable step, so both land together or replay together: the round row, and a run-level evidence row naming every company the judge refused and why. */
 export async function persistRound(input: PersistRoundInput): Promise<void> {
-	const { step, env, runId, icpId, report } = input;
+	const { step, env, runId, report } = input;
 	await step.do(
 		`round_${report.round}-spend`,
 		config.stepConfig.databaseCall,
@@ -103,7 +103,6 @@ export async function persistRound(input: PersistRoundInput): Promise<void> {
 				rejects: input.result.rejects.slice(0, STORED_REJECTS_PER_ROUND),
 			});
 			const refusals = roundRefusalsEvidenceRow(
-				icpId,
 				runId,
 				report.round,
 				input.result.rejects,

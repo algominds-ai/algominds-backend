@@ -122,17 +122,8 @@ function refusedRow(reject: FindCompaniesReject): RefusedRow | null {
 	};
 }
 
-/**
- * One append-only evidence row per round carrying every row the judge refused
- * — its domain, the reason, and the judge's own per-requirement statuses —
- * so a refused company still leaves a trace of why once the run finishes.
- * Filed under the profile's id rather than the run's: a Workflow run id is
- * free text and the evidence table's subject is a uuid. Bounded to
- * `ROUND_REFUSALS_MAX_CHARS`, and null when the round refused nothing at the
- * judge.
- */
+/** One append-only evidence row per round carrying every row the judge refused, with its domain, reason and statuses, bounded to `ROUND_REFUSALS_MAX_CHARS`; null when the round refused nothing. */
 export function roundRefusalsEvidenceRow(
-	icpId: string,
 	runId: string,
 	round: number,
 	rejects: readonly FindCompaniesReject[],
@@ -144,7 +135,7 @@ export function roundRefusalsEvidenceRow(
 	const value = JSON.stringify({ runId, round, refused });
 	return {
 		subjectType: "run",
-		subjectId: icpId,
+		subjectId: runId,
 		kind: "round-refusals",
 		value: value.slice(0, ROUND_REFUSALS_MAX_CHARS),
 		source: EVIDENCE_SOURCE,

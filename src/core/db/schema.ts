@@ -161,7 +161,7 @@ export const evidence = pgTable(
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		subjectType: text("subject_type").notNull(),
-		subjectId: uuid("subject_id").notNull(),
+		subjectId: text("subject_id").notNull(),
 		kind: text("kind").notNull(),
 		value: text("value").notNull(),
 		source: text("source").notNull(),
