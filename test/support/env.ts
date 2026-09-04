@@ -48,3 +48,15 @@ export function fakeModelEnv(overrides: ModelEnvOverrides = {}): Env {
 		MODEL_ROUTE_WORKER: overrides.worker ?? "dynamic/brain-worker",
 	};
 }
+
+/** The worker `Env`, wired for an AI Gateway model call under a test gateway base URL and token. */
+export function fakeGatewayEnv(overrides: Partial<Env> = {}): Env {
+	return {
+		...testEnv,
+		AI_GATEWAY_BASE_URL: "https://gateway.test.example/compat",
+		CF_AIG_TOKEN: { get: async () => "test-aig-token" },
+		MODEL_ROUTE_REASONING: "dynamic/brain-reasoning",
+		MODEL_ROUTE_WORKER: "dynamic/brain-worker",
+		...overrides,
+	};
+}

@@ -1,9 +1,12 @@
 import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 
+export type SleepCall = { name: string; duration: string };
+
 export type FakeWorkflowStep = {
 	step: WorkflowStep;
 	calls: string[];
 	sleeps: string[];
+	sleepCalls: SleepCall[];
 };
 
 /**
@@ -17,6 +20,7 @@ export function fakeWorkflowStep(
 ): FakeWorkflowStep {
 	const calls: string[] = [];
 	const sleeps: string[] = [];
+	const sleepCalls: SleepCall[] = [];
 	async function runNamed(
 		name: string,
 		second: unknown,
@@ -41,13 +45,14 @@ export function fakeWorkflowStep(
 	}
 	const step: WorkflowStep = {
 		do: runNamed,
-		sleep: async (_name: string, duration: string | number) => {
+		sleep: async (name: string, duration: string | number) => {
 			sleeps.push(String(duration));
+			sleepCalls.push({ name, duration: String(duration) });
 		},
 		sleepUntil: async () => undefined,
 		waitForEvent: async () => {
 			throw new Error("fake step: waitForEvent not implemented");
 		},
 	};
-	return { step, calls, sleeps };
+	return { step, calls, sleeps, sleepCalls };
 }

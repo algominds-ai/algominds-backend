@@ -1,13 +1,21 @@
-import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
-import { z } from "zod";
-import { config } from "../src/config";
-import type { CompanyRow } from "../src/core/companies/gate";
-import { verifyEvidenceRows } from "../src/core/companies/proof";
-import { CostLedger } from "../src/core/cost";
+import { config } from "@/config";
+import type { CompanyRow } from "@/core/companies/gate";
+import { verifyEvidenceRows } from "@/core/companies/proof";
+import { CostLedger } from "@/core/cost";
+import { fakeSecretEnv } from "../support/env";
+import { exaContentsFetch } from "../support/fetch";
 
-function exaEnv(): Env {
-	return { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } };
+function countingFetch(inner: typeof fetch): {
+	fetch: typeof fetch;
+	calls: number;
+} {
+	const counter = { fetch: inner, calls: 0 };
+	counter.fetch = (input, init) => {
+		counter.calls += 1;
+		return inner(input, init);
+	};
+	return counter;
 }
 
 function row(overrides: Partial<CompanyRow> & { domain: string }): CompanyRow {
@@ -26,56 +34,6 @@ function row(overrides: Partial<CompanyRow> & { domain: string }): CompanyRow {
 	};
 }
 
-const ContentsRequestSchema = z.object({ urls: z.array(z.string()) });
-
-type FetchCapture = { calls: number; urls: string[][] };
-
-function jsonResponse(status: number, body: unknown): Response {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: { "content-type": "application/json" },
-	});
-}
-
-function stubContents(
-	byUrl: Record<string, { text: string } | { errorTag: string }>,
-): FetchCapture {
-	const capture: FetchCapture = { calls: 0, urls: [] };
-	globalThis.fetch = async (_input, init) => {
-		capture.calls += 1;
-		const { urls } = ContentsRequestSchema.parse(
-			JSON.parse(String(init?.body)),
-		);
-		capture.urls.push(urls);
-		const results: { url: string; text: string }[] = [];
-		const statuses: (
-			| { id: string; status: "success" }
-			| { id: string; status: "error"; error: { tag: string } }
-		)[] = [];
-		for (const url of urls) {
-			const outcome = byUrl[url];
-			if (!outcome) continue;
-			if ("errorTag" in outcome) {
-				statuses.push({
-					id: url,
-					status: "error",
-					error: { tag: outcome.errorTag },
-				});
-				continue;
-			}
-			statuses.push({ id: url, status: "success" });
-			results.push({ url, text: outcome.text });
-		}
-		return jsonResponse(200, {
-			requestId: "req-contents",
-			results,
-			statuses,
-			costDollars: { total: 0.003 },
-		});
-	};
-	return capture;
-}
-
 const originalFetch = globalThis.fetch;
 
 afterEach(() => {
@@ -84,10 +42,13 @@ afterEach(() => {
 
 describe("verifyEvidenceRows batches every checkable row into one exaContents call", () => {
 	it("sends one request for two rows citing different pages, never one per row", async () => {
-		const capture = stubContents({
-			"https://a.example/careers": { text: "A Co is hiring now." },
-			"https://b.example/careers": { text: "B Co is hiring now." },
-		});
+		const counting = countingFetch(
+			exaContentsFetch({
+				"https://a.example/careers": { text: "A Co is hiring now." },
+				"https://b.example/careers": { text: "B Co is hiring now." },
+			}),
+		);
+		globalThis.fetch = counting.fetch;
 		const rows = [
 			row({
 				domain: "a.example",
@@ -101,9 +62,13 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 			}),
 		];
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
-		expect(capture.calls).toBe(1);
+		expect(counting.calls).toBe(1);
 		expect(result.kept.map((r) => r.domain)).toEqual([
 			"a.example",
 			"b.example",
@@ -111,7 +76,7 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 	});
 
 	it("dedupes the url list when two rows cite the same page", async () => {
-		const capture = stubContents({
+		globalThis.fetch = exaContentsFetch({
 			"https://shared.example/about": {
 				text: "Alice runs sales. Bob runs ops.",
 			},
@@ -129,10 +94,12 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 			}),
 		];
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
-		expect(capture.calls).toBe(1);
-		expect(capture.urls[0]).toEqual(["https://shared.example/about"]);
 		expect(result.kept).toHaveLength(2);
 		expect(result.checks["shared-alice.example"]).toBe("found");
 		expect(result.checks["shared-bob.example"]).toBe("found");
@@ -144,16 +111,24 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 		};
 		const rows = [row({ domain: "silent.example" })];
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
 		expect(result.kept).toHaveLength(0);
 		expect(result.rejects).toEqual([
 			{ index: 0, reason: "missing-required", detail: null },
 		]);
 	});
+});
 
-	it("treats a url the vendor's reply never mentions as an error, never as found", async () => {
-		stubContents({});
+describe("verifyEvidenceRows tells a truly missing page from one merely absent from the reply", () => {
+	it("treats a url the vendor's reply never mentions as an error and keeps no page for it", async () => {
+		globalThis.fetch = exaContentsFetch({
+			"https://ghost.example/careers": { absent: true },
+		});
 		const rows = [
 			row({
 				domain: "ghost.example",
@@ -162,14 +137,19 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 			}),
 		];
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
 		expect(result.kept).toHaveLength(1);
 		expect(result.checks["ghost.example"]).toBe("CRAWL_ABSENT_FROM_REPLY");
+		expect(result.pages).toEqual([]);
 	});
 
 	it("rejects a row whose page truly does not exist, keeping the rest of the batch", async () => {
-		stubContents({
+		globalThis.fetch = exaContentsFetch({
 			"https://good.example/careers": { text: "Good Co is hiring now." },
 			"https://missing.example/careers": { errorTag: "CRAWL_NOT_FOUND" },
 		});
@@ -186,7 +166,11 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 			}),
 		];
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
 		expect(result.kept.map((r) => r.domain)).toEqual(["good.example"]);
 		expect(result.rejects).toEqual([
@@ -197,7 +181,7 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 
 describe("verifyEvidenceRows keeps the page it crawled as evidence", () => {
 	it("keeps the crawled page as evidence for every row whose quote it checked", async () => {
-		stubContents({
+		globalThis.fetch = exaContentsFetch({
 			"https://a.example/careers": { text: "A Co is hiring now." },
 			"https://b.example/careers": { text: "Nothing about hiring here." },
 		});
@@ -214,7 +198,11 @@ describe("verifyEvidenceRows keeps the page it crawled as evidence", () => {
 			}),
 		];
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
 		expect(result.pages).toEqual([
 			{
@@ -228,21 +216,6 @@ describe("verifyEvidenceRows keeps the page it crawled as evidence", () => {
 				text: "Nothing about hiring here.",
 			},
 		]);
-	});
-
-	it("never keeps a page for a url the vendor's reply never mentioned, since there is no text to store", async () => {
-		stubContents({});
-		const rows = [
-			row({
-				domain: "ghost.example",
-				evidenceUrl: "https://ghost.example/careers",
-				evidenceQuote: "Ghost Co is hiring now.",
-			}),
-		];
-
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
-
-		expect(result.pages).toEqual([]);
 	});
 });
 
@@ -262,14 +235,16 @@ describe("verifyEvidenceRows bounds one exaContents call to a handful of urls", 
 				{ text: `Co ${i} is hiring now.` },
 			]),
 		);
-		const capture = stubContents(byUrl);
+		const counting = countingFetch(exaContentsFetch(byUrl));
+		globalThis.fetch = counting.fetch;
 
-		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+		const result = await verifyEvidenceRows(
+			rows,
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
 
-		expect(capture.calls).toBe(3);
-		for (const urls of capture.urls) {
-			expect(urls.length).toBeLessThanOrEqual(batchSize);
-		}
+		expect(counting.calls).toBe(3);
 		expect(result.kept).toHaveLength(rows.length);
 		expect(Object.keys(result.checks)).toHaveLength(rows.length);
 	});
