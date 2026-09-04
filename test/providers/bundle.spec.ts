@@ -24,12 +24,12 @@ describe("worker entrypoint", () => {
 
 describe("aliased Node-only packages", () => {
 	it("throws naming undici on any property access", async () => {
-		const stub = (await import("../build/stub-undici")).default;
-		expect(() => stub.fetch).toThrow(/undici/);
+		const aliased = (await import("../../build/stub-undici")).default;
+		expect(() => aliased.fetch).toThrow(/undici/);
 	});
 
 	it("throws naming cross-spawn on any property access", async () => {
-		const stub = (await import("../build/stub-cross-spawn")).default;
-		expect(() => stub.spawn).toThrow(/cross-spawn/);
+		const aliased = (await import("../../build/stub-cross-spawn")).default;
+		expect(() => aliased.spawn).toThrow(/cross-spawn/);
 	});
 });

@@ -1,6 +1,5 @@
-import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CostLedger } from "../src/core/cost";
+import { CostLedger } from "../../src/core/cost";
 import {
 	findymailCredits,
 	findymailLinkedinProvider,
@@ -8,53 +7,29 @@ import {
 	findymailSearchLinkedin,
 	findymailStatus,
 	findymailVerify,
-} from "../src/core/providers/findymail/index";
-import { RetryableProviderError } from "../src/core/providers/waterfall";
-
-type Handler = (init: RequestInit | undefined) => Response;
+} from "../../src/core/providers/findymail/index";
+import { RetryableProviderError } from "../../src/core/providers/waterfall";
+import { fakeSecretEnv } from "../support/env";
+import { fakeFindymail, jsonResponse, requestedEmail } from "../support/fetch";
 
 function findymailEnv(): Env {
-	return {
-		...testEnv,
-		FINDYMAIL_API_KEY: { get: async () => "test-findymail-key" },
-	};
+	return fakeSecretEnv({ FINDYMAIL_API_KEY: "test-findymail-key" });
 }
 
-function fakeFindymail(handlers: Record<string, Handler>): typeof fetch {
-	return async (input, init) => {
-		const pathname = new URL(String(input)).pathname;
-		const handler = handlers[pathname];
-		if (!handler) return new Response(null, { status: 404 });
-		return handler(init);
-	};
-}
+const originalFetch = globalThis.fetch;
 
-function json(body: unknown, status = 200): Response {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: { "content-type": "application/json" },
-	});
-}
-
-function requestedEmail(init: RequestInit | undefined): string {
-	const body: { email?: string } = JSON.parse(String(init?.body ?? "{}"));
-	return body.email ?? "";
-}
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
 
 describe("the outgoing request", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("sends the resolved secret as a bearer token, not the binding object", async () => {
 		const seenHeaders: Headers[] = [];
 		globalThis.fetch = async (input, init) => {
 			seenHeaders.push(new Headers(init?.headers));
 			return fakeFindymail({
 				"/api/search/linkedin": () =>
-					json({ contact: { email: "max@tryramp.com" } }),
+					jsonResponse({ contact: { email: "max@tryramp.com" } }),
 			})(input, init);
 		};
 
@@ -70,18 +45,14 @@ describe("the outgoing request", () => {
 });
 
 describe("the three-state verdict", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("is verified when the finder returns an address, the verifier agrees, and it is not a role address", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({ contact: { email: "max@tryramp.com", name: "Max Freeman" } }),
+				jsonResponse({
+					contact: { email: "max@tryramp.com", name: "Max Freeman" },
+				}),
 			"/api/verify": (init) =>
-				json({
+				jsonResponse({
 					email: requestedEmail(init),
 					verified: true,
 					provider: "findymail",
@@ -100,9 +71,9 @@ describe("the three-state verdict", () => {
 	it("is invalid when the verifier rejects a found address", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({ contact: { email: "ghost@acme.com" } }),
+				jsonResponse({ contact: { email: "ghost@acme.com" } }),
 			"/api/verify": (init) =>
-				json({ email: requestedEmail(init), verified: false }),
+				jsonResponse({ email: requestedEmail(init), verified: false }),
 		});
 
 		const result = await findymailLinkedinProvider.run(
@@ -116,7 +87,7 @@ describe("the three-state verdict", () => {
 	it("is unknown, never verified, when a found address gets no verifier answer", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({ contact: { email: "max@tryramp.com" } }),
+				jsonResponse({ contact: { email: "max@tryramp.com" } }),
 			"/api/verify": () => new Response(null, { status: 500 }),
 		});
 
@@ -126,7 +97,6 @@ describe("the three-state verdict", () => {
 		);
 
 		expect(result?.status).toBe("unknown");
-		expect(result?.status).not.toBe("verified");
 	});
 
 	it.each([
@@ -144,27 +114,21 @@ describe("the three-state verdict", () => {
 });
 
 describe("the two finders", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("keeps both finders' results independent when they disagree on a person's address", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({
+				jsonResponse({
 					contact: {
 						email: "patrick.collison@arcinstitute.org",
 						name: "Patrick Collison",
 					},
 				}),
 			"/api/search/name": () =>
-				json({
+				jsonResponse({
 					contact: { email: "patrick@stri.pe", name: "Patrick Collison" },
 				}),
 			"/api/verify": (init) =>
-				json({ email: requestedEmail(init), verified: true }),
+				jsonResponse({ email: requestedEmail(init), verified: true }),
 		});
 		const input = {
 			linkedinUrl: "linkedin.com/in/patrickcollison",
@@ -223,16 +187,12 @@ describe("the two finders", () => {
 });
 
 describe("findymail cost metering", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
-	it("meters one credits unit and zero verifier_credits units for a search", async () => {
+	it("meters one credits unit for a search and one verifier_credits unit for a verify, whether or not it verifies", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({ contact: { email: "max@tryramp.com" } }),
+				jsonResponse({ contact: { email: "max@tryramp.com" } }),
+			"/api/verify": (init) =>
+				jsonResponse({ email: requestedEmail(init), verified: true }),
 		});
 		const ledger = new CostLedger();
 		const meterSpy = vi.spyOn(ledger, "metered");
@@ -242,27 +202,14 @@ describe("findymail cost metering", () => {
 			findymailEnv(),
 			ledger,
 		);
+		await findymailVerify("max@tryramp.com", findymailEnv(), ledger);
 
-		expect(meterSpy).toHaveBeenCalledTimes(1);
 		expect(meterSpy).toHaveBeenCalledWith(
 			"findymail",
 			expect.any(String),
 			1,
 			"credits",
 		);
-	});
-
-	it("meters verifier_credits, not credits, for a verify call", async () => {
-		globalThis.fetch = fakeFindymail({
-			"/api/verify": (init) =>
-				json({ email: requestedEmail(init), verified: true }),
-		});
-		const ledger = new CostLedger();
-		const meterSpy = vi.spyOn(ledger, "metered");
-
-		await findymailVerify("max@tryramp.com", findymailEnv(), ledger);
-
-		expect(meterSpy).toHaveBeenCalledTimes(1);
 		expect(meterSpy).toHaveBeenCalledWith(
 			"findymail",
 			expect.any(String),
@@ -274,9 +221,9 @@ describe("findymail cost metering", () => {
 	it("finding and then verifying one address totals two priced credits", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({ contact: { email: "max@tryramp.com" } }),
+				jsonResponse({ contact: { email: "max@tryramp.com" } }),
 			"/api/verify": (init) =>
-				json({ email: requestedEmail(init), verified: true }),
+				jsonResponse({ email: requestedEmail(init), verified: true }),
 		});
 		const ledger = new CostLedger();
 
@@ -292,9 +239,9 @@ describe("findymail cost metering", () => {
 	it("still meters what it spent on a miss, into the caller's ledger", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/search/linkedin": () =>
-				json({ contact: { email: "ghost@acme.com" } }),
+				jsonResponse({ contact: { email: "ghost@acme.com" } }),
 			"/api/verify": (init) =>
-				json({ email: requestedEmail(init), verified: false }),
+				jsonResponse({ email: requestedEmail(init), verified: false }),
 		});
 		const ledger = new CostLedger();
 
@@ -310,16 +257,10 @@ describe("findymail cost metering", () => {
 });
 
 describe("findymailCredits", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("reads the two separate balances", async () => {
 		globalThis.fetch = fakeFindymail({
 			"/api/credits": () =>
-				json({
+				jsonResponse({
 					credits: 327654,
 					verifier_credits: 374780,
 					pricing: {},

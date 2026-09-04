@@ -8,7 +8,11 @@ export function fakeDbEnv(cached: string, direct: string): DbEnv {
 	};
 }
 
-type SecretKey = "EXA_API_KEY" | "FINDYMAIL_API_KEY" | "CLAY_API_KEY";
+type SecretKey =
+	| "EXA_API_KEY"
+	| "FINDYMAIL_API_KEY"
+	| "CLAY_API_KEY"
+	| "CF_AIG_TOKEN";
 
 /** The worker `Env`, with only the named secret bindings replaced by a fake `get` returning the given value. */
 export function fakeSecretEnv(
@@ -17,6 +21,7 @@ export function fakeSecretEnv(
 	const exa = secrets.EXA_API_KEY;
 	const findymail = secrets.FINDYMAIL_API_KEY;
 	const clay = secrets.CLAY_API_KEY;
+	const aig = secrets.CF_AIG_TOKEN;
 	return {
 		...testEnv,
 		...(exa !== undefined ? { EXA_API_KEY: { get: async () => exa } } : {}),
@@ -24,5 +29,6 @@ export function fakeSecretEnv(
 			? { FINDYMAIL_API_KEY: { get: async () => findymail } }
 			: {}),
 		...(clay !== undefined ? { CLAY_API_KEY: { get: async () => clay } } : {}),
+		...(aig !== undefined ? { CF_AIG_TOKEN: { get: async () => aig } } : {}),
 	};
 }

@@ -1,12 +1,13 @@
-import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { buildAgentRunRequest } from "../src/core/companies/agent-search";
-import { buildSearchRequest } from "../src/core/companies/candidates";
-import { CostLedger } from "../src/core/cost";
-import { startAgentRun } from "../src/core/providers/exa/agent";
-import { search } from "../src/core/providers/exa/search";
-import type { SearchPlan } from "../src/core/synthesize";
+import { buildAgentRunRequest } from "../../src/core/companies/agent-search";
+import { buildSearchRequest } from "../../src/core/companies/candidates";
+import { CostLedger } from "../../src/core/cost";
+import { startAgentRun } from "../../src/core/providers/exa/agent";
+import { search } from "../../src/core/providers/exa/search";
+import type { SearchPlan } from "../../src/core/synthesize";
+import { fakeSecretEnv } from "../support/env";
+import { jsonResponse, respondOnce } from "../support/fetch";
 
 function planFor(query: string): SearchPlan {
 	return {
@@ -145,38 +146,34 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	};
 }
 
+function exaEnv(): Env {
+	return fakeSecretEnv({ EXA_API_KEY: "test-exa-key" });
+}
+
 describe("company search request stays inside the measured Exa /search schema", () => {
-	it("emits only fields and enum values the measured schema allows", () => {
+	it("emits only fields and enum values the measured schema allows, with no user location required", () => {
 		const request = buildSearchRequest(samplePlan());
-
-		const parsed = MeasuredSearchRequestSchema.safeParse(request);
-
-		expect(parsed.success).toBe(true);
-		expect(request.category).toBe("company");
-	});
-
-	it("still conforms with no user location on the profile", () => {
-		const request = buildSearchRequest(samplePlan({ userLocation: null }));
-
 		expect(MeasuredSearchRequestSchema.safeParse(request).success).toBe(true);
+		expect(request.category).toBe("company");
+
+		const noLocation = buildSearchRequest(samplePlan({ userLocation: null }));
+		expect(MeasuredSearchRequestSchema.safeParse(noLocation).success).toBe(
+			true,
+		);
 	});
 });
 
 describe("the search query carries the plan's bounds", () => {
-	it("appends the numeric bounds and countries as sentences after the descriptive query", () => {
-		const request = buildSearchRequest(samplePlan());
-
-		expect(request.query).toBe(
+	it("appends the numeric bounds and countries as sentences, and leaves the query bare when there are none", () => {
+		const bounded = buildSearchRequest(samplePlan());
+		expect(bounded.query).toBe(
 			"fintech companies at seed stage with a small team Every company must have a headcount of at most 20. Every company must be based in United States.",
 		);
-	});
 
-	it("leaves the query unchanged when the plan carries no bounds and no countries", () => {
-		const request = buildSearchRequest(
+		const bare = buildSearchRequest(
 			samplePlan({ maxWorkforce: null, countries: [] }),
 		);
-
-		expect(request.query).toBe(
+		expect(bare.query).toBe(
 			"fintech companies at seed stage with a small team",
 		);
 	});
@@ -193,7 +190,6 @@ describe("agent run request stays inside the measured Exa /agent/runs schema", (
 		});
 
 		const parsed = MeasuredAgentRunRequestSchema.safeParse(request);
-
 		expect(parsed.success).toBe(true);
 		expect(request.dataSources?.length).toBeLessThanOrEqual(5);
 	});
@@ -201,22 +197,21 @@ describe("agent run request stays inside the measured Exa /agent/runs schema", (
 
 describe("the measured schemas reject exactly the defects that shipped unnoticed", () => {
 	it("rejects a field Exa's /search does not define", () => {
-		const withUnknownField = {
-			query: "seed stage fintech",
-			includeText: ["only match this phrase"],
-		};
-
 		expect(
-			MeasuredSearchRequestSchema.safeParse(withUnknownField).success,
+			MeasuredSearchRequestSchema.safeParse({
+				query: "seed stage fintech",
+				includeText: ["only match this phrase"],
+			}).success,
 		).toBe(false);
 	});
 
 	it("rejects a search type outside the enum Exa accepts", () => {
-		const withInvalidType = { query: "seed stage fintech", type: "neural" };
-
-		expect(MeasuredSearchRequestSchema.safeParse(withInvalidType).success).toBe(
-			false,
-		);
+		expect(
+			MeasuredSearchRequestSchema.safeParse({
+				query: "seed stage fintech",
+				type: "neural",
+			}).success,
+		).toBe(false);
 		expect(
 			MeasuredSearchRequestSchema.safeParse({
 				query: "seed stage fintech",
@@ -237,13 +232,11 @@ describe("the measured schemas reject exactly the defects that shipped unnoticed
 	});
 
 	it("rejects a field the agent endpoint does not define", () => {
-		const withUnknownField = {
-			query: "ten fintech companies",
-			includeText: ["never a real field here either"],
-		};
-
 		expect(
-			MeasuredAgentRunRequestSchema.safeParse(withUnknownField).success,
+			MeasuredAgentRunRequestSchema.safeParse({
+				query: "ten fintech companies",
+				includeText: ["never a real field here either"],
+			}).success,
 		).toBe(false);
 	});
 
@@ -270,19 +263,6 @@ describe("what reaches the network matches what the builder produced", () => {
 		globalThis.fetch = originalFetch;
 	});
 
-	function exaEnv(): Env {
-		return { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } };
-	}
-
-	function stubFetch(response: Response): { init: RequestInit | undefined } {
-		const stub: { init: RequestInit | undefined } = { init: undefined };
-		globalThis.fetch = async (_input, init) => {
-			stub.init = init;
-			return response;
-		};
-		return stub;
-	}
-
 	function postedBody(init: RequestInit | undefined): unknown {
 		if (typeof init?.body !== "string")
 			throw new Error("expected a posted body");
@@ -290,31 +270,28 @@ describe("what reaches the network matches what the builder produced", () => {
 	}
 
 	it("posts the company search request unchanged", async () => {
-		const stub = stubFetch(
-			new Response(
-				JSON.stringify({
-					requestId: "req-1",
-					costDollars: { total: 0 },
-					results: [],
-				}),
-				{ status: 200, headers: { "content-type": "application/json" } },
-			),
+		const captured = respondOnce(
+			jsonResponse({
+				requestId: "req-1",
+				costDollars: { total: 0 },
+				results: [],
+			}),
 		);
+		globalThis.fetch = captured.fetch;
 
 		await search(buildSearchRequest(samplePlan()), exaEnv(), new CostLedger());
 
 		expect(
-			MeasuredSearchRequestSchema.safeParse(postedBody(stub.init)).success,
+			MeasuredSearchRequestSchema.safeParse(postedBody(captured.calls[0]?.init))
+				.success,
 		).toBe(true);
 	});
 
 	it("posts the agent run request unchanged", async () => {
-		const stub = stubFetch(
-			new Response(JSON.stringify({ id: "run-1", status: "running" }), {
-				status: 200,
-				headers: { "content-type": "application/json" },
-			}),
+		const captured = respondOnce(
+			jsonResponse({ id: "run-1", status: "running" }),
 		);
+		globalThis.fetch = captured.fetch;
 
 		await startAgentRun(
 			buildAgentRunRequest({
@@ -328,30 +305,26 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		expect(
-			MeasuredAgentRunRequestSchema.safeParse(postedBody(stub.init)).success,
+			MeasuredAgentRunRequestSchema.safeParse(
+				postedBody(captured.calls[0]?.init),
+			).success,
 		).toBe(true);
 	});
 });
 
-describe("the search request runs at fast, the only type a search round pins", () => {
-	it("sends fast and no additionalQueries, since nothing reads them at fast", () => {
+describe("fixed choices the code makes on the plan's behalf", () => {
+	it("runs the search at fast with no additionalQueries, and sends the effort the plan picked", () => {
 		const request = buildSearchRequest(samplePlan());
-
 		expect(request.type).toBe("fast");
 		expect(request.additionalQueries).toBeUndefined();
-	});
-});
 
-describe("the plan chooses how hard the agent works", () => {
-	it("sends the effort the plan picked, not a fixed setting", () => {
-		const request = buildAgentRunRequest({
+		const agentRequest = buildAgentRunRequest({
 			plan: samplePlan({ agentEffort: "medium" }),
 			count: 5,
 			today: "2026-08-30",
 			seller: null,
 			excludeDomains: [],
 		});
-
-		expect(request.effort).toBe("medium");
+		expect(agentRequest.effort).toBe("medium");
 	});
 });

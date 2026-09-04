@@ -1,27 +1,31 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { config } from "../src/config";
-import { CostLedger } from "../src/core/cost";
+import { config } from "../../src/config";
+import { CostLedger } from "../../src/core/cost";
 import {
 	generateStructured,
 	reasoningModel,
 	workerModel,
-} from "../src/core/model";
-import { EXA_FETCH_TIMEOUT_MS } from "../src/core/providers/exa/http";
-import { RetryableProviderError } from "../src/core/providers/waterfall";
+} from "../../src/core/model";
+import { EXA_FETCH_TIMEOUT_MS } from "../../src/core/providers/exa/http";
+import { RetryableProviderError } from "../../src/core/providers/waterfall";
+import { fakeSecretEnv } from "../support/env";
+import {
+	chatCompletionResponse,
+	fakeGateway,
+	throwsTimeout,
+} from "../support/fetch";
 
 const env: Env = {
 	...testEnv,
+	...fakeSecretEnv({ CF_AIG_TOKEN: "test-aig-token" }),
 	AI_GATEWAY_BASE_URL: "https://gateway.test.example/compat",
-	CF_AIG_TOKEN: { get: async () => "test-aig-token" },
 	MODEL_ROUTE_REASONING: "dynamic/brain-reasoning",
 	MODEL_ROUTE_WORKER: "dynamic/brain-worker",
 };
 
 const WidgetSchema = z.object({ widgetName: z.string(), count: z.number() });
-
-type CapturedRequest = { url: string; body: unknown };
 
 const StructuredRequestBodySchema = z.object({
 	model: z.string(),
@@ -43,70 +47,15 @@ const StructuredRequestBodySchema = z.object({
 });
 
 function capturedBody(
-	request: CapturedRequest | undefined,
+	request: { body: unknown } | undefined,
 ): z.infer<typeof StructuredRequestBodySchema> {
 	if (!request) throw new Error("expected a captured request");
 	return StructuredRequestBodySchema.parse(request.body);
 }
 
-type ScriptedReply = {
-	content: string;
-	finishReason?: "stop" | "length";
-	cost?: number;
-	cacheStatus?: "HIT" | "MISS";
-};
-
-function chatCompletionResponse(reply: ScriptedReply): Response {
-	const model = "deepseek/deepseek-v4-flash-0731";
-	const payload = {
-		id: "chatcmpl-test",
-		model,
-		choices: [
-			{
-				index: 0,
-				message: { role: "assistant", content: reply.content },
-				finish_reason: reply.finishReason ?? "stop",
-			},
-		],
-		usage: {
-			prompt_tokens: 20,
-			completion_tokens: 8,
-			cost: reply.cost ?? 0.000002,
-		},
-	};
-	return new Response(JSON.stringify(payload), {
-		status: 200,
-		headers: {
-			"content-type": "application/json",
-			"cf-aig-model": model,
-			"cf-aig-provider": "openrouter",
-			"cf-aig-cache-status": reply.cacheStatus ?? "MISS",
-		},
-	});
-}
-
-function fakeGateway(responses: readonly Response[]): {
-	fetch: typeof fetch;
-	calls: CapturedRequest[];
-} {
-	const calls: CapturedRequest[] = [];
-	let index = 0;
-	const handler: typeof fetch = async (input, init) => {
-		const body =
-			typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
-		calls.push({ url: String(input), body });
-		const response = responses[index];
-		index += 1;
-		if (!response)
-			throw new Error(`fakeGateway: no scripted response for call ${index}`);
-		return response;
-	};
-	return { fetch: handler, calls };
-}
-
 function widgetReply(
 	overrides: { cost?: number; cacheStatus?: "HIT" | "MISS" } = {},
-): ScriptedReply {
+) {
 	return {
 		content: JSON.stringify({ widgetName: "Acme Widget", count: 3 }),
 		...overrides,
@@ -145,13 +94,13 @@ async function callReasoningModel(ledger: CostLedger) {
 	);
 }
 
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
+
 describe("model: the request body the SDK sends", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("carries the real JSON schema in response_format, not a bare json_object", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
 		globalThis.fetch = gateway.fetch;
@@ -166,54 +115,37 @@ describe("model: the request body the SDK sends", () => {
 		});
 	});
 
-	it("carries the OpenRouter routing flag that makes a provider honour the schema", async () => {
+	it("requires the schema's parameters and never asks for the fastest provider", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
 		globalThis.fetch = gateway.fetch;
 
 		await callWorkerModel(new CostLedger());
 
-		expect(capturedBody(gateway.calls[0]).provider?.require_parameters).toBe(
-			true,
+		const body = capturedBody(gateway.calls[0]);
+		expect(body.provider?.require_parameters).toBe(true);
+		expect(body.provider?.sort).toBeUndefined();
+	});
+
+	it("targets the worker route for the lighter model and the reasoning route for the stronger one", async () => {
+		const workerGateway = fakeGateway([chatCompletionResponse(widgetReply())]);
+		globalThis.fetch = workerGateway.fetch;
+		await callWorkerModel(new CostLedger());
+		expect(capturedBody(workerGateway.calls[0]).model).toBe(
+			env.MODEL_ROUTE_WORKER,
 		);
-	});
 
-	it("never asks for the fastest provider, because that one accepts the schema and ignores it", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
-		globalThis.fetch = gateway.fetch;
-
-		await callWorkerModel(new CostLedger());
-
-		expect(capturedBody(gateway.calls[0]).provider?.sort).toBeUndefined();
-	});
-
-	it("targets the worker route for the lighter model", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
-		globalThis.fetch = gateway.fetch;
-
-		await callWorkerModel(new CostLedger());
-
-		expect(capturedBody(gateway.calls[0]).model).toBe(env.MODEL_ROUTE_WORKER);
-	});
-
-	it("targets the reasoning route for the stronger model", async () => {
-		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
-		globalThis.fetch = gateway.fetch;
-
+		const reasoningGateway = fakeGateway([
+			chatCompletionResponse(widgetReply()),
+		]);
+		globalThis.fetch = reasoningGateway.fetch;
 		await callReasoningModel(new CostLedger());
-
-		expect(capturedBody(gateway.calls[0]).model).toBe(
+		expect(capturedBody(reasoningGateway.calls[0]).model).toBe(
 			env.MODEL_ROUTE_REASONING,
 		);
 	});
 });
 
 describe("model: a response that never matches the schema", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("retries once, then returns null rather than throwing", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
@@ -242,16 +174,8 @@ describe("model: a response that never matches the schema", () => {
 });
 
 describe("model: a call that exceeds the shared timeout", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("throws so the durable step's own retry owns it, rather than resolving as an empty reply", async () => {
-		globalThis.fetch = async () => {
-			throw new DOMException("The operation timed out.", "TimeoutError");
-		};
+		globalThis.fetch = throwsTimeout();
 
 		await expect(callWorkerModel(new CostLedger())).rejects.toThrow(
 			RetryableProviderError,
@@ -260,12 +184,6 @@ describe("model: a call that exceeds the shared timeout", () => {
 });
 
 describe("model: the abort timeout a structured call is given", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
 	it("aborts at the configured model timeout, not the shorter Exa fetch timeout", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(widgetReply())]);
 		globalThis.fetch = gateway.fetch;
@@ -280,35 +198,23 @@ describe("model: the abort timeout a structured call is given", () => {
 });
 
 describe("model: cost reporting", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
-	it("records the cost the gateway returned onto the ledger", async () => {
+	it("records the cost the gateway returned onto the ledger, and zero on a cache hit", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(widgetReply({ cost: 0.0000042 })),
 		]);
 		globalThis.fetch = gateway.fetch;
-		const ledger = new CostLedger();
+		const spent = new CostLedger();
+		await callWorkerModel(spent);
+		expect(spent.total()).toBeCloseTo(0.0000042, 12);
 
-		await callWorkerModel(ledger);
-
-		expect(ledger.total()).toBeCloseTo(0.0000042, 12);
-	});
-
-	it("records zero on a cache hit, not the gateway's stale reported cost", async () => {
-		const gateway = fakeGateway([
+		const cachedGateway = fakeGateway([
 			chatCompletionResponse(
 				widgetReply({ cost: 0.0000042, cacheStatus: "HIT" }),
 			),
 		]);
-		globalThis.fetch = gateway.fetch;
-		const ledger = new CostLedger();
-
-		await callWorkerModel(ledger);
-
-		expect(ledger.total()).toBe(0);
+		globalThis.fetch = cachedGateway.fetch;
+		const cached = new CostLedger();
+		await callWorkerModel(cached);
+		expect(cached.total()).toBe(0);
 	});
 });
