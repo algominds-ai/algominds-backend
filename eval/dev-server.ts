@@ -1,11 +1,5 @@
 import { spawn } from "node:child_process";
-import {
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { armDatabaseUrl } from "@eval/arm-db";
 
 const BASE_CONNECTION_STRING =
