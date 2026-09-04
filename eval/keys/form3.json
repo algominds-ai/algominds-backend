@@ -7,7 +7,18 @@
 			"name": "athenahealth",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Healthcare technology",
+				"description": "athenahealth strives to cure complexity and simplify the practice of healthcare. Our innovative technology includes electronic health records, revenue cycle management, and patient engagement solutions that help healthcare providers, administrators, and practices eliminate friction for patients while getting paid efficiently. athenahealth partners with practices with purpose-built software backed by expertise to produce the insights needed to drive better clinical and financial outcomes. We’re inspired by our vision to create a thriving ecosystem that delivers accessible, high-quality, and sustainable healthcare for all. \n\nOur vibrant and talented employees spark the innovation and passion needed to accomplish our goals. We continue to expand our workforce with amazing people who bring diverse backgrounds, experiences, and perspectives at every level, and foster an environment where we each feel comfortable bringing their best selves to work. \n\nOur dedication to creating an exceptional workplace has been recognized with several prestigious awards. We've been honored as a 2024 Top Workplaces USA, named a Forbes 2024 America's Best Mid-Size employers, and celebrated as one of 2023 Glassdoor Best Large Companies to Work For. Additionally, we've been acknowledged as a 2023 Top Workplace in Austin, one of the 2023 Best Places to Work in Maine and a 2023 Top Workplace in MA by the Boston Globe. These accolades are a testament to our vibrant and diverse team that fuels innovation at athenahealth. ",
+				"workforceTotal": 6409,
+				"country": "United States",
+				"foundedYear": 1997,
+				"citedPage": "https://aws.amazon.com/blogs/migration-and-modernization/modernizing-microservices-using-amazon-eks-for-hybrid-cloud/",
+				"citedDate": "2025-05-08",
+				"quote": "At athenahealth, Karpenter actively manages node provisioning across production EKS clusters, handling diverse workload requirements from multiple development teams.",
+				"fitReason": "athenahealth's healthcare SaaS runs in-house EKS clusters at scale, matching size and North America criteria."
+			}
 		},
 		"bmwgroup.com": {
 			"label": "reject:unreachable",
@@ -17,13 +28,14 @@
 			"note": "BMW Group employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Automotive manufacturing",
-				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world\u2019s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was \u20ac 10.2 billion on revenues amounting to \u20ac 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group\u2019s corporate strategy and covers all products \u2013 from the supply chain through production to the end of their useful life. ",
+				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world’s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was € 10.2 billion on revenues amounting to € 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group’s corporate strategy and covers all products – from the supply chain through production to the end of their useful life. ",
 				"workforceTotal": 33715,
 				"country": "Germany",
 				"foundedYear": 1916,
 				"citedPage": "https://aws.amazon.com/blogs/industries/transforming-the-bmw-connected-vehicle-backend-with-karpenter/",
+				"citedDate": "2025-10-16",
 				"quote": "Today, the BMW Connected Vehicle backend operates as a highly complex, high-performance service mesh comprising more than 375 Amazon Elastic Kubernetes Service (EKS) clusters that process over 12 billion requests and 145TB of data traffic daily across 4 AWS Regions.",
-				"fitReason": "Automotive manufacturer with 33,715 employees in Germany; evidence shows large-scale multi-region EKS/service mesh operations."
+				"fitReason": "Automotive OEM, 33k+ staff in Germany, engineering blog shows large-scale Kubernetes service mesh; no PKI evidence."
 			}
 		},
 		"bt.com": {
@@ -31,172 +43,331 @@
 			"name": "BT Group",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "BT Group employs roughly 80,000 to 100,000 people worldwide, far past the 10,000-employee named-account boundary"
+			"note": "BT Group employs roughly 80,000 to 100,000 people worldwide, far past the 10,000-employee named-account boundary",
+			"record": {
+				"industry": "Telecommunications",
+				"description": "We’re one of the world’s leading communications services companies. At BT Group, the solutions we sell are integral to modern life. Our purpose is as simple as it is ambitious: we connect for good. \n\nThere are no limits to what people can do when they connect. And as technology changes our world, connections are becoming even more important to everyday life.\n\nToday, that’s truer than ever. The connections we make are helping solve the world’s biggest challenges such as the global pandemic, climate change and cyber security. Through the power of technology, we’re supporting customers to live, work and play together better.\n",
+				"workforceTotal": 30657,
+				"country": "United Kingdom",
+				"foundedYear": 1969,
+				"citedPage": "https://colocatedeventsna2025.sched.com/event/2AotI/scaling-flux-at-bt-a-multi-cluster-telco-migration-journey-chris-morandi-bt",
+				"citedDate": "2025-11-10",
+				"quote": "This talk presents BT’s real-world journey migrating from traditional GitLab and Terraform-driven deployments to a fully GitOps-based workflow using Flux, rolled out across more than 30 Kubernetes clusters at telco scale.",
+				"fitReason": "BT Group is a UK telecom with in-house GitOps team running 30+ Kubernetes clusters at telco scale."
+			}
 		},
 		"cash.app": {
 			"label": null,
 			"name": "Cash App",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Consumer payments",
+				"description": "It all started with an idea at Block in 2013. Initially built to take the pain out of peer-to-peer payments, Cash App has gone from a simple product with a single purpose to a dynamic ecosystem, developing unique financial products, including Afterpay, to provide a better way to send, spend, invest, borrow and save to our 50+ million monthly active customers. We want to redefine the world’s relationship with money to make it more relatable, instantly available, and universally accessible. This is our mission, and it’s why working at Cash App means so much more than a job.\n\n\nToday, Cash App has thousands of employees working globally across office and remote locations, with a culture geared toward innovation, collaboration and impact. We’ve been a distributed team since day one, and many of our roles can be done remotely from the countries where Cash App operates. No matter the location, we tailor our experience to ensure our employees are creative, productive, and happy.",
+				"workforceTotal": 1453,
+				"country": "United States",
+				"foundedYear": 2013,
+				"citedPage": "https://aws.amazon.com/blogs/architecture/improving-platform-resilience-at-cash-app/",
+				"citedDate": "2025-05-29",
+				"quote": "In 2024, our cloud platform team implemented architectural changes to improve the reliability of the shared Amazon EKS platform, which was already running hundreds of services and over 10,000 pods.",
+				"fitReason": "US payments app, 1453 staff, AWS blog shows internal team running large-scale EKS platform."
+			}
 		},
 		"clear.bank": {
 			"label": "accept",
 			"name": "ClearBank",
 			"firstSeenRunId": "companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:34:58.519Z",
+			"note": "552 staff, UK, regulated banking-infrastructure provider; cited case study shows over 25% of infrastructure on AKS Kubernetes processing 20 million payments a month",
 			"record": {
 				"industry": null,
-				"description": "Leading brands \u2013 from fintechs and banks to digital asset platforms and large-scale corporates \u2013 use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
+				"description": "Leading brands – from fintechs and banks to digital asset platforms and large-scale corporates – use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
 				"workforceTotal": 552,
 				"country": "United Kingdom",
 				"foundedYear": 2015,
 				"citedPage": "https://clear.bank/learn/case-studies/how-clearbank-processes-20-million-payments-a-month-up-from-8-000-with-platform-built-on-azure",
+				"citedDate": "2024-09-11T08:00:00.000Z",
 				"quote": null,
 				"fitReason": "Regulated UK bank, 552 staff, in-house infra teams, over 25% of infrastructure on AKS Kubernetes; no cert-management evidence."
-			},
-			"note": "552 staff, UK, regulated banking-infrastructure provider; cited case study shows over 25% of infrastructure on AKS Kubernetes processing 20 million payments a month"
+			}
 		},
 		"datadoghq.com": {
 			"label": "accept",
 			"name": "Datadog",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Datadog is a US SaaS company of roughly 5,000-6,000 employees whose own engineering blog and conference talks are a well-known public record of running production Kubernetes at scale"
+			"note": "Datadog is a US SaaS company of roughly 5,000-6,000 employees whose own engineering blog and conference talks are a well-known public record of running production Kubernetes at scale",
+			"record": {
+				"industry": "Cloud observability",
+				"description": "Datadog is the essential monitoring platform for cloud applications. We bring together data from servers, containers, databases, and third-party services to make your stack entirely observable. These capabilities help DevOps teams avoid downtime, resolve performance issues, and ensure customers are getting the best user experience.\n\n",
+				"workforceTotal": 7607,
+				"country": "United States",
+				"foundedYear": 2010,
+				"citedPage": "https://www.datadoghq.com/blog/how-we-saved-with-kubernetes-autoscaling/",
+				"citedDate": "2026-06-25",
+				"quote": "This post looks at how Rapid, a Datadog platform team that supports more than 1,800 services and over 20,000 deployments, adopted DKA to automate horizontal and vertical scaling, simplify scaling configuration, and improve reliability.",
+				"fitReason": "SaaS observability platform, US HQ, 7607 staff, internal platform team runs Kubernetes at scale per blog."
+			}
 		},
 		"dexcom.com": {
 			"label": "accept",
 			"name": "Dexcom",
 			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:38:22.053Z",
+			"note": "5,024 staff, US, medical-device maker with a cited case study quoting Dexcom Cloud Engineering running a platform on GKE for hundreds of developers; treated as fitting the downtime-critical vertical given FDA-regulated real-time patient monitoring, though the record itself flags no explicit downtime-reporting citation",
 			"record": {
 				"industry": "Medical devices",
-				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people\u2019s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
+				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people’s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
 				"workforceTotal": 5024,
 				"country": "United States",
 				"foundedYear": 1999,
 				"citedPage": "https://chkk.io/blog/case-study-dexcom",
+				"citedDate": "2025-03-28",
 				"quote": "Dexcom Cloud Engineering runs a platform on GKE supporting hundreds of developers and thousands of applications.",
 				"fitReason": "Medical device maker with GKE-based cloud engineering team; headcount and location fit, but no PKI or downtime-reporting evidence."
-			},
-			"note": "5,024 staff, US, medical-device maker with a cited case study quoting Dexcom Cloud Engineering running a platform on GKE for hundreds of developers; treated as fitting the downtime-critical vertical given FDA-regulated real-time patient monitoring, though the record itself flags no explicit downtime-reporting citation"
+			}
 		},
 		"draftkings.com": {
 			"label": null,
 			"name": "DraftKings Inc.",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Online gambling",
+				"description": "It's simple, we believe life is more fun when you're in on the action. For that reason, we’re committed to responsibly creating the world’s favorite games and betting experiences.\n\nAt DraftKings, The Crown Is Yours. \n\nWe are driven by the thrill of the future and the pull of possibility. As an original, continuous gamechanger, we’re shaping the present and future of sports entertainment and digital experiences, leading the way into new markets with new products, and providing the ultimate experience to our customers. \n\nHere, we believe in the power and impact that comes from innovation, collaboration, and a winning culture. We’re a strong and dedicated global team of 4,000+ teammates driven to achieve great things. From your very first day, you’ll be part of an amazing culture that welcomes your ideas, champions your growth, and values you for you. \n\nReady to own what’s next?",
+				"workforceTotal": 4387,
+				"country": "United States",
+				"foundedYear": 2012,
+				"citedPage": "https://medium.com/draftkings-engineering/service-probes-905a19104085",
+				"citedDate": "2024-09-16",
+				"quote": "We have thousands of instances of microservices, which we host mostly on Kubernetes.",
+				"fitReason": "Online gambling company, 4387 staff in US; engineering blog confirms large-scale Kubernetes microservices; no PKI or ownership evidence."
+			}
 		},
 		"expediagroup.com": {
 			"label": "reject:unreachable",
 			"name": "Expedia Group",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Expedia Group employs well over 15,000 people worldwide, past the 10,000-employee named-account boundary"
+			"note": "Expedia Group employs well over 15,000 people worldwide, past the 10,000-employee named-account boundary",
+			"record": {
+				"industry": "Travel booking",
+				"description": "Expedia Group, Inc. (NASDAQ: EXPE) is the global travel marketplace with one purpose: to help travelers explore the world, one journey at a time. Expedia Group™ connects travelers, partners, and advertisers through its trusted brands, leading technology, and rich first-party data, delivering predictive, personalized experiences that shape the future of travel.\n\nExpedia Group’s ecosystem includes three flagship consumer brands – Expedia®, Hotels.com®, and Vrbo® – the largest B2B travel business, and a premier advertising network. Guided by an experienced and passionate global team, Expedia Group helps millions of travelers in more than 70 countries explore the world with confidence and ease.\n\nWe’re committed to providing an inclusive and accessible recruiting experience for candidates with disabilities, or other physical or mental health conditions. If you require an accommodation or adjustment for any part of the application or recruitment process, please let us know by completing our Accommodation Request Form or contacting your recruiter.\n\nEmployment opportunities and job offers at Expedia Group will always come from Expedia Group’s Talent Acquisition and hiring teams. Never provide sensitive, personal information to someone unless you’re confident about who they are. We do not send job offers via email, or any other messaging tools, to individuals we have not had prior contact with. Our email domain is @expediagroup.com. Our official careers website, where you can to find and apply for job openings, is careers.expediagroup.com/jobs.\n\nIf you require customer service support to cancel, change or ask about a refund for your trip, you can connect with our 24/7 Virtual Agent through the following links:\nExpedia: https://www.expedia.com/helpcenter\nHotels.com: https://service.hotels.com/en-us/\nVrbo: https://help.vrbo.com/\nFor additional assistance, direct message us on Twitter @ExpediaHelp with your itinerary number and email address: https://twitter.com/ExpediaHelp",
+				"workforceTotal": 10447,
+				"country": "United States",
+				"foundedYear": 1996,
+				"citedPage": "https://careers.expediagroup.com/blog/reflections-from-the-kubecon-india-2025-conference/",
+				"citedDate": "2025-08-20",
+				"quote": "Highlights included two keynote speakers presenting “Pushing the Limits: Scaling ArgoCD’s Repo-Server to Handle 30K Applications,” showcasing our engineering innovation at scale.",
+				"fitReason": "Expedia is a US travel marketplace with in-house engineering scaling Kubernetes/ArgoCD, matching size and region criteria."
+			}
 		},
 		"fanduel.com": {
 			"label": null,
 			"name": "FanDuel",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Online gambling",
+				"description": "Online sportsbook, daily fantasy sports, horse racing, and online casino operator serving more than 12 million users.",
+				"workforceTotal": 3284,
+				"country": "United States",
+				"foundedYear": 2009,
+				"citedPage": "https://mindera.com/blog/fanduel-modernises-systems-to-fuel-growth",
+				"citedDate": "2025-12-15",
+				"quote": "The chosen strategy was to migrate all FanDuel’s services to AWS Kubernetes.",
+				"fitReason": "Online gambling operator, 3284 staff in US; vendor blog confirms AWS Kubernetes migration but no ownership or PKI detail."
+			}
 		},
 		"hubspot.com": {
 			"label": "accept",
 			"name": "HubSpot",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "HubSpot is a US SaaS company of roughly 7,000-8,000 employees whose engineering blog has publicly documented its move to Kubernetes and EKS"
+			"note": "HubSpot is a US SaaS company of roughly 7,000-8,000 employees whose engineering blog has publicly documented its move to Kubernetes and EKS",
+			"record": {
+				"industry": "Customer software",
+				"description": "HubSpot is a leading agentic customer platform that provides software and support to help businesses grow better. Our platform includes marketing, sales, service, and website management products that start free and scale to meet our customers’ needs at any stage of growth. Today, thousands of customers around the world use our powerful and easy-to-use tools and integrations to attract, engage, and delight customers.\n\nHubSpot's award-winning culture has been recognized by Glassdoor, Great Place to Work, Comparably, Fortune, Entrepreneur, Inc., and more. We build connections, careers, and employee growth by creating a workplace that values flexibility, autonomy, and transparency. You can learn more about our commitment to creating an inclusive and diverse workplace in the HubSpot Culture Code.\n\nHubSpot is a flexible company with employees working fully remotely, from an office, or a mix of the two. We are headquartered in Cambridge, MA with offices in Amsterdam, Berlin, Bogota, Dublin, Ghent, London, Madrid, Paris, San Francisco, Singapore, Sydney, Tokyo and Toronto. \n\nTo learn more about HubSpot, visit www.hubspot.com and to join our team, visit www.hubspot.com/careers",
+				"workforceTotal": 8725,
+				"country": "United States",
+				"foundedYear": 2006,
+				"citedPage": "https://product.hubspot.com/blog/cloud-coding-agents-at-hubspot",
+				"citedDate": "2026-01-23",
+				"quote": "Luckily, HubSpot already has a strong culture of building internal infrastructure platforms from scratch – we already have an internal build and deploy system built on top of Kubernetes which runs over one million builds per day and hosts tens of thousands of microservices across approximately 3,000 EC2 instances.",
+				"fitReason": "SaaS customer platform, US, 8725 employees, internal Kubernetes build system hosting thousands of microservices."
+			}
 		},
 		"michelin.com": {
 			"label": "reject:unreachable",
 			"name": "Michelin",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Michelin employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
+			"note": "Michelin employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
+			"record": {
+				"industry": "Automotive manufacturing",
+				"description": "Michelin is a world-leading manufacturer of life-changing composites and experiences. Pioneering materials science over more than 130 years, Michelin is uniquely positioned to make decisive contributions to human progress and a more sustainable world.\n\nDrawing on technological leadership in polymer composites, Michelin is constantly innovating to manufacture high-quality tires and components for critical applications in demanding fields as varied as mobility, construction, aeronautics, low-carbon energies, and healthcare.\n\nThe care we put into our products and our intimate knowledge of consumer habits enable Michelin to offer its customers exceptional experiences, whether in terms of connected solutions and artificial intelligence for professional fleets, or for discovering the outstanding restaurants and hotels that the MICHELIN Guide recommends.",
+				"workforceTotal": 27479,
+				"country": "France",
+				"foundedYear": 1889,
+				"citedPage": "https://www.cncf.io/case-studies/michelin-2/",
+				"citedDate": "2026-07-14",
+				"quote": "The migration was executed within Michelin’s Kubernetes and GitOps-driven infrastructure, demonstrating how CNCF ecosystem projects can be combined to simplify large-scale infrastructure modernization initiatives.",
+				"fitReason": "Automotive manufacturer, 27k staff in France, CNCF case study shows Kubernetes/GitOps at scale; no customer-ownership or PKI detail."
+			}
 		},
 		"millenniumbcp.pt": {
 			"label": null,
 			"name": "Millennium bcp",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Retail banking",
+				"description": "Millennium bcp is Portugal's biggest private-owned bank, with a prominent position in the financial market in Portugal: it's the second Bank and the first private banking institution in terms of market share - both in loans to customers and in total customer funds.\nMillennium bcp provides a wide variety of banking services and financial activities in Portugal and abroad, where it is present in the following markets: Poland, Mozambique, Angola (through its associate BMA) and China. All its banking operations develop their activity under the Millennium brand.\nBanco Comercial Português, S.A.",
+				"workforceTotal": 2715,
+				"country": "Portugal",
+				"foundedYear": 1985,
+				"citedPage": "https://www.cncf.io/case-studies/millennium-bcp/",
+				"citedDate": "2025-09-16",
+				"quote": "The bank maintains a highly regulated, cloud-native infrastructure across five regions and two cloud providers, supporting over 1,000 Kubernetes-based applications.",
+				"fitReason": "Portuguese retail bank, 2715 staff, CNCF case study shows regulated multi-cloud Kubernetes infrastructure."
+			}
 		},
 		"monzo.com": {
 			"label": "accept",
 			"name": "Monzo",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Monzo is a UK challenger bank of roughly 3,000-4,000 employees and one of the most publicly documented Kubernetes case studies in banking, with multiple conference talks on its microservice architecture"
+			"note": "Monzo is a UK challenger bank of roughly 3,000-4,000 employees and one of the most publicly documented Kubernetes case studies in banking, with multiple conference talks on its microservice architecture",
+			"record": {
+				"industry": "Consumer banking",
+				"description": "Hi, we're Monzo. We're a bank that lives on your phone.",
+				"workforceTotal": 4937,
+				"country": "United Kingdom",
+				"foundedYear": 2015,
+				"citedPage": "https://monzo.com/blog/tolerating-full-cloud-outages-with-monzo-stand-in",
+				"citedDate": "2025-02-13",
+				"quote": "Our Primary and Stand-in Platforms run independently to one another, each consisting of Kubernetes clusters running a unique set of services on top of typical platform components such as a database, queueing systems and locking mechanisms.",
+				"fitReason": "Monzo is a bank with in-house Kubernetes platform, ~5k staff in London, fitting size and region requirements."
+			}
 		},
 		"okta.com": {
 			"label": "accept",
 			"name": "Okta",
 			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:38:22.053Z",
+			"note": "5,328 staff, US, SaaS identity vendor; cited page is Okta's own document on how it builds and runs its scalable Kubernetes-based infrastructure",
 			"record": {
 				"industry": null,
-				"description": "Okta secures AI.\n\nOkta is The World\u2019s Identity Company. Freeing everyone to safely use any technology\u2014anywhere, on any device or app.",
+				"description": "Okta secures AI.\n\nOkta is The World’s Identity Company. Freeing everyone to safely use any technology—anywhere, on any device or app.",
 				"workforceTotal": 5328,
 				"country": "United States",
 				"foundedYear": 2009,
 				"citedPage": "https://www.okta.com/sites/default/files/2024-11/How%20Okta%20Builds%20and%20Runs%20Scalable%20Infrastructure%20%281%29.pdf",
+				"citedDate": null,
 				"quote": null,
 				"fitReason": "Okta is a large SaaS identity firm with in-house teams running Kubernetes; no evidence on cert-lifecycle delegation."
-			},
-			"note": "5,328 staff, US, SaaS identity vendor; cited page is Okta's own document on how it builds and runs its scalable Kubernetes-based infrastructure"
+			}
 		},
 		"postfinance.ch": {
 			"label": null,
 			"name": "PostFinance",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Retail banking",
+				"description": "PostFinance Ltd is one of Switzerland’s leading retail financial institutions. We are a diversified, innovation-driven financial service provider. At PostFinance, you’ll work on current and future ways of managing Switzerland’s money, helping to drive the digitization of the Swiss financial sector forward. We offer our customers fresh solutions and smart money-related innovations. We achieve this thanks to our unique culture, which enables us to work with a pioneering spirit every day. We treat each other as equals at all times, regardless of where we are on the company hierarchy. Because working in an agile environment is fun.\n\nPostFinance – Shaping progress.",
+				"workforceTotal": 2152,
+				"country": "Switzerland",
+				"foundedYear": 1906,
+				"citedPage": "https://clement.n8r.ch/en/articles/banking-on-reliability-kubecon-eu-2026/",
+				"citedDate": "2026-03-26",
+				"quote": "PostFinance operates ~35 Kubernetes clusters in an air-gapped environment with strict regulatory requirements.",
+				"fitReason": "Swiss retail bank, 2152 staff, talk describes ~35 air-gapped Kubernetes clusters under strict regulation."
+			}
 		},
 		"roche.com": {
 			"label": "reject:unreachable",
 			"name": "Roche",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Roche employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
+			"note": "Roche employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
+			"record": {
+				"industry": "Biotechnology research",
+				"description": "Roche is a global pioneer in pharmaceuticals and diagnostics focused on advancing science to improve people’s lives. The combined strengths of pharmaceuticals and diagnostics under one roof have made Roche the leader in personalised healthcare – a strategy that aims to fit the right treatment to each patient in the best way possible.\n\nRoche is the world’s largest biotech company, with truly differentiated medicines in oncology, immunology, infectious diseases, ophthalmology and diseases of the central nervous system. Roche is also the world leader in in vitro diagnostics and tissue-based cancer diagnostics, and a frontrunner in diabetes management.\n\nFounded in 1896, Roche continues to search for better ways to prevent, diagnose and treat diseases and make a sustainable contribution to society. The company also aims to improve patient access to medical innovations by working with all relevant stakeholders. Thirty medicines developed by Roche are included in the World Health Organization Model Lists of Essential Medicines, among them life-saving antibiotics, antimalarials and cancer medicines. Roche has been recognised as the Group Leader in sustainability within the Pharmaceuticals, Biotechnology & Life Sciences Industry ten years in a row by the Dow Jones Sustainability Indices (DJSI).\n\nFor more information, please visit https://careers.roche.com\n\nRead our community guidelines here: \nhttps://www.roche.com/some-guidelines.htm\n\n#Roche #Biotechnology #Pharmaceuticals #Diagnostics #Healthcare #PersonalisedHealthcare #GreatPlaceToWork #Innovation",
+				"workforceTotal": 49128,
+				"country": "Switzerland",
+				"foundedYear": 1896,
+				"citedPage": "https://www.truefullstaq.com/en/blog/edgecase-roche-cloud-edge",
+				"citedDate": "2025-09-27",
+				"quote": "With hundreds of thousands of clusters, GitOps was a must—but they had to adapt it.",
+				"fitReason": "Pharma/biotech, 49k staff in Switzerland; blog shows hundreds of thousands of clusters with GitOps; no PKI or ownership evidence."
+			}
 		},
 		"santander.com": {
 			"label": "reject:unreachable",
 			"name": "Santander",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Santander Group employs well over 200,000 people worldwide, far past the 10,000-employee named-account boundary"
+			"note": "Santander Group employs well over 200,000 people worldwide, far past the 10,000-employee named-account boundary",
+			"record": {
+				"industry": "Commercial banking",
+				"description": "Banco Santander (SAN SM) is a leading commercial bank, founded in 1857 and headquartered in Spain and one of the largest banks in the world by market capitalization. The group’s activities are consolidated into five global businesses: Retail & Commercial Banking, Openbank, Corporate & Investment Banking (CIB), Wealth Management & Insurance and Payments. This operating model allows the bank to better leverage its unique combination of global scale and local leadership. Santander aims to be the best open financial services platform providing services to individuals, SMEs, corporates, financial institutions and governments. The bank’s purpose is to help people and businesses prosper in a simple, personal and fair way. In the first quarter of 2026, Banco Santander had €1.4 trillion in total funds, more than 176 million customers, 6,600 branches and 185,000 employees.",
+				"workforceTotal": 30289,
+				"country": "Spain",
+				"foundedYear": 1857,
+				"citedPage": "https://aws.amazon.com/blogs/architecture/digital-transformation-at-santander-how-platform-engineering-is-revolutionizing-cloud-infrastructure/",
+				"citedDate": "2026-02-26",
+				"quote": "At the platform’s core is the control plane cluster, based on Amazon Elastic Kubernetes Service (Amazon EKS).",
+				"fitReason": "Global bank, Spain, 30k+ employees, AWS case study shows in-house EKS control plane cluster."
+			}
 		},
 		"sectigo.com": {
 			"label": "reject:excluded-type",
 			"name": "Sectigo",
 			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:38:22.053Z",
+			"note": "Sectigo's own description says it is a certificate-lifecycle-management and PKI platform, exactly the third-party cert-management vendor category the profile excludes",
 			"record": {
 				"industry": null,
-				"description": "Expired certificates shouldn\u2019t be the reason your business goes down. Sectigo is the industry\u2019s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
+				"description": "Expired certificates shouldn’t be the reason your business goes down. Sectigo is the industry’s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
 				"workforceTotal": 508,
 				"country": "United States",
 				"foundedYear": null,
 				"citedPage": "https://www.sectigo.com/blog/how-lets-encrypt-runs-ct-logs",
+				"citedDate": "2019-11-25T05:00:00.000Z",
 				"quote": null,
 				"fitReason": "Sectigo, ~508 staff, runs its own Kubernetes CT-log infra in-house; vertical fit and internal PKI governance not shown."
-			},
-			"note": "Sectigo's own description says it is a certificate-lifecycle-management and PKI platform, exactly the third-party cert-management vendor category the profile excludes"
+			}
 		},
 		"spotify.com": {
 			"label": "accept",
 			"name": "Spotify",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Spotify is a Swedish (Nordics) company of roughly 9,000 employees and a famous public Kubernetes case study, having given multiple KubeCon talks on its own migration"
+			"note": "Spotify is a Swedish (Nordics) company of roughly 9,000 employees and a famous public Kubernetes case study, having given multiple KubeCon talks on its own migration",
+			"record": {
+				"industry": "Audio streaming",
+				"description": "Global audio streaming service with paid subscriptions and a company-operated engineering and platform organization.",
+				"workforceTotal": 19357,
+				"country": "Sweden",
+				"foundedYear": 2006,
+				"citedPage": "https://engineering.atspotify.com/2025/05/incident-report-spotify-outage-on-april-16-2025",
+				"citedDate": "2025-05-01",
+				"quote": "Envoy instances were continuously cycled by Kubernetes as the Envoy max heap size was set higher than the allowed memory limit.",
+				"fitReason": "Spotify is a global streaming SaaS with in-house engineering running Kubernetes; Sweden qualifies as Nordic region."
+			}
 		},
 		"traderepublic.com": {
 			"label": "accept",
 			"name": "Trade Republic",
 			"firstSeenRunId": "companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:34:58.519Z",
+			"note": "729 staff, Germany, fintech bank; cited engineering blog post shows Kubernetes CronJobs and distributed batch processing on its own infrastructure",
 			"record": {
 				"industry": null,
 				"description": "What does your Bank offer? ",
@@ -204,38 +375,82 @@
 				"country": "Germany",
 				"foundedYear": 2015,
 				"citedPage": "https://engineering.traderepublic.com/scaling-batch-jobs-for-reliable-and-efficient-processing-da6242cdb9f9",
+				"citedDate": "2025-03-17T07:02:40.000Z",
 				"quote": null,
 				"fitReason": "Berlin fintech bank, 729 staff, engineering blog shows Kubernetes CronJobs and distributed processing; no cert-lifecycle evidence found."
-			},
-			"note": "729 staff, Germany, fintech bank; cited engineering blog post shows Kubernetes CronJobs and distributed batch processing on its own infrastructure"
+			}
 		},
 		"tubitv.com": {
 			"label": null,
 			"name": "Tubi",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Video streaming",
+				"description": "Tubi is the most watched free TV and movie streaming service in the U.S., dedicated to providing all people access to all the world's stories. As a leading ad-supported video-on-demand service, the company engages diverse audiences through a personalized experience and the world’s largest content library of over 275,000 movies and TV episodes, a growing collection of Tubi Originals, and nearly 250 FAST channels. Tubi is part of the Tubi Media Group, a division of Fox Corporation that oversees the company’s digital businesses",
+				"workforceTotal": 678,
+				"country": "United States",
+				"foundedYear": 2014,
+				"citedPage": "https://aws.amazon.com/blogs/media/tubi-smashes-the-super-bowl-live-stream-record-by-teaming-up-with-aws/",
+				"citedDate": "2025-04-01",
+				"quote": "Built with Kubernetes on Amazon Web Services (AWS), the Tubi platform relies on a range of AWS services and solutions to help evolve its infrastructure setup.",
+				"fitReason": "Tubi is a US video-streaming service with in-house platform built on Kubernetes/AWS at qualifying headcount and region."
+			}
 		},
 		"uber.com": {
 			"label": "reject:unreachable",
 			"name": "Uber",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Uber employs well over 30,000 people worldwide, far past the 10,000-employee named-account boundary, regardless of its own well-known cloud-native infrastructure"
+			"note": "Uber employs well over 30,000 people worldwide, far past the 10,000-employee named-account boundary, regardless of its own well-known cloud-native infrastructure",
+			"record": {
+				"industry": "Ride-hailing and mobility",
+				"description": "We are Uber. The go-getters. The kind of people who are relentless about our mission to help people go anywhere and get anything and earn their way. Movement is what we power. It’s our lifeblood. It runs through our veins. It’s what gets us out of bed each morning. It pushes us to constantly reimagine how we can move better. For you. For all the places you want to go. For all the things you want to get. For all the ways you want to earn. Across the entire world. In real time. At the incredible speed of now.\n\nThe idea for Uber was born on a snowy night in Paris in 2008, and ever since then our DNA of reimagination and reinvention carries on. We’ve grown into a global platform powering flexible earnings and the movement of people and things in ever expanding ways. We’ve gone from connecting rides on 4 wheels to 2 wheels to 18-wheel freight deliveries. From takeout meals to daily essentials to prescription drugs to just about anything you need at any time and earning your way. From drivers with background checks to real-time verification, safety is a top priority every single day. At Uber, the pursuit of reimagination is never finished, never stops, and is always just beginning.",
+				"workforceTotal": 68165,
+				"country": "United States",
+				"foundedYear": 2009,
+				"citedPage": "https://www.uber.com/en-EG/blog/migrating-ubers-compute-platform-to-kubernetes-a-technical-journey/",
+				"citedDate": "2025-04-24",
+				"quote": "The Container Platform team manages more than 50 compute clusters across multiple regions/zones on both on-prem data centers and cloud providers like Oracle® Cloud and Google Cloud™.",
+				"fitReason": "Uber runs large-scale Kubernetes via in-house Container Platform team; mobility vertical not clearly matching listed regulated sectors."
+			}
 		},
 		"wise.com": {
 			"label": null,
 			"name": "Wise",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements",
+			"record": {
+				"industry": "Financial services",
+				"description": "International money-transfer and multi-currency account platform serving consumers and businesses.",
+				"workforceTotal": 6358,
+				"country": "United Kingdom",
+				"foundedYear": 2011,
+				"citedPage": "https://medium.com/wise-engineering/wise-tech-stack-2025-update-d0e63fe718c7",
+				"citedDate": "2025-02-12",
+				"quote": "As a result, we’ve grown from 6 Kubernetes clusters to more than 20 while keeping maintenance manageable and efficient.",
+				"fitReason": "UK fintech, 6358 staff, engineering post shows growth to 20+ Kubernetes clusters managed in-house."
+			}
 		},
 		"zalando.com": {
 			"label": "reject:unreachable",
 			"name": "Zalando",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Zalando Group employs roughly 15,000-17,000 people including its fulfilment workforce, past the 10,000-employee named-account boundary, regardless of its own well-known Kubernetes open-source work"
+			"note": "Zalando Group employs roughly 15,000-17,000 people including its fulfilment workforce, past the 10,000-employee named-account boundary, regardless of its own well-known Kubernetes open-source work",
+			"record": {
+				"industry": "Online fashion retail",
+				"description": "Welcome to Zalando. Here’s some key info about us:\n\nOur position and vision:\n- We’re Europe’s leading online platform for fashion and lifestyle.\n- Founded in Berlin in 2008, we bring head-to-toe fashion to more than 50 million active customers in 25 markets; offering clothes, footwear, accessories, and beauty. \n- We're building the ecosystem for fashion and lifestyle ecommerce.\n\nOur offering:\n- Our assortment of international brands ranges from world-famous names to local labels\n- Our platform is a one-stop fashion destination for inspiration, innovation, and interaction\n- As Europe’s most fashionable tech company, we work hard to find digital solutions for every aspect of the fashion journey: for our customers, partners, and friends of our brand.\n- Our logistics network with 12 centrally located fulfillment centers allows us to efficiently serve our customers throughout Europe, supported by warehouses in Italy, France, Poland, and Sweden with a focus on local customer needs. \n\nOur beliefs:\n- Our ambition is to combine our passion for self-expression through fashion with our unwavering commitments to sustainability and D&I\n- We promote an inclusive corporate culture that welcomes different perspectives and brings together people from diverse backgrounds. We want to ensure a non-discriminatory and supportive working environment for each of our employees to thrive. It’s a journey that all teams are on together, centered around the values we uphold.\n- We believe that our integration of fashion, operations, and online technology gives us the capability to deliver a compelling value proposition to both our customers and fashion brand partners. ",
+				"workforceTotal": 6856,
+				"country": "Germany",
+				"foundedYear": 2008,
+				"citedPage": "https://engineering.zalando.com/posts/2025/02/scaling-beyond-limits-harnessing-route-server-for-a-stable-cluster.html",
+				"citedDate": "2025-02-17",
+				"quote": "At Zalando, we faced a critical challenge: our ingress controller was threatening to overload our Kubernetes cluster.",
+				"fitReason": "E-commerce fashion retailer, Berlin, 6856 staff, engineering blog shows Kubernetes cluster scaling for its own customers."
+			}
 		}
 	}
 }
