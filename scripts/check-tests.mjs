@@ -8,7 +8,6 @@ const ALLOWED_ROOT_FILES = new Set([
 	"test/global-setup.ts",
 	"test/raw-import.d.ts",
 ]);
-const STRICT = process.argv.includes("--strict");
 const MAX_SPEC_LINES = 300;
 const MAX_TEST_LINES = 40;
 
