@@ -3,124 +3,144 @@
 	"icpId": "cf9f5feb-bdb7-43ab-8899-09f1e1fa468b",
 	"companies": {
 		"athenahealth.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "athenahealth",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "athenahealth is a US healthcare SaaS company in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
 		},
 		"bmwgroup.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "BMW Group",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "BMW Group employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"bt.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "BT Group",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "BT Group employs roughly 80,000 to 100,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"cash.app": {
 			"label": null,
 			"name": "Cash App",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "undecidable: Cash App is a product of Block Inc., whose total headcount sits close enough to the 10,000-employee reachable boundary that it cannot be placed confidently on either side"
 		},
 		"datadoghq.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Datadog",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Datadog is a US SaaS company of roughly 5,000-6,000 employees whose own engineering blog and conference talks are a well-known public record of running production Kubernetes at scale"
 		},
 		"draftkings.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "DraftKings Inc.",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "DraftKings is a US gaming company in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
 		},
 		"expediagroup.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Expedia Group",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Expedia Group employs well over 15,000 people worldwide, past the 10,000-employee named-account boundary"
 		},
 		"fanduel.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "FanDuel",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "FanDuel is a US gaming company plausibly in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
 		},
 		"hubspot.com": {
-			"label": null,
+			"label": "accept",
 			"name": "HubSpot",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "HubSpot is a US SaaS company of roughly 7,000-8,000 employees whose engineering blog has publicly documented its move to Kubernetes and EKS"
 		},
 		"michelin.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Michelin",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Michelin employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"millenniumbcp.pt": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Millennium bcp",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Millennium bcp is a Portuguese bank, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
 		},
 		"monzo.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Monzo",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Monzo is a UK challenger bank of roughly 3,000-4,000 employees and one of the most publicly documented Kubernetes case studies in banking, with multiple conference talks on its microservice architecture"
 		},
 		"postfinance.ch": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "PostFinance",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "PostFinance is a Swiss financial-services company, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
 		},
 		"roche.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Roche",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Roche employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"santander.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Santander",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Santander Group employs well over 200,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"spotify.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Spotify",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Spotify is a Swedish (Nordics) company of roughly 9,000 employees and a famous public Kubernetes case study, having given multiple KubeCon talks on its own migration"
 		},
 		"tubitv.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Tubi",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Tubi is a smaller Fox-owned streaming service with no public engineering blog, conference talk, or case study confirming production Kubernetes at scale"
 		},
 		"uber.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Uber",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Uber employs well over 30,000 people worldwide, far past the 10,000-employee named-account boundary, regardless of its own well-known cloud-native infrastructure"
 		},
 		"wise.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Wise",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Wise is a UK fintech in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
 		},
 		"zalando.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Zalando",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:26:32.814Z"
+			"lastSeenAt": "2026-09-04T03:26:32.814Z",
+			"note": "Zalando Group employs roughly 15,000-17,000 people including its fulfilment workforce, past the 10,000-employee named-account boundary, regardless of its own well-known Kubernetes open-source work"
 		}
 	}
 }
