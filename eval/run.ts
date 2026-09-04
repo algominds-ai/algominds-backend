@@ -182,7 +182,7 @@ export function runIdsByProfile(
 ): Record<string, string[]> {
 	const byProfile: Record<string, string[]> = {};
 	for (const { input, output } of rows) {
-		if (!output.runId) continue;
+		if (!output?.runId) continue;
 		byProfile[input.slug] = [...(byProfile[input.slug] ?? []), output.runId];
 	}
 	return byProfile;
