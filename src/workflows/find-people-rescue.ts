@@ -33,7 +33,16 @@ async function exaRoster(
 		ctx.env,
 		{ domain, name: companyName },
 		ledger,
-	);
+	).catch((error: unknown) => {
+		if (error instanceof RetryableProviderError) throw error;
+		return error instanceof Error ? error.message : String(error);
+	});
+	if (typeof result === "string") {
+		await appendEvidence(ctx.env, [
+			rawEvidenceRow(runCompanyId, "roster", "exa", { error: result }),
+		]);
+		return { candidates: [], costEntries: [] };
+	}
 	await appendEvidence(ctx.env, [
 		rawEvidenceRow(runCompanyId, "roster", "exa", result.raw),
 	]);
@@ -43,7 +52,7 @@ async function exaRoster(
 	};
 }
 
-/** The GetLeads decision makers for `domain`, as candidates, with the raw reply kept as evidence; when GetLeads returns no rows, the Exa people index's senior people at the company instead; an empty list when both hold nobody, so a fallback never makes a company worse off. GetLeads' own refusal returns an empty list without trying Exa. */
+/** The GetLeads decision makers for `domain`, as candidates, with the raw reply kept as evidence; when GetLeads returns no rows, the Exa people index's senior people at the company instead; an empty list when both hold nobody, so a fallback never makes a company worse off. A GetLeads refusal is recorded and Exa is tried the same way. */
 export async function fallbackRoster(
 	ctx: CompanyLoopContext,
 	domain: string,
@@ -60,7 +69,7 @@ export async function fallbackRoster(
 		await appendEvidence(ctx.env, [
 			rawEvidenceRow(runCompanyId, "roster", "getleads", { error: result }),
 		]);
-		return { candidates: [], costEntries: [] };
+		return exaRoster(ctx, domain, companyName, runCompanyId);
 	}
 	await appendEvidence(ctx.env, [
 		rawEvidenceRow(runCompanyId, "roster", "getleads", result.raw),
