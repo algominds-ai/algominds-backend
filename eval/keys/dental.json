@@ -20,6 +20,23 @@
 				"fitReason": "170 staff, Nashville US, runs 70+ dental practices with providers and support staff."
 			}
 		},
+		"decadental.com": {
+			"label": null,
+			"name": "DECA Dental Group",
+			"firstSeenRunId": "companies_8032eee0-534a-4cec-80b7-53a8c12e3087_2026-09-04",
+			"lastSeenAt": "2026-09-04T13:05:25.652Z",
+			"record": {
+				"industry": null,
+				"description": "DECA Dental Group is a Dallas-based, clinician founded and clinician led, dental service organization that has been delivering high-quality dental care to patients since 2008. DECA is actively expanding its footprint coast-to-coast under the brand Ideal Dental. DECA’s culture is founded on a patient-centric model. The company is guided by its vision to be the premier provider of all dental services under one roof while being the first choice for dentists and staff seeking a partner for growth, innovation, and learning. To learn more, please visit decadental.com and myidealdental.com.",
+				"workforceTotal": 268,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://decadental.com/",
+				"citedDate": "2026-06-21T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "DECA Dental has 268 staff, is US-based, and is a clinician-led dental service organisation."
+			}
+		},
 		"dentalonepartners.com": {
 			"label": "accept",
 			"name": "DentalOne Partners",
