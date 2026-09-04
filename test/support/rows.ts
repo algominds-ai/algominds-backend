@@ -1,4 +1,5 @@
 import type { Company, Person, Run, RunCompany } from "@/core/db/schema";
+import type { PersonData } from "@/core/people/rows";
 
 export function runCompanyRow(id: string): RunCompany {
 	return {
@@ -40,6 +41,32 @@ export function personRow(id: string): Person {
 		name: id,
 		title: null,
 		data: null,
+	};
+}
+
+export function verifiedPersonData(
+	overrides: Partial<PersonData> = {},
+): PersonData {
+	return {
+		status: "verified",
+		basis: "champion",
+		seenBy: ["clay"],
+		since: null,
+		location: null,
+		...overrides,
+	};
+}
+
+export function rosterPersonData(
+	overrides: Partial<PersonData> = {},
+): PersonData {
+	return {
+		status: "roster",
+		basis: null,
+		seenBy: ["clay"],
+		since: null,
+		location: null,
+		...overrides,
 	};
 }
 

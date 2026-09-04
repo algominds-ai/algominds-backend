@@ -1,7 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { db, withConnection } from "../src/core/db/client";
+import { db, withConnection } from "@/core/db/client";
 
 async function queryPlan(statement: ReturnType<typeof sql>): Promise<string> {
 	const plan = await withConnection(testEnv, "direct", db, (connection) =>
