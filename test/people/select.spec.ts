@@ -188,4 +188,6 @@ it("sends the rubric and roster as delimited data, not as instructions", async (
 	expect(system).not.toContain(sentinelRubric);
 	expect(user).toContain(sentinelTitle);
 	expect(user).toContain(sentinelRubric);
+	expect(system).toContain("exclude a candidate whose");
+	expect(user).toContain("| (no location)");
 });

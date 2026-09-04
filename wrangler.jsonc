@@ -83,6 +83,11 @@
 			"binding": "CLAY_API_KEY",
 			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
 			"secret_name": "clay-api-key"
+		},
+		{
+			"binding": "GL_API_KEY",
+			"store_id": "5ad6bd7de0494762a21914ec40d3e4da",
+			"secret_name": "gl-api-key"
 		}
 	]
 }

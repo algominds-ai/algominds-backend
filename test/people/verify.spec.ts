@@ -1,6 +1,7 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
 import { CostLedger } from "@/core/cost";
+import { publicDomain } from "@/core/db/schema";
 import {
 	classifyVerdict,
 	employerOpinion,
@@ -84,7 +85,12 @@ describe("verify: verdict classification", () => {
 		);
 		if (run.status !== "completed") throw new Error("expected a completed run");
 
-		expect(classifyVerdict(run.output)).toBe("verified");
+		expect(
+			classifyVerdict(
+				run.output,
+				publicDomain(run.output.evidence_url ?? "") ?? "",
+			),
+		).toBe("verified");
 
 		const outcome = await quoteOnPage(
 			run.output.evidence_url ?? "",
@@ -119,7 +125,7 @@ describe("verify: aggregator evidence needs a second opinion", () => {
 			evidence_kind: "aggregator" as const,
 			confidence: 0.6,
 		};
-		expect(classifyVerdict(verdict)).toBe("needs_index");
+		expect(classifyVerdict(verdict, "acme.example")).toBe("needs_index");
 
 		globalThis.fetch = async () => personSearchResponse();
 		const index = await indexOpinion(
@@ -229,15 +235,19 @@ describe("verify: the quote guard drops the URL rather than the verdict", () => 
 			reason: "CRAWL_NOT_FOUND",
 		});
 
-		expect(
-			classifyVerdict({
-				verdict: "CONFIRMED",
-				evidence_url: url,
-				evidence_quote: quote,
-				evidence_kind: "first_party",
-				confidence: 0.9,
-			}),
-		).toBe("verified");
+		const firstParty = {
+			verdict: "CONFIRMED" as const,
+			evidence_url: url,
+			evidence_quote: quote,
+			evidence_kind: "first_party" as const,
+			confidence: 0.9,
+		};
+		expect(classifyVerdict(firstParty, publicDomain(url) ?? "")).toBe(
+			"verified",
+		);
+		expect(classifyVerdict(firstParty, "another-company.example")).toBe(
+			"needs_index",
+		);
 	});
 });
 

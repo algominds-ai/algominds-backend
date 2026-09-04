@@ -123,6 +123,9 @@ people:
   # selection. Every rubric match up to this count is verified; the rubric and
   # the spend ceiling are the real limits.
   maxVerifyPerCompany: 25
+  # Picks verified at once per company. Exa allows ten requests a second across the whole
+  # run, and a batch of five companies starting every pick together bursts far past it.
+  verifyConcurrency: 3
 
 enrich:
   batchSize: 5

@@ -53,10 +53,7 @@ async function runSelect(
 		`people-${progress.domain}-select`,
 		config.stepConfig.paidCall,
 		() => {
-			const description =
-				ctx.buyer.buyerSource === "captured"
-					? (ctx.profile?.description ?? null)
-					: null;
+			const description = ctx.profile?.description ?? null;
 			return selectBuyers(
 				{ description, buyer: ctx.buyer, candidates },
 				ctx.env,
@@ -92,9 +89,27 @@ function verdictSubject(pick: PickContext): VerdictRunInput {
 type IndexStepResult = {
 	found: boolean;
 	employer: string | null;
+	employerCompanyId: string | null;
 	reply: string;
 	costEntries: CostEntry[];
 };
+
+type OrganizationAgreement = {
+	employer: "SAME" | "DIFFERENT";
+	byOrganizationId: true;
+};
+
+/** The deterministic agreement by Exa organization id, or null when either side's id is unknown and a model opinion is still needed. */
+function organizationAgreement(
+	organizationId: string | null,
+	employerCompanyId: string | null,
+): OrganizationAgreement | null {
+	if (organizationId === null || employerCompanyId === null) return null;
+	return {
+		employer: organizationId === employerCompanyId ? "SAME" : "DIFFERENT",
+		byOrganizationId: true,
+	};
+}
 
 async function secondOpinion(
 	pick: PickContext,
@@ -118,6 +133,7 @@ async function secondOpinion(
 			return {
 				found: result.found,
 				employer: result.employer,
+				employerCompanyId: result.employerCompanyId,
 				reply: JSON.stringify(result.reply),
 				costEntries: stepLedger.toJSON().entries,
 			};
@@ -129,6 +145,14 @@ async function secondOpinion(
 	];
 	if (!indexResult.found || indexResult.employer === null) {
 		return { verified: false, evidence };
+	}
+	const agreement = organizationAgreement(
+		pick.progress.exaOrganizationId,
+		indexResult.employerCompanyId,
+	);
+	if (agreement) {
+		evidence.push({ kind: "verify-agree", body: agreement });
+		return { verified: agreement.employer === "SAME", evidence };
 	}
 	const employer = indexResult.employer;
 	const agreeResult = await pick.ctx.step.do(
@@ -253,7 +277,7 @@ async function verifyPick(pick: PickContext): Promise<PickOutcome> {
 			(ledger) => getAgentVerdictRun(start.id, pick.ctx.env, ledger),
 		);
 		const evidence: PickEvidence[] = [{ kind: "verify-start", body: start }];
-		const classification = classifyVerdict(verdict);
+		const classification = classifyVerdict(verdict, pick.progress.domain);
 		let verified = classification === "verified";
 		if (classification === "needs_index") {
 			const opinion = await secondOpinion(pick, pollLedger);
@@ -365,16 +389,23 @@ export async function runBuyerMode(
 	const select = await runSelect(ctx, progress, roster.candidates);
 	progress.ledger.reported("select", "select", select.costDollars);
 	const picks = select.picks.slice(0, config.people.maxVerifyPerCompany);
-	const outcomes = await Promise.all(
-		picks.map((pick, i) =>
-			verifyPick({
-				ctx,
-				progress,
-				name: `people-${progress.domain}-verify-${i}`,
-				candidate: pick.candidate,
-			}),
-		),
-	);
+	const outcomes: PickOutcome[] = [];
+	const width = config.people.verifyConcurrency;
+	for (let at = 0; at < picks.length; at += width) {
+		const chunk = picks.slice(at, at + width);
+		outcomes.push(
+			...(await Promise.all(
+				chunk.map((pick, offset) =>
+					verifyPick({
+						ctx,
+						progress,
+						name: `people-${progress.domain}-verify-${at + offset}`,
+						candidate: pick.candidate,
+					}),
+				),
+			)),
+		);
+	}
 	const results: PickResult[] = [];
 	for (let i = 0; i < picks.length; i++) {
 		const pick = picks[i];

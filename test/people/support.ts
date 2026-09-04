@@ -128,9 +128,9 @@ export function verifyCandidate(
 
 export const CONFIRMED_VERDICT = {
 	verdict: "CONFIRMED",
-	evidence_url: "https://verifytarget.example/team",
+	evidence_url: "https://news.example/jordan-blake-joins-as-vp-sales",
 	evidence_quote: "Jordan Blake leads sales as VP Sales.",
-	evidence_kind: "first_party",
+	evidence_kind: "press",
 	confidence: 0.9,
 };
 
