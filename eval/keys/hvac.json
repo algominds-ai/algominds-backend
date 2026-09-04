@@ -110,6 +110,23 @@
 				"fitReason": "93 staff in Orlando FL, offers commercial and residential HVAC, not residential-only."
 			}
 		},
+		"engcool.com": {
+			"label": null,
+			"name": "Engineered Cooling Services",
+			"firstSeenRunId": "companies_4da860aa-5b29-4bb9-98cf-9406297f3b0e_2026-09-04",
+			"lastSeenAt": "2026-09-04T13:32:55.550Z",
+			"record": {
+				"industry": null,
+				"description": "Engineered Cooling Services is the Southeast’s leading energy and HVAC services company\nheadquartered in Pensacola, FL with local offices in Mobile, Montgomery, Birmingham, Tallahassee,\nPanama City, and Orlando.\n\nOur focus on service enables us to deliver long-term technical solutions for our clients. We integrate\nunparalleled local resources, experience and expertise to provide the most cost-effective programs\navailable.\n\nWe customize our solutions to meet our client’s operational and financial objectives by listening to\nclients to fully understand their priorities and needs. Our process includes an evaluation of each\nclient’s HVAC system design, operational process and equipment condition to recommend the best\navailable options.",
+				"workforceTotal": 114,
+				"country": "United States",
+				"foundedYear": 2002,
+				"citedPage": "https://engcool.com/",
+				"citedDate": "2026-06-26T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "Explicitly Pensacola, FL headquartered; HVAC/energy services described but 'commercial' focus not stated."
+			}
+		},
 		"helioshvacr.com": {
 			"label": "reject:unreachable",
 			"name": "Helios HVACR Services",
@@ -144,6 +161,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "Apopka FL, 25 staff, mechanical/plumbing contractor specializing in commercial HVAC service and repair."
+			}
+		},
+		"krmechanicalsvcs.com": {
+			"label": null,
+			"name": "K&R Mechanical Services LLC",
+			"firstSeenRunId": "companies_e5ad657b-1d59-413a-9553-10d1792ac175_2026-09-04",
+			"lastSeenAt": "2026-09-04T13:32:08.639Z",
+			"record": {
+				"industry": null,
+				"description": "We are a full-service commercial HVAC mechanical contractor with over 35 years of experience in the field. We are familiar with all systems large and small and work with the leading HVAC brands all around Houston, Texas, and the major surrounding areas. Our focus is on commercial HVAC system installation, repair, and preventative maintenance.\n\nWhether you’re looking for help with something minor or need an experienced professional to take on a larger scale project, we are ready to handle it.\n\nGet in touch to learn more and let our team guide you to comfort.\n",
+				"workforceTotal": 21,
+				"country": "United States",
+				"foundedYear": 2015,
+				"citedPage": "https://krmechanicalsvcs.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Houston, TX contractor with 21 staff doing commercial HVAC install, repair, maintenance as core business."
 			}
 		},
 		"miinclp.com": {
