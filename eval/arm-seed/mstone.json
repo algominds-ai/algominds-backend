@@ -35,7 +35,7 @@
 		{
 			"id": "r4",
 			"kind": "hard",
-			"text": "The company is not a recruitment, staffing, labour-hire, IT contractor reseller, RPO firm, or a council/government body locked into supplier panels.",
+			"text": "The company is not a recruitment, staffing, labour-hire, RPO firm, an IT services, consulting or managed-services firm, an IT contractor reseller, or a council/government body locked into supplier panels.",
 			"proof": "record",
 			"windowDays": null
 		},
