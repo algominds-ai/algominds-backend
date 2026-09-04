@@ -133,6 +133,7 @@ function roundSpan(
 type HeadcountBand = { min: number | null; max: number | null };
 
 type CompanyScoringMeta = {
+	profile: string;
 	key: KeyFile;
 	requiresProvingPass: boolean;
 	requirementsText: string;
@@ -143,7 +144,8 @@ function companySpan(
 	company: CompanyTraceRecord,
 	scoring: CompanyScoringMeta,
 ): SpanSpec {
-	const { key, requiresProvingPass, requirementsText, headcountBand } = scoring;
+	const { profile, key, requiresProvingPass, requirementsText, headcountBand } =
+		scoring;
 	const label = key.companies[company.domain]?.label ?? null;
 	return {
 		name: `company-${company.domain}`,
@@ -171,6 +173,7 @@ function companySpan(
 			}),
 		},
 		metadata: {
+			profile,
 			domain: company.domain,
 			requiresProvingPass,
 			requirementsText,
@@ -210,6 +213,7 @@ export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
 		hardRecordRequirementTexts,
 	} = input;
 	const companyScoring: CompanyScoringMeta = {
+		profile: meta.profile,
 		key,
 		requiresProvingPass,
 		requirementsText: hardRecordRequirementTexts.join("; "),

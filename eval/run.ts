@@ -4,6 +4,7 @@ import type { ApiClient } from "@eval/api-client";
 import { startCompaniesRun, waitForRunTerminal } from "@eval/api-client";
 import type { SeededTrial } from "@eval/arm-db";
 import { bootstrapArmSchema, seedArmProfiles } from "@eval/arm-db";
+import { compareToPreviousExperiment, formatComparison } from "@eval/compare";
 import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
 import { startDevServer } from "@eval/dev-server";
 import { computeVerdict } from "@eval/headline";
@@ -273,6 +274,21 @@ async function writeExperimentManifest(
 	);
 }
 
+/** Prints the diff against the previous experiment of the same arm, best-effort: a comparison failure never fails the run it describes. */
+async function printComparison(arm: string, experiment: string): Promise<void> {
+	const apiKey = process.env.BRAINTRUST_API_KEY;
+	if (!apiKey) return;
+	try {
+		console.log(
+			formatComparison(
+				await compareToPreviousExperiment(arm, experiment, apiKey),
+			),
+		);
+	} catch (error) {
+		console.error(`eval: comparison failed: ${String(error)}`);
+	}
+}
+
 async function main(): Promise<void> {
 	const args = parseArgs(process.argv.slice(2));
 	const profiles = selectedProfiles(args.profile);
@@ -313,6 +329,7 @@ async function main(): Promise<void> {
 		console.log(
 			`eval: experiment ${result.summary.experimentUrl ?? experiment}`,
 		);
+		await printComparison(args.arm, experiment);
 	} finally {
 		await sql.end();
 		stop();
