@@ -97,6 +97,7 @@ function company(
 		name: "Good Co",
 		industry: "software",
 		description: "runs its own onboarding funnel",
+		workforceTotal: 120,
 		citedPage: "https://good.com/careers",
 		quote: "we are hiring a head of onboarding",
 		evidenceCheck: "found",

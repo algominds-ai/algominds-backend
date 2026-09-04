@@ -130,16 +130,29 @@ function roundSpan(
 	};
 }
 
+type HeadcountBand = { min: number | null; max: number | null };
+
+type CompanyScoringMeta = {
+	key: KeyFile;
+	requiresProvingPass: boolean;
+	requirementsText: string;
+	headcountBand: HeadcountBand;
+};
+
 function companySpan(
 	company: CompanyTraceRecord,
-	key: KeyFile,
-	requiresProvingPass: boolean,
+	scoring: CompanyScoringMeta,
 ): SpanSpec {
+	const { key, requiresProvingPass, requirementsText, headcountBand } = scoring;
 	const label = key.companies[company.domain]?.label ?? null;
 	return {
 		name: `company-${company.domain}`,
 		input: {
-			record: { name: company.name, industry: company.industry },
+			record: {
+				name: company.name,
+				industry: company.industry,
+				workforceTotal: company.workforceTotal,
+			},
 			description: company.description,
 		},
 		output: {
@@ -157,7 +170,13 @@ function companySpan(
 				evidenceCheck: company.evidenceCheck,
 			}),
 		},
-		metadata: { domain: company.domain, requiresProvingPass },
+		metadata: {
+			domain: company.domain,
+			requiresProvingPass,
+			requirementsText,
+			headcountMin: headcountBand.min,
+			headcountMax: headcountBand.max,
+		},
 		children: [],
 	};
 }
@@ -173,6 +192,11 @@ export type CompanyRunTraceInput = {
 	hardRecordRequirementTexts: readonly string[];
 };
 
+function headcountBandOf(rounds: readonly RoundTraceRecord[]): HeadcountBand {
+	const plan = rounds[0]?.plans[0];
+	return { min: plan?.minWorkforce ?? null, max: plan?.maxWorkforce ?? null };
+}
+
 /** The whole span tree for one companies run, built purely from already-read data: no IO, so it is testable without Braintrust. */
 export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
 	const {
@@ -185,6 +209,12 @@ export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
 		requiresProvingPass,
 		hardRecordRequirementTexts,
 	} = input;
+	const companyScoring: CompanyScoringMeta = {
+		key,
+		requiresProvingPass,
+		requirementsText: hardRecordRequirementTexts.join("; "),
+		headcountBand: headcountBandOf(rounds),
+	};
 	return {
 		name: "companies-run",
 		metadata: {
@@ -203,9 +233,7 @@ export function buildCompanyRunTrace(input: CompanyRunTraceInput): SpanSpec {
 					hardRecordRequirementTexts,
 				),
 			),
-			...companies.map((company) =>
-				companySpan(company, key, requiresProvingPass),
-			),
+			...companies.map((company) => companySpan(company, companyScoring)),
 		],
 	};
 }

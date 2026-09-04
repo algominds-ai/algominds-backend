@@ -268,7 +268,12 @@ const CompanyTraceRowSchema = z.object({
 	industry: z.string().nullable(),
 	data: z
 		.object({
-			entity: z.object({ description: z.string().nullish() }).nullish(),
+			entity: z
+				.object({
+					description: z.string().nullish(),
+					workforceTotal: z.number().nullish(),
+				})
+				.nullish(),
 			result: z
 				.object({
 					url: z.string().nullish(),
@@ -286,13 +291,14 @@ export type CompanyTraceRecord = {
 	name: string;
 	industry: string | null;
 	description: string | null;
+	workforceTotal: number | null;
 	citedPage: string | null;
 	quote: string | null;
 	evidenceCheck: string | null;
 	fitReason: string | null;
 };
 
-/** Every stored company's record, description, cited page and judge fit reason, for one company span each. */
+/** Every stored company's record, description, headcount, cited page and judge fit reason, for one company span each. */
 export async function readCompanyTraceRecords(
 	sql: Sql,
 	runId: string,
@@ -307,6 +313,7 @@ export async function readCompanyTraceRecords(
 			name: parsed.name,
 			industry: parsed.industry,
 			description: parsed.data?.entity?.description ?? null,
+			workforceTotal: parsed.data?.entity?.workforceTotal ?? null,
 			citedPage: parsed.data?.result?.url ?? null,
 			quote: parsed.data?.result?.quote ?? null,
 			evidenceCheck: parsed.data?.result?.evidenceCheck ?? null,
