@@ -43,14 +43,13 @@ export type JudgeResult = {
 };
 
 const JUDGE_INSTRUCTIONS = [
-	"You judge candidate companies against a list of requirements. For every row, by its",
-	"index, return one status for each requirement id asked for: `proven` when the row's own",
-	"record or evidence establishes it, `contradicted` when they establish the opposite,",
-	"`unproven` otherwise. A requirement the row says nothing about is `unproven`; never",
-	"guess one either way.",
-	"A row carrying an evidence page proves a requirement from it only when the quote is",
-	"about the company the row names and the page records it; a quote about another company",
-	"proves nothing.",
+	"For every row, by index, return one status per id: `proven` when the row's record or",
+	"evidence establishes it; `contradicted` when they show the row is what the requirement",
+	"excludes or not what it requires, e.g. selling IT services contradicts an IT-services",
+	"exclusion; `unproven` when they say nothing either way, e.g. silence on hiring is",
+	"unproven, not contradicted, for hiring.",
+	"A row's evidence page proves a requirement only when the quote is about the company the",
+	"row names and the page records it; a quote about another company proves nothing.",
 	"Give one reason of twenty-five words or fewer describing only what that row's own",
 	"fields show, and never invent a fact the row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",

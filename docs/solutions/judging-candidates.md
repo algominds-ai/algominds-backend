@@ -77,6 +77,20 @@ The same non-determinism is the run's own: identical input, 18 to 22 companies
 kept. A caller sees that as an eleven per cent swing in the size of its list,
 for no reason it can see.
 
+## Contradicted means the row's own record says the opposite, not silence
+
+`decideRows` keeps a row on `unproven` for a hard record requirement, on purpose:
+a record that says nothing is silence, not a contradiction. That only works if
+the judge reserves `contradicted` for a row whose own record or description
+states the opposite outcome. A row describing itself as an IT services seller
+is `contradicted` against a requirement that excludes IT services sellers,
+because its own words say what the requirement rules out. A row whose
+description never mentions how it hires is `unproven`, not `contradicted`,
+against a requirement about hiring contractors directly — silence answers
+nothing. Getting this backwards let sellers of the excluded category through
+on `unproven`, because nothing in their record used the word the requirement
+happened to use.
+
 ## Two ways the judge fails open
 
 `judge.ts` keeps every row the gate passed when the model returns nothing usable

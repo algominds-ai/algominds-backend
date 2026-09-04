@@ -572,8 +572,8 @@ describe("a requirement the row says nothing about is unproven, never a guess", 
 		await judge(requirements, rows, env);
 
 		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("says nothing about is `unproven`");
-		expect(sent).toContain("guess one either way");
+		expect(sent).toContain("`unproven` when they say nothing either way");
+		expect(sent).toContain("unproven, not contradicted, for hiring");
 	});
 
 	it("tells the judge a quote about another company proves nothing", async () => {
@@ -586,5 +586,22 @@ describe("a requirement the row says nothing about is unproven, never a guess", 
 
 		const sent = everyMessage({ body: gateway.calls[0]?.body });
 		expect(sent).toContain("a quote about another company");
+	});
+
+	it("tells the judge a row is contradicted when its own record shows it is what a requirement excludes", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(requirements, rows, env);
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain(
+			"`contradicted` when they show the row is what the requirement",
+		);
+		expect(sent).toContain(
+			"selling IT services contradicts an IT-services exclusion",
+		);
 	});
 });
