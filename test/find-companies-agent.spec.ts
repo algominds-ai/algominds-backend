@@ -7,7 +7,7 @@ import { CostLedger } from "../src/core/cost";
 import { buildVerdictRunRequest } from "../src/core/providers/exa/agent";
 import type { SearchPlan } from "../src/core/synthesize";
 import { AGENT_EFFORTS } from "../src/core/synthesize";
-import { agentSearch } from "../src/workflows/find-companies-agent";
+import { agentFanout } from "../src/workflows/find-companies-agent";
 
 const originalFetch = globalThis.fetch;
 
@@ -19,6 +19,7 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
+		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -126,99 +127,108 @@ function fakeWorkflowStep(): WorkflowStep {
 	};
 }
 
-describe("the company agent run asks for more candidates than the caller wants", () => {
-	it("asks the agent for the multiple the judge stage slices down to", async () => {
-		const { started } = stubAgentCompanyFetch();
-		const remaining = 1;
+function fanoutFor(
+	step: WorkflowStep,
+	seller: Parameters<typeof agentFanout>[0]["seller"] = null,
+) {
+	return agentFanout({ step, round: 1, today: "2026-08-30", seller });
+}
 
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: remaining,
-			today: "2026-08-30",
-			seller: null,
-		});
-		await search(
-			planFor("small US software teams"),
-			{ query: "small US software teams" },
+describe("one agent round fans out across the angles the planner wrote", () => {
+	it("starts one run per angle and merges what every angle found", async () => {
+		const { started } = stubAgentCompanyFetch();
+		const fanout = fanoutFor(fakeWorkflowStep());
+
+		await fanout(
+			[
+				planFor("US managed service providers"),
+				planFor("EU payment platforms"),
+			],
+			[],
 			exaEnv(),
 			new CostLedger(),
 		);
 
-		const wanted = remaining * config.companies.judgeCandidateMultiple;
-		expect(started).toHaveLength(1);
-		expect(started[0]?.minItems).toBe(1);
-		expect(started[0]?.query).toContain(`${wanted} distinct companies`);
+		expect(started).toHaveLength(2);
+		expect(started[0]?.query).toContain("US managed service providers");
+		expect(started[1]?.query).toContain("EU payment platforms");
 	});
 
-	it("keeps the funnel wider than the ask for a larger request too", async () => {
+	it("asks each angle for the configured companies per angle, never the whole count", async () => {
 		const { started } = stubAgentCompanyFetch();
-		const remaining = 4;
+		const fanout = fanoutFor(fakeWorkflowStep());
 
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: remaining,
-			today: "2026-08-30",
-			seller: null,
-		});
-		await search(
-			planFor("seed stage fintech"),
-			{ query: "seed stage fintech" },
+		await fanout(
+			[planFor("seed stage fintech")],
+			[],
 			exaEnv(),
 			new CostLedger(),
 		);
 
+		const perAngle = config.companies.companiesPerAngle;
+		expect(started[0]?.query).toContain(`Return up to ${perAngle} distinct`);
+		expect(started[0]?.query).not.toContain("exactly");
 		expect(started[0]?.minItems).toBe(1);
-		expect(started[0]?.query).toContain(
-			`${remaining * config.companies.judgeCandidateMultiple} distinct companies`,
-		);
+		expect(started[0]?.maxItems).toBe(perAngle);
 	});
 
-	it("never asks the agent for more companies than fit in one round, at the largest request the API accepts", async () => {
-		const { started } = stubAgentCompanyFetch();
-		const remaining = config.limits.maxCompaniesPerRequest;
+	it("waits between angle starts, so a fan-out never crosses the vendor's per-second limit", async () => {
+		stubAgentCompanyFetch();
+		const slept: string[] = [];
+		const base = fakeWorkflowStep();
+		const staggering: WorkflowStep = {
+			do: base.do,
+			sleepUntil: base.sleepUntil,
+			waitForEvent: base.waitForEvent,
+			sleep: async (name) => {
+				slept.push(String(name));
+			},
+		};
+		const fanout = fanoutFor(staggering);
 
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: remaining,
-			today: "2026-08-30",
-			seller: null,
-		});
-		await search(
-			planFor("every mid-market SaaS company"),
-			{ query: "every mid-market SaaS company" },
+		await fanout(
+			[planFor("angle one"), planFor("angle two"), planFor("angle three")],
+			[],
 			exaEnv(),
 			new CostLedger(),
 		);
 
-		expect(started[0]?.minItems).toBe(1);
-		expect(started[0]?.query).toContain(
-			`${config.companies.resultsPerRound} distinct companies`,
+		expect(slept).toEqual([
+			"round_1-angle_1-stagger",
+			"round_1-angle_2-stagger",
+		]);
+	});
+
+	it("names the account's excluded companies in every angle's request", async () => {
+		const { started } = stubAgentCompanyFetch();
+		const fanout = fanoutFor(fakeWorkflowStep());
+
+		await fanout(
+			[planFor("angle one"), planFor("angle two")],
+			["seen.com", "known.io"],
+			exaEnv(),
+			new CostLedger(),
 		);
-		expect(started[0]?.query).not.toContain(
-			`${remaining * config.companies.judgeCandidateMultiple} distinct`,
-		);
+
+		for (const run of started) {
+			expect(run.query).toContain("seen.com");
+			expect(run.query).toContain("known.io");
+		}
 	});
 
 	it("tells the agent the headcount band the filter would otherwise reject on", async () => {
 		const { started } = stubAgentCompanyFetch();
+		const fanout = fanoutFor(fakeWorkflowStep());
 
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: 1,
-			today: "2026-08-30",
-			seller: null,
-		});
-		await search(
-			planFor("B2B software with an outbound team", {
-				minWorkforce: 10,
-				maxWorkforce: 300,
-				countries: ["United States"],
-			}),
-			{ query: "B2B software with an outbound team" },
+		await fanout(
+			[
+				planFor("B2B software with an outbound team", {
+					minWorkforce: 10,
+					maxWorkforce: 300,
+					countries: ["United States"],
+				}),
+			],
+			[],
 			exaEnv(),
 			new CostLedger(),
 		);
@@ -228,47 +238,15 @@ describe("the company agent run asks for more candidates than the caller wants",
 	});
 });
 
-describe("the company agent run asks honestly, not for an exact count", () => {
-	it("asks the agent for up to the wanted count and caps the schema", async () => {
-		const { started } = stubAgentCompanyFetch();
-		const remaining = 5;
-
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: remaining,
-			today: "2026-08-30",
-			seller: null,
-		});
-		await search(
-			planFor("US managed service providers"),
-			{ query: "US managed service providers" },
-			exaEnv(),
-			new CostLedger(),
-		);
-
-		const wanted = remaining * config.companies.judgeCandidateMultiple;
-		expect(started[0]?.query).toContain(`Return up to ${wanted} distinct`);
-		expect(started[0]?.query).not.toContain("exactly");
-		expect(started[0]?.maxItems).toBe(wanted);
-	});
-});
-
 describe("a round whose agent finds nothing counts as an empty round, not a failure", () => {
 	it("resolves to zero results and banks the run's cost, instead of throwing", async () => {
 		stubAgentCompanyFetchReportingNull();
 		const ledger = new CostLedger();
+		const fanout = fanoutFor(fakeWorkflowStep());
 
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: 3,
-			today: "2026-08-30",
-			seller: null,
-		});
-		const result = await search(
-			planFor("payment platforms serving credit unions"),
-			{ query: "payment platforms serving credit unions" },
+		const result = await fanout(
+			[planFor("payment platforms serving credit unions")],
+			[],
 			exaEnv(),
 			ledger,
 		);
@@ -281,21 +259,15 @@ describe("a round whose agent finds nothing counts as an empty round, not a fail
 describe("the round tells the agent which seller it prospects for", () => {
 	it("carries the profile's seller into the started run", async () => {
 		const { started } = stubAgentCompanyFetch();
-
-		const search = agentSearch({
-			step: fakeWorkflowStep(),
-			round: 1,
-			remaining: 1,
-			today: "2026-08-30",
-			seller: {
-				domain: "form3.tech",
-				customers: ["Klarna"],
-				competitorTest: "A competitor sells payment infrastructure to banks.",
-			},
+		const fanout = fanoutFor(fakeWorkflowStep(), {
+			domain: "form3.tech",
+			customers: ["Klarna"],
+			competitorTest: "A competitor sells payment infrastructure to banks.",
 		});
-		await search(
-			planFor("large European platform teams"),
-			{ query: "large European platform teams" },
+
+		await fanout(
+			[planFor("large European platform teams")],
+			[],
 			exaEnv(),
 			new CostLedger(),
 		);
@@ -307,15 +279,16 @@ describe("the round tells the agent which seller it prospects for", () => {
 
 describe("the request schema Exa's agent actually accepts", () => {
 	it("sends Exa an output schema with no $schema key and no pattern anywhere", () => {
-		const companyRequest = buildAgentRunRequest(
-			planFor("US managed service providers", {
+		const companyRequest = buildAgentRunRequest({
+			plan: planFor("US managed service providers", {
 				recency: "a role posted in the last 30 days",
 				recencyDays: 30,
 			}),
-			15,
-			"2026-09-02",
-			null,
-		);
+			count: 15,
+			today: "2026-09-02",
+			seller: null,
+			excludeDomains: [],
+		});
 		const companySchema = JSON.parse(
 			JSON.stringify(companyRequest.outputSchema),
 		);
@@ -342,12 +315,13 @@ describe("the built request never asks the agent for effort above medium", () =>
 		expect(AGENT_EFFORTS).toEqual(["low", "medium"]);
 
 		for (const agentEffort of AGENT_EFFORTS) {
-			const request = buildAgentRunRequest(
-				planFor("US managed service providers", { agentEffort }),
-				5,
-				"2026-09-02",
-				null,
-			);
+			const request = buildAgentRunRequest({
+				plan: planFor("US managed service providers", { agentEffort }),
+				count: 5,
+				today: "2026-09-02",
+				seller: null,
+				excludeDomains: [],
+			});
 			expect(request.effort).toBe(agentEffort);
 		}
 	});

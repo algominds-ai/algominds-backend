@@ -439,6 +439,7 @@ describe("createIcp", () => {
 			description: "an ideal customer profile",
 			seller,
 			buyer: null,
+			requirements: null,
 		});
 	});
 
@@ -467,6 +468,7 @@ describe("createIcp", () => {
 			description: "an ideal customer profile",
 			seller: null,
 			buyer: null,
+			requirements: null,
 		});
 	});
 });

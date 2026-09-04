@@ -4,7 +4,7 @@ import { z } from "zod";
 import { config } from "../src/config";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { judge } from "../src/core/companies/judge";
-import type { IcpDoc } from "../src/core/synthesize";
+import type { Requirement } from "../src/core/requirements";
 
 const env: Env = {
 	...testEnv,
@@ -14,10 +14,22 @@ const env: Env = {
 	MODEL_ROUTE_WORKER: "dynamic/brain-worker",
 };
 
-const icp: IcpDoc = {
-	description:
-		"fintech companies at seed stage in San Francisco with a small team",
-};
+const requirements: Requirement[] = [
+	{
+		id: "r1",
+		text: "the company is a seed stage fintech in San Francisco with a small team",
+		kind: "hard",
+		proof: "record",
+		windowDays: null,
+	},
+	{
+		id: "r2",
+		text: "the company posted a founding engineer role in the last thirty days",
+		kind: "soft",
+		proof: "page",
+		windowDays: 30,
+	},
+];
 
 function row(name: string, domain: string): CompanyRow {
 	return {
@@ -118,19 +130,36 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 		: { content: JSON.stringify(value), cost };
 }
 
+type ScriptedVerdict = {
+	index: number;
+	statuses: Array<{ id: string; status: string }>;
+	soft: string[];
+	reason: string;
+	sameOrganizationAs: number | null;
+};
+
 function verdictsFor(rowSet: readonly CompanyRow[]): {
-	verdicts: Array<{ index: number; keep: boolean; reason: string }>;
+	verdicts: ScriptedVerdict[];
 } {
 	return {
 		verdicts: rowSet.map((_, index) => {
 			const keep = index !== 1;
 			return {
 				index,
-				keep,
+				statuses: [{ id: "r1", status: keep ? "proven" : "contradicted" }],
+				soft: [],
 				reason: keep ? "fits the profile" : "no qualifying signal",
+				sameOrganizationAs: null,
 			};
 		}),
 	};
+}
+
+/** Whether a scripted verdict left every hard requirement satisfied, the shape the round's own decision reads. */
+function kept(verdict: {
+	statuses: ReadonlyArray<{ status: string }>;
+}): boolean {
+	return verdict.statuses.every((entry) => entry.status === "proven");
 }
 
 describe("judge: gateway wiring", () => {
@@ -146,7 +175,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, null);
+		await judge(requirements, rows, env);
 
 		const call = gateway.calls[0];
 		expect(call?.headers.get("cf-aig-authorization")).toBe(
@@ -161,7 +190,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, null);
+		await judge(requirements, rows, env);
 
 		expect(modelInBody(gateway.calls[0])).toBe(env.MODEL_ROUTE_REASONING);
 	});
@@ -173,7 +202,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, null);
+		await judge(requirements, rows, env);
 
 		expect(gateway.calls).toHaveLength(2);
 		for (const call of gateway.calls) {
@@ -188,7 +217,7 @@ describe("judge: gateway wiring", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
 		expect(result.ledger.total()).toBeCloseTo(0.0000091, 12);
 	});
@@ -228,7 +257,7 @@ describe("judge: cost recording without a cost field", () => {
 		const gateway = fakeGateway([response]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
 		expect(result.ledger.total()).toBe(0);
 	});
@@ -247,13 +276,13 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
 		expect(result.verdicts).toHaveLength(rows.length);
 		result.verdicts.forEach((verdict, index) => {
 			expect(verdict.index).toBe(index);
 		});
-		expect(result.verdicts[1]?.keep).toBe(false);
+		expect(kept(result.verdicts[1] ?? { statuses: [] })).toBe(false);
 	});
 
 	it("carries a kept row's reason through to the caller, not just a refused row's", async () => {
@@ -262,17 +291,19 @@ describe("judge: verdicts and retries", () => {
 				objectReply({
 					verdicts: rows.map((_, index) => ({
 						index,
-						keep: true,
+						statuses: [{ id: "r1", status: "proven" }],
+						soft: [],
 						reason: "fits the profile",
+						sameOrganizationAs: null,
 					})),
 				}),
 			),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
-		expect(result.verdicts.every((verdict) => verdict.keep)).toBe(true);
+		expect(result.verdicts.every(kept)).toBe(true);
 		expect(
 			result.verdicts.every((verdict) => verdict.reason === "fits the profile"),
 		).toBe(true);
@@ -284,7 +315,7 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
 		expect(result.verdicts[1]?.reason).toBe("no qualifying signal");
 	});
@@ -296,31 +327,34 @@ describe("judge: verdicts and retries", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
 		expect(gateway.calls).toHaveLength(2);
 		expect(result.verdicts).toHaveLength(rows.length);
 	});
 
-	it("falls back to keeping every gated row after two consecutive failures, without throwing", async () => {
+	it("falls back to every hard requirement unproven after two consecutive failures, without throwing", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "", finishReason: "length" }),
 			chatCompletionResponse({ content: "", finishReason: "length" }),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await judge(icp, rows, env, null);
+		const result = await judge(requirements, rows, env);
 
 		expect(gateway.calls).toHaveLength(2);
 		expect(result.verdicts).toHaveLength(rows.length);
-		expect(result.verdicts.every((verdict) => verdict.keep)).toBe(true);
+		expect(result.verdicts.every(kept)).toBe(false);
+		for (const verdict of result.verdicts) {
+			expect(verdict.statuses).toEqual([{ id: "r1", status: "unproven" }]);
+		}
 		result.verdicts.forEach((verdict, index) => {
 			expect(verdict.index).toBe(index);
 		});
 	});
 });
 
-describe("the judge is told the window it must hold rows to", () => {
+describe("the judge is told which requirements need a status", () => {
 	function userMessage(call: { body: unknown }): string {
 		const parsed = z
 			.object({ messages: z.array(z.object({ content: z.string() })) })
@@ -328,56 +362,60 @@ describe("the judge is told the window it must hold rows to", () => {
 		return parsed.messages.map((message) => message.content).join("\n");
 	}
 
-	it("carries the freshness window when the profile asked for one", async () => {
+	it("asks for a status on every hard requirement, by its id", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, "A role posted in the last 30 days.");
+		await judge(requirements, rows, env);
 
 		const sent = userMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("Freshness window:");
-		expect(sent).toContain("A role posted in the last 30 days.");
+		expect(sent).toContain("Requirements needing a status:");
+		expect(sent).toContain("r1 the company is a seed stage fintech");
 	});
 
-	it("says nothing about a window when the profile asked for none", async () => {
+	it("lists the soft requirements apart, asking for no status on them", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, null);
+		await judge(requirements, rows, env);
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("Preferences.");
+		expect(sent).toContain("r2 the company posted a founding engineer role");
+		expect(sent).toContain("give no status for these");
+	});
+
+	it("says nothing about preferences when the profile asks for none", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const hardOnly = requirements.filter((req) => req.kind === "hard");
+		await judge(hardOnly, rows, env);
 
 		expect(userMessage({ body: gateway.calls[0]?.body })).not.toContain(
-			"Freshness window:",
+			"Preferences.",
 		);
 	});
 
-	it("tells the judge that an undated page can still prove a live signal", async () => {
+	it("names the three statuses it accepts and asks for the same-organisation label", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, "A role posted in the last 30 days.");
+		await judge(requirements, rows, env);
 
 		const sent = userMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("job advertisement still open");
-		expect(sent).toContain("proves nothing without a date");
-	});
-
-	it("tells the judge to weigh the page, not only the profile", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(verdictsFor(rows))),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		await judge(icp, rows, env, null);
-
-		const sent = userMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("evidenceQuote");
-		expect(sent).toContain("names no publisher");
+		expect(sent).toContain("proven");
+		expect(sent).toContain("contradicted");
+		expect(sent).toContain("unproven");
+		expect(sent).toContain("sameOrganizationAs");
 	});
 });
 
@@ -398,7 +436,7 @@ describe("the kind of page a row came from is a label, not something the judge w
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, labelled, env, null);
+		await judge(requirements, labelled, env);
 
 		const sent = userMessage({ body: gateway.calls[0]?.body });
 		expect(sent).toContain("acme.com");
@@ -459,7 +497,7 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		const gateway = deferredGateway();
 		globalThis.fetch = gateway.fetch;
 
-		const pending = judge(icp, bigRows, env, null);
+		const pending = judge(requirements, bigRows, env);
 
 		await flushMicrotasks();
 		expect(gateway.calls).toHaveLength(3);
@@ -471,8 +509,10 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
-				keep: true,
+				statuses: [{ id: "r1", status: "proven" }],
+				soft: [],
 				reason: "fits the profile",
+				sameOrganizationAs: null,
 			}));
 			gateway.resolvers[callIndex]?.(
 				chatCompletionResponse(objectReply({ verdicts })),
@@ -484,12 +524,12 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		expect(result.verdicts).toHaveLength(35);
 		result.verdicts.forEach((verdict, index) => {
 			expect(verdict.index).toBe(index);
-			expect(verdict.keep).toBe(true);
+			expect(kept(verdict)).toBe(true);
 		});
 	});
 });
 
-describe("a row from a source that produces no quote is judged on the record", () => {
+describe("a requirement the row says nothing about is unproven, never a guess", () => {
 	function everyMessage(call: { body: unknown }): string {
 		const parsed = z
 			.object({ messages: z.array(z.object({ content: z.string() })) })
@@ -497,18 +537,28 @@ describe("a row from a source that produces no quote is judged on the record", (
 		return parsed.messages.map((message) => message.content).join("\n");
 	}
 
-	it("never refuses a row merely for carrying no quote and no publisher", async () => {
+	it("tells the judge to leave a silent requirement unproven rather than guess it", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		await judge(icp, rows, env, null);
+		await judge(requirements, rows, env);
 
 		const sent = everyMessage({ body: gateway.calls[0]?.body });
-		expect(sent).toContain("never refuse it for their absence");
-		expect(sent).not.toContain(
-			"Every row carries the page its signal came from",
-		);
+		expect(sent).toContain("says nothing about is `unproven`");
+		expect(sent).toContain("guess one either way");
+	});
+
+	it("tells the judge a quote about another company proves nothing", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(requirements, rows, env);
+
+		const sent = everyMessage({ body: gateway.calls[0]?.body });
+		expect(sent).toContain("a quote about another company");
 	});
 });

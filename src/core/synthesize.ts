@@ -2,9 +2,16 @@ import { z } from "zod";
 import { CostLedger } from "@/core/cost";
 import { generateStructured, reasoningModel } from "@/core/model";
 import { CLAY_BANDS } from "@/core/providers/clay";
+import type { Requirement } from "@/core/requirements";
+import {
+	hardPageRequirements,
+	provingWindowDays,
+	RequirementSchema,
+} from "@/core/requirements";
 
 export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
 export const AGENT_EFFORTS = ["low", "medium"] as const;
+export const ROUND_ROUTES = ["search", "agent"] as const;
 
 /** The eight most senior bands, the default a buyer rubric searches with. */
 export const SENIOR_BANDS: readonly (typeof CLAY_BANDS)[number][] =
@@ -35,6 +42,7 @@ export const IcpDocSchema = z.object({
 		})
 		.nullish(),
 	buyer: IcpBuyerSchema.nullish(),
+	requirements: z.array(RequirementSchema).nullish(),
 });
 
 export type IcpDoc = z.infer<typeof IcpDocSchema>;
@@ -49,6 +57,7 @@ export type IcpSeller = NonNullable<IcpDoc["seller"]>;
 export type SearchPlan = {
 	query: string;
 	angle: string;
+	pageQuery: string | null;
 	recency: string | null;
 	eventWindowDays: number | null;
 	recencyDays: number | null;
@@ -66,14 +75,15 @@ export type SearchPlan = {
 	maxFundingTotal: number | null;
 };
 
-const SearchPlanModelSchema = z.object({
-	query: z.string(),
+const RoundSchema = z.object({
 	angle: z.string(),
-	recency: z.string().nullable(),
-	eventWindowDays: z.number().int().positive().nullable(),
-	recencyDays: z.number().int().positive().nullable(),
-	source: z.enum(SEARCH_SOURCES).nullable(),
-	agentEffort: z.enum(AGENT_EFFORTS).nullable(),
+	query: z.string(),
+	pageQuery: z.string().nullable(),
+});
+
+const SearchPlanModelSchema = z.object({
+	route: z.enum(ROUND_ROUTES).nullable(),
+	rounds: z.array(RoundSchema),
 	userLocation: z.string().nullable(),
 	countries: z.array(z.string()),
 	minWorkforce: z.number().nullable(),
@@ -86,76 +96,68 @@ const SearchPlanModelSchema = z.object({
 	maxFundingTotal: z.number().nullable(),
 });
 
+/** One round's route and the angles it runs, each angle a plan of its own. */
 export type SynthesizeResult = {
-	plan: SearchPlan;
+	route: (typeof ROUND_ROUTES)[number];
+	plans: SearchPlan[];
 	ledger: CostLedger;
 };
 
 const SYNTHESIZE_INSTRUCTIONS = [
-	"You turn an ideal customer profile into one round of company discovery against Exa's",
-	"company index. Exa matches a query by how a person would describe the company in a",
-	"sentence, not by keywords. Write `query` as one short descriptive sentence of about",
-	"fifteen to twenty-five words. Write only the descriptive sentence there; the code adds",
-	"the profile's numeric bounds and countries to it afterward, as its own sentences.",
-	"Exa returns a structured record for each company, so numeric limits also belong in the",
-	"filter fields: set `minWorkforce` and `maxWorkforce` to the headcount range the profile",
-	"asks for, `minFoundedYear` and `maxFoundedYear` to the years it was founded between,",
-	"`minRevenueAnnual` and `maxRevenueAnnual` to the annual revenue in whole US dollars,",
-	"`minFundingTotal` and `maxFundingTotal` to the funding raised in whole US dollars,",
-	"`countries` to the full country names the profile allows, written as Exa writes",
-	"them, for example United States, and `userLocation` to the matching two-letter country",
-	"code, or null when the profile names no country.",
-	"Set a bound only when the profile asks for it. Every bound the profile does not name is",
-	"null, because a limit nobody asked for refuses companies that fit.",
-	"`angle` names the slice of the market this round targets, for example the vertical, the",
-	"buyer, or the product shape.",
-	"`source` is `exa-search` unless the event is the whole qualifier, or unless a hard gate",
-	"of the profile is a fact that only public evidence can establish. `exa-search` reads",
-	"Exa's company index: a hundred structured company records in one second, no pages and",
-	"no dates. `exa-agent` reads the open web for the signal and the page proving it, at a",
-	"handful of companies in minutes. A profile that says what its companies are — industry,",
-	"size, place, book of business — and then adds recent events as reasons to call now is a",
-	"search round: the shape names the population and the events only order it. Choose",
-	"`exa-agent` when no description of lasting shape could name this population and only a",
-	"page can tell a company in from one out. Choose it too when a hard gate names something",
-	"like a technology in production, a certification, a regulatory status, or a published",
-	"capability, and the shape alone cannot guarantee it: then `recency` names that evidence",
-	'and the window the profile gives it, for example "public evidence of production',
-	'Kubernetes at scale within 24 months", so the agent must cite the page proving it and',
-	"the evidence stage checks that page. The shape still narrows the population, and events",
-	"remain reasons to call now.",
-	"`agentEffort` applies to `exa-agent` only: `low` for a population it can name without",
-	"digging, `medium` when the signal needs dated proof. Null means `medium`.",
-	"`recency`, `eventWindowDays` and `recencyDays` belong to an `exa-agent` round and are",
-	"all null on a search round, because the company index holds no pages and no dates.",
-	"On an agent round, `recency` names each event and the window it must fall inside,",
-	"written as spans counted back from today. `eventWindowDays` is how far back the event",
-	"itself may have happened. `recencyDays` answers a different question for the angle this",
-	"round targets: how old may the page proving it be and still show the situation is live",
-	"today? An announcement from January does not show January's work is still going on; a",
-	"page published this month describing it does. So `eventWindowDays` may be a year while",
-	"`recencyDays` is a few weeks. The code refuses a dated page older than `recencyDays`",
-	"and sends an undated one to the judge.",
-	"A paraphrase of an earlier query returns the same companies, so when earlier angles are",
-	"given, choose a genuinely different angle and write a query for it. Keep every constraint",
-	"of the profile true of that new angle.",
-	"The reasons an earlier round's companies were refused say what that round's query got",
-	"wrong, and each one is a correction to make. Companies refused for being too small mean",
-	"the query described a smaller organisation than the profile wants, so describe the scale",
-	"the profile asks for in words: what such a company operates, who it serves, what it is",
-	"accountable for. Companies refused for their country mean the query read as belonging",
-	"somewhere else. Companies refused as not being a company at all mean the query read like",
-	"a topic rather than an organisation. Write the next query so the same reason cannot",
-	"apply again.",
+	"You turn a list of requirements into one round of company discovery, choosing how the",
+	"round runs and writing the angles it runs on.",
+	"`route` is `search` or `agent`. A `search` round asks Exa's company index, which",
+	"enumerates organisations by their record — headcount, country, founded year, revenue,",
+	"industry — a hundred at a time in under a second, and cannot see anything a page says,",
+	"so every requirement marked `page` is then proved by one cheap page lookup per",
+	"candidate, and only companies that publish such a page survive. An `agent` round reads",
+	"the open web, so it finds the population through those pages themselves and returns",
+	"few companies per angle. Choose `search` when the requirements marked `record` already",
+	"name the population. Choose `agent` when a requirement marked `page` is what defines",
+	"who belongs, so no description of a record could enumerate them, or when the previous",
+	"round's proven rate shows a search round could not prove that requirement.",
+	"Write one entry in `rounds` for each angle asked for. An `angle` names a slice of the",
+	"market, for example a vertical, a buyer or a product shape, and each entry carries its",
+	"own `query`: one descriptive sentence of fifteen to twenty-five words covering the hard",
+	"requirements a company record settles, because Exa matches a query by how a person",
+	"would describe the company in a sentence rather than by keywords. The code appends the",
+	"numeric bounds and countries afterwards as their own sentences. Every angle must be",
+	"genuinely different from the others and from any angle already searched, and every",
+	"requirement stays true of all of them.",
+	"When a requirement is marked `page`, each entry also carries `pageQuery`: one sentence",
+	"describing that proving page itself, as its own author would title it, so a search of",
+	"the open web returns pages of that kind. It is null when no requirement is marked",
+	"`page`.",
+	"Put the profile's bounds in the filter fields: `minWorkforce` and `maxWorkforce` for",
+	"headcount, `minFoundedYear` and `maxFoundedYear`, `minRevenueAnnual` and",
+	"`maxRevenueAnnual` and `minFundingTotal` and `maxFundingTotal` in whole US dollars,",
+	"`countries` as full country names written as Exa writes them, for example United",
+	"States, and `userLocation` as the matching two-letter country code.",
+	"Set a bound only when a requirement states it; every other bound is null, because a",
+	"limit nobody asked for refuses companies that fit.",
+	"Each reject reason from the previous round is a correction to make: write the next",
+	"angles so the same reason cannot apply again.",
 ].join(" ");
 
+function requirementBlock(requirements: readonly Requirement[]): string[] {
+	return requirements.map(
+		(req) => `${req.id} [${req.kind}/${req.proof}] ${req.text}`,
+	);
+}
+
 function synthesizePrompt(input: SynthesizeInput): string {
-	const { icp, pastAngles, feedback } = input;
+	const { pastAngles, feedback, angles } = input;
 	const lines = [
 		`Today is ${input.today}.`,
-		"Ideal customer profile:",
-		icp.description,
+		`Write ${angles} ${angles === 1 ? "angle" : "different angles"}.`,
+		"Requirements:",
+		...requirementBlock(input.requirements),
 	];
+	if (input.provenRate !== null) {
+		lines.push(
+			`The previous round proved its page requirements for ${input.provenRate} of its candidates.`,
+		);
+	}
 	if (pastAngles.length > 0) {
 		lines.push("Angles already searched, do not repeat them:");
 		for (const angle of pastAngles) lines.push(`- ${angle}`);
@@ -167,33 +169,45 @@ function synthesizePrompt(input: SynthesizeInput): string {
 	return lines.join("\n");
 }
 
-function templatePlan(icp: IcpDoc): SearchPlan {
+/** The round a profile falls back to when the model writes nothing usable: the profile's own words, on the route its requirements imply. */
+function templatePlans(input: SynthesizeInput): SynthesizeResult {
 	return {
-		query: icp.description,
-		angle: "the profile as written",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
-		source: "exa-search",
-		agentEffort: "medium",
-		userLocation: null,
-		countries: [],
-		minWorkforce: null,
-		maxWorkforce: null,
-		minFoundedYear: null,
-		maxFoundedYear: null,
-		minRevenueAnnual: null,
-		maxRevenueAnnual: null,
-		minFundingTotal: null,
-		maxFundingTotal: null,
+		route:
+			hardPageRequirements(input.requirements).length > 0 ? "agent" : "search",
+		plans: [
+			{
+				query: input.icp.description,
+				angle: "the profile as written",
+				pageQuery: hardPageRequirements(input.requirements)[0]?.text ?? null,
+				recency: null,
+				eventWindowDays: null,
+				recencyDays: null,
+				source: "exa-search",
+				agentEffort: "low",
+				userLocation: null,
+				countries: [],
+				minWorkforce: null,
+				maxWorkforce: null,
+				minFoundedYear: null,
+				maxFoundedYear: null,
+				minRevenueAnnual: null,
+				maxRevenueAnnual: null,
+				minFundingTotal: null,
+				maxFundingTotal: null,
+			},
+		],
+		ledger: new CostLedger(),
 	};
 }
 
 export type SynthesizeInput = {
 	icp: IcpDoc;
+	requirements: readonly Requirement[];
 	pastAngles: readonly string[];
 	feedback: readonly string[];
 	today: string;
+	angles: number;
+	provenRate: string | null;
 };
 
 type SearchPlanModel = z.infer<typeof SearchPlanModelSchema>;
@@ -203,23 +217,44 @@ function countryCode(value: string | null | undefined): string | null {
 	return value && value.length === 2 ? value.toUpperCase() : null;
 }
 
-type PlanBounds = Pick<
+type PlanBounds = Omit<SearchPlan, "query" | "angle" | "pageQuery">;
+
+/** Every limit the profile put on the records a round keeps, plus the evidence demand the requirements imply. An absent limit is null, never zero. */
+type EvidenceDemand = Pick<
 	SearchPlan,
-	| "userLocation"
-	| "countries"
-	| "minWorkforce"
-	| "maxWorkforce"
-	| "minFoundedYear"
-	| "maxFoundedYear"
-	| "minRevenueAnnual"
-	| "maxRevenueAnnual"
-	| "minFundingTotal"
-	| "maxFundingTotal"
+	"recency" | "eventWindowDays" | "recencyDays" | "source"
 >;
 
-/** Every limit the profile put on the records a round keeps. An absent limit is null, never zero. */
-function toBounds(output: SearchPlanModel): PlanBounds {
+/** What a round demands of the agent: the hard page requirement it must prove and the window it must prove it inside. A search round demands nothing, because it proves its own candidates instead. */
+function evidenceDemand(
+	requirements: readonly Requirement[],
+	route: (typeof ROUND_ROUTES)[number],
+): EvidenceDemand {
+	if (route !== "agent") {
+		return {
+			recency: null,
+			eventWindowDays: null,
+			recencyDays: null,
+			source: "exa-search",
+		};
+	}
+	const window = provingWindowDays(requirements);
 	return {
+		recency: hardPageRequirements(requirements)[0]?.text ?? null,
+		eventWindowDays: window,
+		recencyDays: window,
+		source: "exa-agent",
+	};
+}
+
+function toBounds(
+	output: SearchPlanModel,
+	requirements: readonly Requirement[],
+	route: (typeof ROUND_ROUTES)[number],
+): PlanBounds {
+	return {
+		...evidenceDemand(requirements, route),
+		agentEffort: "low",
 		userLocation: countryCode(output.userLocation),
 		countries: output.countries,
 		minWorkforce: output.minWorkforce,
@@ -233,24 +268,25 @@ function toBounds(output: SearchPlanModel): PlanBounds {
 	};
 }
 
-function toPlan(output: SearchPlanModel): SearchPlan {
-	return {
-		query: output.query,
-		angle: output.angle,
-		recency: output.recency ?? null,
-		eventWindowDays: output.eventWindowDays ?? null,
-		recencyDays: output.recencyDays ?? null,
-		source: output.source ?? "exa-search",
-		agentEffort: output.agentEffort ?? "medium",
-		...toBounds(output),
-	};
+/**
+ * The route the round runs on. The model's own choice stands unless the
+ * requirements make it impossible: with no requirement that only a page can
+ * settle there is nothing for an agent round to demand, so such a round is a
+ * plain search whatever the model said.
+ */
+export function routeFor(
+	chosen: (typeof ROUND_ROUTES)[number] | null,
+	requirements: readonly Requirement[],
+): (typeof ROUND_ROUTES)[number] {
+	if (hardPageRequirements(requirements).length === 0) return "search";
+	return chosen ?? "agent";
 }
 
 /**
- * Turns an ideal customer profile, the angles already tried, and the previous
- * round's reject reasons into one Exa query plus the numeric limits applied to
- * the returned records. Falls back to the profile text when the model produces
- * nothing usable twice in a row.
+ * Turns the profile's requirements, the angles already tried, and the previous
+ * round's reject reasons into one route and its angles, each with the numeric
+ * limits applied to the records that come back. Falls back to the profile text
+ * when the model produces nothing usable twice in a row.
  */
 export async function synthesize(
 	input: SynthesizeInput,
@@ -269,6 +305,19 @@ export async function synthesize(
 		ledger,
 		"synthesize",
 	);
-	if (!output) return { plan: templatePlan(input.icp), ledger };
-	return { plan: toPlan(output), ledger };
+	if (!output || output.rounds.length === 0) {
+		return { ...templatePlans(input), ledger };
+	}
+	const route = routeFor(output.route, input.requirements);
+	const bounds = toBounds(output, input.requirements, route);
+	return {
+		route,
+		plans: output.rounds.map((round) => ({
+			query: round.query,
+			angle: round.angle,
+			pageQuery: round.pageQuery,
+			...bounds,
+		})),
+		ledger,
+	};
 }

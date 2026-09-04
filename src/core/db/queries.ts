@@ -116,6 +116,8 @@ export interface TransactableConnection {
 
 export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
 export type IcpInsertConnection = AppendConnection<typeof icp, NewIcp, Icp>;
+export type IcpDocUpdateConnection = SelectLimitConnection<typeof icp, Icp> &
+	UpdateWhereConnection<typeof icp, Pick<NewIcp, "doc">>;
 export interface DomainsConnection {
 	select(columns: { domain: typeof company.domain }): {
 		from(table: typeof company): {
@@ -335,6 +337,7 @@ export {
 	createIcp,
 	loadIcp,
 	type NewIcpInput,
+	saveIcpRequirements,
 	saveOnboardedIcp,
 } from "@/core/db/icp";
 export {

@@ -6,6 +6,7 @@ import { normalizeDomain } from "@/core/db/schema";
 
 const EVIDENCE_SOURCE = "exa";
 const RAW_RESULT_MAX_CHARS = 20_000;
+const PAGE_TEXT_MAX_CHARS = 10_000;
 
 export type NewCompanyContext = {
 	icpId: string;
@@ -84,6 +85,20 @@ export function rawResultEvidenceRow(
 		subjectId: saved.id,
 		kind: capture.source === "exa-agent" ? "agent-result" : "search-result",
 		value: boundedRaw(capture.raw),
+		source: EVIDENCE_SOURCE,
+	};
+}
+
+/** One append-only evidence row carrying the text of a page a round retrieved to prove a requirement, bounded to `PAGE_TEXT_MAX_CHARS`, so the content the decision rested on is stored rather than discarded. */
+export function retrievedPageEvidenceRow(
+	saved: Company,
+	page: { url: string; text: string },
+): NewEvidence {
+	return {
+		subjectType: "company",
+		subjectId: saved.id,
+		kind: "proving-page",
+		value: `${page.url}\n${page.text.slice(0, PAGE_TEXT_MAX_CHARS)}`,
 		source: EVIDENCE_SOURCE,
 	};
 }

@@ -12,6 +12,7 @@ function planFor(query: string): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
+		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -124,6 +125,7 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies at seed stage with a small team",
 		angle: "founder-led vertical software",
+		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -182,12 +184,13 @@ describe("the search query carries the plan's bounds", () => {
 
 describe("agent run request stays inside the measured Exa /agent/runs schema", () => {
 	it("emits only fields and enum values the measured schema allows", () => {
-		const request = buildAgentRunRequest(
-			planFor("small US software teams"),
-			10,
-			"2026-08-30",
-			null,
-		);
+		const request = buildAgentRunRequest({
+			plan: planFor("small US software teams"),
+			count: 10,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		const parsed = MeasuredAgentRunRequestSchema.safeParse(request);
 
@@ -314,12 +317,13 @@ describe("what reaches the network matches what the builder produced", () => {
 		);
 
 		await startAgentRun(
-			buildAgentRunRequest(
-				planFor("ten fintech companies"),
-				10,
-				"2026-08-30",
-				null,
-			),
+			buildAgentRunRequest({
+				plan: planFor("ten fintech companies"),
+				count: 10,
+				today: "2026-08-30",
+				seller: null,
+				excludeDomains: [],
+			}),
 			exaEnv(),
 		);
 
@@ -340,12 +344,13 @@ describe("the search request runs at fast, the only type a search round pins", (
 
 describe("the plan chooses how hard the agent works", () => {
 	it("sends the effort the plan picked, not a fixed setting", () => {
-		const request = buildAgentRunRequest(
-			samplePlan({ agentEffort: "medium" }),
-			5,
-			"2026-08-30",
-			null,
-		);
+		const request = buildAgentRunRequest({
+			plan: samplePlan({ agentEffort: "medium" }),
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(request.effort).toBe("medium");
 	});

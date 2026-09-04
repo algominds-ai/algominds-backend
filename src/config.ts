@@ -24,6 +24,13 @@ export const config = {
 		seenDomainsWindowDays: 60,
 		exaAgentPollIntervalSeconds: 5,
 		exaAgentMaxPollAttempts: 60,
+		maxAnglesPerRound: 12,
+		companiesPerAngle: 4,
+		agentStartStaggerMs: 1500,
+		agentExcludedDomainsNamed: 50,
+		provingConcurrency: 5,
+		provingResults: 3,
+		contentsMaxCharacters: 10000,
 		judgeBatchSize: 15,
 	},
 	people: {

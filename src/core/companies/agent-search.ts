@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { config } from "@/config";
 import { planConstraints } from "@/core/companies/candidates";
 import type {
 	ExaAgentCompany,
@@ -64,7 +65,20 @@ const HONEST_COUNT_RULE = [
 	"means fewer companies, not a fabricated one.",
 ].join(" ");
 
-function agentQuery(plan: SearchPlan, count: number): string {
+const EXCLUDED_DOMAINS_NAMED = config.companies.agentExcludedDomainsNamed;
+
+/** The companies this account already holds, said to the agent so it stops spending on ones the gate will drop. Bounded, because the whole list runs to hundreds and the gate is what enforces it. */
+function excludedSentence(excludeDomains: readonly string[]): string | null {
+	if (excludeDomains.length === 0) return null;
+	const named = excludeDomains.slice(0, EXCLUDED_DOMAINS_NAMED).join(", ");
+	return `Never return any of these companies, which are already known: ${named}.`;
+}
+
+function agentQuery(
+	plan: SearchPlan,
+	count: number,
+	excludeDomains: readonly string[],
+): string {
 	const constraints = planConstraints(plan);
 	const parts = [
 		plan.query,
@@ -73,6 +87,7 @@ function agentQuery(plan: SearchPlan, count: number): string {
 		constraints,
 		plan.recency,
 		provenWindow(plan),
+		excludedSentence(excludeDomains),
 	];
 	return parts.filter((part) => part !== null && part !== "").join(" ");
 }
@@ -146,12 +161,16 @@ function agentSystemPrompt(today: string, seller: IcpSeller | null): string {
  * countries reach it as words, because the filter that follows rejects on them
  * and a candidate refused there was still paid for.
  */
-export function buildAgentRunRequest(
-	plan: SearchPlan,
-	count: number,
-	today: string,
-	seller: IcpSeller | null,
-): ExaAgentRunRequest {
+export type AgentRunInput = {
+	plan: SearchPlan;
+	count: number;
+	today: string;
+	seller: IcpSeller | null;
+	excludeDomains: readonly string[];
+};
+
+export function buildAgentRunRequest(input: AgentRunInput): ExaAgentRunRequest {
+	const { plan, count, today, seller, excludeDomains } = input;
 	const { $schema: _schema, ...outputSchema } = z.toJSONSchema(
 		z.object({
 			companies: z.array(agentCompanySchema(plan)).min(1).max(count),
@@ -159,7 +178,7 @@ export function buildAgentRunRequest(
 		{ io: "input" },
 	);
 	return {
-		query: agentQuery(plan, count),
+		query: agentQuery(plan, count, excludeDomains),
 		systemPrompt: agentSystemPrompt(today, seller),
 		effort: plan.agentEffort,
 		dataSources: [{ provider: "fiber" }],

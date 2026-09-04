@@ -7,67 +7,172 @@ import {
 } from "@/core/companies/agent-search";
 import { gate } from "@/core/companies/gate";
 import { judge } from "@/core/companies/judge";
+import { proveRows } from "@/core/companies/proving";
+import { backfillRecords } from "@/core/companies/record";
 import { CostLedger } from "@/core/cost";
 import { recentDomains } from "@/core/db/queries";
+import type { ExaAgentCompany } from "@/core/providers/exa/agent";
 import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
+import type { ExaResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
-import type { IcpDoc, IcpSeller } from "@/core/synthesize";
+import type { IcpDoc, IcpSeller, SearchPlan } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
 
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
-const JUDGE_CANDIDATE_MULTIPLE = config.companies.judgeCandidateMultiple;
-const RESULTS_PER_ROUND = config.companies.resultsPerRound;
+const COMPANIES_PER_ANGLE = config.companies.companiesPerAngle;
+const START_STAGGER_MS = config.companies.agentStartStaggerMs;
 
-/**
- * Builds the `search` dependency for one round when the configured company
- * source is Exa's agent API: starts a run asking for enough candidates to
- * survive the filter, the gate and the judge that follow,
- * then polls it to completion with durable sleeps the workflow owns.
- */
 export type AgentSearchInput = {
 	step: WorkflowStep;
 	round: number;
-	remaining: number;
 	today: string;
 	seller: IcpSeller | null;
 };
 
-export function agentSearch(
-	input: AgentSearchInput,
-): FindCompaniesDeps["search"] {
-	const { step, round, remaining, today, seller } = input;
-	return async (plan, _req, env, ledger) => {
-		const name = `round_${round}-agent`;
-		const wanted = Math.min(
-			remaining * JUDGE_CANDIDATE_MULTIPLE,
-			RESULTS_PER_ROUND,
+type AngleInput = {
+	input: AgentSearchInput;
+	plan: SearchPlan;
+	slot: number;
+	excludeDomains: readonly string[];
+};
+
+/**
+ * Runs one angle as its own durable agent run: start, poll to completion, and
+ * return the companies it found. Each angle owns its own step names so a
+ * replay resumes the angle it was in rather than restarting the fan-out, and
+ * every angle after the first waits its slot out so a round never crosses
+ * Exa's ten-requests-a-second limit.
+ */
+async function runAngle(
+	angle: AngleInput,
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaAgentCompany[]> {
+	const { input, plan, slot, excludeDomains } = angle;
+	const { step, round, today, seller } = input;
+	const name = `round_${round}-angle_${slot}`;
+	if (slot > 0) {
+		await step.sleep(
+			`${name}-stagger`,
+			`${Math.ceil((slot * START_STAGGER_MS) / 1000)} seconds`,
 		);
-		const { id } = await step.do(
-			`${name}-start`,
-			config.stepConfig.paidCall,
-			() =>
-				startAgentRun(buildAgentRunRequest(plan, wanted, today, seller), env),
-		);
-		const companies = await pollAgentRun(
-			{
+	}
+	const { id } = await step.do(
+		`${name}-start`,
+		config.stepConfig.paidCall,
+		() =>
+			startAgentRun(
+				buildAgentRunRequest({
+					plan,
+					count: COMPANIES_PER_ANGLE,
+					today,
+					seller,
+					excludeDomains,
+				}),
 				env,
-				step,
-				name,
-				id,
-				intervalSeconds: POLL_INTERVAL_SECONDS,
-				maxAttempts: MAX_POLL_ATTEMPTS,
-			},
-			ledger,
-			async (pollLedger) => {
-				const run = await getAgentRun(id, env, pollLedger);
-				return run.status === "completed"
-					? { status: "completed", output: run.companies }
-					: run;
+			),
+	);
+	return pollAgentRun(
+		{
+			env,
+			step,
+			name,
+			id,
+			intervalSeconds: POLL_INTERVAL_SECONDS,
+			maxAttempts: MAX_POLL_ATTEMPTS,
+		},
+		ledger,
+		async (pollLedger) => {
+			const run = await getAgentRun(id, env, pollLedger);
+			return run.status === "completed"
+				? { status: "completed", output: run.companies }
+				: run;
+		},
+	);
+}
+
+/**
+ * Builds the fan-out dependency: one agent run per angle the planner wrote,
+ * started `agentStartStaggerMs` apart so a round never crosses Exa's
+ * ten-requests-a-second limit, and their companies merged into one result.
+ */
+export function agentFanout(
+	input: AgentSearchInput,
+): FindCompaniesDeps["agentRound"] {
+	return async (plans, excludeDomains, env, ledger) => {
+		const perAngle = await Promise.all(
+			plans.map((plan, slot) =>
+				runAngle({ input, plan, slot, excludeDomains }, env, ledger),
+			),
+		);
+		return toExaSearchResult(`round_${input.round}-fanout`, perAngle.flat());
+	};
+}
+
+/** Wraps the record backfill in one durable step, so a replay reuses the records it already paid for. */
+export function steppedBackfill(
+	step: WorkflowStep,
+	round: number,
+): FindCompaniesDeps["backfill"] {
+	return async (domains, env, ledger) => {
+		const cached = await step.do(
+			`round_${round}-backfill`,
+			config.stepConfig.paidCall,
+			async () => {
+				const stepLedger = new CostLedger();
+				const filled = await backfillRecords(domains, env, stepLedger);
+				return {
+					filled: filled.map((entry) => ({
+						domain: entry.domain,
+						record: entry.record ? JSON.stringify(entry.record) : null,
+					})),
+					costEntries: stepLedger.toJSON().entries,
+				};
 			},
 		);
-		return toExaSearchResult(id, companies);
+		applyCostEntries(cached.costEntries, ledger);
+		return cached.filled.map((entry) => ({
+			domain: entry.domain,
+			record: entry.record ? readExaResult(entry.record) : null,
+		}));
+	};
+}
+
+/** One serialized Exa result read back after a durable step, whose reply must be plain JSON. */
+function readExaResult(raw: string): ExaResult | null {
+	const parsed: unknown = JSON.parse(raw);
+	if (parsed === null || typeof parsed !== "object") return null;
+	const candidate: ExaResult = {
+		id: null,
+		url: "",
+		title: "",
+		summary: null,
+		company: null,
+		person: null,
+		...parsed,
+	};
+	return candidate.url === "" ? null : candidate;
+}
+
+/** Wraps the proving pass in one durable step, so a replay reuses the pages it already paid for. */
+export function steppedProve(
+	step: WorkflowStep,
+	round: number,
+): FindCompaniesDeps["prove"] {
+	return async (rows, requirement, env, ledger) => {
+		const cached = await step.do(
+			`round_${round}-prove`,
+			config.stepConfig.paidCall,
+			async () => {
+				const stepLedger = new CostLedger();
+				const proven = await proveRows(rows, requirement, env, stepLedger);
+				return { proven, costEntries: stepLedger.toJSON().entries };
+			},
+		);
+		applyCostEntries(cached.costEntries, ledger);
+		return cached.proven;
 	};
 }
 
@@ -87,14 +192,15 @@ export function agentSynthesize(
 			async () => {
 				const result = await synthesize(input, env);
 				return {
-					plan: result.plan,
+					route: result.route,
+					plans: result.plans,
 					costEntries: result.ledger.toJSON().entries,
 				};
 			},
 		);
 		const ledger = new CostLedger();
 		applyCostEntries(cached.costEntries, ledger);
-		return { plan: cached.plan, ledger };
+		return { route: cached.route, plans: cached.plans, ledger };
 	};
 }
 
@@ -114,22 +220,17 @@ export function agentRecentDomains(
 		);
 }
 
-/**
- * Wraps the plain Exa search in its own durable step, so a later failure in
- * the same round replays the results it already paid for instead of buying
- * them again.
- */
 /** Wraps the judge in its own durable step, for the same replay-safety reason as `agentSynthesize`. */
 function steppedJudge(
 	step: WorkflowStep,
 	round: number,
 ): FindCompaniesDeps["judge"] {
-	return async (icp, rows, env, recency) => {
+	return async (requirements, rows, env) => {
 		const cached = await step.do(
 			`round_${round}-judge`,
 			config.stepConfig.paidCall,
 			async () => {
-				const result = await judge(icp, rows, env, recency);
+				const result = await judge(requirements, rows, env);
 				return {
 					verdicts: result.verdicts,
 					costEntries: result.ledger.toJSON().entries,
@@ -142,31 +243,29 @@ function steppedJudge(
 	};
 }
 
-/** Builds every dependency one round runs on, sending the round to the agent when its plan chose one and to a single Exa search when it did not. */
+/** Builds every dependency one round runs on. The route is the planner's, so both the search path and the agent fan-out are wired here and the round picks between them. */
 export type RoundDepsInput = {
 	accumulatedDomains: ReadonlySet<string>;
 	step: WorkflowStep;
 	round: number;
-	remaining: number;
 	today: string;
 	seller: IcpDoc["seller"];
 };
 
 export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
-	const { accumulatedDomains, step, round, remaining, today } = input;
+	const { accumulatedDomains, step, round, today } = input;
 	const seller = input.seller ?? null;
 	const lookupRecentDomains = agentRecentDomains(step, round);
-	const viaAgent = agentSearch({ step, round, remaining, today, seller });
 	return {
 		recentDomains: async (env, organizationId, days) => {
 			const known = await lookupRecentDomains(env, organizationId, days);
 			return [...known, ...accumulatedDomains];
 		},
 		synthesize: agentSynthesize(step, round),
-		search: (plan, req, env, ledger) =>
-			plan.source === "exa-agent"
-				? viaAgent(plan, req, env, ledger)
-				: search(req, env, ledger),
+		search: (_plan, req, env, ledger) => search(req, env, ledger),
+		agentRound: agentFanout({ step, round, today, seller }),
+		backfill: steppedBackfill(step, round),
+		prove: steppedProve(step, round),
 		gate,
 		judge: steppedJudge(step, round),
 	};

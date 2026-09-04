@@ -12,6 +12,7 @@ import {
 import { publicDomain } from "@/core/db/schema";
 import type { SellerPage } from "@/core/onboard";
 import { readSellerPages, writeSellerProfile } from "@/core/onboard";
+import type { Requirement } from "@/core/requirements";
 import type { IcpBuyer, IcpSeller } from "@/core/synthesize";
 
 const OnboardIcpPayloadSchema = z.object({
@@ -55,6 +56,7 @@ type BuiltIcp = {
 	description: string | null;
 	seller: IcpSeller;
 	buyer: IcpBuyer | null;
+	requirements: Requirement[];
 	wroteProfile: boolean;
 	costDollars: number;
 };
@@ -91,6 +93,7 @@ async function buyProfile(input: BuyProfileInput): Promise<BuiltIcp> {
 				description: result.description,
 				seller: result.seller,
 				buyer: result.buyer,
+				requirements: result.requirements,
 				wroteProfile: result.wroteProfile,
 				costDollars: result.ledger.total(),
 			})),
@@ -120,6 +123,7 @@ async function persistIcp(input: PersistIcpInput): Promise<string> {
 		description: built.description,
 		seller: built.seller,
 		buyer: built.buyer,
+		requirements: built.requirements,
 		costDollars: built.costDollars,
 	});
 }

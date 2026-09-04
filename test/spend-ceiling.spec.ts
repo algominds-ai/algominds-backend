@@ -75,7 +75,18 @@ describe("the account's daily spend ceiling", () => {
 				await m.mockStepResult(
 					{ name: "load-icp" },
 					{
-						doc: { description: "anything" },
+						doc: {
+							description: "anything",
+							requirements: [
+								{
+									id: "r1",
+									text: "the company fits the profile",
+									kind: "hard",
+									proof: "record",
+									windowDays: null,
+								},
+							],
+						},
 						organizationId: seed.organizationId,
 					},
 				);
@@ -106,7 +117,18 @@ describe("the account's daily spend ceiling", () => {
 				await m.mockStepResult(
 					{ name: "load-icp" },
 					{
-						doc: { description: "anything" },
+						doc: {
+							description: "anything",
+							requirements: [
+								{
+									id: "r1",
+									text: "the company fits the profile",
+									kind: "hard",
+									proof: "record",
+									windowDays: null,
+								},
+							],
+						},
 						organizationId: seed.organizationId,
 					},
 				);
@@ -124,6 +146,7 @@ describe("the account's daily spend ceiling", () => {
 						captures: {},
 						seenDomains: [],
 						feedback: [],
+						pages: [],
 					},
 				);
 				await m.mockStepResult({ name: "save-companies" }, {});

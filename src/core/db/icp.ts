@@ -4,10 +4,12 @@ import { db, withConnection } from "@/core/db/client";
 import type {
 	DbFactory,
 	IcpConnection,
+	IcpDocUpdateConnection,
 	IcpInsertConnection,
 } from "@/core/db/queries";
 import type { Icp, NewIcp } from "@/core/db/schema";
 import { icp, run } from "@/core/db/schema";
+import type { Requirement } from "@/core/requirements";
 import type { IcpBuyer, IcpDoc, IcpSeller } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 
@@ -26,6 +28,7 @@ export type NewIcpInput = Pick<NewIcp, "domain" | "organizationId"> & {
 	description: string;
 	seller?: IcpSeller | null;
 	buyer?: IcpBuyer | null;
+	requirements?: readonly Requirement[] | null;
 };
 
 /** Inserts the profile and returns the stored row, on whichever connection the caller is already inside. */
@@ -37,6 +40,7 @@ async function insertIcp(
 		description: input.description,
 		seller: input.seller ?? null,
 		buyer: input.buyer ?? null,
+		requirements: input.requirements ?? null,
 	});
 	const rows = await connection
 		.insert(icp)
@@ -84,4 +88,33 @@ export async function createIcp(
 	return withConnection(env, "cached", buildDb, (connection) =>
 		insertIcp(connection, input),
 	);
+}
+
+/**
+ * Stores the requirements a profile was missing, leaving every other field of
+ * its document alone. Returns the stored list, or the list already there when
+ * another run wrote one first, so one profile is only ever read once.
+ */
+export async function saveIcpRequirements(
+	env: DbEnv,
+	icpId: string,
+	requirements: readonly Requirement[],
+	buildDb: DbFactory<IcpDocUpdateConnection> = db,
+): Promise<Requirement[]> {
+	return withConnection(env, "cached", buildDb, async (connection) => {
+		const rows = await connection
+			.select()
+			.from(icp)
+			.where(eq(icp.id, icpId))
+			.limit(1);
+		const row = rows[0];
+		if (!row) throw new Error(`saveIcpRequirements: unknown icp ${icpId}`);
+		const doc = IcpDocSchema.parse(row.doc);
+		if (doc.requirements && doc.requirements.length > 0) {
+			return doc.requirements;
+		}
+		const next: IcpDoc = { ...doc, requirements: [...requirements] };
+		await connection.update(icp).set({ doc: next }).where(eq(icp.id, icpId));
+		return [...requirements];
+	});
 }

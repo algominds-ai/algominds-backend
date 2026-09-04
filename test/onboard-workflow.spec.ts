@@ -265,6 +265,16 @@ describe("POST /icp/onboard: a same-day repeat", () => {
 	});
 });
 
+const onboardedRequirements = [
+	{
+		id: "r1",
+		text: "the company runs its own delivery team",
+		kind: "hard",
+		proof: "record",
+		windowDays: null,
+	},
+];
+
 describe("OnboardIcpWorkflow: persisting the profile", () => {
 	it("writes one icp row carrying the description, seller block, and buyer block, and a run row GET /runs/:runId resolves", async () => {
 		const domain = `acme-${crypto.randomUUID()}.example`;
@@ -290,6 +300,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 						description: "a four paragraph ideal customer profile",
 						seller,
 						buyer,
+						requirements: onboardedRequirements,
 						wroteProfile: true,
 						costDollars: 0.02,
 					},
@@ -327,6 +338,7 @@ describe("OnboardIcpWorkflow: persisting the profile", () => {
 				description: "a four paragraph ideal customer profile",
 				seller,
 				buyer,
+				requirements: onboardedRequirements,
 			});
 
 			const statusResponse = await authedCall(
@@ -657,6 +669,7 @@ describe("saveOnboardedIcp", () => {
 			description: "a stored profile",
 			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
 			buyer: null,
+			requirements: null,
 		});
 
 		const closed = await findRun(testEnv, runId);

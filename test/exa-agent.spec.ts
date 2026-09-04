@@ -25,6 +25,7 @@ function planFor(query: string): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
+		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -95,12 +96,13 @@ describe("agent run start request shape", () => {
 		const stub = stubFetch(
 			jsonResponse(200, { id: "run-1", status: "running" }),
 		);
-		const req = buildAgentRunRequest(
-			planFor("seed stage fintech"),
-			10,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: planFor("seed stage fintech"),
+			count: 10,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		await startAgentRun(req, exaEnv());
 
@@ -118,18 +120,25 @@ describe("agent run start request shape", () => {
 		plan.recency = "a funding round announced lately";
 		plan.recencyDays = 45;
 
-		const req = buildAgentRunRequest(plan, 10, "2026-09-01", null);
+		const req = buildAgentRunRequest({
+			plan: plan,
+			count: 10,
+			today: "2026-09-01",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(req.query).toContain("published in the last 45 days");
 	});
 
 	it("asks for no window when the profile asked for nothing recent", async () => {
-		const req = buildAgentRunRequest(
-			planFor("seed stage fintech"),
-			10,
-			"2026-09-01",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: planFor("seed stage fintech"),
+			count: 10,
+			today: "2026-09-01",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(req.query).not.toContain("published in the last");
 	});
@@ -138,12 +147,13 @@ describe("agent run start request shape", () => {
 		stubFetch(jsonResponse(200, { id: "run-42", status: "running" }));
 
 		const result = await startAgentRun(
-			buildAgentRunRequest(
-				planFor("seed stage fintech"),
-				5,
-				"2026-08-30",
-				null,
-			),
+			buildAgentRunRequest({
+				plan: planFor("seed stage fintech"),
+				count: 5,
+				today: "2026-08-30",
+				seller: null,
+				excludeDomains: [],
+			}),
 			exaEnv(),
 		);
 
@@ -159,7 +169,13 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30", null),
+				buildAgentRunRequest({
+					plan: planFor("GTM leads"),
+					count: 5,
+					today: "2026-08-30",
+					seller: null,
+					excludeDomains: [],
+				}),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -172,7 +188,13 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30", null),
+				buildAgentRunRequest({
+					plan: planFor("GTM leads"),
+					count: 5,
+					today: "2026-08-30",
+					seller: null,
+					excludeDomains: [],
+				}),
 				exaEnv(),
 			),
 		).rejects.toThrow(NonRetryableError);
@@ -185,7 +207,13 @@ describe("agent run error mapping", () => {
 
 		await expect(
 			startAgentRun(
-				buildAgentRunRequest(planFor("GTM leads"), 5, "2026-08-30", null),
+				buildAgentRunRequest({
+					plan: planFor("GTM leads"),
+					count: 5,
+					today: "2026-08-30",
+					seller: null,
+					excludeDomains: [],
+				}),
 				exaEnv(),
 			),
 		).rejects.toThrow(RetryableProviderError);
@@ -461,12 +489,13 @@ describe("a run that is still working", () => {
 
 describe("the agent is asked for evidence, and for evidence inside a window", () => {
 	function companySchema(count: number, plan: SearchPlan) {
-		const req = buildAgentRunRequest(
-			{ ...plan, recency: "A role posted in the last 30 days." },
-			count,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: { ...plan, recency: "A role posted in the last 30 days." },
+			count: count,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 		const parsed = JSON.parse(JSON.stringify(req.outputSchema));
 		return parsed.properties.companies.items;
 	}
@@ -490,33 +519,36 @@ describe("the agent is asked for evidence, and for evidence inside a window", ()
 	});
 
 	it("tells the agent today's date so a window in the query means something", () => {
-		const req = buildAgentRunRequest(
-			planFor("payment platforms"),
-			5,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: planFor("payment platforms"),
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(req.systemPrompt).toContain("2026-08-30");
 		expect(req.systemPrompt).toContain("YYYY-MM-DD");
 	});
 
 	it("carries the profile's freshness windows into the query, and nothing when it asks for none", () => {
-		const withWindow = buildAgentRunRequest(
-			{
+		const withWindow = buildAgentRunRequest({
+			plan: {
 				...planFor("payment platforms"),
 				recency: "A role posted in the last 30 days.",
 			},
-			5,
-			"2026-08-30",
-			null,
-		);
-		const without = buildAgentRunRequest(
-			planFor("payment platforms"),
-			5,
-			"2026-08-30",
-			null,
-		);
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
+		const without = buildAgentRunRequest({
+			plan: planFor("payment platforms"),
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(withWindow.query).toContain("last 30 days");
 		expect(without.query).not.toContain("last 30 days");
@@ -683,7 +715,13 @@ describe("what is stored keeps the evidence, not just the company", () => {
 
 describe("a signal is only demanded when the profile asks for something recent", () => {
 	function itemsFor(plan: SearchPlan) {
-		const req = buildAgentRunRequest(plan, 5, "2026-08-30", null);
+		const req = buildAgentRunRequest({
+			plan: plan,
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
 			.items;
 	}
@@ -763,12 +801,13 @@ describe("a company LinkedIn page reaches the row, a personal profile does not",
 
 describe("the agent hands over the page, not only its own summary of it", () => {
 	function itemsFor(recency: string | null) {
-		const req = buildAgentRunRequest(
-			{ ...planFor("payment platforms"), recency },
-			5,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: { ...planFor("payment platforms"), recency },
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
 			.items;
 	}
@@ -788,12 +827,13 @@ describe("the agent hands over the page, not only its own summary of it", () => 
 	});
 
 	it("tells the agent to copy the sentence and never to guess a publisher", () => {
-		const req = buildAgentRunRequest(
-			planFor("payment platforms"),
-			5,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: planFor("payment platforms"),
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(req.systemPrompt).toContain("copied word for word");
 		expect(req.systemPrompt).toContain("the page does not say");
@@ -897,12 +937,13 @@ describe("evidence outside the window the profile asks for is refused in code", 
 
 describe("a thin round comes back thin, never empty", () => {
 	it("never sets a floor the agent can fail, because a failed schema discards everything it found", () => {
-		const req = buildAgentRunRequest(
-			planFor("payment platforms"),
-			30,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: planFor("payment platforms"),
+			count: 30,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 		const schema = JSON.parse(JSON.stringify(req.outputSchema));
 
 		expect(schema.properties.companies.minItems).toBe(1);
@@ -949,12 +990,13 @@ describe("the industry the agent reports reaches the row and the stored company"
 	});
 
 	it("asks the agent for the market it sells into", () => {
-		const req = buildAgentRunRequest(
-			planFor("staffing agencies"),
-			5,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: planFor("staffing agencies"),
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 
 		expect(req.systemPrompt).toContain("`industry`");
 	});
@@ -969,12 +1011,13 @@ describe("the agent is told who it prospects for", () => {
 	};
 
 	function promptFor(sellerBlock: typeof seller | null): string | undefined {
-		return buildAgentRunRequest(
-			planFor("payment platforms"),
-			5,
-			"2026-08-30",
-			sellerBlock,
-		).systemPrompt;
+		return buildAgentRunRequest({
+			plan: planFor("payment platforms"),
+			count: 5,
+			today: "2026-08-30",
+			seller: sellerBlock,
+			excludeDomains: [],
+		}).systemPrompt;
 	}
 
 	it("names the seller, every customer it already won, and the competitor test", () => {
@@ -1004,12 +1047,13 @@ describe("the agent is told who it prospects for", () => {
 
 describe("a LinkedIn post proves an event, a member profile does not", () => {
 	it("admits the post and bars the member profile", () => {
-		const prompt = buildAgentRunRequest(
-			planFor("payment platforms"),
-			5,
-			"2026-08-30",
-			null,
-		).systemPrompt;
+		const prompt = buildAgentRunRequest({
+			plan: planFor("payment platforms"),
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		}).systemPrompt;
 
 		expect(prompt).toContain("LinkedIn post");
 		expect(prompt).toContain("linkedin.com/in");
@@ -1019,12 +1063,13 @@ describe("a LinkedIn post proves an event, a member profile does not", () => {
 
 describe("a row says what sort of page proved it", () => {
 	function itemsFor(recency: string | null) {
-		const req = buildAgentRunRequest(
-			{ ...planFor("payment platforms"), recency },
-			5,
-			"2026-08-30",
-			null,
-		);
+		const req = buildAgentRunRequest({
+			plan: { ...planFor("payment platforms"), recency },
+			count: 5,
+			today: "2026-08-30",
+			seller: null,
+			excludeDomains: [],
+		});
 		return JSON.parse(JSON.stringify(req.outputSchema)).properties.companies
 			.items;
 	}

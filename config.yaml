@@ -73,6 +73,27 @@ companies:
   # killed mid-flight, losing everything already paid for. 60 polls at 5
   # seconds is 5 minutes, which covers the constrained case.
   exaAgentMaxPollAttempts: 60
+  # Angles one agent round fans out across, each its own paid run. Measured: an agent run
+  # asked for twenty companies returned one, because it stops at schema_satisfied, so more
+  # companies come from more angles rather than a bigger ask. Seven angles returned nine
+  # companies in 139 seconds.
+  maxAnglesPerRound: 12
+  # Companies one agent angle is asked for. Small on purpose: the ask is not the floor.
+  companiesPerAngle: 4
+  # Milliseconds between two agent run starts. Exa refuses above ten requests a second,
+  # measured live, and a fan-out starts every angle at once without this.
+  agentStartStaggerMs: 1500
+  # Domains an agent run is told by name to skip. The gate enforces the whole exclusion
+  # list; naming a bounded head of it in the query only stops the agent paying for
+  # companies that would be dropped anyway.
+  agentExcludedDomainsNamed: 50
+  # Concurrent proving lookups and record backfills, under the same ten-a-second limit.
+  provingConcurrency: 5
+  # Results one proving lookup asks for. The first carrying a quote wins.
+  provingResults: 3
+  # Characters of page text Exa returns per page. The vendor's documented maximum is 10000;
+  # a larger number is clamped rather than refused.
+  contentsMaxCharacters: 10000
   # Rows sent to the judge in one model call. A round that sent every judgeCandidateMultiple x
   # count row in a single prompt was measured at 130 seconds across two attempts and timed out
   # once; slicing into batches this size keeps each call inside model.timeoutMs below.

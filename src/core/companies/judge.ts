@@ -3,15 +3,31 @@ import { config } from "@/config";
 import type { CompanyRow } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import { generateStructured, reasoningModel } from "@/core/model";
-import type { IcpDoc } from "@/core/synthesize";
+import type { Requirement } from "@/core/requirements";
+import { hardRequirements, requirementLine } from "@/core/requirements";
 
 const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 const JUDGE_BATCH_SIZE = config.companies.judgeBatchSize;
 
+export const REQUIREMENT_STATUSES = [
+	"proven",
+	"unproven",
+	"contradicted",
+] as const;
+
+export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number];
+
+const StatusSchema = z.object({
+	id: z.string(),
+	status: z.enum(REQUIREMENT_STATUSES),
+});
+
 const VerdictSchema = z.object({
 	index: z.number().int().nonnegative(),
-	keep: z.boolean(),
+	statuses: z.array(StatusSchema),
+	soft: z.array(z.string()),
 	reason: z.string(),
+	sameOrganizationAs: z.number().int().nonnegative().nullable(),
 });
 
 export type Verdict = z.infer<typeof VerdictSchema>;
@@ -26,43 +42,42 @@ export type JudgeResult = {
 };
 
 const JUDGE_INSTRUCTIONS = [
-	"You judge one batch of candidate companies against an ideal customer profile in a single",
-	"pass. For every row, by its index, decide whether it should keep going toward a campaign.",
-	"Return one verdict per row, in the same order, each carrying the row index and a keep",
-	"decision. Give a one-sentence reason for every row, kept or refused, of about twenty five",
-	"words or fewer, in plain text describing only what that row's own fields show: never",
-	"invent a fact the row does not carry.",
-	"A row may carry the page its signal came from: `evidenceUrl`, `evidenceQuote` copied",
-	"word for word from that page, and `evidencePublisher` as the page names itself. When a",
-	"row carries them, weigh them: refuse a row whose page records nothing about the company",
-	"it names, whose quote is about a different company, or whose page names no publisher at",
-	"all. A page published by a named organisation counts even when that organisation is not",
-	"the company, so a news publication, a job board the company plainly uses, and a status",
-	"provider are all credible records.",
-	"A row carrying no quote and no publisher came from a source that does not produce them,",
-	"because the profile asked for no recent event. Judge it on the profile and the",
-	"company's own record, and never refuse it for their absence.",
-	"A row whose `evidenceDate` falls outside the freshness window never reaches you, so",
-	"every date you see is inside it. A row carrying no `evidenceDate` does reach you, and",
-	"whether it still proves the signal depends on what the page is. A page that is only",
-	"true while it is published, such as a job advertisement still open or a status page",
-	"reporting a live incident, proves the signal now even with no date printed on it. A",
-	"page that records something that happened, such as a news article, an announcement or",
-	"a postmortem, proves nothing without a date, because you cannot tell when it happened.",
+	"You judge candidate companies against a list of requirements. For every row, by its",
+	"index, return one status for each requirement id asked for: `proven` when the row's own",
+	"record or evidence establishes it, `contradicted` when they establish the opposite,",
+	"`unproven` otherwise. A requirement the row says nothing about is `unproven`; never",
+	"guess one either way.",
+	"A row carrying an evidence page proves a requirement from it only when the quote is",
+	"about the company the row names and the page records it; a quote about another company",
+	"proves nothing.",
+	"Give one reason of twenty-five words or fewer describing only what that row's own",
+	"fields show, and never invent a fact the row does not carry.",
+	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
+	"under another brand, country domain or subdomain, and to null otherwise.",
 ].join(" ");
 
 function judgePrompt(
-	icp: IcpDoc,
+	requirements: readonly Requirement[],
 	rows: readonly CompanyRow[],
-	recency: string | null,
 ): string {
-	const criteria = [`Ideal customer profile:`, icp.description];
-	if (recency !== null) criteria.push("Freshness window:", recency);
-	const numbered = rows.map((row, index) => {
+	const hard = hardRequirements(requirements);
+	const soft = requirements.filter((req) => req.kind === "soft");
+	const lines = [
+		"Requirements needing a status:",
+		...hard.map(requirementLine),
+	];
+	if (soft.length > 0) {
+		lines.push(
+			"Preferences. List in `soft` the ids this row's own fields show, and give no status for these:",
+			...soft.map(requirementLine),
+		);
+	}
+	lines.push("Rows:");
+	for (const [index, row] of rows.entries()) {
 		const { evidenceKind: _kind, ...judged } = row;
-		return `${index}: ${JSON.stringify(judged)}`;
-	});
-	return [...criteria, "Rows:", ...numbered].join("\n");
+		lines.push(`${index}: ${JSON.stringify(judged)}`);
+	}
+	return lines.join("\n");
 }
 
 const FALLBACK_REASON =
@@ -82,11 +97,25 @@ function judgeSlices(rows: readonly CompanyRow[]): JudgeSlice[] {
 	return slices;
 }
 
-function keepEverySliceRow(slice: JudgeSlice): Verdict[] {
-	return slice.rows.map((_, index) => ({
+/**
+ * Every hard requirement `unproven` for a slice whose model call produced
+ * nothing. A row-level fallback cannot claim proof it never saw, so a page
+ * requirement stays unproven and the round's own rule decides what that means.
+ */
+function unjudgedSlice(
+	slice: JudgeSlice,
+	requirements: readonly Requirement[],
+): Verdict[] {
+	const statuses = hardRequirements(requirements).map((req) => ({
+		id: req.id,
+		status: "unproven" as const,
+	}));
+	return slice.rows.map((_row, index) => ({
 		index: index + slice.offset,
-		keep: true,
+		statuses,
+		soft: [],
 		reason: FALLBACK_REASON,
+		sameOrganizationAs: null,
 	}));
 }
 
@@ -97,13 +126,16 @@ function shiftVerdicts(
 	return verdicts.map((verdict) => ({
 		...verdict,
 		index: verdict.index + slice.offset,
+		sameOrganizationAs:
+			verdict.sameOrganizationAs === null
+				? null
+				: verdict.sameOrganizationAs + slice.offset,
 	}));
 }
 
 type JudgeContext = {
-	icp: IcpDoc;
+	requirements: readonly Requirement[];
 	env: Env;
-	recency: string | null;
 	model: Awaited<ReturnType<typeof reasoningModel>>;
 	ledger: CostLedger;
 };
@@ -117,7 +149,7 @@ async function judgeSlice(
 			model: ctx.model,
 			configuredId: ctx.env.MODEL_ROUTE_REASONING,
 			instructions: JUDGE_INSTRUCTIONS,
-			prompt: judgePrompt(ctx.icp, slice.rows, ctx.recency),
+			prompt: judgePrompt(ctx.requirements, slice.rows),
 			schema: JudgeModelSchema,
 			headers: { "cf-aig-cache-ttl": String(JUDGE_CACHE_TTL_SECONDS) },
 		},
@@ -126,34 +158,31 @@ async function judgeSlice(
 	);
 	return output
 		? shiftVerdicts(slice, output.verdicts)
-		: keepEverySliceRow(slice);
+		: unjudgedSlice(slice, ctx.requirements);
 }
 
 /**
- * Judges every gate-passed row against the ICP document, in slices of at
- * most `JUDGE_BATCH_SIZE` rows so one call never sends the model more than
- * it can finish inside its own timeout. Every slice runs as its own model
- * call, concurrently, on one shared cost ledger; a slice whose model
- * produces nothing usable twice in a row falls back to keeping its own rows
- * rather than failing the whole batch.
+ * Judges every gate-passed row against the profile's requirements, in slices
+ * of at most `JUDGE_BATCH_SIZE` rows so one call never sends the model more
+ * than it can finish inside its own timeout. Every slice runs as its own
+ * model call, concurrently, on one shared cost ledger; a slice whose model
+ * produces nothing usable twice in a row falls back to every hard requirement
+ * unproven rather than failing the whole batch.
  */
 export async function judge(
-	icp: IcpDoc,
+	requirements: readonly Requirement[],
 	rows: readonly CompanyRow[],
 	env: Env,
-	recency: string | null,
 ): Promise<JudgeResult> {
 	const ledger = new CostLedger();
 	const ctx: JudgeContext = {
-		icp,
+		requirements,
 		env,
-		recency,
 		model: await reasoningModel(env),
 		ledger,
 	};
-	const slices = judgeSlices(rows);
 	const verdictsBySlice = await Promise.all(
-		slices.map((slice) => judgeSlice(ctx, slice)),
+		judgeSlices(rows).map((slice) => judgeSlice(ctx, slice)),
 	);
 	return { verdicts: verdictsBySlice.flat(), ledger };
 }

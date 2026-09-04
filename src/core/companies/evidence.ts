@@ -165,7 +165,6 @@ export function applyJudgeReasons(
 	verdicts: readonly Verdict[],
 ): void {
 	for (const verdict of verdicts) {
-		if (!verdict.keep) continue;
 		const domain = rows[verdict.index]?.domain;
 		const capture = domain ? captures[domain] : undefined;
 		if (capture) capture.result.fitReason = verdict.reason;

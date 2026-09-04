@@ -1,7 +1,8 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import type { IcpDoc } from "../src/core/synthesize";
+import type { Requirement } from "../src/core/requirements";
+import type { IcpDoc, SynthesizeInput } from "../src/core/synthesize";
 import { synthesize } from "../src/core/synthesize";
 
 const env: Env = {
@@ -32,7 +33,7 @@ function userContent(request: CapturedRequest | undefined): string {
 	return message.content;
 }
 
-function systemContent(request: CapturedRequest | undefined): string {
+function _systemContent(request: CapturedRequest | undefined): string {
 	if (!request) throw new Error("expected a captured request");
 	const body = RequestBodySchema.parse(request.body);
 	const message = body.messages.find((entry) => entry.role === "system");
@@ -112,13 +113,10 @@ function objectReply(value: unknown, cost?: number): ScriptedReply {
 }
 
 type PlanShape = {
+	route: string | null;
 	query: string;
 	angle: string;
-	recency: string | null;
-	eventWindowDays: number | null;
-	recencyDays: number | null;
-	source: string | null;
-	agentEffort: string | null;
+	pageQuery: string | null;
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
@@ -132,14 +130,16 @@ type PlanShape = {
 };
 
 function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
-	return objectReply({
+	const { route, query, angle, pageQuery, ...bounds } = {
+		route: null,
 		query: "small US software teams that sell without a sales team",
 		angle: "founder-led vertical software",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
-		source: null,
-		agentEffort: null,
+		pageQuery: null,
+		...overrides,
+	};
+	return objectReply({
+		route,
+		rounds: [{ angle, query, pageQuery }],
 		userLocation: "US",
 		countries: ["United States"],
 		minWorkforce: null,
@@ -150,15 +150,63 @@ function planReply(overrides: Partial<PlanShape> = {}): ScriptedReply {
 		maxRevenueAnnual: null,
 		minFundingTotal: null,
 		maxFundingTotal: null,
-		...overrides,
+		...bounds,
 	});
+}
+
+const recordRequirement: Requirement = {
+	id: "r1",
+	text: "the company has twenty employees or fewer and is based in the United States",
+	kind: "hard",
+	proof: "record",
+	windowDays: null,
+};
+
+const pageRequirement: Requirement = {
+	id: "r2",
+	text: "the company published an engineering page showing it runs the platform itself",
+	kind: "hard",
+	proof: "page",
+	windowDays: 30,
+};
+
+const testRequirements: Requirement[] = [recordRequirement];
+
+function recordOnlyInput(): SynthesizeInput {
+	return {
+		icp,
+		requirements: [recordRequirement],
+		pastAngles: [],
+		feedback: [],
+		today: "2026-08-30",
+		angles: 1,
+		provenRate: null,
+	};
+}
+
+function pageGatedInput(): SynthesizeInput {
+	return {
+		...recordOnlyInput(),
+		requirements: [recordRequirement, pageRequirement],
+	};
 }
 
 function runSynthesize(
 	pastAngles: readonly string[] = [],
 	feedback: readonly string[] = [],
 ) {
-	return synthesize({ icp, pastAngles, feedback, today: "2026-08-30" }, env);
+	return synthesize(
+		{
+			icp,
+			requirements: testRequirements,
+			pastAngles,
+			feedback,
+			today: "2026-08-30",
+			angles: 1,
+			provenRate: null,
+		},
+		env,
+	);
 }
 
 describe("synthesize: gateway wiring", () => {
@@ -211,13 +259,8 @@ describe("synthesize: gateway wiring", () => {
 			chatCompletionResponse(
 				objectReply(
 					{
-						query: "q",
-						angle: "a",
-						recency: null,
-						eventWindowDays: null,
-						recencyDays: null,
-						source: null,
-						agentEffort: null,
+						route: null,
+						rounds: [{ angle: "a", query: "q", pageQuery: null }],
 						userLocation: null,
 						countries: [],
 						minWorkforce: null,
@@ -258,11 +301,8 @@ describe("synthesize: cost recording without a cost field", () => {
 					message: {
 						role: "assistant",
 						content: JSON.stringify({
-							query: "q",
-							angle: "a",
-							recency: null,
-							eventWindowDays: null,
-							recencyDays: null,
+							route: null,
+							rounds: [{ angle: "a", query: "q", pageQuery: null }],
 							source: null,
 							agentEffort: null,
 							userLocation: null,
@@ -312,12 +352,12 @@ describe("synthesize: the plan it returns", () => {
 
 		const result = await runSynthesize();
 
-		expect(result.plan.query).toBe(
+		expect(result.plans[0]?.query).toBe(
 			"small US software teams that sell without a sales team",
 		);
-		expect(result.plan.angle).toBe("founder-led vertical software");
-		expect(result.plan.maxWorkforce).toBe(20);
-		expect(result.plan.countries).toEqual(["United States"]);
+		expect(result.plans[0]?.angle).toBe("founder-led vertical software");
+		expect(result.plans[0]?.maxWorkforce).toBe(20);
+		expect(result.plans[0]?.countries).toEqual(["United States"]);
 	});
 
 	it("uppercases a two-letter country code and drops anything else", async () => {
@@ -327,8 +367,8 @@ describe("synthesize: the plan it returns", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		expect((await runSynthesize()).plan.userLocation).toBe("US");
-		expect((await runSynthesize()).plan.userLocation).toBeNull();
+		expect((await runSynthesize()).plans[0]?.userLocation).toBe("US");
+		expect((await runSynthesize()).plans[0]?.userLocation).toBeNull();
 	});
 
 	it("lists the angles already tried so the model picks a different one", async () => {
@@ -363,7 +403,7 @@ describe("synthesize: prompt drift and retries", () => {
 		const roundOnePrompt = userContent(gateway.calls[0]);
 		const roundTwoPrompt = userContent(gateway.calls[1]);
 		expect(roundTwoPrompt).not.toBe(roundOnePrompt);
-		expect(roundTwoPrompt).toContain(icp.description);
+		expect(roundTwoPrompt).toContain(recordRequirement.text);
 		expect(roundTwoPrompt).toContain("headcount too high");
 	});
 
@@ -379,8 +419,8 @@ describe("synthesize: prompt drift and retries", () => {
 		const result = await runSynthesize();
 
 		expect(gateway.calls).toHaveLength(2);
-		expect(result.plan.query).toBe("retry-query");
-		expect(result.plan.angle).toBe("retry-angle");
+		expect(result.plans[0]?.query).toBe("retry-query");
+		expect(result.plans[0]?.angle).toBe("retry-angle");
 	});
 
 	it("falls back to a template query after two consecutive failures, without throwing", async () => {
@@ -393,135 +433,121 @@ describe("synthesize: prompt drift and retries", () => {
 		const result = await runSynthesize();
 
 		expect(gateway.calls).toHaveLength(2);
-		expect(result.plan.query).toBe(icp.description);
-		expect(result.plan.maxWorkforce).toBeNull();
-		expect(result.plan.countries).toEqual([]);
+		expect(result.plans[0]?.query).toBe(icp.description);
+		expect(result.plans[0]?.maxWorkforce).toBeNull();
+		expect(result.plans[0]?.countries).toEqual([]);
 	});
 });
 
-describe("the agent is given the effort that keeps evidence freshest", () => {
+describe("the round runs on the route the requirements allow", () => {
 	const originalFetch = globalThis.fetch;
 
 	afterEach(() => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("sends low unchanged when the model writes agentEffort as low", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(planReply({ agentEffort: "low" })),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		expect((await runSynthesize()).plan.agentEffort).toBe("low");
-	});
-
-	it("fills medium when the model writes agentEffort as null", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(planReply({ agentEffort: null })),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
-	});
-
-	it("sends medium when the model writes agentEffort as medium", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(planReply({ agentEffort: "medium" })),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
-	});
-
-	it("carries medium on the template the second failure falls back to", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse({ content: "", finishReason: "length" }),
-			chatCompletionResponse({ content: "", finishReason: "length" }),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		expect((await runSynthesize()).plan.agentEffort).toBe("medium");
-	});
-
-	it("falls back to the template plan when the model writes agentEffort as high, because the schema no longer allows it", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(planReply({ agentEffort: "high" })),
-			chatCompletionResponse(planReply({ agentEffort: "high" })),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await runSynthesize();
-
-		expect(gateway.calls).toHaveLength(2);
-		expect(result.plan.query).toBe(icp.description);
-		expect(result.plan.agentEffort).toBe("medium");
-	});
-});
-
-describe("the routing rule: a shape draw searches, an event draw calls the agent", () => {
-	const originalFetch = globalThis.fetch;
-
-	afterEach(() => {
-		globalThis.fetch = originalFetch;
-	});
-
-	it("routes a shape profile draw to search, with no recency or agent windows", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				planReply({
-					source: "exa-search",
-					recency: null,
-					eventWindowDays: null,
-					recencyDays: null,
-				}),
-			),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await runSynthesize();
-
-		expect(result.plan.source).toBe("exa-search");
-		expect(result.plan.recency).toBeNull();
-		expect(result.plan.eventWindowDays).toBeNull();
-		expect(result.plan.recencyDays).toBeNull();
-	});
-
-	it("routes an event profile draw to the agent, with recency and both windows carried through", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				planReply({
-					source: "exa-agent",
-					recency: "a platform engineering role posted in the last 30 days",
-					eventWindowDays: 365,
-					recencyDays: 30,
-				}),
-			),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await runSynthesize();
-
-		expect(result.plan.source).toBe("exa-agent");
-		expect(result.plan.recency).toBe(
-			"a platform engineering role posted in the last 30 days",
-		);
-		expect(result.plan.eventWindowDays).toBe(365);
-		expect(result.plan.recencyDays).toBe(30);
-	});
-
-	it("tells the model to route a fact only public evidence can establish to the agent", async () => {
+	it("searches when nothing in the profile needs a page to settle it", async () => {
 		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
-		await runSynthesize();
+		const result = await synthesize(recordOnlyInput(), env);
 
-		const instructions = systemContent(gateway.calls[0]);
-		expect(instructions).toContain("a fact that only public evidence can");
-		expect(instructions).toContain(
-			"Choose it too when a hard gate names something",
-		);
-		expect(instructions).toContain(
-			"the shape alone cannot guarantee it: then `recency` names that evidence",
-		);
+		expect(result.route).toBe("search");
+		expect(result.plans[0]?.source).toBe("exa-search");
+		expect(result.plans[0]?.recency).toBeNull();
+		expect(result.plans[0]?.recencyDays).toBeNull();
+	});
+
+	it("ignores an agent route the model asks for when no requirement needs a page", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ route: "agent" })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(recordOnlyInput(), env);
+
+		expect(result.route).toBe("search");
+		expect(result.plans[0]?.source).toBe("exa-search");
+	});
+
+	it("carries the page requirement and its window onto an agent round", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ route: "agent" })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(pageGatedInput(), env);
+
+		expect(result.route).toBe("agent");
+		expect(result.plans[0]?.source).toBe("exa-agent");
+		expect(result.plans[0]?.recency).toBe(pageRequirement.text);
+		expect(result.plans[0]?.recencyDays).toBe(30);
+		expect(result.plans[0]?.eventWindowDays).toBe(30);
+	});
+
+	it("leaves a page-gated round on search when the model chooses it, and demands nothing of the agent", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(planReply({ route: "search" })),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(pageGatedInput(), env);
+
+		expect(result.route).toBe("search");
+		expect(result.plans[0]?.source).toBe("exa-search");
+		expect(result.plans[0]?.recency).toBeNull();
+	});
+
+	it("returns one plan per angle the model wrote, sharing the round's bounds", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				objectReply({
+					route: "agent",
+					rounds: [
+						{ angle: "banking", query: "banks", pageQuery: "a bank blog" },
+						{ angle: "retail", query: "retailers", pageQuery: "a retail blog" },
+					],
+					userLocation: "US",
+					countries: ["United States"],
+					minWorkforce: 500,
+					maxWorkforce: null,
+					minFoundedYear: null,
+					maxFoundedYear: null,
+					minRevenueAnnual: null,
+					maxRevenueAnnual: null,
+					minFundingTotal: null,
+					maxFundingTotal: null,
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(pageGatedInput(), env);
+
+		expect(result.plans).toHaveLength(2);
+		expect(result.plans.map((plan) => plan.angle)).toEqual([
+			"banking",
+			"retail",
+		]);
+		expect(result.plans.every((plan) => plan.minWorkforce === 500)).toBe(true);
+		expect(result.plans[1]?.pageQuery).toBe("a retail blog");
+	});
+
+	it("asks the model for as many angles as the round wants", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await synthesize({ ...pageGatedInput(), angles: 6 }, env);
+
+		expect(userContent(gateway.calls[0])).toContain("Write 6 different angles");
+	});
+
+	it("tells the next round how many candidates the last one proved", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await synthesize({ ...pageGatedInput(), provenRate: "3 of 20" }, env);
+
+		expect(userContent(gateway.calls[0])).toContain("3 of 20");
 	});
 });

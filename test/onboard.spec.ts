@@ -133,6 +133,13 @@ function profileReply(
 			bands: string[];
 			keywordBands: { band: string; keywords: string[] }[];
 		} | null;
+		requirements: Array<{
+			id: string;
+			text: string;
+			kind: string;
+			proof: string;
+			windowDays: number | null;
+		}>;
 	}> = {},
 ): ScriptedModelReply {
 	return {
@@ -141,6 +148,15 @@ function profileReply(
 			customers: ["Acme Corp"],
 			competitorTest: "A competitor sells the same tooling to other vendors.",
 			buyer: null,
+			requirements: [
+				{
+					id: "r1",
+					text: "the company runs its own delivery team",
+					kind: "hard",
+					proof: "record",
+					windowDays: null,
+				},
+			],
 			...overrides,
 		}),
 	};
