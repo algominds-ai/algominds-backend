@@ -227,6 +227,8 @@ export type ClayRosterRow = {
 	url: string;
 	title: string;
 	company: string;
+	city?: string;
+	country?: string;
 };
 
 /** Stubs `globalThis.fetch` as Clay's filters-mode search followed by its roster read, answering with `rows`. */
@@ -245,7 +247,10 @@ export function stubClayFetch(rows: ClayRosterRow[]): void {
 				latest_experience_title: row.title,
 				latest_experience_company: row.company,
 				latest_experience_start_date: null,
-				location: null,
+				structured_location: {
+					city: row.city ?? null,
+					country: row.country ?? null,
+				},
 			})),
 			has_more: false,
 			period_quota: { used: rows.length },

@@ -75,6 +75,9 @@ const ClaySearchRowSchema = z
 		latest_experience_company: z.string().nullish(),
 		latest_experience_start_date: z.string().nullish(),
 		location: z.string().nullish(),
+		structured_location: z
+			.object({ city: z.string().nullish(), country: z.string().nullish() })
+			.nullish(),
 	})
 	.passthrough();
 
@@ -99,13 +102,22 @@ export function canonicalPersonUrl(
 	return match ? `https://linkedin.com/in/${match[1]}` : null;
 }
 
+function structuredLocation(
+	value: z.infer<typeof ClaySearchRowSchema>["structured_location"],
+): string | null {
+	const parts = [value?.city, value?.country].filter((part): part is string =>
+		Boolean(part),
+	);
+	return parts.length > 0 ? parts.join(", ") : null;
+}
+
 function toClayRow(row: z.infer<typeof ClaySearchRowSchema>): ClayRow {
 	return {
 		name: row.name ?? null,
 		title: row.latest_experience_title ?? null,
 		company: row.latest_experience_company ?? null,
 		url: canonicalPersonUrl(row.url),
-		location: row.location ?? null,
+		location: row.location ?? structuredLocation(row.structured_location),
 		since: row.latest_experience_start_date ?? null,
 	};
 }
