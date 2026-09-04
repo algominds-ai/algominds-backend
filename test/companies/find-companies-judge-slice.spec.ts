@@ -212,3 +212,22 @@ describe("what one round hands the next when the judge never saw every candidate
 		expect(calls[1]?.excludeDomains).toContain("cand4.com");
 	});
 });
+
+describe("findCompanies — the plan's country bound filters the records", () => {
+	it("refuses a company headquartered outside the plan's countries", async () => {
+		const { result } = run(
+			5,
+			[
+				[
+					goodResult("abroad.com", { country: "Germany" }),
+					goodResult("home.com", { country: "United States" }),
+				],
+			],
+			{ planOverrides: { countries: ["United States"] } },
+		);
+
+		const outcome = await result;
+
+		expect(outcome.companies.map((c) => c.domain)).toEqual(["home.com"]);
+	});
+});

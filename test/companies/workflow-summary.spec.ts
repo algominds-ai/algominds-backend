@@ -3,6 +3,10 @@ import { env as testEnv } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { config } from "@/config";
+import type {
+	FindCompaniesResult,
+	FindCompaniesStatus,
+} from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import { organization } from "@/core/db/auth-schema";
@@ -16,6 +20,7 @@ import {
 } from "@/core/db/schema";
 import type { Requirement } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
+import { reportRound, roundPlan } from "@/workflows/find-companies-persist";
 
 const storedRequirements: Requirement[] = [
 	{
@@ -117,8 +122,12 @@ function reportFor(plan: SearchPlan, found: number) {
 
 function roundResult(
 	domains: string[],
-	overrides: { requested: number; status: string; costDollars: number },
-) {
+	overrides: {
+		requested: number;
+		status: FindCompaniesStatus;
+		costDollars: number;
+	},
+): FindCompaniesResult {
 	const companies = domains.map(companyRow);
 	const captures: Record<string, CompanyCapture> = Object.fromEntries(
 		domains.map((domain) => [
@@ -247,5 +256,35 @@ describe("what the workflow reports back for the whole run", () => {
 			await instance.dispose();
 			await cleanup({ ...seed, instanceId });
 		}
+	});
+});
+
+describe("a round's stored plan keeps every angle it searched", () => {
+	it("keeps every angle a round searched, and is null for a round that found none", () => {
+		const plans = [planFor(), { ...planFor(), angle: "payroll" }];
+
+		expect(roundPlan(plans)).toEqual(plans);
+		expect(roundPlan([])).toBeNull();
+	});
+});
+
+describe("a round reports the freshness it demanded", () => {
+	it("shows the window the plan asked for, and null when it asked for none", () => {
+		const empty = roundResult([], {
+			requested: 1,
+			status: "complete",
+			costDollars: 0,
+		});
+		const withWindow = reportRound(1, {
+			...empty,
+			searches: [
+				{ ...planFor(), recency: "A role posted in the last 30 days." },
+			],
+		});
+		const without = reportRound(1, { ...empty, searches: [planFor()] });
+
+		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
+		expect(without.recency).toBeNull();
+		expect(withWindow.source).toBe("exa-search");
 	});
 });

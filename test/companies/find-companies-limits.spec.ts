@@ -46,17 +46,6 @@ function goodResult(
 	};
 }
 
-function entitylessResult(id: number): ExaResult {
-	return {
-		id: null,
-		url: `https://example.com/missing-${id}`,
-		title: `NoEntity${id}`,
-		summary: null,
-		company: null,
-		person: null,
-	};
-}
-
 function testDeps(
 	overrides: Partial<FindCompaniesDeps> &
 		Pick<
@@ -229,28 +218,12 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 	};
 }
 
-describe("findCompanies — a rejected row never counts", () => {
-	it("never returns a result with no company record, even when it would have met the count", async () => {
-		const { result } = run(2, [
-			[goodResult("keep.com"), entitylessResult(1)],
-			[],
-		]);
+function hostOf(result: ExaResult): string {
+	return new URL(result.url).hostname;
+}
 
-		const outcome = await result;
-
-		expect(outcome.companies.map((c) => c.domain)).toEqual(["keep.com"]);
-		expect(
-			outcome.rejects.some(
-				(r) =>
-					r.stage === "filter" &&
-					r.reason === "no company record in the result",
-			),
-		).toBe(true);
-	});
-});
-
-describe("findCompanies — the plan's numeric and country bounds filter the records", () => {
-	it("refuses a company outside a bound the plan sets, per figure, keeping one the profile never bounded", async () => {
+describe("findCompanies — the plan's numeric bounds filter the records", () => {
+	it("refuses a company outside a bound the plan sets, per figure, keeping one still inside it", async () => {
 		const cases: Array<{
 			bound: Partial<SearchPlan>;
 			bad: ExaResult;
@@ -266,19 +239,19 @@ describe("findCompanies — the plan's numeric and country bounds filter the rec
 			{
 				bound: { minFoundedYear: 2020 },
 				bad: goodResult("old.com", { foundedYear: 2005 }),
-				good: goodResult("new.com", { foundedYear: null }),
+				good: goodResult("new.com", { foundedYear: 2021 }),
 				reason: "founding year 2005 below the floor of 2020",
 			},
 			{
 				bound: { maxRevenueAnnual: 10_000_000 },
 				bad: goodResult("richco.com", { revenueAnnual: 90_000_000 }),
-				good: goodResult("modest.com", { revenueAnnual: null }),
+				good: goodResult("modest.com", { revenueAnnual: 2_000_000 }),
 				reason: "annual revenue 90000000 above the limit of 10000000",
 			},
 			{
 				bound: { minFundingTotal: 1_000_000 },
 				bad: goodResult("bootstrapped.com", { fundingTotal: 50_000 }),
-				good: goodResult("funded.com", { fundingTotal: 0 }),
+				good: goodResult("funded.com", { fundingTotal: 2_000_000 }),
 				reason: "funding raised 50000 below the floor of 1000000",
 			},
 		];
@@ -286,23 +259,39 @@ describe("findCompanies — the plan's numeric and country bounds filter the rec
 		for (const { bound, bad, good, reason } of cases) {
 			const outcome = await run(5, [[bad, good]], { planOverrides: bound })
 				.result;
-			expect(outcome.companies.map((c) => c.domain)).not.toContain(bad.url);
+			const domains = outcome.companies.map((c) => c.domain);
+			expect(domains).not.toContain(hostOf(bad));
+			expect(domains).toContain(hostOf(good));
 			expect(outcome.rejects.some((r) => r.reason === reason)).toBe(true);
 		}
 	});
 
-	it("refuses a company headquartered outside the plan's countries", async () => {
-		const outcome = await run(
-			5,
-			[
-				[
-					goodResult("abroad.com", { country: "Germany" }),
-					goodResult("home.com", { country: "United States" }),
-				],
-			],
-			{ planOverrides: { countries: ["United States"] } },
-		).result;
+	it("never refuses on a figure the profile leaves unbounded, or one the vendor never reported", async () => {
+		const silentRows: Array<{
+			planOverrides: Partial<SearchPlan>;
+			row: ExaResult;
+		}> = [
+			{
+				planOverrides: {},
+				row: goodResult("anything.com", {
+					foundedYear: 1998,
+					fundingTotal: 0,
+					workforceTotal: 99_999,
+				}),
+			},
+			{
+				planOverrides: { minFoundedYear: 2020 },
+				row: goodResult("unknown-year.com", { foundedYear: null }),
+			},
+			{
+				planOverrides: { maxWorkforce: 20 },
+				row: goodResult("unknown-size.com", { workforceTotal: null }),
+			},
+		];
 
-		expect(outcome.companies.map((c) => c.domain)).toEqual(["home.com"]);
+		for (const { planOverrides, row } of silentRows) {
+			const outcome = await run(1, [[row]], { planOverrides }).result;
+			expect(outcome.companies.map((c) => c.domain)).toContain(hostOf(row));
+		}
 	});
 });

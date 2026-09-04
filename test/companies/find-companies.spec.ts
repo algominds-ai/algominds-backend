@@ -283,3 +283,23 @@ describe("findCompanies — the three terminal states", () => {
 		expect(outcome.companies).toHaveLength(6);
 	});
 });
+
+describe("findCompanies — a rejected row never counts", () => {
+	it("never returns a result with no company record, even when it would have met the count", async () => {
+		const { result } = run(2, [
+			[goodResult("keep.com"), entitylessResult(1)],
+			[],
+		]);
+
+		const outcome = await result;
+
+		expect(outcome.companies.map((c) => c.domain)).toEqual(["keep.com"]);
+		expect(
+			outcome.rejects.some(
+				(r) =>
+					r.stage === "filter" &&
+					r.reason === "no company record in the result",
+			),
+		).toBe(true);
+	});
+});
