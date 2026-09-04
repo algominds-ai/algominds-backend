@@ -1,5 +1,4 @@
 import type { KeyFile } from "@eval/label-core";
-import { emptyKeyFile } from "@eval/label-core";
 import { BRAINTRUST_PROJECT } from "@eval/profiles";
 import {
 	readCompanyTraceRecords,
@@ -18,7 +17,6 @@ import { buildCompanyRunTrace } from "@eval/trace-spans";
 import type { Span } from "braintrust";
 import { currentSpan, initLogger } from "braintrust";
 import type { Sql } from "postgres";
-import postgres from "postgres";
 
 export type {
 	CompanyRunTraceInput,
@@ -119,36 +117,4 @@ export async function logTrace(
 		{ name: spec.name, event: childEvent(spec) },
 	);
 	await logger.flush();
-}
-
-async function manualIcpId(sql: Sql, runId: string): Promise<string> {
-	const rows = await sql`select icp_id as "icpId" from run where id = ${runId}`;
-	const icpId = rows[0]?.icpId;
-	if (typeof icpId !== "string") {
-		throw new Error(`eval: trace found no icp for run ${runId}`);
-	}
-	return icpId;
-}
-
-async function main(): Promise<void> {
-	const runId = process.argv[2];
-	if (!runId) throw new Error("eval: trace needs a run id");
-	const sql = postgres(process.env.DATABASE_URL ?? "", { max: 1 });
-	const meta: RunTraceMeta = {
-		profile: "manual",
-		arm: "manual",
-		trial: 0,
-		commit: "manual",
-	};
-	try {
-		const icpId = await manualIcpId(sql, runId);
-		const scoring = { icpId, key: emptyKeyFile("manual", icpId) };
-		await logTrace(await traceCompaniesRun(sql, runId, scoring, meta));
-	} finally {
-		await sql.end();
-	}
-}
-
-if (import.meta.main) {
-	await main();
 }

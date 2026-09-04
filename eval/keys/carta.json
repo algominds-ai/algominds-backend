@@ -3,118 +3,137 @@
 	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
 	"companies": {
 		"01health.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "01Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"aegisai.ai": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Aegis AI Security",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"arintra.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Arintra",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: Arintra is a medical-coding AI startup this reviewer has some recollection of, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"augustus.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Augustus",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"axle.insure": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Axle",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"beacon.security": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Beacon Security",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"callosum.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Callosum",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"cytix.io": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Cytix",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: Cytix is a UK offensive-security startup this reviewer recalls raising a round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"metriport.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Metriport",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: Metriport is a health-data interoperability startup this reviewer recalls raising a seed round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"mindgard.ai": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Mindgard",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: Mindgard is a UK AI-security-testing startup this reviewer recalls raising seed funding before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"nogginhq.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Noggin HQ",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: this may be the established Noggin critical-event-management software company rather than an early-stage startup, which this reviewer cannot confirm from the name alone, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"norberthealth.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Norbert Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"onoshealth.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Onos Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"oreenergy.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Ore Energy",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"poweredbylight.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Light",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"quaise.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Quaise Energy",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: Quaise Energy is a deep-tech geothermal-drilling startup this reviewer recalls already raising a Series B before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"smallest.ai": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "smallest.ai",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: smallest.ai is a voice-AI startup this reviewer recalls raising a seed round before 2026, but no dated announcement within the 90-day window ending 2026-09-03 is available, and that window falls after this reviewer's knowledge cutoff"
 		},
 		"takt.io": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Takt",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		},
 		"velatir.com": {
-			"label": null,
+			"label": "reject:no-evidence",
 			"name": "Velatir",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
-			"lastSeenAt": "2026-09-04T03:18:34.881Z"
+			"lastSeenAt": "2026-09-04T03:18:34.881Z",
+			"note": "reject:no-evidence: no dated announcement of a priced round is available to check against the 90-day window, and no known public record of this company exists to check independently"
 		}
 	}
 }

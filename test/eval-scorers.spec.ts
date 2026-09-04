@@ -5,7 +5,7 @@ import {
 	gateProven,
 	gatesPass,
 	keyAccepted,
-	qualifiedCoverage,
+	precision,
 	queryCarriesHardRequirements,
 	routeMatchesShape,
 } from "@eval/scorers";
@@ -24,7 +24,7 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 		},
 		allGatesPass: true,
 		storedCount: 1,
-		qualifiedCoverage: 1,
+		precision: 1,
 		unlabelledStoredCount: 0,
 		costPerStoredCompany: 0.1,
 		secondsPerStoredCompany: 10,
@@ -59,20 +59,20 @@ describe("gatesPass", () => {
 	});
 });
 
-describe("qualifiedCoverage", () => {
-	it("reports the verdict's own coverage fraction", () => {
-		const half = verdict({ qualifiedCoverage: 0.5 });
+describe("precision", () => {
+	it("reports the verdict's own precision", () => {
+		const half = verdict({ precision: 0.5 });
 		expect(
-			qualifiedCoverage({
+			precision({
 				output: { verdict: half, runId: "r", skipped: null },
 			}),
-		).toEqual({ name: "qualified_coverage", score: 0.5 });
+		).toEqual({ name: "precision", score: 0.5 });
 	});
 
 	it("is null when the key has no accepted companies yet", () => {
-		const none = verdict({ qualifiedCoverage: null });
+		const none = verdict({ precision: null });
 		expect(
-			qualifiedCoverage({
+			precision({
 				output: { verdict: none, runId: "r", skipped: null },
 			}),
 		).toBeNull();

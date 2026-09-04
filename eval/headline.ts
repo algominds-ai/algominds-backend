@@ -14,6 +14,7 @@ export type StoredCompanyRecord = {
 	citedPage: string | null;
 	quote: string | null;
 	evidenceCheck: string | null;
+	provingPageStored: boolean;
 };
 
 export type CorrectnessGates = {
@@ -30,7 +31,7 @@ export type Verdict = {
 	gates: CorrectnessGates;
 	allGatesPass: boolean;
 	storedCount: number;
-	qualifiedCoverage: number | null;
+	precision: number | null;
 	unlabelledStoredCount: number;
 	costPerStoredCompany: number | null;
 	secondsPerStoredCompany: number | null;
@@ -78,8 +79,8 @@ function provingPassesWhereRequired(
 	return stored.every(
 		(row) =>
 			row.citedPage !== null &&
-			row.quote !== null &&
-			row.evidenceCheck === "found",
+			row.evidenceCheck === "found" &&
+			row.provingPageStored,
 	);
 }
 
@@ -92,12 +93,6 @@ function wallClockSeconds(run: RunReport): number | null {
 	const started = new Date(run.startedAt).getTime();
 	const finished = new Date(run.finishedAt).getTime();
 	return (finished - started) / 1000;
-}
-
-function keyAcceptedCount(key: KeyFile): number {
-	return Object.values(key.companies).filter(
-		(entry) => entry.label === "accept",
-	).length;
 }
 
 function perCompany(total: number | null, count: number): number | null {
@@ -115,9 +110,10 @@ export type VerdictInput = {
 
 /**
  * The lexicographic verdict for one run: correctness gates first, then
- * qualified coverage against the key, then cost and seconds per stored
- * company. Round-level route, funnel and yield are diagnostics attached
- * separately and never enter this computation.
+ * cost and seconds per stored company. Precision, accepted over labelled
+ * stored companies, is reported as a score but never ranks, because a
+ * stored reject already fails a gate. Round-level route, funnel and yield
+ * are diagnostics attached separately and never enter this computation.
  */
 export function computeVerdict(input: VerdictInput): Verdict {
 	const { key, run, bars, requiresProvingPass, stored } = input;
@@ -133,10 +129,9 @@ export function computeVerdict(input: VerdictInput): Verdict {
 		costUnderBar: run.costDollars <= bars.maxCostDollars,
 		secondsUnderBar: seconds === null || seconds <= bars.maxSeconds,
 	};
-	const acceptedCount = keyAcceptedCount(key);
-	const acceptedStored = stored.filter(
-		(row) => key.companies[row.domain]?.label === "accept",
-	).length;
+	const labels = stored.map((row) => key.companies[row.domain]?.label ?? null);
+	const acceptedStored = labels.filter((label) => label === "accept").length;
+	const labelledStored = labels.filter((label) => label !== null).length;
 	const unlabelledStoredCount = stored.filter(
 		(row) =>
 			key.companies[row.domain]?.label === null ||
@@ -147,8 +142,7 @@ export function computeVerdict(input: VerdictInput): Verdict {
 		gates,
 		allGatesPass: Object.values(gates).every(Boolean),
 		storedCount: stored.length,
-		qualifiedCoverage:
-			acceptedCount === 0 ? null : acceptedStored / acceptedCount,
+		precision: labelledStored === 0 ? null : acceptedStored / labelledStored,
 		unlabelledStoredCount,
 		costPerStoredCompany: perCompany(run.costDollars, stored.length),
 		secondsPerStoredCompany: perCompany(seconds, stored.length),
@@ -164,14 +158,11 @@ function rank(value: number | null, worstFirst: boolean): number {
 /**
  * Negative when `a` is the better run, positive when `b` is, zero when the
  * lexicographic order cannot separate them. The order is fixed at build
- * time — gates, then coverage, then cost, then seconds — so no run of the
- * eval ever picks a different metric to break a tie after the fact.
+ * time — gates, then cost, then seconds — so no run of the eval ever picks
+ * a different metric to break a tie after the fact.
  */
 export function compareVerdicts(a: Verdict, b: Verdict): number {
 	if (a.allGatesPass !== b.allGatesPass) return a.allGatesPass ? -1 : 1;
-	const coverage =
-		rank(b.qualifiedCoverage, false) - rank(a.qualifiedCoverage, false);
-	if (coverage !== 0) return coverage;
 	const cost =
 		rank(a.costPerStoredCompany, true) - rank(b.costPerStoredCompany, true);
 	if (cost !== 0) return cost;

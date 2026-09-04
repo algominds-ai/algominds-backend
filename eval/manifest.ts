@@ -1,6 +1,6 @@
 export const WINNER_RULE =
 	"An arm wins a profile when every correctness gate holds; among arms that " +
-	"clear the gates, higher qualified coverage wins, then lower cost per " +
+	"clear the gates, lower cost per " +
 	"stored company, then fewer seconds per stored company. Declared before " +
 	"any arm runs; never chosen after seeing the numbers.";
 

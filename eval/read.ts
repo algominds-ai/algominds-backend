@@ -30,6 +30,8 @@ export async function readRunReport(
 const CompanyRowSchema = z.object({
 	domain: z.string(),
 	name: z.string(),
+	evidence_url: z.string().nullish(),
+	proving_page_stored: z.boolean(),
 	data: z
 		.object({
 			result: z
@@ -48,15 +50,23 @@ export async function readStoredCompanies(
 	runId: string,
 ): Promise<StoredCompanyRecord[]> {
 	const rows = await sql`
-		select domain, name, data from company where run_id = ${runId}`;
+		select c.domain, c.name, c.data,
+			(select e.value from evidence e
+				where e.subject_id = c.id::text and e.kind = 'evidenceUrl' limit 1)
+				as evidence_url,
+			exists (select 1 from evidence e
+				where e.subject_id = c.id::text and e.kind = 'proving-page')
+				as proving_page_stored
+		from company c where c.run_id = ${runId}`;
 	return rows.map((row) => {
 		const parsed = CompanyRowSchema.parse(row);
 		return {
 			domain: parsed.domain,
 			name: parsed.name,
-			citedPage: parsed.data?.result?.url ?? null,
+			citedPage: parsed.evidence_url ?? parsed.data?.result?.url ?? null,
 			quote: parsed.data?.result?.quote ?? null,
 			evidenceCheck: parsed.data?.result?.evidenceCheck ?? null,
+			provingPageStored: parsed.proving_page_stored,
 		};
 	});
 }
@@ -87,41 +97,6 @@ export async function readHardRecordRequirementTexts(
 	return hardRequirements(parsed.doc?.requirements ?? [])
 		.filter((req) => req.proof === "record")
 		.map((req) => req.text);
-}
-
-export type RoundDiagnostic = {
-	ordinal: number;
-	source: string | null;
-	found: number;
-	rejectCount: number;
-	startedAt: string;
-};
-
-const RoundRowSchema = z.object({
-	ordinal: z.number(),
-	plan: z.object({ source: z.string().nullish() }).nullish(),
-	found: z.number(),
-	rejects: z.array(z.unknown()).nullish(),
-	started_at: z.coerce.date(),
-});
-
-export async function readRoundDiagnostics(
-	sql: Sql,
-	runId: string,
-): Promise<RoundDiagnostic[]> {
-	const rows = await sql`
-		select ordinal, plan, found, rejects, started_at
-		from round where run_id = ${runId} order by ordinal`;
-	return rows.map((row) => {
-		const parsed = RoundRowSchema.parse(row);
-		return {
-			ordinal: parsed.ordinal,
-			source: parsed.plan?.source ?? null,
-			found: parsed.found,
-			rejectCount: parsed.rejects?.length ?? 0,
-			startedAt: parsed.started_at.toISOString(),
-		};
-	});
 }
 
 const SearchPlanTraceSchema = z

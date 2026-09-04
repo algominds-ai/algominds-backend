@@ -10,7 +10,7 @@ type MetricDiff = {
 
 type ProfileComparison = {
 	profile: string;
-	coverage: MetricDiff;
+	precision: MetricDiff;
 	costPerCompany: MetricDiff;
 	secondsPerCompany: MetricDiff;
 	appeared: string[];
@@ -22,7 +22,7 @@ type ExperimentProfileSnapshot = {
 	count: number;
 	costDollars: number;
 	seconds: number | null;
-	qualifiedCoverage: number | null;
+	precision: number | null;
 	domains: readonly string[];
 };
 
@@ -45,8 +45,8 @@ function perCompany(total: number | null, count: number): number | null {
  * One `ProfileComparison` per profile the current run measured, against
  * whatever the previous snapshot recorded for that same profile — a
  * profile absent from the previous snapshot compares against nulls, not
- * an error. Pure: no Braintrust IO, so this is the tested half of
- * deliverable 3's comparison.
+ * an error. Pure: no Braintrust IO, so this is the tested half of the
+ * comparison.
  */
 function diffProfiles(
 	current: readonly ExperimentProfileSnapshot[],
@@ -61,10 +61,7 @@ function diffProfiles(
 		const previousDomains = new Set(prev?.domains ?? []);
 		return {
 			profile: curr.profile,
-			coverage: metricDiff(
-				curr.qualifiedCoverage,
-				prev?.qualifiedCoverage ?? null,
-			),
+			precision: metricDiff(curr.precision, prev?.precision ?? null),
 			costPerCompany: metricDiff(
 				perCompany(curr.costDollars, curr.count),
 				prev ? perCompany(prev.costDollars, prev.count) : null,
@@ -93,7 +90,7 @@ const ExperimentRowSchema = z.object({
 			seconds: z.number().nullish(),
 		})
 		.optional(),
-	scores: z.object({ qualified_coverage: z.number().nullish() }).optional(),
+	scores: z.object({ precision: z.number().nullish() }).optional(),
 });
 
 type ExperimentRow = z.infer<typeof ExperimentRowSchema>;
@@ -104,7 +101,7 @@ function emptySnapshot(profile: string): ExperimentProfileSnapshot {
 		count: 0,
 		costDollars: 0,
 		seconds: null,
-		qualifiedCoverage: null,
+		precision: null,
 		domains: [],
 	};
 }
@@ -119,7 +116,7 @@ function applyRootRow(
 		count: metadata.count ?? snapshot.count,
 		costDollars: metadata.costDollars ?? snapshot.costDollars,
 		seconds: metadata.seconds ?? snapshot.seconds,
-		qualifiedCoverage: scores?.qualified_coverage ?? snapshot.qualifiedCoverage,
+		precision: scores?.precision ?? snapshot.precision,
 	};
 }
 
@@ -142,7 +139,7 @@ function foldOneRow(
 	return snapshot;
 }
 
-/** One `ExperimentProfileSnapshot` per profile, folded from the raw rows a fetched experiment carries — the root `companies-run` span for count/cost/seconds/coverage, and every `company-<domain>` span for the domain set. Pure, so it is tested without a live Braintrust connection. */
+/** One `ExperimentProfileSnapshot` per profile, folded from the raw rows a fetched experiment carries — the root `companies-run` span for count/cost/seconds/precision, and every `company-<domain>` span for the domain set. Pure, so it is tested without a live Braintrust connection. */
 function snapshotsFromRows(
 	rows: readonly unknown[],
 ): ExperimentProfileSnapshot[] {
@@ -173,20 +170,20 @@ const ListExperimentsResponseSchema = z.object({
 	objects: z.array(z.object({ name: z.string() })),
 });
 
+const BASELINE_ARM = "baseline";
+
 /**
- * The most recently created experiment tagged with `arm` in this project,
- * other than `excludeName` (the experiment this run just wrote) — "the
- * previous experiment of the same arm" deliverable 3 compares against.
- * Null when this is the arm's first experiment.
+ * The most recently created baseline experiment in this project other than
+ * `excludeName`, the experiment this run just wrote. Null when no baseline
+ * has been recorded yet.
  */
-async function findPreviousExperimentName(
-	arm: string,
+async function findLatestBaselineName(
 	excludeName: string,
 	apiKey: string,
 ): Promise<string | null> {
 	const params = new URLSearchParams({
 		project_name: BRAINTRUST_PROJECT,
-		metadata: JSON.stringify({ arm }),
+		metadata: JSON.stringify({ arm: BASELINE_ARM }),
 	});
 	const response = await fetch(
 		`https://api.braintrust.dev/v1/experiment?${params}`,
@@ -208,14 +205,12 @@ type ExperimentComparison = {
 	profiles: ProfileComparison[];
 };
 
-/** The full comparison for one just-finished experiment against the previous experiment of the same arm, or an empty comparison when this is the arm's first run. */
-export async function compareToPreviousExperiment(
-	arm: string,
+/** The full comparison for one just-finished experiment against the latest baseline experiment, or an empty comparison when no baseline exists yet. */
+export async function compareToBaseline(
 	experimentName: string,
 	apiKey: string,
 ): Promise<ExperimentComparison> {
-	const previousExperiment = await findPreviousExperimentName(
-		arm,
+	const previousExperiment = await findLatestBaselineName(
 		experimentName,
 		apiKey,
 	);
@@ -231,15 +226,15 @@ function fmt(value: number | null, digits: number): string {
 	return value === null ? "n/a" : value.toFixed(digits);
 }
 
-/** One printable block per profile: coverage, cost and seconds per stored company against the previous experiment, and which companies appeared or disappeared. */
+/** One printable block per profile: precision, cost and seconds per stored company against the baseline experiment, and which companies appeared or disappeared. */
 export function formatComparison(comparison: ExperimentComparison): string {
 	if (!comparison.previousExperiment) {
-		return "eval: no previous experiment for this arm yet — nothing to compare";
+		return "eval: no baseline experiment yet — nothing to compare";
 	}
 	const lines = [`eval: comparing against ${comparison.previousExperiment}`];
 	for (const profile of comparison.profiles) {
 		lines.push(
-			`  ${profile.profile}: coverage ${fmt(profile.coverage.current, 2)} (was ${fmt(profile.coverage.previous, 2)}), ` +
+			`  ${profile.profile}: precision ${fmt(profile.precision.current, 2)} (was ${fmt(profile.precision.previous, 2)}), ` +
 				`$${fmt(profile.costPerCompany.current, 3)}/company (was $${fmt(profile.costPerCompany.previous, 3)}), ` +
 				`${fmt(profile.secondsPerCompany.current, 1)}s/company (was ${fmt(profile.secondsPerCompany.previous, 1)}s)`,
 		);

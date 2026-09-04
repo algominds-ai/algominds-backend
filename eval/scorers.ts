@@ -15,19 +15,15 @@ export function gatesPass({ output }: { output: TrialOutput }): Score | null {
 }
 
 /** The fraction of the key's accepted companies this trial's stored companies covered, null when the key has none accepted yet or the trial was skipped. */
-export function qualifiedCoverage({
-	output,
-}: {
-	output: TrialOutput;
-}): Score | null {
-	if (!output.verdict || output.verdict.qualifiedCoverage === null) return null;
+export function precision({ output }: { output: TrialOutput }): Score | null {
+	if (!output.verdict || output.verdict.precision === null) return null;
 	return {
-		name: "qualified_coverage",
-		score: output.verdict.qualifiedCoverage,
+		name: "precision",
+		score: output.verdict.precision,
 	};
 }
 
-export const CODE_SCORERS = [gatesPass, qualifiedCoverage];
+export const CODE_SCORERS = [gatesPass, precision];
 
 export type UnlabelledCompany = {
 	domain: string;
@@ -73,7 +69,7 @@ export async function fitReading(
 
 /**
  * The hosted evaluators recorded against a companies/people run's trace
- * span tree, deliverable 2 of `docs/solutions/eval.md`'s Braintrust packet.
+ * span tree described in `docs/solutions/eval.md`.
  * Every choice mapping a hosted evaluator uses lives here, in code, mirrored
  * into the saved Braintrust function rather than defined only in the UI.
  */

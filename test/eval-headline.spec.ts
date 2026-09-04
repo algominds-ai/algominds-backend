@@ -33,6 +33,7 @@ function company(
 		citedPage: null,
 		quote: null,
 		evidenceCheck: null,
+		provingPageStored: false,
 		...overrides,
 	};
 }
@@ -74,10 +75,10 @@ describe("canonicalDomain", () => {
 });
 
 describe("computeVerdict", () => {
-	it("passes every gate and reports full coverage for a clean, on-budget run", () => {
+	it("passes every gate and reports full precision for a clean, on-budget run", () => {
 		const verdict = computeVerdict(input());
 		expect(verdict.allGatesPass).toBe(true);
-		expect(verdict.qualifiedCoverage).toBe(1);
+		expect(verdict.precision).toBe(1);
 		expect(verdict.costPerStoredCompany).toBe(1);
 		expect(verdict.secondsPerStoredCompany).toBe(60);
 	});
@@ -114,15 +115,15 @@ describe("computeVerdict", () => {
 		expect(computeVerdict(built).gates.recordBoundsHold).toBe(false);
 	});
 
-	it("requires a citation, a quote and a found check only when the profile demands proof", () => {
+	it("requires a citation, a found check and a stored proving page only when the profile demands proof", () => {
 		const built = input({ requiresProvingPass: true });
 		const withoutProof = computeVerdict(built);
 		expect(withoutProof.gates.provingPassesWhereRequired).toBe(false);
 		built.stored = [
 			company({
 				citedPage: "https://a.com/blog",
-				quote: "we run k8s",
 				evidenceCheck: "found",
+				provingPageStored: true,
 			}),
 		];
 		expect(computeVerdict(built).gates.provingPassesWhereRequired).toBe(true);
@@ -148,36 +149,41 @@ describe("computeVerdict", () => {
 		expect(verdict.allGatesPass).toBe(true);
 	});
 
-	it("reports null coverage when the key has no accepted companies yet", () => {
+	it("reports precision as accepted over labelled stored companies, ignoring unlabelled ones", () => {
 		const built = input();
-		built.key.companies["a.com"] = {
-			label: null,
-			name: "A Inc",
+		built.key.companies["b.com"] = {
+			label: "reject:not-a-company",
+			name: "B",
 			firstSeenRunId: "run-0",
 			lastSeenAt: "t",
 		};
-		expect(computeVerdict(built).qualifiedCoverage).toBeNull();
+		built.stored = [
+			company({ domain: "a.com" }),
+			company({ domain: "b.com" }),
+			company({ domain: "unseen.com" }),
+		];
+		expect(computeVerdict(built).precision).toBe(0.5);
+	});
+
+	it("reports null precision when no stored company is labelled yet", () => {
+		const built = input();
+		built.stored = [company({ domain: "unseen.com" })];
+		expect(computeVerdict(built).precision).toBeNull();
 	});
 });
 
 describe("compareVerdicts", () => {
-	it("ranks every gate passing above any gate failing, regardless of coverage or cost", () => {
+	it("ranks every gate passing above any gate failing, regardless of cost", () => {
 		const clean = computeVerdict(input());
 		const dirty = computeVerdict(input({ run: run({ costDollars: 5 }) }));
 		expect(compareVerdicts(clean, dirty)).toBeLessThan(0);
 	});
 
-	it("breaks a tie on gates by higher qualified coverage, then lower cost per company", () => {
-		const higherCoverage = computeVerdict(input());
-		const built = input();
-		built.key.companies["b.com"] = {
-			label: "accept",
-			name: null,
-			firstSeenRunId: "r",
-			lastSeenAt: "t",
-		};
-		const lowerCoverage = computeVerdict(built);
-		expect(compareVerdicts(higherCoverage, lowerCoverage)).toBeLessThan(0);
+	it("breaks a tie on gates by lower cost per company, then fewer seconds", () => {
+		const slower = computeVerdict(
+			input({ run: run({ finishedAt: "2026-01-01T00:01:30.000Z" }) }),
+		);
+		expect(compareVerdicts(computeVerdict(input()), slower)).toBeLessThan(0);
 
 		const cheaper = computeVerdict(input({ run: run({ costDollars: 0.5 }) }));
 		const pricier = computeVerdict(input({ run: run({ costDollars: 1.5 }) }));

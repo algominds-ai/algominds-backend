@@ -3,8 +3,12 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import type { ApiClient } from "@eval/api-client";
 import { startCompaniesRun, waitForRunTerminal } from "@eval/api-client";
 import type { SeededTrial } from "@eval/arm-db";
-import { bootstrapArmSchema, seedArmProfiles } from "@eval/arm-db";
-import { compareToPreviousExperiment, formatComparison } from "@eval/compare";
+import {
+	armDatabaseUrl,
+	bootstrapArmSchema,
+	seedArmProfiles,
+} from "@eval/arm-db";
+import { compareToBaseline, formatComparison } from "@eval/compare";
 import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
 import { startDevServer } from "@eval/dev-server";
 import { computeVerdict } from "@eval/headline";
@@ -216,7 +220,7 @@ function verdictLine(input: TrialCase, output: TrialOutput): string | null {
 	if (!verdict) return null;
 	return (
 		`${label}: ${verdict.allGatesPass ? "PASS" : "FAIL"} gates, ` +
-		`coverage ${verdict.qualifiedCoverage ?? "n/a"}, ` +
+		`precision ${verdict.precision ?? "n/a"}, ` +
 		`$${(verdict.costPerStoredCompany ?? 0).toFixed(3)}/company, ` +
 		`${(verdict.secondsPerStoredCompany ?? 0).toFixed(1)}s/company`
 	);
@@ -276,16 +280,12 @@ async function writeExperimentManifest(
 	);
 }
 
-/** Prints the diff against the previous experiment of the same arm, best-effort: a comparison failure never fails the run it describes. */
-async function printComparison(arm: string, experiment: string): Promise<void> {
+/** Prints the diff against the latest baseline experiment, best-effort: a comparison failure never fails the run it describes. */
+async function printComparison(experiment: string): Promise<void> {
 	const apiKey = process.env.BRAINTRUST_API_KEY;
 	if (!apiKey) return;
 	try {
-		console.log(
-			formatComparison(
-				await compareToPreviousExperiment(arm, experiment, apiKey),
-			),
-		);
+		console.log(formatComparison(await compareToBaseline(experiment, apiKey)));
 	} catch (error) {
 		console.error(`eval: comparison failed: ${String(error)}`);
 	}
@@ -299,7 +299,7 @@ async function main(): Promise<void> {
 	const cases = casesFor(seeded).filter((trial) =>
 		profiles.some((profile) => profile.slug === trial.slug),
 	);
-	const sql = postgres(process.env.DATABASE_URL ?? "", { max: 1 });
+	const sql = postgres(armDatabaseUrl(args.arm), { max: 1 });
 	const budget = newBudget(profiles.map((profile) => profile.slug));
 	const startedAt = new Date().toISOString();
 	const commit = gitCommit();
@@ -331,7 +331,7 @@ async function main(): Promise<void> {
 		console.log(
 			`eval: experiment ${result.summary.experimentUrl ?? experiment}`,
 		);
-		await printComparison(args.arm, experiment);
+		await printComparison(experiment);
 	} finally {
 		await sql.end();
 		stop();
