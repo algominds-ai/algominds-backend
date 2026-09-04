@@ -28,6 +28,7 @@ import { withEvidence } from "@/core/companies/proving";
 import { applyRecords } from "@/core/companies/record";
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
+import type { QuoteCheckReason } from "@/core/providers/exa/contents";
 import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import type { Requirement } from "@/core/requirements";
 import { hardPageRequirements } from "@/core/requirements";
@@ -114,21 +115,29 @@ type ProveInput = {
 	ledger: CostLedger;
 };
 
-type ProvedCandidates = { rows: CompanyRow[]; pages: RetrievedPage[] };
+type ProvedCandidates = {
+	rows: CompanyRow[];
+	pages: RetrievedPage[];
+	checks: Record<string, QuoteCheckReason>;
+};
 
 /**
  * Every candidate of a search round with the page proving the round's hard
  * page requirement attached, so the one judge call that follows sees the
  * evidence and no second pass is needed. A candidate no page was found for
- * keeps its own row, and the judge leaves that requirement unproven.
+ * keeps its own row, and the judge leaves that requirement unproven. A page
+ * this search itself retrieved is already grounded — the quote is a highlight
+ * drawn from that same crawl — so the row's check is `found` without a second
+ * fetch to confirm it.
  */
 async function proveCandidates(input: ProveInput): Promise<ProvedCandidates> {
 	const { deps, requirements, candidates, env, ledger } = input;
 	const demand = hardPageRequirements(requirements)[0];
-	if (!demand) return { rows: [...candidates], pages: [] };
+	if (!demand) return { rows: [...candidates], pages: [], checks: {} };
 	const proven = await deps.prove(candidates, demand, env, ledger);
 	const rows = [...candidates];
 	const pages: RetrievedPage[] = [];
+	const checks: Record<string, QuoteCheckReason> = {};
 	for (const entry of proven) {
 		const row = rows[entry.index];
 		if (!row || entry.hit === null) continue;
@@ -139,9 +148,10 @@ async function proveCandidates(input: ProveInput): Promise<ProvedCandidates> {
 				url: entry.hit.url,
 				text: entry.hit.text,
 			});
+			checks[row.domain] = "found";
 		}
 	}
-	return { rows, pages };
+	return { rows, pages, checks };
 }
 
 export async function runRound(
@@ -182,7 +192,7 @@ export async function runRound(
 	const evidenceLedger = new CostLedger();
 	const checked = demandsEvidenceProof(first)
 		? await verifyEvidenceRows(candidates, opts.env, evidenceLedger)
-		: { kept: candidates, rejects: [], checks: {} };
+		: { kept: candidates, rejects: [], checks: {}, pages: [] };
 	applyEvidenceChecks(filtered.captures, checked.checks);
 	const proved =
 		route === "search"
@@ -193,7 +203,8 @@ export async function runRound(
 					env: opts.env,
 					ledger: evidenceLedger,
 				})
-			: { rows: checked.kept, pages: [] };
+			: { rows: checked.kept, pages: checked.pages, checks: {} };
+	applyEvidenceChecks(filtered.captures, proved.checks);
 	const judged =
 		proved.rows.length > 0
 			? await deps.judge(ctx.requirements, proved.rows, opts.env)

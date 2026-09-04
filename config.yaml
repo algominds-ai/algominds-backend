@@ -94,10 +94,9 @@ companies:
   # Characters of page text Exa returns per page. The vendor's documented maximum is 10000;
   # a larger number is clamped rather than refused.
   contentsMaxCharacters: 10000
-  # Rows sent to the judge in one model call. A round that sent every judgeCandidateMultiple x
-  # count row in a single prompt was measured at 130 seconds across two attempts and timed out
-  # once; slicing into batches this size keeps each call inside model.timeoutMs below.
-  judgeBatchSize: 15
+  # Rows sent to the judge in one model call. A batch of 15 still timed out twice on a
+  # 40-row judge; slicing into batches this size keeps each call inside model.timeoutMs below.
+  judgeBatchSize: 8
 
 people:
   # Seconds between polls of a running exa-agent run.

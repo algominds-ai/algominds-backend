@@ -169,20 +169,23 @@ function synthesizePrompt(input: SynthesizeInput): string {
 	return lines.join("\n");
 }
 
-/** The round a profile falls back to when the model writes nothing usable: the profile's own words, on the route its requirements imply. */
+/**
+ * The round a profile falls back to when the model writes nothing usable: the
+ * profile's own words, on the route its requirements imply, carrying the same
+ * evidence demand a normal agent round would — an agent route with no
+ * requirement's own demand attached never sees its cited page checked.
+ */
 function templatePlans(input: SynthesizeInput): SynthesizeResult {
+	const route =
+		hardPageRequirements(input.requirements).length > 0 ? "agent" : "search";
 	return {
-		route:
-			hardPageRequirements(input.requirements).length > 0 ? "agent" : "search",
+		route,
 		plans: [
 			{
 				query: input.icp.description,
 				angle: "the profile as written",
 				pageQuery: hardPageRequirements(input.requirements)[0]?.text ?? null,
-				recency: null,
-				eventWindowDays: null,
-				recencyDays: null,
-				source: "exa-search",
+				...evidenceDemand(input.requirements, route),
 				agentEffort: "low",
 				userLocation: null,
 				countries: [],

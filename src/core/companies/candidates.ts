@@ -22,6 +22,9 @@ export type FindCompaniesReject = {
 	group?: string;
 };
 
+/** One page a round retrieved for one company, kept because content read from the web is stored as evidence rather than discarded. */
+export type RetrievedPage = { domain: string; url: string; text: string };
+
 export type CompanyMatch = {
 	id: string | null;
 	url: string;

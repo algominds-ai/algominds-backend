@@ -334,6 +334,33 @@ describe("proving runs before the judge, never after it", () => {
 			},
 		]);
 	});
+});
+
+describe("a search round's own proof reads the same as an agent round's evidence", () => {
+	it("stamps an evidenceCheck on the row it proved, so a search round's evidence reads the same as an agent round's", async () => {
+		const spy = spyingDeps({
+			route: "search",
+			requirements: [recordRequirement, pageRequirement],
+			results: [exaResult("bank.com", 900)],
+			hits: {
+				"bank.com": {
+					url: "https://bank.com/engineering",
+					quote: "we run our own platform",
+					publishedDate: "2026-01-01",
+					text: "we run our own platform",
+				},
+			},
+		});
+
+		const result = await findCompanies(
+			icp,
+			1,
+			options({ requirements: [recordRequirement, pageRequirement] }),
+			spy.deps,
+		);
+
+		expect(result.captures["bank.com"]?.result.evidenceCheck).toBe("found");
+	});
 
 	it("never proves on an agent round, because the agent already cited its page", async () => {
 		const spy = spyingDeps({

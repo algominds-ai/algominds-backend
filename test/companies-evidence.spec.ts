@@ -1,6 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { config } from "../src/config";
 import { verifyEvidenceRows } from "../src/core/companies/evidence";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { CostLedger } from "../src/core/cost";
@@ -191,5 +192,85 @@ describe("verifyEvidenceRows batches every checkable row into one exaContents ca
 		expect(result.rejects).toEqual([
 			{ index: 1, reason: "evidence-not-on-page", detail: "CRAWL_NOT_FOUND" },
 		]);
+	});
+});
+
+describe("verifyEvidenceRows keeps the page it crawled as evidence", () => {
+	it("keeps the crawled page as evidence for every row whose quote it checked", async () => {
+		stubContents({
+			"https://a.example/careers": { text: "A Co is hiring now." },
+			"https://b.example/careers": { text: "Nothing about hiring here." },
+		});
+		const rows = [
+			row({
+				domain: "a.example",
+				evidenceUrl: "https://a.example/careers",
+				evidenceQuote: "A Co is hiring now.",
+			}),
+			row({
+				domain: "b.example",
+				evidenceUrl: "https://b.example/careers",
+				evidenceQuote: "B Co is hiring now.",
+			}),
+		];
+
+		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+
+		expect(result.pages).toEqual([
+			{
+				domain: "a.example",
+				url: "https://a.example/careers",
+				text: "A Co is hiring now.",
+			},
+			{
+				domain: "b.example",
+				url: "https://b.example/careers",
+				text: "Nothing about hiring here.",
+			},
+		]);
+	});
+
+	it("never keeps a page for a url the vendor's reply never mentioned, since there is no text to store", async () => {
+		stubContents({});
+		const rows = [
+			row({
+				domain: "ghost.example",
+				evidenceUrl: "https://ghost.example/careers",
+				evidenceQuote: "Ghost Co is hiring now.",
+			}),
+		];
+
+		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+
+		expect(result.pages).toEqual([]);
+	});
+});
+
+describe("verifyEvidenceRows bounds one exaContents call to a handful of urls", () => {
+	it("splits a dozen urls into concurrent calls of the configured batch size, never one huge request", async () => {
+		const batchSize = config.companies.provingConcurrency;
+		const rows = Array.from({ length: batchSize * 2 + 2 }, (_, i) =>
+			row({
+				domain: `co${i}.example`,
+				evidenceUrl: `https://co${i}.example/careers`,
+				evidenceQuote: `Co ${i} is hiring now.`,
+			}),
+		);
+		const byUrl = Object.fromEntries(
+			rows.map((_r, i) => [
+				`https://co${i}.example/careers`,
+				{ text: `Co ${i} is hiring now.` },
+			]),
+		);
+		const capture = stubContents(byUrl);
+
+		const result = await verifyEvidenceRows(rows, exaEnv(), new CostLedger());
+
+		expect(capture.calls).toBe(3);
+		for (const urls of capture.urls) {
+			expect(urls.length).toBeLessThanOrEqual(batchSize);
+		}
+		expect(result.kept).toHaveLength(rows.length);
+		expect(Object.keys(result.checks)).toHaveLength(rows.length);
 	});
 });

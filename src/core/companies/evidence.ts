@@ -1,6 +1,8 @@
+import { config } from "@/config";
 import type {
 	CompanyCapture,
 	FindCompaniesReject,
+	RetrievedPage,
 } from "@/core/companies/candidates";
 import type { CompanyRow, Reject, RejectReason } from "@/core/companies/gate";
 import type { Verdict } from "@/core/companies/judge";
@@ -11,6 +13,11 @@ import type {
 } from "@/core/providers/exa/contents";
 import { exaContents, quoteFoundInText } from "@/core/providers/exa/contents";
 import type { SearchPlan } from "@/core/synthesize";
+
+const {
+	provingConcurrency: CONTENTS_BATCH_SIZE,
+	resultsPerRound: MAX_CONTENTS_PAGES,
+} = config.companies;
 
 export function toGateRejects(
 	rows: readonly CompanyRow[],
@@ -33,6 +40,7 @@ export type EvidenceOutcome = {
 	kept: CompanyRow[];
 	rejects: EvidenceReject[];
 	checks: Record<string, QuoteCheckReason>;
+	pages: RetrievedPage[];
 };
 
 const PAGE_MISSING_REASONS = new Set<QuoteCheckReason>([
@@ -94,16 +102,54 @@ function entryOutcome(
 	return { found, reason: found ? "found" : "missing" };
 }
 
+/** Splits a deduplicated url list into groups of `CONTENTS_BATCH_SIZE`, bounded to `MAX_CONTENTS_PAGES` pages a round ever pays to crawl. */
+function contentsBatches(urls: readonly string[]): string[][] {
+	const bounded = urls.slice(0, MAX_CONTENTS_PAGES);
+	const batches: string[][] = [];
+	for (let at = 0; at < bounded.length; at += CONTENTS_BATCH_SIZE) {
+		batches.push(bounded.slice(at, at + CONTENTS_BATCH_SIZE));
+	}
+	return batches;
+}
+
+/** Every url's crawl outcome, fetched as concurrent `exaContents` calls of at most `CONTENTS_BATCH_SIZE` urls each rather than one unbounded call. */
+async function fetchContents(
+	urls: readonly string[],
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaContentsResult> {
+	const batches = await Promise.all(
+		contentsBatches(urls).map((batch) => exaContents(batch, env, ledger)),
+	);
+	return {
+		requestId: batches[0]?.requestId ?? "",
+		results: batches.flatMap((batch) => batch.results),
+		statuses: batches.flatMap((batch) => batch.statuses),
+	};
+}
+
+/** The page an entry's crawl actually returned, as evidence worth keeping — null when the vendor's reply carries no text for it to store. */
+function entryPage(
+	row: CompanyRow,
+	entry: EvidenceEntry,
+	lookup: Map<string, PageOutcome>,
+): RetrievedPage | null {
+	const text = lookup.get(entry.url)?.text ?? null;
+	return row.domain === null || text === null
+		? null
+		: { domain: row.domain, url: entry.url, text };
+}
+
 /**
  * Confirms every gated row's evidence page really exists, for a round whose
  * plan demanded proof from the agent. A row with no quote at all is
- * missing-required. Every row that does carry a quote to check is fetched in
- * one batched `exaContents` call, over the deduplicated url list (two rows
- * can cite one page). A row whose page truly does not exist or cannot be
+ * missing-required. Every row that does carry a quote to check is fetched
+ * over the deduplicated url list (two rows can cite one page), in concurrent
+ * `exaContents` batches. A row whose page truly does not exist or cannot be
  * fetched at all — `CRAWL_NOT_FOUND` or `UNSUPPORTED_URL` — is
  * evidence-not-on-page; every other outcome (missing, a timeout, a source the
- * crawler was refused) keeps the row and records the check for the judge to
- * see.
+ * crawler was refused) keeps the row, records the check for the judge to
+ * see, and keeps the crawled page as evidence when the crawl returned one.
  */
 export async function verifyEvidenceRows(
 	rows: readonly CompanyRow[],
@@ -112,9 +158,12 @@ export async function verifyEvidenceRows(
 ): Promise<EvidenceOutcome> {
 	const { entries, missing } = collectEvidenceEntries(rows);
 	const checks: Record<string, QuoteCheckReason> = {};
-	if (entries.length === 0) return { kept: [], rejects: missing, checks };
+	const pages: RetrievedPage[] = [];
+	if (entries.length === 0) {
+		return { kept: [], rejects: missing, checks, pages };
+	}
 	const urls = Array.from(new Set(entries.map((entry) => entry.url)));
-	const contents = await exaContents(urls, env, ledger);
+	const contents = await fetchContents(urls, env, ledger);
 	const lookup = buildPageLookup(contents);
 	const kept: CompanyRow[] = [];
 	const rejects: EvidenceReject[] = [...missing];
@@ -132,8 +181,10 @@ export async function verifyEvidenceRows(
 		}
 		kept.push(row);
 		if (row.domain) checks[row.domain] = outcome.reason;
+		const page = entryPage(row, entry, lookup);
+		if (page) pages.push(page);
 	}
-	return { kept, rejects, checks };
+	return { kept, rejects, checks, pages };
 }
 
 export function toEvidenceRejects(

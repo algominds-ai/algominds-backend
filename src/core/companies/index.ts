@@ -2,6 +2,7 @@ import { config } from "@/config";
 import type {
 	CompanyCapture,
 	FindCompaniesReject,
+	RetrievedPage,
 } from "@/core/companies/candidates";
 import {
 	collectDomains,
@@ -35,7 +36,7 @@ import type {
 	SynthesizeResult,
 } from "@/core/synthesize";
 
-export type { FindCompaniesReject };
+export type { FindCompaniesReject, RetrievedPage };
 
 const SPEND_PER_RUN = config.spend.perRunDollars;
 
@@ -105,9 +106,6 @@ export type FindCompaniesStatus =
 	| "exhausted"
 	| "empty"
 	| "capped";
-
-/** One page a round retrieved for one company, kept because content read from the web is stored as evidence rather than discarded. */
-export type RetrievedPage = { domain: string; url: string; text: string };
 
 export type FindCompaniesResult = {
 	companies: CompanyRow[];
