@@ -3,7 +3,7 @@
 	"icpId": "4213915c-0b0c-43f0-bd4a-5379e3a0a594",
 	"companies": {
 		"lonepeakdentalgroup.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Lone Peak Dental Group",
 			"firstSeenRunId": "companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:43:07.739Z",
@@ -16,10 +16,11 @@
 				"citedPage": "https://lonepeakdentalgroup.com/",
 				"quote": null,
 				"fitReason": "71 staff, Denver US, a Dental Service Organization supporting specialty offices."
-			}
+			},
+			"note": "71 staff and US-based per record, a dental service organisation supporting specialty practices under a partner-doctor model, matching r1-r3"
 		},
 		"mortensondentalpartners.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "Mortenson Dental Partners",
 			"firstSeenRunId": "companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:43:07.739Z",
@@ -32,23 +33,25 @@
 				"citedPage": "https://mortensondentalpartners.com/",
 				"quote": null,
 				"fitReason": "290 staff, US-based, operates 140+ dental practices as a group."
-			}
+			},
+			"note": "the record's own description states the company employs 'over 1,800 team members' across 140+ practices, well above the 500-staff ceiling in r1, even though the structured workforceTotal field says 290"
 		},
 		"prosmile.com": {
-			"label": null,
+			"label": "accept",
 			"name": "ProSmile",
 			"firstSeenRunId": "companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:43:07.739Z",
 			"record": {
 				"industry": null,
-				"description": "OUR STORY\nProSmile’s story began in 1998 with the formation of Allied Dental, which brought together multiple dental offices across New Jersey. By 2017, Allied had expanded into Maryland and Pennsylvania. In 2020, Allied Dental merged with Dental Health Associates, founded by Dr. Amish Patel, to create ProSmile. Under the leadership of Bharat Rana as CEO, the organization quickly grew, reaching 79 locations within a year and becoming the largest multi-specialty dental group in New Jersey, Pennsylvania, and Maryland. Today, under the leadership of CEO Andrew Shafran, ProSmile continues to expand its reach and strengthen its commitment to providing high-quality, patient-centered dental care across the region.\n\nWHO WE ARE\nThe largest multi-specialty dental group in NJ, MD, PA, VA, IN, WI, MI & IL.\n\nOUR MISSION\nTo build great smiles by providing support services through mentorship, leadership, and engagement.\n\nCORE VALUES\nSupport - We make a difference. \nMentor - We guide growth. \nInspire - We do the right thing. \nLead - We treat others how we want to be treated.\nEngage - We are here to stay! Team members and patients remain engaged throughout their journey.\n\n“At ProSmile, we don’t just support dental practices—we empower people to create brighter futures, one smile at a time. Through compassionate care, dedicated mentorship, and a commitment to growth, we’re building a community where excellence thrives and every patient feels seen, valued, and cared for.”\n– Andrew Shafran, CEO",
+				"description": "OUR STORY\nProSmile\u2019s story began in 1998 with the formation of Allied Dental, which brought together multiple dental offices across New Jersey. By 2017, Allied had expanded into Maryland and Pennsylvania. In 2020, Allied Dental merged with Dental Health Associates, founded by Dr. Amish Patel, to create ProSmile. Under the leadership of Bharat Rana as CEO, the organization quickly grew, reaching 79 locations within a year and becoming the largest multi-specialty dental group in New Jersey, Pennsylvania, and Maryland. Today, under the leadership of CEO Andrew Shafran, ProSmile continues to expand its reach and strengthen its commitment to providing high-quality, patient-centered dental care across the region.\n\nWHO WE ARE\nThe largest multi-specialty dental group in NJ, MD, PA, VA, IN, WI, MI & IL.\n\nOUR MISSION\nTo build great smiles by providing support services through mentorship, leadership, and engagement.\n\nCORE VALUES\nSupport - We make a difference. \nMentor - We guide growth. \nInspire - We do the right thing. \nLead - We treat others how we want to be treated.\nEngage - We are here to stay! Team members and patients remain engaged throughout their journey.\n\n\u201cAt ProSmile, we don\u2019t just support dental practices\u2014we empower people to create brighter futures, one smile at a time. Through compassionate care, dedicated mentorship, and a commitment to growth, we\u2019re building a community where excellence thrives and every patient feels seen, valued, and cared for.\u201d\n\u2013 Andrew Shafran, CEO",
 				"workforceTotal": 74,
 				"country": "United States",
 				"foundedYear": 2020,
 				"citedPage": "https://prosmile.com/",
 				"quote": null,
 				"fitReason": "74 staff, Woodbridge US, largest multi-specialty dental group in region."
-			}
+			},
+			"note": "74 staff and US-based per record, an operating multi-specialty dental group, matching r1-r3"
 		}
 	}
 }
