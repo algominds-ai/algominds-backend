@@ -98,6 +98,7 @@ function company(
 		industry: "software",
 		description: "runs its own onboarding funnel",
 		workforceTotal: 120,
+		country: "United States",
 		citedPage: "https://good.com/careers",
 		quote: "we are hiring a head of onboarding",
 		evidenceCheck: "found",
@@ -191,6 +192,16 @@ describe("buildCompanyRunTrace", () => {
 		expect(refused?.output).toEqual([
 			{ domain: "bad.com", reason: "contradicts r1" },
 		]);
+		const refusedRow = refused?.children.find(
+			(child) => child.name === "refused-bad.com",
+		);
+		expect(refusedRow?.metadata).toMatchObject({
+			domain: "bad.com",
+			headcountTotal: null,
+			country: null,
+			fitReason: null,
+			judgeReason: "contradicts r1",
+		});
 	});
 
 	it("gives every stored company its own span carrying the cited page, quote and fit reason", () => {

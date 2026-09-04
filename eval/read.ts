@@ -272,6 +272,7 @@ const CompanyTraceRowSchema = z.object({
 				.object({
 					description: z.string().nullish(),
 					workforceTotal: z.number().nullish(),
+					country: z.string().nullish(),
 				})
 				.nullish(),
 			result: z
@@ -292,6 +293,7 @@ export type CompanyTraceRecord = {
 	industry: string | null;
 	description: string | null;
 	workforceTotal: number | null;
+	country: string | null;
 	citedPage: string | null;
 	quote: string | null;
 	evidenceCheck: string | null;
@@ -314,6 +316,7 @@ export async function readCompanyTraceRecords(
 			industry: parsed.industry,
 			description: parsed.data?.entity?.description ?? null,
 			workforceTotal: parsed.data?.entity?.workforceTotal ?? null,
+			country: parsed.data?.entity?.country ?? null,
 			citedPage: parsed.data?.result?.url ?? null,
 			quote: parsed.data?.result?.quote ?? null,
 			evidenceCheck: parsed.data?.result?.evidenceCheck ?? null,
