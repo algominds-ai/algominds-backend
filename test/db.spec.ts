@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { config } from "../src/config";
 import { MAX_EXCLUDED_DOMAINS } from "../src/core/companies/candidates";
 import { organization } from "../src/core/db/auth-schema";
-import type { DbEnv, DbMode } from "../src/core/db/client";
+import type { DbMode } from "../src/core/db/client";
 import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
 import type {
@@ -70,7 +70,6 @@ import type {
 	NewRun,
 	Person,
 	Run,
-	RunCompany,
 } from "../src/core/db/schema";
 import {
 	company,
@@ -83,13 +82,12 @@ import {
 } from "../src/core/db/schema";
 import { rawEvidenceRow } from "../src/core/people/rows";
 import type { IcpSeller } from "../src/core/synthesize";
-
-function fakeEnv(cached: string, direct: string): DbEnv {
-	return {
-		HYPERDRIVE_CACHED: { connectionString: cached },
-		HYPERDRIVE_DIRECT: { connectionString: direct },
-	};
-}
+import {
+	deleteOrganizations as cleanupOrganizations,
+	seedOrganization,
+} from "./support/db";
+import { fakeDbEnv as fakeEnv } from "./support/env";
+import { companyRow, personRow, runCompanyRow, runRow } from "./support/rows";
 
 describe("normalizeDomain", () => {
 	const cases: Array<[string, string]> = [
@@ -915,7 +913,7 @@ describe("companiesForRun", () => {
 
 		const result = await companiesForRun(
 			env,
-			testRun({ id: "run-1", capability: "companies" }),
+			runRow({ id: "run-1", capability: "companies", status: "complete" }),
 			buildDb,
 		);
 
@@ -957,7 +955,7 @@ describe("companiesForRun", () => {
 
 		const result = await companiesForRun(
 			env,
-			testRun({ id: "run-2", capability: "companies" }),
+			runRow({ id: "run-2", capability: "companies", status: "complete" }),
 			buildDb,
 		);
 
@@ -1113,22 +1111,6 @@ describe("createCompanyRow: the fallback select's binding", () => {
 	});
 });
 
-function runCompanyRow(id: string): RunCompany {
-	return {
-		id,
-		runId: "run-1",
-		domain: "acme.com",
-		companyId: null,
-		identity: "unresolved",
-		mode: "roster",
-		buyerSource: "none",
-		spendDollars: 0,
-		clayRecords: 0,
-		peopleVerified: 0,
-		peopleRoster: 0,
-	};
-}
-
 describe("saveRunCompanies: a domain the run already recorded", () => {
 	it("re-selects the existing row through the direct binding instead of treating the conflict as a miss", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
@@ -1272,21 +1254,6 @@ describe("closeErroredRun", () => {
 	});
 });
 
-function companyRow(id: string): Company {
-	return {
-		id,
-		organizationId: "org-1",
-		icpId: "icp-1",
-		domain: `${id}.com`,
-		name: id,
-		linkedinUrl: null,
-		industry: null,
-		data: null,
-		runId: "run-1",
-		foundAt: new Date("2026-01-01T00:00:00.000Z"),
-	};
-}
-
 function recordingCompanyPageDb(
 	rows: Company[],
 	spy: { condition?: unknown; order?: unknown; limit?: number },
@@ -1321,7 +1288,7 @@ describe("companiesPage", () => {
 
 		const page = await companiesPage(
 			env,
-			testRun({ id: "run-1", capability: "companies" }),
+			runRow({ id: "run-1", capability: "companies", status: "complete" }),
 			{ limit: 2, cursor: undefined },
 			buildDb,
 		);
@@ -1337,7 +1304,7 @@ describe("companiesPage", () => {
 
 		const page = await companiesPage(
 			env,
-			testRun({ id: "run-1", capability: "companies" }),
+			runRow({ id: "run-1", capability: "companies", status: "complete" }),
 			{ limit: 2, cursor: undefined },
 			buildDb,
 		);
@@ -1346,18 +1313,6 @@ describe("companiesPage", () => {
 		expect(page.nextCursor).toBeNull();
 	});
 });
-
-function personRow(id: string): Person {
-	return {
-		id,
-		organizationId: "org-1",
-		companyId: "company-1",
-		linkedinUrl: `https://linkedin.com/in/${id}`,
-		name: id,
-		title: null,
-		data: null,
-	};
-}
 
 function recordingPersonPageDb(
 	rows: Person[],
@@ -1392,23 +1347,6 @@ function recordingPersonPageDb(
 	});
 }
 
-function testRun(fields: {
-	id: string;
-	capability: string;
-	icpId?: string | null;
-}): Run {
-	return {
-		id: fields.id,
-		organizationId: "org-1",
-		icpId: fields.icpId === undefined ? "icp-1" : fields.icpId,
-		capability: fields.capability,
-		status: "complete",
-		costDollars: 0,
-		startedAt: new Date("2026-08-28T00:00:00Z"),
-		finishedAt: null,
-	};
-}
-
 describe("peoplePage", () => {
 	it("reports the last row's id as the next cursor only when a row is left over", async () => {
 		const env = fakeEnv("postgres://cached", "postgres://direct");
@@ -1417,7 +1355,7 @@ describe("peoplePage", () => {
 
 		const page = await peoplePage(
 			env,
-			testRun({ id: "run-1", capability: "companies" }),
+			runRow({ id: "run-1", capability: "companies", status: "complete" }),
 			{ limit: 2, cursor: undefined },
 			buildDb,
 		);
@@ -1523,7 +1461,7 @@ describe("peoplePage scopes by what the run covers", () => {
 
 		const page = await peoplePage(
 			env,
-			testRun({ id: "onboarding_x", capability: "onboarding", icpId: null }),
+			runRow({ id: "onboarding_x", capability: "onboarding", icpId: null }),
 			{ limit: 5, cursor: undefined },
 			buildDb,
 		);
@@ -1532,22 +1470,6 @@ describe("peoplePage scopes by what the run covers", () => {
 		expect(spy.condition).toBeUndefined();
 	});
 });
-
-async function seedOrganization(label: string): Promise<Organization> {
-	return organizationForSlug(
-		testEnv,
-		`db-spec-${label}-${crypto.randomUUID()}.internal`,
-		`db-spec-${label}`,
-	);
-}
-
-async function cleanupOrganizations(orgIds: readonly string[]): Promise<void> {
-	await withConnection(testEnv, "direct", db, (connection) =>
-		connection
-			.delete(organization)
-			.where(inArray(organization.id, [...orgIds])),
-	);
-}
 
 function isRunCompanyPageRow(row: CompanyPageRow): row is RunCompanyPageRow {
 	return "domain" in row && "runId" in row && "identity" in row;

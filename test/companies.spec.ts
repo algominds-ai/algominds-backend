@@ -3,7 +3,6 @@ import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
-import { z } from "zod";
 import { config } from "../src/config";
 import type {
 	FindCompaniesDeps,
@@ -52,6 +51,8 @@ import {
 	reportRound,
 	roundPlan,
 } from "../src/workflows/find-companies-persist";
+import { fakeSecretEnv } from "./support/env";
+import { exaContentsFetch as contentsFetch } from "./support/fetch";
 
 const storedRequirements: Requirement[] = [
 	{
@@ -2067,8 +2068,6 @@ describe("the sort of page a company was proved by survives onto the saved row",
 	});
 });
 
-const ContentsRequestSchema = z.object({ urls: z.array(z.string()) });
-
 function agentRow(domain: string, quote: string): ExaResult {
 	return {
 		...goodResult(domain),
@@ -2079,46 +2078,8 @@ function agentRow(domain: string, quote: string): ExaResult {
 
 function exaOptions(): FindCompaniesOptions {
 	return testOptions({
-		env: { ...testEnv, EXA_API_KEY: { get: async () => "test-exa-key" } },
+		env: fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
 	});
-}
-
-function contentsFetch(
-	byUrl: Record<string, { text: string } | { errorTag: string }>,
-): typeof fetch {
-	return async (_input, init) => {
-		const { urls } = ContentsRequestSchema.parse(
-			JSON.parse(String(init?.body)),
-		);
-		const results: { url: string; text: string }[] = [];
-		const statuses: (
-			| { id: string; status: "success" }
-			| { id: string; status: "error"; error: { tag: string } }
-		)[] = [];
-		for (const url of urls) {
-			const outcome = byUrl[url];
-			if (!outcome) throw new Error(`unexpected contents request for ${url}`);
-			if ("errorTag" in outcome) {
-				statuses.push({
-					id: url,
-					status: "error",
-					error: { tag: outcome.errorTag },
-				});
-				continue;
-			}
-			statuses.push({ id: url, status: "success" });
-			results.push({ url, text: outcome.text });
-		}
-		return new Response(
-			JSON.stringify({
-				requestId: "req-contents",
-				results,
-				statuses,
-				costDollars: { total: 0.003 },
-			}),
-			{ status: 200, headers: { "content-type": "application/json" } },
-		);
-	};
 }
 
 describe("a round that demanded proof checks its own evidence before the judge sees it", () => {

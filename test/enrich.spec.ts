@@ -4,16 +4,9 @@ import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { toBatches } from "../src/core/batches";
 import { organization } from "../src/core/db/auth-schema";
-import type { DbMode } from "../src/core/db/client";
 import { db, withConnection } from "../src/core/db/client";
 import { organizationForSlug } from "../src/core/db/organizations";
-import type {
-	DbFactory,
-	EvidenceAppendConnection,
-	EvidenceReadConnection,
-	Organization,
-	RunLookupConnection,
-} from "../src/core/db/queries";
+import type { Organization } from "../src/core/db/queries";
 import {
 	openRun,
 	saveCompanies,
@@ -40,44 +33,36 @@ import type {
 	EnrichSubject,
 	LinkedinInput,
 	LinkedinResult,
-	RunCompanyExistsConnection,
-	RunPeopleConnection,
 	SubjectsDeps,
 } from "../src/core/enrich";
 import { enrich, isSendable, subjectsForRun } from "../src/core/enrich";
 import { exaAgentEmailProvider } from "../src/core/providers/exa/agent-email";
 import type { Provider } from "../src/core/providers/types";
 import { RetryableProviderError } from "../src/core/providers/waterfall";
-
-type Handler = (init: RequestInit | undefined) => Response;
+import type { Recorded } from "./support/db";
+import {
+	fakeCompanyExists,
+	fakeFindRun,
+	fakeReadEvidence,
+	fakeReadEvidenceSequence,
+	fakeRunPeople,
+	fakeWriteEvidence,
+} from "./support/db";
+import { fakeSecretEnv } from "./support/env";
+import {
+	completedAgentRun,
+	fakeFindymail,
+	fakeVendors,
+	jsonResponse as json,
+	requestedEmail,
+} from "./support/fetch";
+import { runRow } from "./support/rows";
 
 function findymailEnv(): Env {
-	return {
-		...testEnv,
-		FINDYMAIL_API_KEY: { get: async () => "test-key" },
-		EXA_API_KEY: { get: async () => "test-exa-key" },
-	};
-}
-
-function fakeFindymail(handlers: Record<string, Handler>): typeof fetch {
-	return async (input, init) => {
-		const pathname = new URL(String(input)).pathname;
-		const handler = handlers[pathname];
-		if (!handler) return new Response(null, { status: 404 });
-		return handler(init);
-	};
-}
-
-function json(body: unknown, status = 200): Response {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: { "content-type": "application/json" },
+	return fakeSecretEnv({
+		FINDYMAIL_API_KEY: "test-key",
+		EXA_API_KEY: "test-exa-key",
 	});
-}
-
-function requestedEmail(init: RequestInit | undefined): string {
-	const body: { email?: string } = JSON.parse(String(init?.body ?? "{}"));
-	return body.email ?? "";
 }
 
 function evidenceRow(fields: {
@@ -94,56 +79,6 @@ function evidenceRow(fields: {
 		confidence: null,
 		...fields,
 	};
-}
-
-function fakeReadEvidence(
-	row: Evidence | undefined,
-): DbFactory<EvidenceReadConnection> {
-	return () => ({
-		select: () => ({
-			from: () => ({
-				where: () => ({
-					orderBy: () => ({
-						limit: () => Promise.resolve(row ? [row] : []),
-					}),
-				}),
-			}),
-		}),
-	});
-}
-
-function fakeReadEvidenceSequence(
-	rows: (Evidence | undefined)[],
-): DbFactory<EvidenceReadConnection> {
-	let call = 0;
-	return () => {
-		const row = rows[call];
-		call += 1;
-		return {
-			select: () => ({
-				from: () => ({
-					where: () => ({
-						orderBy: () => ({
-							limit: () => Promise.resolve(row ? [row] : []),
-						}),
-					}),
-				}),
-			}),
-		};
-	};
-}
-
-function fakeWriteEvidence(
-	sink: NewEvidence[],
-): DbFactory<EvidenceAppendConnection> {
-	return () => ({
-		insert: () => ({
-			values: (rows: NewEvidence | NewEvidence[]) => {
-				sink.push(...(Array.isArray(rows) ? rows : [rows]));
-				return { returning: () => Promise.resolve([]) };
-			},
-		}),
-	});
 }
 
 function linkedinProvider(
@@ -274,36 +209,6 @@ describe("the email waterfall", () => {
 		expect(results[0]?.email?.status).toBe("unknown");
 	});
 });
-
-function fakeVendors(
-	findymail: Record<string, Handler>,
-	exa: Record<string, Handler>,
-): typeof fetch {
-	return async (input, init) => {
-		const url = new URL(String(input));
-		const table = url.hostname === "api.exa.ai" ? exa : findymail;
-		const handler = table[url.pathname];
-		return handler ? handler(init) : new Response(null, { status: 404 });
-	};
-}
-
-function completedAgentRun(overrides: { output?: unknown } = {}) {
-	return {
-		id: "agent-run-1",
-		status: "completed",
-		output: {
-			structured: {
-				fullName: "Kirk Marple",
-				title: "Founder and Chief Executive Officer",
-				email: "kirk@graphlit.com",
-				linkedinUrl: "https://www.linkedin.com/in/kirkmarple",
-				source: "https://www.linkedin.com/posts/kirkmarple_hiring",
-			},
-		},
-		costDollars: { total: 0.025, agentCompute: 0.02, search: 0.005 },
-		...overrides,
-	};
-}
 
 describe("the exa agent email provider in the waterfall", () => {
 	const originalFetch = globalThis.fetch;
@@ -650,74 +555,6 @@ describe("isSendable", () => {
 		expect(isSendable("verified")).toBe(true);
 	});
 });
-
-type Recorded = { condition?: unknown; mode?: DbMode };
-
-function fakeFindRun(row: Run | undefined): DbFactory<RunLookupConnection> {
-	return () => ({
-		select: () => ({
-			from: () => ({
-				where: () => ({
-					limit: () => Promise.resolve(row ? [row] : []),
-				}),
-			}),
-		}),
-	});
-}
-
-function fakeCompanyExists(
-	rows: { id: string }[],
-	recorded: Recorded = {},
-): DbFactory<RunCompanyExistsConnection> {
-	return (_env, mode) => {
-		recorded.mode = mode;
-		return {
-			select: () => ({
-				from: () => ({
-					where: (condition) => {
-						recorded.condition = condition;
-						return Promise.resolve(rows);
-					},
-				}),
-			}),
-		};
-	};
-}
-
-function fakeRunPeople(
-	rows: { person: Person; company: Company }[],
-	recorded: Recorded = {},
-): DbFactory<RunPeopleConnection> {
-	return (_env, mode) => {
-		recorded.mode = mode;
-		return {
-			select: () => ({
-				from: () => ({
-					innerJoin: () => ({
-						where: (condition) => {
-							recorded.condition = condition;
-							return Promise.resolve(rows);
-						},
-					}),
-				}),
-			}),
-		};
-	};
-}
-
-function runRow(overrides: Partial<Run> = {}): Run {
-	return {
-		id: "companies_icp-1_2026-08-27",
-		organizationId: "org-1",
-		icpId: "icp-1",
-		capability: "companies",
-		status: "running",
-		costDollars: 0,
-		startedAt: new Date("2026-08-27T00:00:00.000Z"),
-		finishedAt: null,
-		...overrides,
-	};
-}
 
 function personCompanyRows(
 	companyRow: Company,
@@ -1262,7 +1099,7 @@ describe("enrich() result shape", () => {
 		});
 	});
 
-	it("works on a subject that never went through the people search, reading only evidence", async () => {
+	it("resolves a subject that never went through the people search, reading only evidence", async () => {
 		const seenAt = new Date();
 		const emailRow = evidenceRow({
 			kind: "email",

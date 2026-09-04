@@ -26,6 +26,9 @@ import {
 	runOneCompany,
 } from "../src/workflows/find-people-company";
 import type { TargetCompany } from "../src/workflows/find-people-target";
+import { fakeSecretEnv } from "./support/env";
+import { stubClayFetch, stubClayRejectFetch } from "./support/fetch";
+import { fakeWorkflowStep } from "./support/step";
 
 const originalFetch = globalThis.fetch;
 
@@ -56,7 +59,7 @@ function bareCompany(domain: string): TargetCompany {
 	return { id: null, domain, name: null, linkedinUrl: null, icpId: null };
 }
 
-async function mockRunLevel(
+async function primeRunLevelSteps(
 	m: StepMocker,
 	companies: TargetCompany[],
 ): Promise<void> {
@@ -95,7 +98,7 @@ describe("FindPeopleWorkflow: identity resolution", () => {
 		);
 		try {
 			await instance.modify(async (m) => {
-				await mockRunLevel(m, [bareCompany(domain)]);
+				await primeRunLevelSteps(m, [bareCompany(domain)]);
 				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
 				await m.mockStepResult(
 					{ name: `people-${domain}-identity` },
@@ -154,7 +157,7 @@ describe("runOneCompany: an unresolved domain's Clay spend", () => {
 			});
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
 				step: fakeWorkflowStep(
 					new Map([
 						[
@@ -168,7 +171,7 @@ describe("runOneCompany: an unresolved domain's Clay spend", () => {
 							},
 						],
 					]),
-				),
+				).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -219,7 +222,7 @@ describe("FindPeopleWorkflow: roster mode", () => {
 		);
 		try {
 			await instance.modify(async (m) => {
-				await mockRunLevel(m, [bareCompany(domain)]);
+				await primeRunLevelSteps(m, [bareCompany(domain)]);
 				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
 				await m.mockStepResult(
 					{ name: `people-${domain}-identity` },
@@ -651,45 +654,6 @@ describe("FindPeopleWorkflow: a step that throws after the run opens", () => {
 	});
 });
 
-const CLAY_HEADERS = { "content-type": "application/json" };
-
-function clayResponse(body: unknown): Response {
-	return new Response(JSON.stringify(body), {
-		status: 200,
-		headers: CLAY_HEADERS,
-	});
-}
-
-function stubClayFetch(
-	rows: {
-		name: string;
-		url: string;
-		title: string;
-		company: string;
-	}[],
-): void {
-	let call = 0;
-	globalThis.fetch = async (input) => {
-		call += 1;
-		const path = new URL(String(input)).pathname;
-		if (path === "/public/v0/search/filters-mode") {
-			return clayResponse({ search_id: `search-${call}` });
-		}
-		return clayResponse({
-			data: rows.map((row) => ({
-				name: row.name,
-				url: row.url,
-				latest_experience_title: row.title,
-				latest_experience_company: row.company,
-				latest_experience_start_date: null,
-				location: null,
-			})),
-			has_more: false,
-			period_quota: { used: rows.length },
-		});
-	};
-}
-
 async function cleanupTargetRun(
 	organizationId: string,
 	runId: string,
@@ -782,42 +746,6 @@ function targetCandidate(
 		location: null,
 		since: null,
 		seenBy: ["clay:c-suite"],
-	};
-}
-
-function fakeWorkflowStep(
-	overrides: Map<string, unknown>,
-	calls?: string[],
-): WorkflowStep {
-	async function runNamed(
-		name: string,
-		second: unknown,
-		third: unknown,
-	): Promise<unknown> {
-		calls?.push(name);
-		if (overrides.has(name)) {
-			const value = overrides.get(name);
-			if (value instanceof Error) throw value;
-			return value;
-		}
-		const callback = typeof second === "function" ? second : third;
-		if (typeof callback !== "function") {
-			throw new Error(`fake step: no callback for ${name}`);
-		}
-		const ctx: WorkflowStepContext = {
-			step: { name, count: 0 },
-			attempt: 1,
-			config: {},
-		};
-		return callback(ctx);
-	}
-	return {
-		do: runNamed,
-		sleep: async () => undefined,
-		sleepUntil: async () => undefined,
-		waitForEvent: async () => {
-			throw new Error("fake step: waitForEvent not implemented");
-		},
 	};
 }
 
@@ -996,8 +924,8 @@ describe("FindPeopleWorkflow: a target run", () => {
 			]);
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(targetRunOverrides(domain)),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(targetRunOverrides(domain)).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1087,10 +1015,12 @@ describe("FindPeopleWorkflow: the maxVerifyPerCompany bound", () => {
 				},
 			]);
 
-			const calls: string[] = [];
+			const workflowStep = fakeWorkflowStep(
+				boundRunOverrides(domain, pickCount),
+			);
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(boundRunOverrides(domain, pickCount), calls),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: workflowStep.step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1101,7 +1031,9 @@ describe("FindPeopleWorkflow: the maxVerifyPerCompany bound", () => {
 
 			expect(result.outcome.verified).toBe(bound);
 			for (let index = bound; index < pickCount; index++) {
-				expect(calls).not.toContain(`people-${domain}-verify-${index}-start`);
+				expect(workflowStep.calls).not.toContain(
+					`people-${domain}-verify-${index}-start`,
+				);
 			}
 
 			const storedPeople = await withConnection(
@@ -1180,8 +1112,8 @@ describe("FindPeopleWorkflow: a contradicted verdict", () => {
 			]);
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(contradictedRunOverrides(domain)),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(contradictedRunOverrides(domain)).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1294,8 +1226,8 @@ describe("FindPeopleWorkflow: a pick whose poll step fails", () => {
 			]);
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(overrides),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(overrides).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1429,8 +1361,8 @@ describe("FindPeopleWorkflow: an unknown verdict's reported URL", () => {
 			]);
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(unknownVerdictWithUrlOverrides(domain)),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(unknownVerdictWithUrlOverrides(domain)).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1452,22 +1384,6 @@ describe("FindPeopleWorkflow: an unknown verdict's reported URL", () => {
 	});
 });
 
-function stubClayRejectFetch(): { runCalls: number } {
-	const calls = { runCalls: 0 };
-	globalThis.fetch = async (input) => {
-		const path = new URL(String(input)).pathname;
-		if (path === "/public/v0/search/filters-mode") {
-			return clayResponse({ search_id: "search-rejected" });
-		}
-		calls.runCalls += 1;
-		return new Response(
-			JSON.stringify({ error: "invalid company_identifier" }),
-			{ status: 400, headers: CLAY_HEADERS },
-		);
-	};
-	return calls;
-}
-
 describe("FindPeopleWorkflow: a Clay-rejected domain", () => {
 	it("writes identity: unresolved and lists the domain as unknown, with no roster call", async () => {
 		const domain = "notacompany.example";
@@ -1488,8 +1404,8 @@ describe("FindPeopleWorkflow: a Clay-rejected domain", () => {
 			const calls = stubClayRejectFetch();
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(new Map()),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(new Map()).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1585,7 +1501,7 @@ function wrongCompanyRunOverrides(domain: string): Map<string, unknown> {
 }
 
 describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
-	it("does not verify a candidate the second opinion says works at a different company", async () => {
+	it("does not verify a candidate the second opinion places at a different company", async () => {
 		const domain = `wrong-company-${crypto.randomUUID()}.example`;
 		const org = await organizationForSlug(
 			testEnv,
@@ -1611,8 +1527,8 @@ describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
 			]);
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(wrongCompanyRunOverrides(domain)),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(wrongCompanyRunOverrides(domain)).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
@@ -1703,8 +1619,8 @@ describe("FindPeopleWorkflow: a null selector reply", () => {
 			]);
 
 			const ctx: CompanyLoopContext = {
-				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
-				step: fakeWorkflowStep(nullSelectRunOverrides(domain)),
+				env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
+				step: fakeWorkflowStep(nullSelectRunOverrides(domain)).step,
 				runId,
 				organizationId: org.id,
 				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
