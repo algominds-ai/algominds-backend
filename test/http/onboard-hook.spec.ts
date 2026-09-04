@@ -1,7 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
-import { createAuth, startOnboarding } from "../src/auth";
-import { buildRunId, onboardScopeId } from "../src/http/jobs";
+import { createAuth, startOnboarding } from "@/auth";
+import { buildRunId, onboardScopeId } from "@/http/jobs";
 
 type StartedBatch = Parameters<Env["ONBOARD_ICP"]["createBatch"]>[0][number];
 
@@ -27,7 +27,7 @@ function recordingEnv(onCreate?: () => never): {
 }
 
 describe("an organization that names a domain begins onboarding", () => {
-	it("starts one run carrying that domain and the organization id", async () => {
+	it("starts one run under the run id the endpoint would build, carrying the domain and organization", async () => {
 		const { env, started } = recordingEnv();
 
 		await startOnboarding(env, {
@@ -41,29 +41,15 @@ describe("an organization that names a domain begins onboarding", () => {
 			note: null,
 			organizationId: "org-1",
 		});
-	});
-
-	it("gives the run the same id the endpoint would, so the two never double-charge", async () => {
-		const { env, started } = recordingEnv();
-
-		await startOnboarding(env, { id: "org-1", domain: "form3.tech" });
-
 		const scopeId = await onboardScopeId({ domain: "form3.tech" }, "org-1");
 		expect(started[0]?.id).toBe(buildRunId("onboarding", scopeId));
 	});
 
-	it("starts nothing for an organization that named no domain", async () => {
+	it("starts nothing for an organization naming no domain, or one that is not a public hostname", async () => {
 		const { env, started } = recordingEnv();
 
 		await startOnboarding(env, { id: "org-1", domain: null });
 		await startOnboarding(env, { id: "org-1" });
-
-		expect(started).toHaveLength(0);
-	});
-
-	it("starts nothing for a domain that is not a public hostname", async () => {
-		const { env, started } = recordingEnv();
-
 		await startOnboarding(env, { id: "org-1", domain: "localhost" });
 		await startOnboarding(env, { id: "org-1", domain: "10.0.0.7" });
 		await startOnboarding(env, { id: "org-1", domain: "  " });
@@ -81,7 +67,7 @@ describe("an organization that names a domain begins onboarding", () => {
 		).resolves.toBeUndefined();
 	});
 
-	it("starts onboarding because the hook is wired, not because a test called it", async () => {
+	it("starts onboarding because the hook is wired into organization creation, not because a test called it directly", async () => {
 		const { env, started } = recordingEnv();
 		const auth = createAuth(env);
 		const label = `hooked-${crypto.randomUUID()}`;
@@ -106,7 +92,7 @@ describe("an organization that names a domain begins onboarding", () => {
 		});
 	});
 
-	it("starts nothing when the organization it creates names no domain", async () => {
+	it("starts nothing when the organization the hook creates names no domain", async () => {
 		const { env, started } = recordingEnv();
 		const auth = createAuth(env);
 		const label = `unhooked-${crypto.randomUUID()}`;

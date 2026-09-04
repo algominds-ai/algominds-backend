@@ -26,3 +26,30 @@ export function fakeSecretEnv(
 		...(clay !== undefined ? { CLAY_API_KEY: { get: async () => clay } } : {}),
 	};
 }
+
+type ModelEnvOverrides = {
+	AI_GATEWAY_BASE_URL?: string;
+	MODEL_ROUTE_REASONING?: string;
+	MODEL_ROUTE_WORKER?: string;
+};
+
+/**
+ * The worker `Env`, with the AI Gateway base url, token, and dynamic model
+ * routes pointed at a test gateway. Builds on `base` (the real `Env` by
+ * default) rather than always re-spreading it, so composing this with another
+ * fake env builder never undoes the other's overrides.
+ */
+export function fakeModelEnv(
+	overrides: ModelEnvOverrides = {},
+	base: Env = testEnv,
+): Env {
+	return {
+		...base,
+		AI_GATEWAY_BASE_URL:
+			overrides.AI_GATEWAY_BASE_URL ?? "https://gateway.test.example/compat",
+		CF_AIG_TOKEN: { get: async () => "test-aig-token" },
+		MODEL_ROUTE_REASONING:
+			overrides.MODEL_ROUTE_REASONING ?? "dynamic/brain-reasoning",
+		MODEL_ROUTE_WORKER: overrides.MODEL_ROUTE_WORKER ?? "dynamic/brain-worker",
+	};
+}

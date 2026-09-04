@@ -1,4 +1,10 @@
-import type { Company, Person, Run, RunCompany } from "@/core/db/schema";
+import type {
+	Company,
+	Evidence,
+	Person,
+	Run,
+	RunCompany,
+} from "@/core/db/schema";
 
 export function runCompanyRow(id: string): RunCompany {
 	return {
@@ -40,6 +46,22 @@ export function personRow(id: string): Person {
 		name: id,
 		title: null,
 		data: null,
+	};
+}
+
+export function evidenceRow(fields: {
+	kind: string;
+	value: string;
+	source: string;
+	status: string | null;
+	seenAt: Date;
+}): Evidence {
+	return {
+		id: "evidence-1",
+		subjectType: "person",
+		subjectId: "subject-1",
+		confidence: null,
+		...fields,
 	};
 }
 

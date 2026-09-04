@@ -18,7 +18,7 @@ function newEmail(): string {
 }
 
 describe("the sign-up endpoint", () => {
-	it("creates a user from an email and a password", async () => {
+	it("creates a user from an email and a password, needing no api key", async () => {
 		const response = await post("/api/auth/sign-up/email", {
 			email: newEmail(),
 			password: "a-long-enough-password",
@@ -26,6 +26,7 @@ describe("the sign-up endpoint", () => {
 		});
 
 		expect(response.status).toBe(200);
+		expect(response.status).not.toBe(401);
 	}, 30000);
 
 	it("refuses a second sign-up with the same email", async () => {
@@ -44,15 +45,5 @@ describe("the sign-up endpoint", () => {
 		});
 
 		expect(response.status).not.toBe(200);
-	}, 30000);
-
-	it("needs no api key, since a key is what sign-up leads to", async () => {
-		const response = await post("/api/auth/sign-up/email", {
-			email: newEmail(),
-			password: "a-long-enough-password",
-			name: "Probe",
-		});
-
-		expect(response.status).not.toBe(401);
 	}, 30000);
 });

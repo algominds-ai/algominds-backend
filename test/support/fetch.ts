@@ -31,6 +31,63 @@ export function fakeVendors(
 	};
 }
 
+export type CapturedFetch = { url: string; headers: Headers; body: unknown };
+
+/** An Exa `/search` success reply carrying one result per page, costed at a flat total. */
+export function exaSearchResultsResponse(
+	pages: readonly { url: string; text: string }[],
+): Response {
+	return jsonResponse({
+		requestId: "req-search",
+		costDollars: { total: 0.01 },
+		results: pages.map((page) => ({
+			url: page.url,
+			title: page.url,
+			text: page.text,
+		})),
+	});
+}
+
+/** A `fetch` that answers Exa calls and model-gateway calls from two separate scripted queues, recording both. */
+export function fakeExaAndModel(
+	exa: readonly Response[],
+	model: readonly Response[],
+): {
+	fetch: typeof fetch;
+	exaCalls: CapturedFetch[];
+	modelCalls: CapturedFetch[];
+} {
+	const exaCalls: CapturedFetch[] = [];
+	const modelCalls: CapturedFetch[] = [];
+	let exaIndex = 0;
+	let modelIndex = 0;
+	const handler: typeof fetch = async (input, init) => {
+		const url = String(input);
+		const body =
+			typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
+		const captured: CapturedFetch = {
+			url,
+			headers: new Headers(init?.headers),
+			body,
+		};
+		if (url.includes("api.exa.ai")) {
+			const response = exa[exaIndex];
+			exaIndex += 1;
+			exaCalls.push(captured);
+			if (!response)
+				throw new Error("fakeExaAndModel: no scripted exa response left");
+			return response;
+		}
+		const response = model[modelIndex];
+		modelIndex += 1;
+		modelCalls.push(captured);
+		if (!response)
+			throw new Error("fakeExaAndModel: no scripted model response left");
+		return response;
+	};
+	return { fetch: handler, exaCalls, modelCalls };
+}
+
 export function requestedEmail(init: RequestInit | undefined): string {
 	const body: { email?: string } = JSON.parse(String(init?.body ?? "{}"));
 	return body.email ?? "";
