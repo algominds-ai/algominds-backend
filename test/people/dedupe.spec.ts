@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dedupe, nameKey } from "../src/core/people/dedupe";
+import { dedupe, nameKey } from "@/core/people/dedupe";
 
 describe("name key", () => {
 	it("strips credential suffixes so a name matches its credentialed form", () => {

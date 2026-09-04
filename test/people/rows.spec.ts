@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { Candidate } from "../src/core/people/candidate";
+import type { Candidate } from "@/core/people/candidate";
 import {
 	personVerifyEvidenceRow,
 	rawEvidenceRow,
 	toNewPerson,
-} from "../src/core/people/rows";
+} from "@/core/people/rows";
 
 const candidate: Candidate = {
 	id: 0,

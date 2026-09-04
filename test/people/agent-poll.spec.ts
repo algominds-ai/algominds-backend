@@ -1,39 +1,9 @@
-import type { WorkflowStep, WorkflowStepContext } from "cloudflare:workers";
 import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
-import { CostLedger } from "../src/core/cost";
-import type { AgentRunState } from "../src/workflows/agent-poll";
-import { pollAgentRun } from "../src/workflows/agent-poll";
-
-function fakeWorkflowStep(): { step: WorkflowStep; sleeps: string[] } {
-	const sleeps: string[] = [];
-	const step: WorkflowStep = {
-		do: async (
-			name: string,
-			second: unknown,
-			third?: unknown,
-		): Promise<unknown> => {
-			const callback = typeof second === "function" ? second : third;
-			if (typeof callback !== "function") {
-				throw new Error(`fake step: no callback for ${name}`);
-			}
-			const ctx: WorkflowStepContext = {
-				step: { name, count: 0 },
-				attempt: 1,
-				config: {},
-			};
-			return callback(ctx);
-		},
-		sleep: async (_name: string, duration: string | number) => {
-			sleeps.push(String(duration));
-		},
-		sleepUntil: async () => undefined,
-		waitForEvent: async () => {
-			throw new Error("fake step: waitForEvent not implemented");
-		},
-	};
-	return { step, sleeps };
-}
+import { CostLedger } from "@/core/cost";
+import type { AgentRunState } from "@/workflows/agent-poll";
+import { pollAgentRun } from "@/workflows/agent-poll";
+import { fakeWorkflowStep } from "../support/step";
 
 describe("pollAgentRun: a run that never completes", () => {
 	it("throws after the configured attempts, polling exactly that many times and never again", async () => {
