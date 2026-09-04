@@ -56,3 +56,14 @@ export function fakeWorkflowStep(
 	};
 	return { step, calls, sleeps, sleepCalls };
 }
+
+export type RunLookup = {
+	get: (id: string) => Promise<{ status: () => Promise<{ status: string }> }>;
+};
+
+/** A Workflow control-plane binding whose one instance answers `status()` however `status` says, or throws when `status` throws. */
+export function fakeRunLookup(
+	status: () => Promise<{ status: string }>,
+): RunLookup {
+	return { get: async () => ({ status }) };
+}

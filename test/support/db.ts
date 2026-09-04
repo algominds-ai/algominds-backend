@@ -1,5 +1,7 @@
 import { env as testEnv } from "cloudflare:workers";
 import { inArray } from "drizzle-orm";
+import { createAuth } from "@/auth";
+import { ORGANIZATION_KEY_CONFIG_ID } from "@/auth-options";
 import { organization } from "@/core/db/auth-schema";
 import { db, withConnection } from "@/core/db/client";
 import { createIcp } from "@/core/db/icp";
@@ -188,6 +190,53 @@ export async function wipeOrganizations(
 		await connection.delete(icp).where(inArray(icp.organizationId, ids));
 	});
 	await deleteOrganizations(ids);
+}
+
+export type IssuedKey = {
+	key: string;
+	id: string;
+	organizationId: string;
+	userId: string;
+};
+
+/** Mints a real api key for a real organization: signs up a user, creates an organization it owns, then mints a key for it. */
+export async function issueOrganizationKey(label: string): Promise<IssuedKey> {
+	const auth = createAuth(testEnv);
+	const signedUp = await auth.api.signUpEmail({
+		body: {
+			name: label,
+			email: `${label}-${crypto.randomUUID()}@algo.test`,
+			password: "correct-horse-battery-staple",
+		},
+	});
+	const org = await auth.api.createOrganization({
+		body: { name: label, slug: label, userId: signedUp.user.id },
+	});
+	const created = await auth.api.createApiKey({
+		body: {
+			configId: ORGANIZATION_KEY_CONFIG_ID,
+			organizationId: org.id,
+			userId: signedUp.user.id,
+			name: "test-key",
+		},
+	});
+	return {
+		key: created.key,
+		id: created.id,
+		organizationId: org.id,
+		userId: signedUp.user.id,
+	};
+}
+
+export async function disableOrganizationKey(issued: IssuedKey): Promise<void> {
+	await createAuth(testEnv).api.updateApiKey({
+		body: {
+			configId: ORGANIZATION_KEY_CONFIG_ID,
+			keyId: issued.id,
+			userId: issued.userId,
+			enabled: false,
+		},
+	});
 }
 
 export function fakeFindRun(
