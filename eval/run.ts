@@ -8,12 +8,11 @@ import {
 	bootstrapArmSchema,
 	seedArmProfiles,
 } from "@eval/arm-db";
-import { compareToBaseline, formatComparison } from "@eval/compare";
 import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
 import { startDevServer } from "@eval/dev-server";
 import { computeVerdict } from "@eval/headline";
 import { readKeyFile } from "@eval/keys-io";
-import type { KeyFile } from "@eval/label-core";
+import { seedKeyFileFromArm } from "@eval/label";
 import { buildManifest } from "@eval/manifest";
 import type { ProfileBars } from "@eval/profiles";
 import {
@@ -32,12 +31,6 @@ import {
 } from "@eval/read";
 import type { TrialOutput } from "@eval/scorers";
 import { CODE_SCORERS } from "@eval/scorers";
-import type { RunTraceMeta } from "@eval/trace";
-import {
-	attachTraceToCurrentSpan,
-	logTrace,
-	traceCompaniesRun,
-} from "@eval/trace";
 import { Eval } from "braintrust";
 import postgres from "postgres";
 
@@ -122,48 +115,10 @@ export function casesFor(seeded: readonly SeededTrial[]): TrialCase[] {
 
 type TrialResult = TrialOutput & { costDollars: number };
 
-type ArmIdentity = { arm: string; commit: string };
-type TrialKey = { trial: TrialCase; key: KeyFile };
-
-/**
- * Logs one trial's Braintrust trace, best-effort: a trace failure never
- * fails the trial it describes. Attaches the same span tree, with every
- * code scorer's score, onto the current experiment span, and separately
- * logs it to project logs so the run is also browsable outside any one
- * experiment.
- */
-async function traceTrial(
-	sql: postgres.Sql,
-	runId: string,
-	trialKey: TrialKey,
-	identity: ArmIdentity,
-): Promise<void> {
-	const { trial, key } = trialKey;
-	const meta: RunTraceMeta = {
-		profile: trial.slug,
-		arm: identity.arm,
-		trial: trial.trialIndex,
-		commit: identity.commit,
-	};
-	try {
-		const spec = await traceCompaniesRun(
-			sql,
-			runId,
-			{ icpId: trial.icpId, key },
-			meta,
-		);
-		attachTraceToCurrentSpan(spec);
-		await logTrace(spec);
-	} catch (error) {
-		console.error(`eval: trace failed for ${runId}: ${String(error)}`);
-	}
-}
-
 async function runOneTrial(
 	client: ApiClient,
 	sql: postgres.Sql,
 	trial: TrialCase,
-	identity: ArmIdentity,
 ): Promise<TrialResult> {
 	const runId = await startCompaniesRun(client, trial.icpId, COMPANIES_PER_RUN);
 	await waitForRunTerminal(client, runId);
@@ -180,22 +135,16 @@ async function runOneTrial(
 		requiresProvingPass,
 		stored,
 	});
-	await traceTrial(sql, runId, { trial, key }, identity);
 	return { verdict, runId, skipped: null, costDollars: run.costDollars };
 }
 
 /** One trial's task: skip it without spending anything once the budget blocks it, otherwise start, wait, read back and score it, banking what it actually cost. */
-function buildTask(
-	apiUrl: string,
-	sql: postgres.Sql,
-	budget: Budget,
-	identity: ArmIdentity,
-) {
+function buildTask(apiUrl: string, sql: postgres.Sql, budget: Budget) {
 	return async (trial: TrialCase): Promise<TrialOutput> => {
 		const blocked = budgetBlock(budget, trial.slug);
 		if (blocked) return { verdict: null, runId: null, skipped: blocked };
 		const client: ApiClient = { baseUrl: apiUrl, apiKey: trial.apiKey };
-		const result = await runOneTrial(client, sql, trial, identity);
+		const result = await runOneTrial(client, sql, trial);
 		bankSpend(budget, trial.slug, result.costDollars);
 		return { verdict: result.verdict, runId: result.runId, skipped: null };
 	};
@@ -212,26 +161,58 @@ async function setUpArm(arm: string, trials: number): Promise<ArmSetup> {
 	return { seeded, apiUrl: server.url, stop: server.stop };
 }
 
-function verdictLine(input: TrialCase, output: TrialOutput): string | null {
+async function companyLabelPairs(
+	sql: postgres.Sql,
+	slug: string,
+	runId: string,
+): Promise<string> {
+	const profile = profileBySlug(slug);
+	if (!profile) return "";
+	const key = readKeyFile(profile.slug, profile.icpId);
+	const stored = await readStoredCompanies(sql, runId);
+	return stored
+		.map((row) => `${row.domain}:${key.companies[row.domain]?.label ?? "-"}`)
+		.join(", ");
+}
+
+async function verdictLine(
+	sql: postgres.Sql,
+	input: TrialCase,
+	output: TrialOutput,
+): Promise<string | null> {
 	const label = `${input.slug} t${input.trialIndex}`;
 	if (!output) return `${label}: no output (the trial threw)`;
 	if (output.skipped) return `${label}: skipped (${output.skipped})`;
 	const verdict = output.verdict;
-	if (!verdict) return null;
+	if (!verdict || !output.runId) return null;
+	const companies = await companyLabelPairs(sql, input.slug, output.runId);
 	return (
 		`${label}: ${verdict.allGatesPass ? "PASS" : "FAIL"} gates, ` +
 		`precision ${verdict.precision ?? "n/a"}, ` +
 		`$${(verdict.costPerStoredCompany ?? 0).toFixed(3)}/company, ` +
-		`${(verdict.secondsPerStoredCompany ?? 0).toFixed(1)}s/company`
+		`${(verdict.secondsPerStoredCompany ?? 0).toFixed(1)}s/company — ${companies}`
 	);
 }
 
-function printVerdicts(
+async function printVerdicts(
+	sql: postgres.Sql,
 	rows: readonly { input: TrialCase; output: TrialOutput }[],
-): void {
+): Promise<void> {
 	for (const { input, output } of rows) {
-		const line = verdictLine(input, output);
+		const line = await verdictLine(sql, input, output);
 		if (line) console.log(line);
+	}
+}
+
+async function seedKeyFiles(
+	sql: postgres.Sql,
+	profiles: typeof PROFILES,
+): Promise<void> {
+	for (const profile of profiles) {
+		const seeded = await seedKeyFileFromArm(sql, profile.slug);
+		console.log(
+			`${profile.slug}: ${seeded.companyCount} companies, ${seeded.unlabelledCount} unlabelled`,
+		);
 	}
 }
 
@@ -280,17 +261,6 @@ async function writeExperimentManifest(
 	);
 }
 
-/** Prints the diff against the latest baseline experiment, best-effort: a comparison failure never fails the run it describes. */
-async function printComparison(experiment: string): Promise<void> {
-	const apiKey = process.env.BRAINTRUST_API_KEY;
-	if (!apiKey) return;
-	try {
-		console.log(formatComparison(await compareToBaseline(experiment, apiKey)));
-	} catch (error) {
-		console.error(`eval: comparison failed: ${String(error)}`);
-	}
-}
-
 async function main(): Promise<void> {
 	const args = parseArgs(process.argv.slice(2));
 	const profiles = selectedProfiles(args.profile);
@@ -307,7 +277,7 @@ async function main(): Promise<void> {
 	try {
 		const result = await Eval("algo-backend", {
 			data: cases.map((trial) => ({ input: trial })),
-			task: buildTask(apiUrl, sql, budget, { arm: args.arm, commit }),
+			task: buildTask(apiUrl, sql, budget),
 			scores: CODE_SCORERS,
 			experimentName: experiment,
 			metadata: { commit, arm: args.arm },
@@ -326,12 +296,12 @@ async function main(): Promise<void> {
 			rows,
 			datasetSnapshotIds,
 		});
-		printVerdicts(rows);
+		await seedKeyFiles(sql, profiles);
+		await printVerdicts(sql, rows);
 		console.log(`eval: total spend $${budget.spent.toFixed(4)}`);
 		console.log(
 			`eval: experiment ${result.summary.experimentUrl ?? experiment}`,
 		);
-		await printComparison(experiment);
 	} finally {
 		await sql.end();
 		stop();

@@ -150,22 +150,51 @@ async function promptForLabels(
 	return labelled;
 }
 
+/** `slug`'s key file, merged with every company row `scope` finds and written back sorted. */
+async function seedKeyFile(
+	sql: Sql,
+	slug: string,
+	scope: Scope,
+): Promise<{ key: KeyFile; rows: CompanyRow[] }> {
+	const profile = profileBySlug(slug);
+	if (!profile) throw new Error(`eval:label unknown profile ${slug}`);
+	const rows = await fetchCompanyRows(sql, scope);
+	const key = sortedKeyFile(
+		mergeStoredCompanies(
+			readKeyFile(profile.slug, profile.icpId),
+			rows.map(toStoredCompany),
+		),
+	);
+	writeKeyFile(key);
+	return { key, rows };
+}
+
+export type SeedResult = { companyCount: number; unlabelledCount: number };
+
+/** Seeds `slug`'s key file from every company an arm database's `eval-<slug>-t<n>` organizations stored, exactly what `bun run eval:label <slug> --seed-only --arm <arm>` does. */
+export async function seedKeyFileFromArm(
+	sql: Sql,
+	slug: string,
+): Promise<SeedResult> {
+	const { key } = await seedKeyFile(sql, slug, { armSlug: slug });
+	return {
+		companyCount: Object.keys(key.companies).length,
+		unlabelledCount: unlabelledDomains(key).length,
+	};
+}
+
 type LabelArgs = { slug: string; seedOnly: boolean; arm: string | null };
 
 async function labelProfile(args: LabelArgs): Promise<void> {
 	const { slug, seedOnly, arm } = args;
 	const profile = profileBySlug(slug);
 	if (!profile) throw new Error(`eval:label unknown profile ${slug}`);
-	let key = readKeyFile(profile.slug, profile.icpId);
 	const databaseUrl = arm ? armDatabaseUrl(arm) : process.env.DATABASE_URL;
 	if (!databaseUrl) throw new Error("eval:label DATABASE_URL is not set");
 	const sql = postgres(databaseUrl, { max: 1 });
 	try {
 		const scope: Scope = arm ? { armSlug: slug } : { icpId: profile.icpId };
-		const rows = await fetchCompanyRows(sql, scope);
-		key = mergeStoredCompanies(key, rows.map(toStoredCompany));
-		key = sortedKeyFile(key);
-		writeKeyFile(key);
+		const { key, rows } = await seedKeyFile(sql, slug, scope);
 		const pending = unlabelledDomains(key).length;
 		console.log(
 			`${slug}: ${Object.keys(key.companies).length} companies, ${pending} unlabelled, wrote ${keyPath(slug)}`,
