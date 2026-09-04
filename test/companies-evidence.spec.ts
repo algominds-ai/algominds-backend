@@ -2,8 +2,8 @@ import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { config } from "../src/config";
-import { verifyEvidenceRows } from "../src/core/companies/evidence";
 import type { CompanyRow } from "../src/core/companies/gate";
+import { verifyEvidenceRows } from "../src/core/companies/proof";
 import { CostLedger } from "../src/core/cost";
 
 function exaEnv(): Env {

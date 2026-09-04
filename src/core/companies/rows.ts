@@ -1,4 +1,7 @@
-import type { CompanyCapture } from "@/core/companies/candidates";
+import type {
+	CompanyCapture,
+	FindCompaniesReject,
+} from "@/core/companies/candidates";
 import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
@@ -7,6 +10,7 @@ import { normalizeDomain } from "@/core/db/schema";
 const EVIDENCE_SOURCE = "exa";
 const RAW_RESULT_MAX_CHARS = 20_000;
 const PAGE_TEXT_MAX_CHARS = 10_000;
+const ROUND_REFUSALS_MAX_CHARS = 20_000;
 
 export type NewCompanyContext = {
 	icpId: string;
@@ -99,6 +103,50 @@ export function retrievedPageEvidenceRow(
 		subjectId: saved.id,
 		kind: "proving-page",
 		value: `${page.url}\n${page.text.slice(0, PAGE_TEXT_MAX_CHARS)}`,
+		source: EVIDENCE_SOURCE,
+	};
+}
+
+type RefusedRow = {
+	domain: string | null;
+	reason: string;
+	statuses: { id: string; status: string }[];
+};
+
+function refusedRow(reject: FindCompaniesReject): RefusedRow | null {
+	if (reject.statuses === undefined) return null;
+	return {
+		domain: reject.domain,
+		reason: reject.reason,
+		statuses: reject.statuses,
+	};
+}
+
+/**
+ * One append-only evidence row per round carrying every row the judge refused
+ * — its domain, the reason, and the judge's own per-requirement statuses —
+ * so a refused company still leaves a trace of why once the run finishes.
+ * Filed under the profile's id rather than the run's: a Workflow run id is
+ * free text and the evidence table's subject is a uuid. Bounded to
+ * `ROUND_REFUSALS_MAX_CHARS`, and null when the round refused nothing at the
+ * judge.
+ */
+export function roundRefusalsEvidenceRow(
+	icpId: string,
+	runId: string,
+	round: number,
+	rejects: readonly FindCompaniesReject[],
+): NewEvidence | null {
+	const refused = rejects
+		.map(refusedRow)
+		.filter((row): row is RefusedRow => row !== null);
+	if (refused.length === 0) return null;
+	const value = JSON.stringify({ runId, round, refused });
+	return {
+		subjectType: "run",
+		subjectId: icpId,
+		kind: "round-refusals",
+		value: value.slice(0, ROUND_REFUSALS_MAX_CHARS),
 		source: EVIDENCE_SOURCE,
 	};
 }

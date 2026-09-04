@@ -2,6 +2,8 @@ import { z } from "zod";
 import { config } from "@/config";
 import type { CompanyRow, SearchResult } from "@/core/companies/gate";
 import { NOT_A_COMPANY_DOMAIN } from "@/core/companies/gate";
+import type { RejectDetail } from "@/core/companies/limits";
+import { entityRejectReason, planConstraints } from "@/core/companies/limits";
 import { normalizeDomain } from "@/core/db/schema";
 import type {
 	CompanyEntity,
@@ -20,6 +22,7 @@ export type FindCompaniesReject = {
 	reason: string;
 	stage: "filter" | "gate" | "judge";
 	group?: string;
+	statuses?: { id: string; status: string }[];
 };
 
 /** One page a round retrieved for one company, kept because content read from the web is stored as evidence rather than discarded. */
@@ -188,119 +191,6 @@ export function companyExaId(data: unknown): string | null {
 	return parsed.success ? (parsed.data?.result?.id ?? null) : null;
 }
 
-export type NumericLimit = {
-	label: string;
-	reading: (entity: CompanyEntity) => number | null;
-	floor: (plan: SearchPlan) => number | null;
-	ceiling: (plan: SearchPlan) => number | null;
-};
-
-/** Every figure Exa reports for a company that a profile can bound. */
-export const NUMERIC_LIMITS: readonly NumericLimit[] = [
-	{
-		label: "headcount",
-		reading: (entity) => entity.workforceTotal,
-		floor: (plan) => plan.minWorkforce,
-		ceiling: (plan) => plan.maxWorkforce,
-	},
-	{
-		label: "founding year",
-		reading: (entity) => entity.foundedYear,
-		floor: (plan) => plan.minFoundedYear,
-		ceiling: (plan) => plan.maxFoundedYear,
-	},
-	{
-		label: "annual revenue",
-		reading: (entity) => entity.revenueAnnual,
-		floor: (plan) => plan.minRevenueAnnual,
-		ceiling: (plan) => plan.maxRevenueAnnual,
-	},
-	{
-		label: "funding raised",
-		reading: (entity) => entity.fundingTotal,
-		floor: (plan) => plan.minFundingTotal,
-		ceiling: (plan) => plan.maxFundingTotal,
-	},
-];
-
-function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
-	const floor = limit.floor(plan);
-	const ceiling = limit.ceiling(plan);
-	if (floor !== null && ceiling !== null) {
-		return `Every company must have a ${limit.label} between ${floor} and ${ceiling}.`;
-	}
-	if (ceiling !== null) {
-		return `Every company must have a ${limit.label} of at most ${ceiling}.`;
-	}
-	if (floor !== null) {
-		return `Every company must have a ${limit.label} of at least ${floor}.`;
-	}
-	return null;
-}
-
-/** The plan's bounds and countries as sentences, appended to a query so the vendor's search and any agent both see them stated. */
-export function planConstraints(plan: SearchPlan): string {
-	const rules = NUMERIC_LIMITS.map((limit) => limitRule(limit, plan)).filter(
-		(rule): rule is string => rule !== null,
-	);
-	if (plan.countries.length > 0) {
-		rules.push(
-			`Every company must be based in ${plan.countries.join(" or ")}.`,
-		);
-	}
-	return rules.join(" ");
-}
-
-type RejectDetail = { reason: string; group?: string };
-
-function numericRejectReason(
-	entity: CompanyEntity,
-	plan: SearchPlan,
-): RejectDetail | null {
-	for (const limit of NUMERIC_LIMITS) {
-		const reading = limit.reading(entity);
-		if (reading === null) continue;
-		const ceiling = limit.ceiling(plan);
-		if (ceiling !== null && reading > ceiling) {
-			const group = `${limit.label} above the limit of ${ceiling}`;
-			return {
-				reason: `${limit.label} ${reading} above the limit of ${ceiling}`,
-				group,
-			};
-		}
-		const floor = limit.floor(plan);
-		if (floor !== null && reading < floor) {
-			const group = `${limit.label} below the floor of ${floor}`;
-			return {
-				reason: `${limit.label} ${reading} below the floor of ${floor}`,
-				group,
-			};
-		}
-	}
-	return null;
-}
-
-function countryRejectReason(
-	entity: CompanyEntity,
-	plan: SearchPlan,
-): string | null {
-	const { country } = entity;
-	if (plan.countries.length === 0 || country === null) return null;
-	const allowed = plan.countries.some(
-		(name) => name.toLowerCase() === country.toLowerCase(),
-	);
-	return allowed ? null : `headquarters in ${country}`;
-}
-
-function entityRejectReason(
-	entity: CompanyEntity,
-	plan: SearchPlan,
-): RejectDetail | null {
-	const countryReason = countryRejectReason(entity, plan);
-	if (countryReason !== null) return { reason: countryReason };
-	return numericRejectReason(entity, plan);
-}
-
 export type FilterOutcome = {
 	rows: CompanyRow[];
 	results: SearchResult[];
@@ -315,7 +205,7 @@ export type FilterOutcome = {
  * because whether it still proves anything depends on what the page is, and a
  * live job advertisement is current whether or not it prints a date.
  */
-export function staleRejectReason(
+function staleRejectReason(
 	evidenceDate: string | null,
 	recencyDays: number | null,
 	today: string,
@@ -396,31 +286,6 @@ export function filterEntities(
 		}
 	}
 	return outcome;
-}
-
-function rowDomain(row: CompanyRow): string | null {
-	return row.domain ? normalizeDomain(row.domain) : null;
-}
-
-export function collectDomains(rows: readonly CompanyRow[]): Set<string> {
-	const domains = new Set<string>();
-	for (const row of rows) {
-		const domain = rowDomain(row);
-		if (domain) domains.add(domain);
-	}
-	return domains;
-}
-
-export function countUnseen(
-	rows: readonly CompanyRow[],
-	seen: ReadonlySet<string>,
-): number {
-	let count = 0;
-	for (const row of rows) {
-		const domain = rowDomain(row);
-		if (domain && !seen.has(domain)) count += 1;
-	}
-	return count;
 }
 
 /**

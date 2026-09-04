@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { config } from "@/config";
-import { planConstraints } from "@/core/companies/candidates";
+import { planConstraints } from "@/core/companies/limits";
 import type {
 	ExaAgentCompany,
 	ExaAgentRunRequest,

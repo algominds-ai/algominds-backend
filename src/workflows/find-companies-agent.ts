@@ -7,7 +7,7 @@ import {
 } from "@/core/companies/agent-search";
 import { gate } from "@/core/companies/gate";
 import { judge } from "@/core/companies/judge";
-import { proveRows } from "@/core/companies/proving";
+import { proveRows } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
 import { CostLedger } from "@/core/cost";
 import { recentDomains } from "@/core/db/queries";
@@ -245,12 +245,12 @@ function steppedJudge(
 	step: WorkflowStep,
 	round: number,
 ): FindCompaniesDeps["judge"] {
-	return async (requirements, rows, env) => {
+	return async (requirements, rows, env, evidenceByRow) => {
 		const cached = await step.do(
 			`round_${round}-judge`,
 			config.stepConfig.paidCall,
 			async () => {
-				const result = await judge(requirements, rows, env);
+				const result = await judge(requirements, rows, env, evidenceByRow);
 				return {
 					verdicts: result.verdicts,
 					costEntries: result.ledger.toJSON().entries,

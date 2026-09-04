@@ -19,21 +19,20 @@ import {
 	closeRun,
 	loadIcp,
 	openRun,
-	recordRunSpend,
-	saveRound,
 } from "@/core/db/queries";
 import type { Requirement } from "@/core/requirements";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";
+import type { RoundReport } from "@/workflows/find-companies-persist";
 import {
 	loadRequirements,
 	persistCompanies,
+	persistRound,
+	reportRound,
 } from "@/workflows/find-companies-persist";
 
 const MAX_ROUNDS = config.companies.maxRounds;
-/** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
-const STORED_REJECTS_PER_ROUND = 120;
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -53,35 +52,6 @@ export function finalStatus(
 	if (lastRoundStatus === "capped") return "capped";
 	if (lastRoundStatus === "empty") return found > 0 ? "short" : "empty";
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
-}
-
-type PersistRoundInput = {
-	step: WorkflowStep;
-	env: Env;
-	runId: string;
-	costDollars: number;
-	result: FindCompaniesResult;
-	report: RoundReport;
-};
-
-/** Banks what one round spent and what it did, in one durable step, so both land together or replay together. */
-async function persistRound(input: PersistRoundInput): Promise<void> {
-	const { step, env, runId, report } = input;
-	await step.do(
-		`round_${report.round}-spend`,
-		config.stepConfig.databaseCall,
-		async () => {
-			await recordRunSpend(env, runId, input.costDollars);
-			await saveRound(env, {
-				runId,
-				ordinal: report.round,
-				plan: input.result.searches[0] ?? null,
-				found: report.found,
-				rejected: report.rejected,
-				rejects: input.result.rejects.slice(0, STORED_REJECTS_PER_ROUND),
-			});
-		},
-	);
 }
 
 /** The options one round runs under, carrying the angles and reject reasons the rounds before it produced. */
@@ -127,6 +97,95 @@ function carried(result: FindCompaniesResult, across: CarriedAcross): string[] {
 	return result.searches.map((plan) => plan.angle);
 }
 
+type RoundTarget = {
+	env: Env;
+	payload: FindCompaniesPayload;
+	icp: IcpDoc;
+	requirements: readonly Requirement[];
+	runId: string;
+	organizationId: string;
+	step: WorkflowStep;
+};
+
+type RoundLoopState = {
+	accumulatedDomains: Set<string>;
+	searches: FindCompaniesResult["searches"];
+	captures: Record<string, CompanyCapture>;
+	pages: FindCompaniesResult["pages"];
+	roundReports: RoundReport[];
+	companies: CompanyRow[];
+	rejects: FindCompaniesReject[];
+	costDollars: number;
+	rounds: number;
+	lastRoundStatus: FindCompaniesStatus;
+	pastAngles: string[];
+	feedback: string[];
+};
+
+/** Runs one round as its own durable step and folds its result into the loop's state. Returns `"stop"` once the run has covered the market it can, or crossed its own spend ceiling. */
+async function runOneRound(
+	target: RoundTarget,
+	state: RoundLoopState,
+	round: number,
+	today: string,
+): Promise<"continue" | "stop"> {
+	const { env, payload, icp, organizationId, step } = target;
+	const opts = roundOptions({
+		payload,
+		organizationId,
+		env,
+		today,
+		history: { pastAngles: state.pastAngles, feedback: state.feedback },
+		requirements: target.requirements,
+	});
+	const deps = roundDeps({
+		accumulatedDomains: state.accumulatedDomains,
+		step,
+		round,
+		today,
+		seller: icp.seller,
+	});
+	const remaining = payload.count - state.companies.length;
+	const stepResult = await step.do(
+		`round_${round}`,
+		config.stepConfig.paidCall,
+		() => findCompanies(icp, remaining, opts, deps),
+	);
+	state.companies = state.companies.concat(stepResult.companies);
+	state.rejects = state.rejects.concat(stepResult.rejects);
+	state.costDollars += stepResult.costDollars;
+	state.rounds += 1;
+	state.lastRoundStatus = stepResult.status;
+	state.pastAngles = state.pastAngles.concat(
+		carried(stepResult, {
+			searches: state.searches,
+			captures: state.captures,
+			pages: state.pages,
+		}),
+	);
+	state.feedback = stepResult.feedback;
+	const report = reportRound(round, stepResult);
+	state.roundReports.push(report);
+	await persistRound({
+		step,
+		env,
+		runId: target.runId,
+		icpId: payload.icpId,
+		costDollars: state.costDollars,
+		result: stepResult,
+		report,
+	});
+	for (const domain of stepResult.seenDomains) {
+		state.accumulatedDomains.add(domain);
+	}
+	if (stepResult.status === "exhausted") return "stop";
+	if (state.costDollars >= config.spend.perRunDollars) {
+		state.lastRoundStatus = "capped";
+		return "stop";
+	}
+	return "continue";
+}
+
 async function runFindCompaniesRounds(
 	target: {
 		env: Env;
@@ -139,93 +198,60 @@ async function runFindCompaniesRounds(
 	},
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
-	const { env, payload, icp, runId, organizationId } = target;
+	const { payload, icp } = target;
 	const today = await step.do("today", config.stepConfig.databaseCall, () =>
 		Promise.resolve(new Date().toISOString().slice(0, 10)),
 	);
-	const accumulatedDomains = seedExcludedDomains(
-		payload.excludeDomains ?? [],
-		icp.seller,
-	);
-	const searches: FindCompaniesResult["searches"] = [];
-	const captures: Record<string, CompanyCapture> = {};
-	const pages: FindCompaniesResult["pages"] = [];
-	const roundReports: RoundReport[] = [];
-	let companies: CompanyRow[] = [];
-	let rejects: FindCompaniesReject[] = [];
-	let costDollars = target.alreadySpent;
-	let rounds = 0;
-	let lastRoundStatus: FindCompaniesStatus = "short";
-	let pastAngles: string[] = [];
-	let feedback: string[] = [];
+	const state: RoundLoopState = {
+		accumulatedDomains: seedExcludedDomains(
+			payload.excludeDomains ?? [],
+			icp.seller,
+		),
+		searches: [],
+		captures: {},
+		pages: [],
+		roundReports: [],
+		companies: [],
+		rejects: [],
+		costDollars: target.alreadySpent,
+		rounds: 0,
+		lastRoundStatus: "short",
+		pastAngles: [],
+		feedback: [],
+	};
 
 	for (
 		let round = 1;
-		round <= MAX_ROUNDS && companies.length < payload.count;
+		round <= MAX_ROUNDS && state.companies.length < payload.count;
 		round++
 	) {
-		const remaining = payload.count - companies.length;
-		const opts = roundOptions({
-			payload,
-			organizationId,
-			env,
-			today,
-			history: { pastAngles, feedback },
-			requirements: target.requirements,
-		});
-		const deps = roundDeps({
-			accumulatedDomains,
-			step,
+		const decision = await runOneRound(
+			{ ...target, step },
+			state,
 			round,
 			today,
-			seller: icp.seller,
-		});
-		const stepResult = await step.do(
-			`round_${round}`,
-			config.stepConfig.paidCall,
-			() => findCompanies(icp, remaining, opts, deps),
 		);
-		companies = companies.concat(stepResult.companies);
-		rejects = rejects.concat(stepResult.rejects);
-		costDollars += stepResult.costDollars;
-		rounds += 1;
-		lastRoundStatus = stepResult.status;
-		pastAngles = pastAngles.concat(
-			carried(stepResult, { searches, captures, pages }),
-		);
-		feedback = stepResult.feedback;
-		const report = reportRound(round, stepResult);
-		roundReports.push(report);
-		await persistRound({
-			step,
-			env,
-			runId,
-			costDollars,
-			result: stepResult,
-			report,
-		});
-		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
-		if (stepResult.status === "exhausted") break;
-		if (costDollars >= config.spend.perRunDollars) {
-			lastRoundStatus = "capped";
-			break;
-		}
+		if (decision === "stop") break;
 	}
 
 	return {
-		companies,
+		companies: state.companies,
 		requested: payload.count,
-		found: companies.length,
-		rounds,
-		status: finalStatus(companies.length, payload.count, lastRoundStatus),
-		costDollars,
-		rejects,
-		searches,
-		captures,
-		seenDomains: [...accumulatedDomains],
-		feedback,
-		pages,
-		roundReports,
+		found: state.companies.length,
+		rounds: state.rounds,
+		status: finalStatus(
+			state.companies.length,
+			payload.count,
+			state.lastRoundStatus,
+		),
+		costDollars: state.costDollars,
+		rejects: state.rejects,
+		searches: state.searches,
+		captures: state.captures,
+		seenDomains: [...state.accumulatedDomains],
+		feedback: state.feedback,
+		pages: state.pages,
+		roundReports: state.roundReports,
 	};
 }
 
@@ -235,45 +261,6 @@ async function runFindCompaniesRounds(
  * back a page at a time through `GET /runs/{runId}/companies`.
  */
 type ReportedRounds = FindCompaniesResult & { roundReports: RoundReport[] };
-
-export type RoundReport = {
-	round: number;
-	angle: string;
-	query: string;
-	recency: string | null;
-	eventWindowDays: number | null;
-	recencyDays: number | null;
-	source: string;
-	agentEffort: string;
-	found: number;
-	rejected: { filter: number; gate: number; judge: number };
-};
-
-/** One line per round: the angle it tried, what it kept, and how many fell at each stage. The reasons themselves stay inside the run, since one round refused seventy eight companies and named every one. */
-export function reportRound(
-	round: number,
-	result: FindCompaniesResult,
-): RoundReport {
-	const plan = result.searches[0];
-	const count = (stage: FindCompaniesReject["stage"]): number =>
-		result.rejects.filter((reject) => reject.stage === stage).length;
-	return {
-		round,
-		angle: plan?.angle ?? "",
-		query: plan?.query ?? "",
-		recency: plan?.recency ?? null,
-		eventWindowDays: plan?.eventWindowDays ?? null,
-		recencyDays: plan?.recencyDays ?? null,
-		source: plan?.source ?? "",
-		agentEffort: plan?.agentEffort ?? "",
-		found: result.companies.length,
-		rejected: {
-			filter: count("filter"),
-			gate: count("gate"),
-			judge: count("judge"),
-		},
-	};
-}
 
 export type FindCompaniesSummary = {
 	requested: number;
