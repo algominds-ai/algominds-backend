@@ -10,22 +10,21 @@ import { armDatabaseUrl } from "@eval/arm-db";
 
 const BASE_CONNECTION_STRING =
 	"postgresql://postgres:postgres@localhost:5432/algo";
-const CONFIG_DIR = ".wrangler-eval";
 const HEALTH_POLL_MS = 500;
 const HEALTH_TIMEOUT_MS = 60_000;
 
 function armConfigPath(arm: string): string {
-	return `${CONFIG_DIR}/${arm}.jsonc`;
+	return `wrangler.eval-${arm}.jsonc`;
 }
 
 /**
  * A copy of `wrangler.jsonc` with both Hyperdrive local connection strings
- * pointed at `eval_<arm>` instead of `algo`, written under `.wrangler-eval/`
- * (gitignored). A plain text substitution rather than a JSONC parse: the
+ * pointed at `eval_<arm>` instead of `algo`, written beside it as
+ * `wrangler.eval-<arm>.jsonc` (gitignored), because wrangler resolves the
+ * entry point relative to the config file. A plain text substitution rather than a JSONC parse: the
  * file's only well-known variable part is that one literal string.
  */
 function writeArmConfig(arm: string): string {
-	if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true });
 	const base = readFileSync("wrangler.jsonc", "utf8");
 	const swapped = base.replaceAll(BASE_CONNECTION_STRING, armDatabaseUrl(arm));
 	const path = armConfigPath(arm);
