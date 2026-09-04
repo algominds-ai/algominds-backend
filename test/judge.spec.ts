@@ -427,9 +427,13 @@ describe("the kind of page a row came from is a label, not something the judge w
 		return parsed.messages.map((message) => message.content).join("\n");
 	}
 
-	it("serialises every other field of the row and leaves the kind out", async () => {
+	it("sends only the fields a verdict can rest on, leaving the kind and every other label out", async () => {
 		const labelled: CompanyRow[] = [
-			{ ...row("Acme", "acme.com"), evidenceKind: "vendor-case-study" },
+			{
+				...row("Acme", "acme.com"),
+				description: "a small robotics company",
+				evidenceKind: "vendor-case-study",
+			},
 		];
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(labelled))),
@@ -440,9 +444,31 @@ describe("the kind of page a row came from is a label, not something the judge w
 
 		const sent = userMessage({ body: gateway.calls[0]?.body });
 		expect(sent).toContain("acme.com");
-		expect(sent).toContain("hiring a founding engineer");
+		expect(sent).toContain("a small robotics company");
+		expect(sent).toContain("https://acme.com/careers");
 		expect(sent).not.toContain("evidenceKind");
 		expect(sent).not.toContain("vendor-case-study");
+		expect(sent).not.toContain("linkedinUrl");
+		expect(sent).not.toContain("evidencePublisher");
+		expect(sent).not.toContain("hiring a founding engineer");
+		expect(sent).not.toContain("2026-08-20");
+	});
+
+	it("bounds a row's description to the judge's own character limit", async () => {
+		const long = "x".repeat(config.companies.descriptionChars + 200);
+		const overlong: CompanyRow[] = [
+			{ ...row("Acme", "acme.com"), description: long },
+		];
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(overlong))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(requirements, overlong, env);
+
+		const sent = userMessage({ body: gateway.calls[0]?.body });
+		expect(sent).not.toContain(long);
+		expect(sent).toContain("x".repeat(config.companies.descriptionChars));
 	});
 });
 
@@ -490,8 +516,8 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("sends 35 rows as three concurrent calls of 15, 15 and 5, and returns every index in row order however the calls resolve", async () => {
-		const bigRows: CompanyRow[] = Array.from({ length: 35 }, (_, i) =>
+	it("sends 40 rows as five concurrent calls of 8, and returns every index in row order however the calls resolve", async () => {
+		const bigRows: CompanyRow[] = Array.from({ length: 40 }, (_, i) =>
 			row(`Company ${i}`, `co${i}.com`),
 		);
 		const gateway = deferredGateway();
@@ -500,12 +526,12 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		const pending = judge(requirements, bigRows, env);
 
 		await flushMicrotasks();
-		expect(gateway.calls).toHaveLength(3);
+		expect(gateway.calls).toHaveLength(5);
 		const sizes = gateway.calls.map((call) => rowCountIn(call));
-		expect(sizes).toEqual([15, 15, 5]);
-		expect(config.companies.judgeBatchSize).toBe(15);
+		expect(sizes).toEqual([8, 8, 8, 8, 8]);
+		expect(config.companies.judgeBatchSize).toBe(8);
 
-		for (const callIndex of [2, 0, 1]) {
+		for (const callIndex of [4, 2, 0, 3, 1]) {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
@@ -521,7 +547,7 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 
 		const result = await pending;
 
-		expect(result.verdicts).toHaveLength(35);
+		expect(result.verdicts).toHaveLength(40);
 		result.verdicts.forEach((verdict, index) => {
 			expect(verdict.index).toBe(index);
 			expect(kept(verdict)).toBe(true);

@@ -1,7 +1,7 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { config } from "../src/config";
@@ -1810,6 +1810,167 @@ describe("FindCompaniesWorkflow: the raw vendor result kept as evidence", () => 
 	});
 });
 
+function provingPagesRoundResult(count: number): {
+	roundResult: FindCompaniesResult;
+	domains: string[];
+} {
+	const domains = Array.from(
+		{ length: count },
+		(_, i) => `proving-${i}-${crypto.randomUUID()}.example`,
+	);
+	const companies: CompanyRow[] = domains.map((domain, i) => ({
+		name: `Proving Co ${i}`,
+		domain,
+		linkedinUrl: null,
+		evidenceUrl: `https://${domain}/careers`,
+		evidenceQuote: `Proving Co ${i} is hiring now.`,
+		evidencePublisher: null,
+		evidenceKind: null,
+		industry: null,
+		description: null,
+		signal: "hiring a founding engineer",
+		evidenceDate: "2026-08-20",
+	}));
+	const captures: Record<string, CompanyCapture> = Object.fromEntries(
+		domains.map((domain, i) => [
+			domain,
+			{
+				entity: entity({ name: `Proving Co ${i}` }),
+				result: {
+					id: null,
+					url: `https://${domain}/`,
+					title: domain,
+					signal: null,
+					quote: null,
+					publisher: null,
+					kind: null,
+					publishedDate: null,
+					score: null,
+					evidenceCheck: "found",
+					fitReason: "fits icp",
+				},
+				raw: JSON.stringify(goodResult(domain)),
+				source: "exa-agent",
+			},
+		]),
+	);
+	const pages = domains.map((domain) => ({
+		domain,
+		url: `https://${domain}/careers`,
+		text: `${domain} is hiring now.`,
+	}));
+	return {
+		domains,
+		roundResult: {
+			companies,
+			requested: count,
+			found: count,
+			rounds: 1,
+			status: "complete",
+			costDollars: 0.05,
+			rejects: [],
+			searches: [testPlan({ source: "exa-agent", recency: "hiring signal" })],
+			captures,
+			seenDomains: domains,
+			feedback: [],
+			pages,
+		},
+	};
+}
+
+async function cleanupProvingPagesFixture(fixture: {
+	instanceId: string;
+	organizationId: string;
+	icpId: string;
+	savedIds: string[];
+}): Promise<void> {
+	await withConnection(testEnv, "direct", db, async (connection) => {
+		if (fixture.savedIds.length > 0) {
+			await connection
+				.delete(evidenceTable)
+				.where(inArray(evidenceTable.subjectId, fixture.savedIds));
+		}
+		await connection
+			.delete(companyTable)
+			.where(eq(companyTable.runId, fixture.instanceId));
+		await connection.delete(run).where(eq(run.id, fixture.instanceId));
+		await connection.delete(icpTable).where(eq(icpTable.id, fixture.icpId));
+		await connection
+			.delete(organization)
+			.where(eq(organization.id, fixture.organizationId));
+	});
+}
+
+describe("FindCompaniesWorkflow: an agent round's proving pages after persist", () => {
+	it("stores one proving-page evidence row for each of twelve quoted companies from one agent round", async () => {
+		const org = await organizationForSlug(
+			testEnv,
+			`companies-workflow-proving-pages-${crypto.randomUUID()}`,
+			"companies workflow proving pages test",
+		);
+		const icpRow = await createIcp(testEnv, {
+			description: "seed icp for the proving pages test",
+			domain: `proving-pages-${crypto.randomUUID()}.internal`,
+			organizationId: org.id,
+			requirements: storedRequirements,
+		});
+		const instanceId = `companies_proving_pages_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		const { roundResult } = provingPagesRoundResult(12);
+		let savedIds: string[] = [];
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "round_1" }, roundResult);
+			});
+
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: icpRow.id, count: 12 },
+			});
+			await instance.waitForStatus("complete");
+
+			const savedCompanies = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(companyTable)
+						.where(eq(companyTable.runId, instanceId)),
+			);
+			expect(savedCompanies).toHaveLength(12);
+			savedIds = savedCompanies.map((row) => row.id);
+
+			const evidenceRows = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(evidenceTable)
+						.where(inArray(evidenceTable.subjectId, savedIds)),
+			);
+			const provingPageRows = evidenceRows.filter(
+				(row) => row.kind === "proving-page",
+			);
+			expect(provingPageRows).toHaveLength(12);
+		} finally {
+			await instance.dispose();
+			await cleanupProvingPagesFixture({
+				instanceId,
+				organizationId: org.id,
+				icpId: icpRow.id,
+				savedIds,
+			});
+		}
+	});
+});
+
 describe("the status the workflow reports for the whole run", () => {
 	it("never reports empty for a run that saved a company in an earlier round", () => {
 		expect(finalStatus(2, 5, "empty")).toBe("short");
@@ -2024,6 +2185,52 @@ describe("a round that demanded proof checks its own evidence before the judge s
 		expect(result.captures["blocked.com"]?.result.evidenceCheck).toBe(
 			"SOURCE_NOT_AVAILABLE",
 		);
+	});
+});
+
+describe("a round with a whole dozen quoted companies checks and keeps a page for every one", () => {
+	it("records an evidenceCheck and a proving page for every one of twelve quoted companies an agent round found", async () => {
+		const rows = Array.from({ length: 12 }, (_, i) =>
+			agentRow(`co${i}.example`, `Co ${i} is hiring now.`),
+		);
+		const byUrl = Object.fromEntries(
+			rows.map((_row, i) => [
+				`https://co${i}.example/careers`,
+				{ text: `Co ${i} is hiring now.` },
+			]),
+		);
+		globalThis.fetch = contentsFetch(byUrl);
+
+		const { search } = scriptedSearch([[]]);
+		const { agentRound } = scriptedAgentRound([rows]);
+		const { synthesize } = scriptedSynthesize({
+			source: "exa-agent",
+			recency: "a role posted in the last 30 days",
+			recencyDays: 30,
+		});
+		const { recentDomains } = recordingRecentDomains();
+
+		const result = await findCompanies(
+			icp,
+			12,
+			exaOptions(),
+			testDeps({
+				recentDomains,
+				synthesize,
+				search,
+				agentRound,
+				backfill: passthroughBackfill,
+				gate,
+				judge: scriptedJudge([]),
+			}),
+		);
+
+		expect(result.companies).toHaveLength(12);
+		const checks = result.companies.map(
+			(row) => result.captures[row.domain ?? ""]?.result.evidenceCheck,
+		);
+		expect(checks.every((check) => check === "found")).toBe(true);
+		expect(result.pages).toHaveLength(12);
 	});
 });
 

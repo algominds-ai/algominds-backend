@@ -437,6 +437,21 @@ describe("synthesize: prompt drift and retries", () => {
 		expect(result.plans[0]?.maxWorkforce).toBeNull();
 		expect(result.plans[0]?.countries).toEqual([]);
 	});
+
+	it("falls back onto the agent route with its evidence demand carried, never a plan the round would think proved nothing", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse({ content: "", finishReason: "length" }),
+			chatCompletionResponse({ content: "", finishReason: "length" }),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(pageGatedInput(), env);
+
+		expect(result.route).toBe("agent");
+		expect(result.plans[0]?.source).toBe("exa-agent");
+		expect(result.plans[0]?.recency).toBe(pageRequirement.text);
+		expect(result.plans[0]?.recencyDays).toBe(30);
+	});
 });
 
 describe("the round runs on the route the requirements allow", () => {

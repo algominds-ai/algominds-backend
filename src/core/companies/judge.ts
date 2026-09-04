@@ -8,6 +8,7 @@ import { hardRequirements, requirementLine } from "@/core/requirements";
 
 const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 const JUDGE_BATCH_SIZE = config.companies.judgeBatchSize;
+const JUDGE_DESCRIPTION_CHARS = config.companies.descriptionChars;
 
 export const REQUIREMENT_STATUSES = [
 	"proven",
@@ -56,6 +57,28 @@ const JUDGE_INSTRUCTIONS = [
 	"under another brand, country domain or subdomain, and to null otherwise.",
 ].join(" ");
 
+type JudgedFields = {
+	name: string | null;
+	domain: string | null;
+	description: string | null;
+	evidenceUrl?: string;
+	evidenceQuote?: string;
+};
+
+/** The row cut to only the fields the judge instructions read: its own record, and the page it cites when it cites one. Everything else — signal, dates, publisher, the kind label — never changes a verdict. */
+function judgedFields(row: CompanyRow): JudgedFields {
+	return {
+		name: row.name,
+		domain: row.domain,
+		description:
+			row.description === null
+				? null
+				: row.description.slice(0, JUDGE_DESCRIPTION_CHARS),
+		...(row.evidenceUrl !== null ? { evidenceUrl: row.evidenceUrl } : {}),
+		...(row.evidenceQuote !== null ? { evidenceQuote: row.evidenceQuote } : {}),
+	};
+}
+
 function judgePrompt(
 	requirements: readonly Requirement[],
 	rows: readonly CompanyRow[],
@@ -74,8 +97,7 @@ function judgePrompt(
 	}
 	lines.push("Rows:");
 	for (const [index, row] of rows.entries()) {
-		const { evidenceKind: _kind, ...judged } = row;
-		lines.push(`${index}: ${JSON.stringify(judged)}`);
+		lines.push(`${index}: ${JSON.stringify(judgedFields(row))}`);
 	}
 	return lines.join("\n");
 }
