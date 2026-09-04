@@ -152,6 +152,62 @@ export function stubClayRejectFetch(): { runCalls: number } {
 	return calls;
 }
 
+export type ClayCreateFilters = {
+	company_identifier: string[];
+	job_title_seniority_levels_v2?: string[];
+	job_title_keywords?: string[];
+};
+
+function clayCreateFilters(init: RequestInit | undefined): ClayCreateFilters {
+	const body: { filters?: ClayCreateFilters } = JSON.parse(
+		String(init?.body ?? "{}"),
+	);
+	if (!body.filters)
+		throw new Error("expected a Clay create body with filters");
+	return body.filters;
+}
+
+/** Stubs `globalThis.fetch` as Clay's create-then-run search, answering each call with the next of `responses` (repeating the last), and recording every create call's filters. */
+export function stubClaySequence(responses: readonly Response[]): {
+	calls: number;
+	creates: ClayCreateFilters[];
+} {
+	const creates: ClayCreateFilters[] = [];
+	const state = { calls: 0, creates };
+	let step = 0;
+	globalThis.fetch = async (input, init) => {
+		state.calls += 1;
+		const path = new URL(String(input)).pathname;
+		if (path === "/public/v0/search/filters-mode") {
+			state.creates.push(clayCreateFilters(init));
+		}
+		const response = responses[step] ?? responses.at(-1);
+		step += 1;
+		if (!response) throw new Error("stubClaySequence: no response scripted");
+		return response;
+	};
+	return state;
+}
+
+/** Stubs `globalThis.fetch` as Clay's create-then-run search, recording every create call's filters and answering every run with an empty page. */
+export function stubClayCreateCapture(): {
+	creates: ClayCreateFilters[];
+	runCalls: number;
+} {
+	const creates: ClayCreateFilters[] = [];
+	const state = { creates, runCalls: 0 };
+	globalThis.fetch = async (input, init) => {
+		const path = new URL(String(input)).pathname;
+		if (path === "/public/v0/search/filters-mode") {
+			state.creates.push(clayCreateFilters(init));
+			return clayResponse({ search_id: `search-${state.creates.length}` });
+		}
+		state.runCalls += 1;
+		return clayResponse({ data: [], has_more: false });
+	};
+	return state;
+}
+
 export type CapturedRequest = { url: string; headers: Headers; body: unknown };
 
 export type ScriptedReply = {

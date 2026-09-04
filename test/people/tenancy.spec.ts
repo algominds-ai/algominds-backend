@@ -1,20 +1,23 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
-import { organization } from "../src/core/db/auth-schema";
-import { db, withConnection } from "../src/core/db/client";
-import { companiesForDomains } from "../src/core/db/company-domains";
-import { organizationForSlug } from "../src/core/db/organizations";
+import { organization } from "@/core/db/auth-schema";
+import { db, withConnection } from "@/core/db/client";
+import { companiesForDomains } from "@/core/db/company-domains";
 import {
 	createIcp,
 	findRun,
 	openRun,
 	saveCompanies,
 	upsertPeople,
-} from "../src/core/db/queries";
-import { company, icp as icpTable, person, run } from "../src/core/db/schema";
-import { domainsScopeId } from "../src/http/jobs";
+} from "@/core/db/queries";
+import { company, icp as icpTable, person, run } from "@/core/db/schema";
+import { domainsScopeId } from "@/http/jobs";
+import { loadTargetCompanies } from "@/workflows/find-people-target";
+import { seedOrganization } from "../support/db";
+import { companyRowsFor, personRowsFor } from "./support";
 
 type SeededOrg = {
 	organizationId: string;
@@ -27,11 +30,7 @@ async function seedOrgWithCompany(
 	label: string,
 	domain: string,
 ): Promise<SeededOrg> {
-	const org = await organizationForSlug(
-		testEnv,
-		`people-tenancy-${label}-${crypto.randomUUID()}.internal`,
-		`people-tenancy-${label}`,
-	);
+	const org = await seedOrganization(`people-tenancy-${label}`);
 	const icpRow = await createIcp(testEnv, {
 		description: "seed icp for people tenancy tests",
 		domain: org.slug,
@@ -54,9 +53,7 @@ async function seedOrgWithCompany(
 			name: `${label} Co`,
 		},
 	]);
-	if (!savedCompany) {
-		throw new Error(`seedOrgWithCompany: failed to save company for ${label}`);
-	}
+	if (!savedCompany) throw new Error(`failed to save company for ${label}`);
 	return {
 		organizationId: org.id,
 		icpId: icpRow.id,
@@ -81,7 +78,6 @@ describe("companiesForDomains: tenancy", () => {
 		const sharedDomain = `shared-${crypto.randomUUID()}.com`;
 		const orgA = await seedOrgWithCompany("domain-scope-a", sharedDomain);
 		const orgB = await seedOrgWithCompany("domain-scope-b", sharedDomain);
-
 		try {
 			const forOrgA = await companiesForDomains(
 				testEnv,
@@ -109,6 +105,15 @@ describe("companiesForDomains: tenancy", () => {
 	});
 });
 
+function personPayload(seed: SeededOrg, linkedinUrl: string) {
+	return {
+		organizationId: seed.organizationId,
+		companyId: seed.companyId,
+		linkedinUrl,
+		name: "Same Person",
+	};
+}
+
 describe("upsertPeople: tenancy", () => {
 	it("keeps a row for each organization that finds the same linkedin url, and dedupes it within one organization", async () => {
 		const linkedinUrl = `https://linkedin.com/in/shared-${crypto.randomUUID()}`;
@@ -120,32 +125,13 @@ describe("upsertPeople: tenancy", () => {
 			"person-scope-b",
 			`person-b-${crypto.randomUUID()}.com`,
 		);
-
 		try {
-			const savedA = await upsertPeople(testEnv, [
-				{
-					organizationId: orgA.organizationId,
-					companyId: orgA.companyId,
-					linkedinUrl,
-					name: "Same Person",
-				},
-			]);
+			const personA = personPayload(orgA, linkedinUrl);
+			const savedA = await upsertPeople(testEnv, [personA]);
 			const savedB = await upsertPeople(testEnv, [
-				{
-					organizationId: orgB.organizationId,
-					companyId: orgB.companyId,
-					linkedinUrl,
-					name: "Same Person",
-				},
+				personPayload(orgB, linkedinUrl),
 			]);
-			const savedAAgain = await upsertPeople(testEnv, [
-				{
-					organizationId: orgA.organizationId,
-					companyId: orgA.companyId,
-					linkedinUrl,
-					name: "Same Person",
-				},
-			]);
+			const savedAAgain = await upsertPeople(testEnv, [personA]);
 
 			expect(savedA).toHaveLength(1);
 			expect(savedB).toHaveLength(1);
@@ -176,11 +162,8 @@ describe("domainsScopeId: tenancy", () => {
 			`a-${crypto.randomUUID()}.com`,
 			`b-${crypto.randomUUID()}.com`,
 		];
-		const orgA = crypto.randomUUID();
-		const orgB = crypto.randomUUID();
-
-		const scopeIdA = await domainsScopeId(domains, orgA);
-		const scopeIdB = await domainsScopeId(domains, orgB);
+		const scopeIdA = await domainsScopeId(domains, crypto.randomUUID());
+		const scopeIdB = await domainsScopeId(domains, crypto.randomUUID());
 
 		expect(scopeIdA).not.toBe(scopeIdB);
 		expect(scopeIdA.startsWith("dom-")).toBe(true);
@@ -191,23 +174,88 @@ describe("domainsScopeId: tenancy", () => {
 		const domains = [`c-${crypto.randomUUID()}.com`];
 		const org = crypto.randomUUID();
 
-		const first = await domainsScopeId(domains, org);
-		const second = await domainsScopeId(domains, org);
+		expect(await domainsScopeId(domains, org)).toBe(
+			await domainsScopeId(domains, org),
+		);
+	});
+});
 
-		expect(first).toBe(second);
+async function seedIcpAndRun(label: string, organizationId: string) {
+	const icpRow = await createIcp(testEnv, {
+		description: "seed icp for people target tenancy",
+		domain: `${label}-${crypto.randomUUID()}.internal`,
+		organizationId,
+	});
+	const runId = `companies_${label}-${crypto.randomUUID()}`;
+	await openRun(testEnv, {
+		id: runId,
+		organizationId,
+		icpId: icpRow.id,
+		capability: "companies",
+		status: "complete",
+	});
+	return { icpId: icpRow.id, runId };
+}
+
+describe("loadTargetCompanies: tenancy", () => {
+	it("throws for a runId owned by another organization", async () => {
+		const org = await seedOrganization("people-target-run-tenancy");
+		const seed = await seedIcpAndRun("run-tenancy", org.id);
+		try {
+			await expect(
+				loadTargetCompanies(testEnv, {
+					runId: seed.runId,
+					organizationId: crypto.randomUUID(),
+				}),
+			).rejects.toBeInstanceOf(NonRetryableError);
+		} finally {
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, seed.runId));
+				await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, org.id));
+			});
+		}
+	});
+
+	it("throws for an explicit icpId owned by another organization", async () => {
+		const owner = await seedOrganization("people-target-icp-tenancy-owner");
+		const seed = await seedIcpAndRun("icp-tenancy", owner.id);
+		const stranger = await seedOrganization(
+			"people-target-icp-tenancy-stranger",
+		);
+		try {
+			await expect(
+				loadTargetCompanies(testEnv, {
+					domains: [`unused-${crypto.randomUUID()}.com`],
+					organizationId: stranger.id,
+					icpId: seed.icpId,
+				}),
+			).rejects.toBeInstanceOf(NonRetryableError);
+		} finally {
+			await withConnection(testEnv, "direct", db, async (connection) => {
+				await connection.delete(run).where(eq(run.id, seed.runId));
+				await connection.delete(icpTable).where(eq(icpTable.id, seed.icpId));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, owner.id));
+				await connection
+					.delete(organization)
+					.where(eq(organization.id, stranger.id));
+			});
+		}
 	});
 });
 
 const MISMATCH_SCOPE = "people-tenancy-load-icp-mismatch";
 
-async function terminateMismatchRun(): Promise<void> {
+afterEach(async () => {
 	const instance = await testEnv.FIND_PEOPLE.get(MISMATCH_SCOPE).catch(
 		() => null,
 	);
 	await instance?.terminate().catch(() => undefined);
-}
-
-afterEach(terminateMismatchRun);
+});
 
 describe("FindPeopleWorkflow: an icp from another organization", () => {
 	it("refuses to run when the resolved icp belongs to a different organization than the payload names", async () => {
@@ -238,29 +286,8 @@ describe("FindPeopleWorkflow: an icp from another organization", () => {
 			await instance.waitForStatus("errored");
 
 			expect(await findRun(testEnv, MISMATCH_SCOPE)).toBeUndefined();
-
-			const writtenCompanies = await withConnection(
-				testEnv,
-				"direct",
-				db,
-				(connection) =>
-					connection
-						.select()
-						.from(company)
-						.where(eq(company.organizationId, attackerOrganizationId)),
-			);
-			const writtenPeople = await withConnection(
-				testEnv,
-				"direct",
-				db,
-				(connection) =>
-					connection
-						.select()
-						.from(person)
-						.where(eq(person.organizationId, attackerOrganizationId)),
-			);
-			expect(writtenCompanies).toHaveLength(0);
-			expect(writtenPeople).toHaveLength(0);
+			expect(await companyRowsFor(attackerOrganizationId)).toHaveLength(0);
+			expect(await personRowsFor(attackerOrganizationId)).toHaveLength(0);
 		} finally {
 			await instance.dispose();
 			await cleanupOrg(victim);

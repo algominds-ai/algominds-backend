@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { resolveBuyer } from "../src/core/people/buyer";
-import type { IcpDoc } from "../src/core/synthesize";
-import { SENIOR_BANDS } from "../src/core/synthesize";
+import { resolveBuyer } from "@/core/people/buyer";
+import type { IcpDoc } from "@/core/synthesize";
+import { SENIOR_BANDS } from "@/core/synthesize";
 
 const capturedProfile: IcpDoc = {
 	description: "fintech companies at seed stage in San Francisco",
