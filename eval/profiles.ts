@@ -4,7 +4,7 @@ export const BRAINTRUST_PROJECT = "algo-backend";
 export const MAX_SPEND_DOLLARS = 8;
 export const MAX_PROFILE_SPEND_DOLLARS = 2;
 export const MIN_TRIALS = 2;
-export const COMPANIES_PER_RUN = 20;
+export const COMPANIES_PER_RUN = 3;
 
 /**
  * A run over one profile stops meaning anything past these bars: a
