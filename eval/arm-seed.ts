@@ -4,6 +4,7 @@ import dental from "@eval/arm-seed/dental.json";
 import form3 from "@eval/arm-seed/form3.json";
 import hvac from "@eval/arm-seed/hvac.json";
 import mstone from "@eval/arm-seed/mstone.json";
+import ondato from "@eval/arm-seed/ondato.json";
 import { IcpDocSchema } from "@eval/icp-doc";
 import { PROFILES } from "@eval/profiles";
 
@@ -12,6 +13,7 @@ const RAW_DOC_BY_SLUG: ReadonlyMap<string, unknown> = new Map<string, unknown>([
 	["aris", aris],
 	["form3", form3],
 	["carta", carta],
+	["ondato", ondato],
 	["dental", dental],
 	["hvac", hvac],
 ]);

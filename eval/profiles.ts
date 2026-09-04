@@ -70,6 +70,13 @@ export const PROFILES: readonly Profile[] = [
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
 	},
 	{
+		slug: "ondato",
+		icpId: "18c490ee-009d-44b8-afd3-e0103f5a1ae7",
+		name: "Ondato",
+		keyVar: "EVAL_API_KEY_ONDATO",
+		bars: { maxCostDollars: 2, maxSeconds: 240 },
+	},
+	{
 		slug: "dental",
 		icpId: "4213915c-0b0c-43f0-bd4a-5379e3a0a594",
 		name: "Dental practice management (mid-market vertical SaaS shape)",
