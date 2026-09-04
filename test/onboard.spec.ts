@@ -399,6 +399,28 @@ describe("buildIcp: the note", () => {
 		expect(prompt).toContain(`--- end note ${opened?.[1]} ---`);
 	});
 
+	it("reserves a page requirement for the fact that defines the population, not for every fact a record omits", async () => {
+		const gateway = router({
+			exa: [
+				exaSuccessResponse([
+					{ url: "https://acme.com/", text: "Acme sells tooling." },
+				]),
+			],
+			model: [modelResponse(profileReply())],
+		});
+		globalThis.fetch = gateway.fetch;
+
+		await buildIcp(onboardEnv(), "acme.com", null);
+
+		const system = modelSystemContent(gateway.modelCalls[0]);
+		expect(system).toContain(
+			"`proof` is `page` only when the requirement is what defines the population",
+		);
+		expect(system).toContain("no description of lasting shape");
+		expect(system).toContain("including a behaviour no record states outright");
+		expect(system).not.toContain("structured company record can establish it");
+	});
+
 	it("carries the product-scoping instruction when the note names a product, with the note still delimited as data after it", async () => {
 		const gateway = router({
 			exa: [

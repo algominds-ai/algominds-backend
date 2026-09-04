@@ -15,7 +15,10 @@ import { applyRecords, mergeEntity } from "../src/core/companies/record";
 import { CostLedger } from "../src/core/cost";
 import type { ExaResult } from "../src/core/providers/exa/search";
 import type { Requirement } from "../src/core/requirements";
-import { hardPageRequirements } from "../src/core/requirements";
+import {
+	hardPageRequirements,
+	REQUIREMENTS_INSTRUCTIONS,
+} from "../src/core/requirements";
 import type { IcpDoc, SearchPlan } from "../src/core/synthesize";
 
 const icp: IcpDoc = { description: "a profile" };
@@ -708,5 +711,25 @@ describe("the round loop stays bounded", () => {
 		expect(rounds).toBe(3);
 		expect(result.rounds).toBe(3);
 		expect(result.status).toBe("empty");
+	});
+});
+
+describe("the backfill reader reserves a page requirement for the population itself", () => {
+	it("asks for `page` only where no description of shape could name the companies", () => {
+		expect(REQUIREMENTS_INSTRUCTIONS).toContain(
+			"`proof` is `page` only when the requirement is what defines the population",
+		);
+		expect(REQUIREMENTS_INSTRUCTIONS).toContain(
+			"no description of lasting shape",
+		);
+	});
+
+	it("sends a behaviour a record never states outright to `record`, not to `page`", () => {
+		expect(REQUIREMENTS_INSTRUCTIONS).toContain(
+			"including a behaviour no record states outright",
+		);
+		expect(REQUIREMENTS_INSTRUCTIONS).not.toContain(
+			"structured company record can establish it",
+		);
 	});
 });
