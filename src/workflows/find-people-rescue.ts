@@ -22,16 +22,25 @@ type FallbackRosterResult = {
 	costEntries: CostEntry[];
 };
 
+export type FallbackTarget = {
+	domain: string;
+	name: string | null;
+	organizationId: string | null;
+};
+
 async function exaRoster(
 	ctx: CompanyLoopContext,
-	domain: string,
-	companyName: string | null,
 	runCompanyId: string,
+	target: FallbackTarget,
 ): Promise<FallbackRosterResult> {
+	if (target.organizationId === null) {
+		return { candidates: [], costEntries: [] };
+	}
 	const ledger = new CostLedger();
 	const result = await exaPeopleRoster(
 		ctx.env,
-		{ domain, name: companyName },
+		{ domain: target.domain, name: target.name },
+		target.organizationId,
 		ledger,
 	).catch((error: unknown) => {
 		if (error instanceof RetryableProviderError) throw error;
@@ -52,14 +61,13 @@ async function exaRoster(
 	};
 }
 
-/** The GetLeads decision makers for `domain`, as candidates, with the raw reply kept as evidence; when GetLeads returns no rows, the Exa people index's senior people at the company instead; an empty list when both hold nobody, so a fallback never makes a company worse off. A GetLeads refusal is recorded and Exa is tried the same way. */
+/** The GetLeads decision makers for `target.domain`, as candidates, with the raw reply kept as evidence; when GetLeads returns no rows, the Exa people index's senior people at the company, gated by `target.organizationId`; an empty list when both hold nobody, so a fallback never makes a company worse off. A GetLeads refusal is recorded and Exa is tried the same way. */
 export async function fallbackRoster(
 	ctx: CompanyLoopContext,
-	domain: string,
 	runCompanyId: string,
-	companyName: string | null,
+	target: FallbackTarget,
 ): Promise<FallbackRosterResult> {
-	const result = await getleadsDecisionMakers(ctx.env, domain).catch(
+	const result = await getleadsDecisionMakers(ctx.env, target.domain).catch(
 		(error: unknown) => {
 			if (error instanceof RetryableProviderError) throw error;
 			return error instanceof Error ? error.message : String(error);
@@ -69,7 +77,7 @@ export async function fallbackRoster(
 		await appendEvidence(ctx.env, [
 			rawEvidenceRow(runCompanyId, "roster", "getleads", { error: result }),
 		]);
-		return exaRoster(ctx, domain, companyName, runCompanyId);
+		return exaRoster(ctx, runCompanyId, target);
 	}
 	await appendEvidence(ctx.env, [
 		rawEvidenceRow(runCompanyId, "roster", "getleads", result.raw),
@@ -77,7 +85,7 @@ export async function fallbackRoster(
 	if (result.rows.length > 0) {
 		return { candidates: dedupe(result.rows), costEntries: [] };
 	}
-	return exaRoster(ctx, domain, companyName, runCompanyId);
+	return exaRoster(ctx, runCompanyId, target);
 }
 
 /** `candidates` unchanged and no spend, when Clay already found someone; otherwise `fallbackRoster` for `target`. */
@@ -85,17 +93,13 @@ export async function rosterOrFallback(
 	ctx: CompanyLoopContext,
 	candidates: Candidate[],
 	runCompanyId: string,
-	target: { domain: string; name: string | null },
+	target: FallbackTarget,
 ): Promise<FallbackRosterResult> {
 	if (candidates.length > 0) return { candidates, costEntries: [] };
-	return fallbackRoster(ctx, target.domain, runCompanyId, target.name);
+	return fallbackRoster(ctx, runCompanyId, target);
 }
 
-export type RosterTarget = {
-	domain: string;
-	identifier: string;
-	name: string | null;
-};
+export type RosterTarget = FallbackTarget & { identifier: string };
 
 /** Clay's senior roster for `target`, falling to `rosterOrFallback` when Clay holds nobody, with Clay's raw replies kept as evidence and its cost merged into the returned ledger. */
 export async function runRosterStep(
@@ -138,11 +142,16 @@ export async function runRosterStep(
 	);
 }
 
+export type RescueRefs = {
+	runCompanyId: string;
+	organizationId: string | null;
+};
+
 /** A roster for a domain Clay could not resolve, from GetLeads by domain, or null when it holds nobody either. */
 export async function rescueUnresolved(
 	ctx: CompanyLoopContext,
 	company: TargetCompany,
-	runCompanyId: string,
+	refs: RescueRefs,
 	identity: IdentityStepResult,
 ): Promise<RosterStepResult | null> {
 	return ctx.step.do(
@@ -151,9 +160,12 @@ export async function rescueUnresolved(
 		async () => {
 			const { candidates, costEntries } = await fallbackRoster(
 				ctx,
-				company.domain,
-				runCompanyId,
-				company.name,
+				refs.runCompanyId,
+				{
+					domain: company.domain,
+					name: company.name,
+					organizationId: refs.organizationId,
+				},
 			);
 			if (candidates.length === 0) return null;
 			return { candidates, clayRecords: identity.clayRecords, costEntries };

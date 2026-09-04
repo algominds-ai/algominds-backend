@@ -89,9 +89,27 @@ function verdictSubject(pick: PickContext): VerdictRunInput {
 type IndexStepResult = {
 	found: boolean;
 	employer: string | null;
+	employerCompanyId: string | null;
 	reply: string;
 	costEntries: CostEntry[];
 };
+
+type OrganizationAgreement = {
+	employer: "SAME" | "DIFFERENT";
+	byOrganizationId: true;
+};
+
+/** The deterministic agreement by Exa organization id, or null when either side's id is unknown and a model opinion is still needed. */
+function organizationAgreement(
+	organizationId: string | null,
+	employerCompanyId: string | null,
+): OrganizationAgreement | null {
+	if (organizationId === null || employerCompanyId === null) return null;
+	return {
+		employer: organizationId === employerCompanyId ? "SAME" : "DIFFERENT",
+		byOrganizationId: true,
+	};
+}
 
 async function secondOpinion(
 	pick: PickContext,
@@ -115,6 +133,7 @@ async function secondOpinion(
 			return {
 				found: result.found,
 				employer: result.employer,
+				employerCompanyId: result.employerCompanyId,
 				reply: JSON.stringify(result.reply),
 				costEntries: stepLedger.toJSON().entries,
 			};
@@ -126,6 +145,14 @@ async function secondOpinion(
 	];
 	if (!indexResult.found || indexResult.employer === null) {
 		return { verified: false, evidence };
+	}
+	const agreement = organizationAgreement(
+		pick.progress.exaOrganizationId,
+		indexResult.employerCompanyId,
+	);
+	if (agreement) {
+		evidence.push({ kind: "verify-agree", body: agreement });
+		return { verified: agreement.employer === "SAME", evidence };
 	}
 	const employer = indexResult.employer;
 	const agreeResult = await pick.ctx.step.do(

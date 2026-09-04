@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { CostLedger } from "@/core/cost";
-import { exaPeopleRoster } from "@/core/providers/exa/people-roster";
+import {
+	exaOrganizationId,
+	exaPeopleRoster,
+} from "@/core/providers/exa/people-roster";
 import { fakeSecretEnv } from "../support/env";
 import {
 	exaCompanySearchResponse,
 	exaPeopleSearchResponse,
-	respondInSequence,
 } from "../support/fetch";
 
 const originalFetch = globalThis.fetch;
@@ -20,31 +22,57 @@ function exaEnv(): Env {
 
 const ORG_ID = "https://exa.ai/library/organization/acme";
 
+describe("exaOrganizationId", () => {
+	it("sends a company-category search restricted to the domain", async () => {
+		let body: { query?: string; category?: string; includeDomains?: string[] } =
+			{};
+		globalThis.fetch = async (_input, init) => {
+			body = JSON.parse(String(init?.body));
+			return exaCompanySearchResponse(ORG_ID);
+		};
+
+		const id = await exaOrganizationId(exaEnv(), "acme.com", new CostLedger());
+
+		expect(id).toBe(ORG_ID);
+		expect(body.category).toBe("company");
+		expect(body.includeDomains).toEqual(["acme.com"]);
+	});
+
+	it("returns null when Exa's company index does not carry the domain", async () => {
+		globalThis.fetch = async () => exaCompanySearchResponse(null);
+
+		const id = await exaOrganizationId(
+			exaEnv(),
+			"nobody.example",
+			new CostLedger(),
+		);
+
+		expect(id).toBeNull();
+	});
+});
+
 describe("exaPeopleRoster", () => {
 	it("sends a people-category search naming the company and its senior titles", async () => {
-		const { fetch, calls } = respondInSequence([
-			exaCompanySearchResponse(ORG_ID),
-			exaPeopleSearchResponse([]),
-		]);
-		globalThis.fetch = fetch;
+		let body: { query?: string; category?: string } = {};
+		globalThis.fetch = async (_input, init) => {
+			body = JSON.parse(String(init?.body));
+			return exaPeopleSearchResponse([]);
+		};
 
 		await exaPeopleRoster(
 			exaEnv(),
 			{ domain: "acme.com", name: "Acme" },
+			ORG_ID,
 			new CostLedger(),
 		);
 
-		const body: { query?: string; category?: string } = JSON.parse(
-			String(calls[1]?.init?.body),
-		);
 		expect(body.category).toBe("people");
 		expect(body.query).toContain("Acme");
 		expect(body.query).toContain("founder");
 	});
 
 	it("drops a person whose current employer is a different organization id", async () => {
-		globalThis.fetch = respondInSequence([
-			exaCompanySearchResponse(ORG_ID),
+		globalThis.fetch = async () =>
 			exaPeopleSearchResponse([
 				{
 					url: "https://www.linkedin.com/in/jane",
@@ -53,12 +81,12 @@ describe("exaPeopleRoster", () => {
 					currentCompany: "Other Corp",
 					currentCompanyId: "https://exa.ai/library/organization/other",
 				},
-			]),
-		]).fetch;
+			]);
 
 		const result = await exaPeopleRoster(
 			exaEnv(),
 			{ domain: "acme.com", name: "Acme" },
+			ORG_ID,
 			new CostLedger(),
 		);
 
@@ -66,8 +94,7 @@ describe("exaPeopleRoster", () => {
 	});
 
 	it("keeps a person whose current employer's organization id matches the company", async () => {
-		globalThis.fetch = respondInSequence([
-			exaCompanySearchResponse(ORG_ID),
+		globalThis.fetch = async () =>
 			exaPeopleSearchResponse([
 				{
 					url: "https://www.linkedin.com/in/jane",
@@ -77,12 +104,12 @@ describe("exaPeopleRoster", () => {
 					currentCompanyId: ORG_ID,
 					location: "Austin, Texas",
 				},
-			]),
-		]).fetch;
+			]);
 
 		const result = await exaPeopleRoster(
 			exaEnv(),
 			{ domain: "acme.com", name: "Acme" },
+			ORG_ID,
 			new CostLedger(),
 		);
 
@@ -97,21 +124,5 @@ describe("exaPeopleRoster", () => {
 				source: "exa:people",
 			},
 		]);
-	});
-
-	it("returns an empty roster and makes no people search when no organization is found", async () => {
-		const { fetch, calls } = respondInSequence([
-			exaCompanySearchResponse(null),
-		]);
-		globalThis.fetch = fetch;
-
-		const result = await exaPeopleRoster(
-			exaEnv(),
-			{ domain: "nobody.example", name: null },
-			new CostLedger(),
-		);
-
-		expect(result.rows).toEqual([]);
-		expect(calls).toHaveLength(1);
 	});
 });

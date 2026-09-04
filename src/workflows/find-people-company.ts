@@ -14,6 +14,8 @@ import type { NewPerson } from "@/core/db/schema";
 import type { ResolvedBuyer } from "@/core/people/buyer";
 import { resolveIdentity } from "@/core/people/identity";
 import { rawEvidenceRow, toNewPerson } from "@/core/people/rows";
+import { exaOrganizationId } from "@/core/providers/exa/people-roster";
+import { RetryableProviderError } from "@/core/providers/waterfall";
 import type { IcpDoc } from "@/core/synthesize";
 import { applyCostEntries } from "@/workflows/agent-poll";
 import {
@@ -41,6 +43,7 @@ export type CompanyProgress = {
 	spentSoFar: number;
 	clayRecords: number;
 	ledger: CostLedger;
+	exaOrganizationId: string | null;
 };
 
 export type CompanyOutcome = {
@@ -158,6 +161,29 @@ async function markUnresolved(
 	);
 }
 
+/** The Exa organization id for `domain`, resolved once per company so both the roster fallback and the verify second opinion can compare against it by id rather than by name. A miss, or any non-retryable failure, is `null`. */
+async function runOrganizationStep(
+	ctx: CompanyLoopContext,
+	domain: string,
+): Promise<{ organizationId: string | null; costEntries: CostEntry[] }> {
+	return ctx.step.do(
+		`people-${domain}-organization`,
+		config.stepConfig.paidCall,
+		async () => {
+			const ledger = new CostLedger();
+			const organizationId = await exaOrganizationId(
+				ctx.env,
+				domain,
+				ledger,
+			).catch((error: unknown) => {
+				if (error instanceof RetryableProviderError) throw error;
+				return null;
+			});
+			return { organizationId, costEntries: ledger.toJSON().entries };
+		},
+	);
+}
+
 async function ensureCompanyRow(
 	ctx: CompanyLoopContext,
 	company: TargetCompany,
@@ -261,9 +287,16 @@ export async function runOneCompany(
 	const ledger = new CostLedger();
 	const identity = await runIdentityStep(ctx, company, runCompanyId);
 	applyCostEntries(identity.costEntries, ledger);
+	const organization = await runOrganizationStep(ctx, company.domain);
+	applyCostEntries(organization.costEntries, ledger);
 	const rescued =
 		identity.how === "unresolved"
-			? await rescueUnresolved(ctx, company, runCompanyId, identity)
+			? await rescueUnresolved(
+					ctx,
+					company,
+					{ runCompanyId, organizationId: organization.organizationId },
+					identity,
+				)
 			: null;
 	if (identity.how === "unresolved" && rescued === null) {
 		await markUnresolved(ctx, company.domain, runCompanyId, {
@@ -302,6 +335,7 @@ export async function runOneCompany(
 				domain: company.domain,
 				identifier: resolved.identifier,
 				name: resolved.name,
+				organizationId: organization.organizationId,
 			},
 			runCompanyId,
 		));
@@ -314,6 +348,7 @@ export async function runOneCompany(
 		spentSoFar,
 		clayRecords: identity.clayRecords + roster.clayRecords,
 		ledger,
+		exaOrganizationId: organization.organizationId,
 	};
 	if (ctx.buyer.mode === "roster") {
 		return finishRosterMode(ctx, progress, roster);

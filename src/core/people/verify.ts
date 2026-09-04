@@ -47,14 +47,16 @@ export type IndexOpinionCandidate = {
 export type IndexOpinionResult = {
 	found: boolean;
 	employer: string | null;
+	employerCompanyId: string | null;
 	indexedTitle: string | null;
 	reply: ExaSearchResult;
 };
 
 /**
  * Asks the Exa people index for the same title at the same company, and
- * reports the current employer and title of whichever entity matches the
- * candidate by canonical LinkedIn URL, or failing that, by name key.
+ * reports the current employer, its Exa organization id, and title of
+ * whichever entity matches the candidate by canonical LinkedIn URL, or
+ * failing that, by name key.
  */
 export async function indexOpinion(
 	candidate: IndexOpinionCandidate,
@@ -89,6 +91,7 @@ export async function indexOpinion(
 	return {
 		found: match !== undefined,
 		employer: current?.companyName ?? null,
+		employerCompanyId: current?.companyId ?? null,
 		indexedTitle: current?.title ?? null,
 		reply,
 	};

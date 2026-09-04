@@ -107,7 +107,13 @@ const STEVE = {
 	person_country_name: "Canada",
 };
 
-async function rescue(seed: SeededPeopleRun, domain: string) {
+const TEST_ORGANIZATION_ID = "https://exa.ai/library/organization/test";
+
+async function rescue(
+	seed: SeededPeopleRun,
+	domain: string,
+	organizationId: string | null = TEST_ORGANIZATION_ID,
+) {
 	const ctx: CompanyLoopContext = {
 		...contextFor(seed, new Map()),
 		env: fakeSecretEnv({
@@ -115,11 +121,12 @@ async function rescue(seed: SeededPeopleRun, domain: string) {
 			EXA_API_KEY: "test-exa-key",
 		}),
 	};
-	return rescueUnresolved(ctx, bareCompany(domain), crypto.randomUUID(), {
-		how: "unresolved",
-		clayRecords: 2,
-		costEntries: [],
-	});
+	return rescueUnresolved(
+		ctx,
+		bareCompany(domain),
+		{ runCompanyId: crypto.randomUUID(), organizationId },
+		{ how: "unresolved", clayRecords: 2, costEntries: [] },
+	);
 }
 
 describe("a domain Clay cannot resolve is rescued from GetLeads", () => {
