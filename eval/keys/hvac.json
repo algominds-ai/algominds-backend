@@ -64,7 +64,7 @@
 			"note": "93 staff, Orlando FL, self-performs commercial and residential HVAC design, installation and service, matching r1-r3",
 			"record": {
 				"industry": null,
-				"description": "Energy Air, Inc. is a leading heating, ventilation, and air conditioning company that’s been in business since 1976.\n\nWe consistently rank as one of the top specialty contractors in the state of Florida. Our services include commercial and residential HVAC system design and installation, service/repair, replacements/retrofits and planned maintenance. We have a bonding capacity in excess of $90 million and are experienced with projects in all major market segments, including education, healthcare, hospitality/entertainment, retail, office, multi-family/mixed-use, religious, industrial and residential. We self-perform the entire HVAC scope of work and prefabricate ductwork, sheet metal and piping at our 55,000-square-foot, in-house fabrication facility. We have a robust safety and training program and in-house BIM/3D modeling capabilities.\n\nContact us today to learn more: https://energyair.com",
+				"description": "Energy Air, Inc. is a leading heating, ventilation, and air conditioning company that\u2019s been in business since 1976.\n\nWe consistently rank as one of the top specialty contractors in the state of Florida. Our services include commercial and residential HVAC system design and installation, service/repair, replacements/retrofits and planned maintenance. We have a bonding capacity in excess of $90 million and are experienced with projects in all major market segments, including education, healthcare, hospitality/entertainment, retail, office, multi-family/mixed-use, religious, industrial and residential. We self-perform the entire HVAC scope of work and prefabricate ductwork, sheet metal and piping at our 55,000-square-foot, in-house fabrication facility. We have a robust safety and training program and in-house BIM/3D modeling capabilities.\n\nContact us today to learn more: https://energyair.com",
 				"workforceTotal": 93,
 				"country": "United States",
 				"foundedYear": 1976,
@@ -75,7 +75,7 @@
 			}
 		},
 		"issmechanical.com": {
-			"label": null,
+			"label": "accept",
 			"name": "ISS Mechanical",
 			"firstSeenRunId": "companies_ef326d80-10ae-4001-95f6-cab732c79cdf_2026-09-04",
 			"lastSeenAt": "2026-09-04T12:05:59.162Z",
@@ -89,7 +89,8 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "Apopka FL, 25 staff, mechanical/plumbing contractor specializing in commercial HVAC service and repair."
-			}
+			},
+			"note": "25 staff, Apopka/Orlando FL, specializes in commercial air conditioning, chiller, controls and refrigeration service, matching r1-r3"
 		},
 		"miinclp.com": {
 			"label": null,
@@ -98,7 +99,7 @@
 			"lastSeenAt": "2026-09-04T12:06:35.321Z",
 			"record": {
 				"industry": null,
-				"description": "MIINC is a trusted mechanical contractor with a reputation for successfully planning, completing, and servicing highly-complex commercial and industrial projects throughout North Texas and nationwide. We have a history of handling jobs that other contractors can’t do or won’t touch. MIINC takes on work of any size or complexity, from design to installation or maintenance, and no challenge is too great. Yet, more than a company with a crew of skilled tradesmen, the true value of MIINC is partnering with a contractor that goes the extra mile to ensure every project is a mutual success.\n\nOur mastery of mechanical craftsmanship is only surpassed by our mastery of service. Over the last four decades, we have been the preferred service provider for some of the largest companies and brands in the US.",
+				"description": "MIINC is a trusted mechanical contractor with a reputation for successfully planning, completing, and servicing highly-complex commercial and industrial projects throughout North Texas and nationwide. We have a history of handling jobs that other contractors can\u2019t do or won\u2019t touch. MIINC takes on work of any size or complexity, from design to installation or maintenance, and no challenge is too great. Yet, more than a company with a crew of skilled tradesmen, the true value of MIINC is partnering with a contractor that goes the extra mile to ensure every project is a mutual success.\n\nOur mastery of mechanical craftsmanship is only surpassed by our mastery of service. Over the last four decades, we have been the preferred service provider for some of the largest companies and brands in the US.",
 				"workforceTotal": 59,
 				"country": "United States",
 				"foundedYear": 2004,
@@ -106,7 +107,8 @@
 				"citedDate": "2026-06-25T00:00:00.000Z",
 				"quote": null,
 				"fitReason": "Description calls it a mechanical contractor in Dallas, TX; no explicit HVAC line-of-business mention."
-			}
+			},
+			"note": "undecidable: the record's own fitReason flags no explicit HVAC line-of-business mention, describing only general mechanical contracting for North Texas commercial and industrial projects"
 		},
 		"msifla.com": {
 			"label": "accept",
@@ -116,7 +118,7 @@
 			"note": "55 staff, Orlando FL, self-performing commercial HVAC mechanical services for hospitals, data centers and commercial buildings, matching r1-r3 despite some prefabrication work",
 			"record": {
 				"industry": null,
-				"description": "EMCOR Services MSI is one of the region’s largest and most respected, award winning commercial HVAC service operations, a trusted member of our industry and community for over 46 years.\n\nMSI manufactures and prefabricates projects of all types and complexity, quickly and cost effectively. Our self performing, fully integrated mechanical, heating, ventilating, and air conditioning services position MSI to control quality, schedule and budgets. MSI designs, builds, operates and maintains mechanical systems in a wide variety of applications and markets including: Hospitals, Data Centers and Bio-Medical Laboratories, Universities, Commercial Office Buildings and Public Sector.\n\nOur emphasis is on our client’s Return on Investments by reducing the “Total Ownership Costs”® through energy and environmentally conscious design, self performance, predictive maintenance services and Fast Trac® execution.\n\nOur commitment to quality begins with our people. Each year our associates participate in OEM and in-house training initiatives for personal and professional development. Our customer’s Return on Investments begins with our commitments and investments in time and capital that ensures our skilled craftsmen receive the training they need to provide our customers with the best possible service at the least possible cost. ",
+				"description": "EMCOR Services MSI is one of the region\u2019s largest and most respected, award winning commercial HVAC service operations, a trusted member of our industry and community for over 46 years.\n\nMSI manufactures and prefabricates projects of all types and complexity, quickly and cost effectively. Our self performing, fully integrated mechanical, heating, ventilating, and air conditioning services position MSI to control quality, schedule and budgets. MSI designs, builds, operates and maintains mechanical systems in a wide variety of applications and markets including: Hospitals, Data Centers and Bio-Medical Laboratories, Universities, Commercial Office Buildings and Public Sector.\n\nOur emphasis is on our client\u2019s Return on Investments by reducing the \u201cTotal Ownership Costs\u201d\u00ae through energy and environmentally conscious design, self performance, predictive maintenance services and Fast Trac\u00ae execution.\n\nOur commitment to quality begins with our people. Each year our associates participate in OEM and in-house training initiatives for personal and professional development. Our customer\u2019s Return on Investments begins with our commitments and investments in time and capital that ensures our skilled craftsmen receive the training they need to provide our customers with the best possible service at the least possible cost. ",
 				"workforceTotal": 55,
 				"country": "United States",
 				"foundedYear": null,
