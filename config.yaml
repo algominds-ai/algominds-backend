@@ -119,6 +119,10 @@ people:
   # (Clay, the Exa agent), so batching companies overlaps that wait time
   # instead of paying it once per company.
   companyConcurrency: 5
+  # Safety bound on picks verified per company, applied in request order after
+  # selection. Every rubric match up to this count is verified; the rubric and
+  # the spend ceiling are the real limits.
+  maxVerifyPerCompany: 25
 
 enrich:
   batchSize: 5

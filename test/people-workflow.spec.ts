@@ -785,12 +785,16 @@ function targetCandidate(
 	};
 }
 
-function fakeWorkflowStep(overrides: Map<string, unknown>): WorkflowStep {
+function fakeWorkflowStep(
+	overrides: Map<string, unknown>,
+	calls?: string[],
+): WorkflowStep {
 	async function runNamed(
 		name: string,
 		second: unknown,
 		third: unknown,
 	): Promise<unknown> {
+		calls?.push(name);
 		if (overrides.has(name)) {
 			const value = overrides.get(name);
 			if (value instanceof Error) throw value;
@@ -1007,6 +1011,110 @@ describe("FindPeopleWorkflow: a target run", () => {
 			expect(result.outcome.unresolvedDomain).toBeNull();
 
 			await assertVerifiedTargetRun(org.id, runId);
+		} finally {
+			await cleanupTargetRun(org.id, runId);
+		}
+	});
+});
+
+function boundRunOverrides(
+	domain: string,
+	pickCount: number,
+): Map<string, unknown> {
+	const overrides = new Map<string, unknown>();
+	const picks = Array.from({ length: pickCount }, (_, index) => ({
+		candidate: targetCandidate(
+			index,
+			`Person ${index}`,
+			"VP Sales",
+			`https://linkedin.com/in/bound-person-${index}`,
+		),
+		basis: "explicit_persona_match" as const,
+	}));
+	overrides.set(`people-${domain}-select`, {
+		picks,
+		droppedIds: [],
+		reply: {
+			picks: picks.map((pick) => ({
+				id: pick.candidate.id,
+				basis: pick.basis,
+			})),
+		},
+		costDollars: 0.01,
+	});
+	for (let index = 0; index < config.people.maxVerifyPerCompany; index++) {
+		overrides.set(`people-${domain}-verify-${index}-start`, {
+			id: `agent-run-${index}`,
+		});
+		overrides.set(`people-${domain}-verify-${index}-poll-1`, {
+			run: { status: "completed", output: CONFIRMED_VERDICT },
+			costEntries: [],
+		});
+		overrides.set(`people-${domain}-verify-${index}-quote`, {
+			found: true,
+			reason: "found",
+			costEntries: [],
+		});
+	}
+	return overrides;
+}
+
+describe("FindPeopleWorkflow: the maxVerifyPerCompany bound", () => {
+	it("verifies every rubric match up to the bound and never starts a verify run past it", async () => {
+		const domain = `bound-${crypto.randomUUID()}.example`;
+		const org = await organizationForSlug(
+			testEnv,
+			`people-workflow-bound-${crypto.randomUUID()}`,
+			"people workflow bound test",
+		);
+		const runId = `people_bound_${crypto.randomUUID()}`;
+		const bound = config.people.maxVerifyPerCompany;
+		const pickCount = bound + 3;
+		try {
+			await openRun(testEnv, {
+				id: runId,
+				organizationId: org.id,
+				icpId: null,
+				capability: "people",
+				status: "running",
+			});
+			stubClayFetch([
+				{
+					name: "Jordan Blake",
+					url: "https://linkedin.com/in/jordan-blake",
+					title: "VP Sales",
+					company: "Verify Target Co",
+				},
+			]);
+
+			const calls: string[] = [];
+			const ctx: CompanyLoopContext = {
+				env: { ...testEnv, CLAY_API_KEY: { get: async () => "test-clay-key" } },
+				step: fakeWorkflowStep(boundRunOverrides(domain, pickCount), calls),
+				runId,
+				organizationId: org.id,
+				buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
+				profile: null,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(bound);
+			for (let index = bound; index < pickCount; index++) {
+				expect(calls).not.toContain(`people-${domain}-verify-${index}-start`);
+			}
+
+			const storedPeople = await withConnection(
+				testEnv,
+				"direct",
+				db,
+				(connection) =>
+					connection
+						.select()
+						.from(person)
+						.where(eq(person.organizationId, org.id)),
+			);
+			expect(storedPeople).toHaveLength(bound);
 		} finally {
 			await cleanupTargetRun(org.id, runId);
 		}

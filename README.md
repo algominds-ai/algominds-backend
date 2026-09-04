@@ -121,7 +121,7 @@ Sign up a user, create an organization, and mint an organization API key through
 
 `bun run gate` is the only check that counts. It runs the config generator, the type check, biome, the comment and language rules, the step-config rules, the test suite on the real Workers runtime, and a dry-run bundle. The tests use a separate database, `algo_test`; create it once with `bun run db:test:reset`.
 
-A versioned pre-commit hook runs gitleaks and the lint step. CI runs the full gate on every push and pull request.
+A versioned pre-commit hook runs gitleaks and the lint step. CI runs the full gate; it can be started by hand from the Actions tab until push triggers are confirmed.
 
 ## Layout
 

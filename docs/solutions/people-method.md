@@ -139,7 +139,7 @@ rosters and treg, are not in the method.
 | 1 identity | resolve the company by domain; if empty, by the stored LinkedIn company URL; if both fail, stop as unresolved | Clay | none, by design | ~0 |
 | 2 retrieve | the eight senior bands, one call each; at a small MSP with no senior HR owner, add the manager band keyworded for HR and recruiting | Clay | Exa people search per persona | quota |
 | 3 dedupe | canonical LinkedIn URL, then name key | code | — | 0 |
-| 4 select | at most six candidate ids plus a closed-set basis; the model never emits a title; an empty result is a valid result | model with the buyer criteria | — | $0.02 |
+| 4 select | every candidate id who owns the budget or the decision plus a closed-set basis, bounded only by `people.maxVerifyPerCompany` as a safety cap; the model never emits a title; an empty result is a valid result | model with the buyer criteria | — | $0.02 |
 | 5 verify | one Exa agent run, effort minimal, structured output: verdict, evidence url, verbatim quote, `evidence_kind`, confidence; aggregator-only confirmation gets the people index as a second opinion; silence is unknown and is excluded | Exa agent | people index + web read | $0.012 |
 | 6 store | write the person, and every provider's raw reply as append-only evidence, unshaped | code | — | 0 |
 

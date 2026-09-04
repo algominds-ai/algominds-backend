@@ -13,11 +13,9 @@ export const PERSONA_BASIS = PersonaBasisSchema.options;
 
 export type PersonaBasis = z.infer<typeof PersonaBasisSchema>;
 
-export const MAX_PICKS = 6;
-
 function selectInstructions(): string {
 	return [
-		`From the roster lines in the data section below, choose at most ${MAX_PICKS} candidates`,
+		"From the roster lines in the data section below, choose every candidate",
 		"who would own the budget or the decision for this purchase according to the rubric.",
 		"Exclude anyone the rubric names as an influencer or a hard negative. Return candidate",
 		'ids only, never a title. `basis` is "explicit_persona_match" when the rubric names the',
@@ -85,7 +83,7 @@ function resolvePicks(
 	const droppedIds: number[] = [];
 	for (const pick of reply.picks) {
 		const candidate = byId.get(pick.id);
-		if (!candidate || picks.length >= MAX_PICKS) {
+		if (!candidate) {
 			droppedIds.push(pick.id);
 			continue;
 		}
@@ -96,8 +94,8 @@ function resolvePicks(
 
 /**
  * Sends the roster as `id | title` lines and the buyer rubric to
- * `reasoningModel`, and keeps at most `MAX_PICKS` model-picked candidates by
- * id. Unknown or excess ids are dropped and counted; a null model reply is
+ * `reasoningModel`, and keeps every model-picked candidate that resolves to
+ * a known id. Unknown ids are dropped and counted; a null model reply is
  * zero picks.
  */
 export async function selectBuyers(

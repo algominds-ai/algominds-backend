@@ -14,7 +14,7 @@ import {
 	toNewPerson,
 } from "@/core/people/rows";
 import type { SelectedBuyer, SelectModelReply } from "@/core/people/select";
-import { MAX_PICKS, selectBuyers } from "@/core/people/select";
+import { selectBuyers } from "@/core/people/select";
 import {
 	classifyVerdict,
 	employerOpinion,
@@ -356,7 +356,7 @@ async function saveVerifiedPeople(
 	);
 }
 
-/** Selects at most six candidates, verifies each with one Exa agent run, and saves the verified people plus every collected reply. */
+/** Selects every candidate the rubric would have own the budget or the decision, verifies each with one Exa agent run bounded by `config.people.maxVerifyPerCompany`, and saves the verified people plus every collected reply. */
 export async function runBuyerMode(
 	ctx: CompanyLoopContext,
 	progress: CompanyProgress,
@@ -364,7 +364,7 @@ export async function runBuyerMode(
 ): Promise<CompanyRunResult> {
 	const select = await runSelect(ctx, progress, roster.candidates);
 	progress.ledger.reported("select", "select", select.costDollars);
-	const picks = select.picks.slice(0, MAX_PICKS);
+	const picks = select.picks.slice(0, config.people.maxVerifyPerCompany);
 	const outcomes = await Promise.all(
 		picks.map((pick, i) =>
 			verifyPick({

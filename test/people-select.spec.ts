@@ -153,13 +153,13 @@ describe("selectBuyers: returns observed candidates by id", () => {
 	});
 });
 
-describe("selectBuyers: drops invented and excess picks", () => {
+describe("selectBuyers: drops only invented picks", () => {
 	const originalFetch = globalThis.fetch;
 	afterEach(() => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it("keeps the first six known picks and counts the rest as dropped", async () => {
+	it("keeps every known pick, however many the rubric matches, and drops only unknown ids", async () => {
 		const candidates = Array.from({ length: 7 }, (_, index) =>
 			candidate(index + 1, `Title ${index + 1}`),
 		);
@@ -193,11 +193,11 @@ describe("selectBuyers: drops invented and excess picks", () => {
 			env,
 		);
 
-		expect(result.picks).toHaveLength(6);
+		expect(result.picks).toHaveLength(7);
 		expect(result.picks.map((pick) => pick.candidate.id)).toEqual([
-			1, 2, 3, 4, 5, 6,
+			1, 2, 3, 4, 5, 6, 7,
 		]);
-		expect(result.droppedIds).toEqual([7, 999]);
+		expect(result.droppedIds).toEqual([999]);
 	});
 });
 

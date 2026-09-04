@@ -41,6 +41,7 @@ export const config = {
 		clayFetchTimeoutMs: 30000,
 		clayRetryAfterMaxMs: 5000,
 		companyConcurrency: 5,
+		maxVerifyPerCompany: 25,
 	},
 	enrich: {
 		batchSize: 5,
