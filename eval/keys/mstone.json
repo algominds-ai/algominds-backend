@@ -7,7 +7,7 @@
 			"name": "Acenda Life",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
 			"lastSeenAt": "2026-09-04T00:33:07.397Z",
-			"note": "undecidable: no known public record of Acenda Life's headcount, revenue, or country of operation"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"afgonline.com.au": {
 			"label": "accept",
@@ -136,7 +136,7 @@
 			"note": "Boral is a large ASX-listed building-materials corporate with thousands of staff and multi-billion revenue",
 			"record": {
 				"industry": null,
-				"description": "Boral is the largest vertically-integrated construction materials company in Australia. Our network includes prized quarry and cement infrastructure, bitumen, construction materials recycling, asphalt, and concrete batching operations. \n\nWe employ about 9,000 employees and contractors across our operations that span more than 360 sites nationwide. \n\nFor 80 years, we’ve been building something great in Australia - rarely a day goes by that you wouldn’t pass one of our sites or trucks, enter a building, use a road, bridge, tunnel, footpath, or other critical infrastructure that our people and products have helped enable.",
+				"description": "Boral is the largest vertically-integrated construction materials company in Australia. Our network includes prized quarry and cement infrastructure, bitumen, construction materials recycling, asphalt, and concrete batching operations. \n\nWe employ about 9,000 employees and contractors across our operations that span more than 360 sites nationwide. \n\nFor 80 years, we\u2019ve been building something great in Australia - rarely a day goes by that you wouldn\u2019t pass one of our sites or trucks, enter a building, use a road, bridge, tunnel, footpath, or other critical infrastructure that our people and products have helped enable.",
 				"workforceTotal": 1586,
 				"country": "Australia",
 				"foundedYear": 1946,
@@ -171,7 +171,7 @@
 			"name": "Carlisle Homes",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:51:12.679Z",
-			"note": "undecidable: a Victorian volume home builder whose direct headcount against the 201-staff floor cannot be confirmed from name alone"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"carsales.com.au": {
 			"label": "accept",
@@ -181,7 +181,7 @@
 			"note": "carsales is named directly in the ruling as an accept example",
 			"record": {
 				"industry": null,
-				"description": "At carsales, we’re all about making buying and selling a great experience. For over 25 years we’ve been evolving with the new economy to help people choose how they move today and tomorrow.\n\nWe started out with the idea of digitising print classifieds back in 1997 when we thought that ‘this internet thing might actually be starting to take off’. Fast forward to today and we have close to 800 team members across Australia and New Zealand and we’re part of CAR Group - an ASX 50 business and a global leader in digital marketplaces across Oceania, Asia and The Americas.\n\nAnd don’t let our name fool you – we might have the word “car” in there, but we’re about so much more....\n\nWhen it comes to your career, we want to provide big opportunities to help you make a big impact. But for this to be possible, we strive to feel small. Small enough to quickly change tack, small enough to learn from different departments and small enough to connect authentically with leadership.\n\nNot something you’d expect from one of the country’s biggest tech companies, is it?\n\nThere are a lot of things to love about carsales. Our uniqueness comes from having the rare combination of being able to provide all the benefits of a big tech company – being growth, security and resource – coupled with the feeling of a small organisation, which gives agility, opportunity and autonomy to our people. We’re a place where you can truly move your career forward and we’re proud to offer a dynamic workplace experience which transcends a mere list of perks and benefits.\n\nOur people are Software Developers. Engineers. Product Managers. Data Analysts. Designers. Sales, Media and Advertising specialists. Researchers. Customer Service stars. Content Producers. Finance experts. Photographers. Marketing magicians. Legal eagles. And People and Culture peeps.",
+				"description": "At carsales, we\u2019re all about making buying and selling a great experience. For over 25 years we\u2019ve been evolving with the new economy to help people choose how they move today and tomorrow.\n\nWe started out with the idea of digitising print classifieds back in 1997 when we thought that \u2018this internet thing might actually be starting to take off\u2019. Fast forward to today and we have close to 800 team members across Australia and New Zealand and we\u2019re part of CAR Group - an ASX 50 business and a global leader in digital marketplaces across Oceania, Asia and The Americas.\n\nAnd don\u2019t let our name fool you \u2013 we might have the word \u201ccar\u201d in there, but we\u2019re about so much more....\n\nWhen it comes to your career, we want to provide big opportunities to help you make a big impact. But for this to be possible, we strive to feel small. Small enough to quickly change tack, small enough to learn from different departments and small enough to connect authentically with leadership.\n\nNot something you\u2019d expect from one of the country\u2019s biggest tech companies, is it?\n\nThere are a lot of things to love about carsales. Our uniqueness comes from having the rare combination of being able to provide all the benefits of a big tech company \u2013 being growth, security and resource \u2013 coupled with the feeling of a small organisation, which gives agility, opportunity and autonomy to our people. We\u2019re a place where you can truly move your career forward and we\u2019re proud to offer a dynamic workplace experience which transcends a mere list of perks and benefits.\n\nOur people are Software Developers. Engineers. Product Managers. Data Analysts. Designers. Sales, Media and Advertising specialists. Researchers. Customer Service stars. Content Producers. Finance experts. Photographers. Marketing magicians. Legal eagles. And People and Culture peeps.",
 				"workforceTotal": 490,
 				"country": "Australia",
 				"foundedYear": 1997,
@@ -310,7 +310,7 @@
 			"name": "Easygo",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
 			"lastSeenAt": "2026-09-04T04:23:30.559Z",
-			"note": "undecidable: a private company with no verifiable public headcount or revenue figures"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"elders.com.au": {
 			"label": "accept",
@@ -352,7 +352,7 @@
 			"name": "Fredon",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
 			"lastSeenAt": "2026-09-04T04:23:30.559Z",
-			"note": "undecidable: a specialist electrical and mechanical services contractor whose headcount and revenue against the profile's floor cannot be confirmed"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"glencore.ws": {
 			"label": "accept",
@@ -394,7 +394,7 @@
 			"name": "Iberdrola Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
 			"lastSeenAt": "2026-09-03T06:22:12.855Z",
-			"note": "undecidable: Iberdrola's Australian renewables arm may run a much smaller local team than its global parent, and its AU headcount cannot be confirmed"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"ing.com.au": {
 			"label": "accept",
@@ -464,7 +464,7 @@
 			"name": "Middy's Electrical",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
 			"lastSeenAt": "2026-09-04T04:23:30.559Z",
-			"note": "undecidable: Middy's Electrical is a regional Western Australian retail chain whose revenue against the $100M floor cannot be confirmed"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"mitre10.com.au": {
 			"label": "accept",
@@ -496,7 +496,7 @@
 		},
 		"nbn.com.au": {
 			"label": "accept",
-			"name": "nbn® Australia",
+			"name": "nbn\u00ae Australia",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
 			"lastSeenAt": "2026-09-04T00:33:07.397Z",
 			"note": "nbn is Australia's national wholesale broadband infrastructure operator, fitting the telecommunications vertical, and operates commercially rather than as a procurement-panel-bound body"
@@ -506,7 +506,7 @@
 			"name": "NGM Group",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
 			"lastSeenAt": "2026-09-03T20:48:08.500Z",
-			"note": "undecidable: no known public record of NGM Group's industry, headcount, or revenue"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"nib.com.au": {
 			"label": "accept",
@@ -674,7 +674,7 @@
 			"name": "UHG (Unified Healthcare Group)",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
 			"lastSeenAt": "2026-09-04T01:51:12.679Z",
-			"note": "undecidable: no known public record of Unified Healthcare Group's headcount or revenue"
+			"note": "undecidable: no record was stored for this domain, so headcount, revenue, and country cannot be checked against the requirements"
 		},
 		"unisuper.com.au": {
 			"label": "accept",
@@ -698,7 +698,7 @@
 			"note": "Ventia is a large ASX-listed infrastructure-services corporate with tens of thousands of staff",
 			"record": {
 				"industry": null,
-				"description": "Ventia is our people: over 35,000 employees and subcontractors, across more than 400 sites, in Australia and New Zealand working. \n\nFrom transport and energy networks to critical utilities, defence, schools and hospitals, we’re there – making sure essential services are always working.\n\nEvery day, we draw on our network, experience and expertise to overcome challenges and go further for our customers, partners and communities. At the same time, our values and our heritage spanning half a century drive us to keep learning, working smarter, and thinking further ahead. \n\nVentia: Together we go further.",
+				"description": "Ventia is our people: over 35,000 employees and subcontractors, across more than 400 sites, in Australia and New Zealand working. \n\nFrom transport and energy networks to critical utilities, defence, schools and hospitals, we\u2019re there \u2013 making sure essential services are always working.\n\nEvery day, we draw on our network, experience and expertise to overcome challenges and go further for our customers, partners and communities. At the same time, our values and our heritage spanning half a century drive us to keep learning, working smarter, and thinking further ahead. \n\nVentia: Together we go further.",
 				"workforceTotal": 4566,
 				"country": "Australia",
 				"foundedYear": null,
