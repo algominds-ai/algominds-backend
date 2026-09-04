@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
+import { normalizeDomain, publicDomain } from "@/core/db/schema";
 import { generateStructured, workerModel } from "@/core/model";
 import { nameKey } from "@/core/people/dedupe";
 import { canonicalPersonUrl } from "@/core/providers/clay";
@@ -14,19 +15,22 @@ export type VerdictClassification =
 	| "unknown";
 
 /**
- * Maps a closed-set agent verdict to what the pipeline does with it: only a
- * first-party or press confirmation verifies outright, an aggregator or
- * LinkedIn confirmation needs a second opinion, a contradiction stays
- * contradicted, and everything else is unknown.
+ * Maps a closed-set agent verdict to what the pipeline does with it: a press
+ * confirmation, or a first-party one whose page sits on the company's own
+ * `domain`, verifies outright; a first-party page on any other domain, an
+ * aggregator or LinkedIn confirmation needs a second opinion; a
+ * contradiction stays contradicted, and everything else is unknown.
  */
 export function classifyVerdict(
 	output: ExaAgentVerdict,
+	domain: string,
 ): VerdictClassification {
 	if (output.verdict === "CONTRADICTED") return "contradicted";
 	if (output.verdict !== "CONFIRMED") return "unknown";
+	if (output.evidence_kind === "press") return "verified";
 	if (
-		output.evidence_kind === "first_party" ||
-		output.evidence_kind === "press"
+		output.evidence_kind === "first_party" &&
+		publicDomain(output.evidence_url ?? "") === normalizeDomain(domain)
 	) {
 		return "verified";
 	}
