@@ -34,9 +34,7 @@ const POLL_BUDGET_PER_SECOND = config.companies.exaPollBudgetPerSecond;
 function scaledPollIntervalSeconds(anglesInFlight: number): number {
 	return Math.max(
 		POLL_INTERVAL_SECONDS,
-		Math.ceil(
-			(anglesInFlight * POLL_INTERVAL_SECONDS) / POLL_BUDGET_PER_SECOND,
-		),
+		Math.ceil(anglesInFlight / POLL_BUDGET_PER_SECOND),
 	);
 }
 

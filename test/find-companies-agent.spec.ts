@@ -283,7 +283,7 @@ describe("the poll interval scales with the angles in flight", () => {
 		return { step, waits };
 	}
 
-	it("polls a twelve-angle fan-out every 30 seconds instead of the base 5", async () => {
+	it("polls a twelve-angle fan-out every 6 seconds so the whole fan-out stays under two polls a second", async () => {
 		stubAgentCompanyPolling(2);
 		const { step, waits } = sleepCapturingStep();
 		const fanout = fanoutFor(step);
@@ -296,7 +296,7 @@ describe("the poll interval scales with the angles in flight", () => {
 		const pollWaits = waits.filter((wait) => wait.name.includes("-wait-"));
 		expect(pollWaits.length).toBeGreaterThan(0);
 		for (const wait of pollWaits) {
-			expect(wait.duration).toBe("30 seconds");
+			expect(wait.duration).toBe("6 seconds");
 		}
 	});
 
