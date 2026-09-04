@@ -650,6 +650,23 @@
 				"fitReason": null
 			}
 		},
+		"data3.com": {
+			"label": null,
+			"name": "Data#3",
+			"firstSeenRunId": "companies_90223719-70e9-4f9a-894b-6f0f5c091540_2026-09-04",
+			"lastSeenAt": "2026-09-04T12:09:40.848Z",
+			"record": {
+				"industry": null,
+				"description": "Data#3 Limited (DTL), is focused on helping customers to harness the power of people and technology for a better future.\n\nBuilt on a foundation of over 45 years’ experience, combined with world-leading vendor technologies, Data#3 is constantly evolving its solutions and services to enable its customers’ success. Leveraging solutions such as cloud, modern workplace, security, data & analytics and connectivity, combined with Data#3’s services across consulting, project services and managed services, Data#3 is delivering the digital future.\n\nThroughout our long history, we have made many decisions that support our community and environment. Our vision is to harness the power of people and technology for a better future. We commit to a sustainable environmental, social and governance (ESG) framework that supports our business, people and stakeholders. The foundation of our program consists of four pillars: people, community, ethics, and environment. Click here to read our ESG report: https://bit.ly/45Uf9Iu\n\nListed on the ASX in 1997, Data#3 reported gross sales of $3 billion in the 2025 financial year and has more than 1,400 employees. Headquartered in Brisbane, it has facilities across 12 locations in Australia and Fiji.",
+				"workforceTotal": 866,
+				"country": "Australia",
+				"foundedYear": 1977,
+				"citedPage": "https://data3.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Data#3 meets size/revenue thresholds, HQ in Toowong (Brisbane), Australia; no evidence of internal contractor-hiring authority or exclusion category."
+			}
+		},
 		"davidjones.com.au": {
 			"label": "accept",
 			"name": "David Jones",
@@ -972,6 +989,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": null
+			}
+		},
+		"interactive.com.au": {
+			"label": null,
+			"name": "Interactive",
+			"firstSeenRunId": "companies_90223719-70e9-4f9a-894b-6f0f5c091540_2026-09-04",
+			"lastSeenAt": "2026-09-04T12:09:40.848Z",
+			"record": {
+				"industry": null,
+				"description": "Interactive has been supporting the growth of Australian industry for more than 38 years. We’ve seen a lot of change. Our expertise across cloud services, cyber security, data centres and systems maintenance enable household names to pivot seamlessly. It allows national institutions to serve entire populations uninterrupted. It takes start-ups from the spare room to the stock exchange.  \n\nOurs is a complete perspective earned by working with over 2000 diverse customers. Every situation is different, and our experience means that we can understand the exact point they’re at then navigate through implementation and beyond.   \n\nOur customers trust us to see it, solve it, and evolve it.  \n\nWe’ve always been Interactive by name and by nature because lasting solutions come from connection with people you trust. When you know where you stand and who’s got your back, things move forward.  \n\nRight now, technology is the engine that will power businesses into the future. It demands unwavering focus, so the people who manage it need to know it’s in good hands. Today’s tech leaders are the visionaries who know just how much depends on the decisions they make and the actions they take. The stakes are higher than ever.  \n\nInteractive. Get technology right. What happens next depends on it. ",
+				"workforceTotal": 373,
+				"country": "Australia",
+				"foundedYear": 1988,
+				"citedPage": "https://interactive.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Interactive has 373 staff and $242M revenue, HQ Port Melbourne; no evidence of internal contractor authority or exclusion category."
 			}
 		},
 		"iress.com": {
