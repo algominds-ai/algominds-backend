@@ -12,15 +12,13 @@ import {
 } from "@/core/db/queries";
 import type { NewPerson } from "@/core/db/schema";
 import type { ResolvedBuyer } from "@/core/people/buyer";
-import type { Candidate } from "@/core/people/candidate";
 import { resolveIdentity } from "@/core/people/identity";
-import { seniorRoster } from "@/core/people/roster";
 import { rawEvidenceRow, toNewPerson } from "@/core/people/rows";
 import type { IcpDoc } from "@/core/synthesize";
 import { applyCostEntries } from "@/workflows/agent-poll";
 import {
-	fallbackRoster,
 	rescueUnresolved,
+	runRosterStep,
 	skipFailedCompany,
 } from "@/workflows/find-people-rescue";
 import type { TargetCompany } from "@/workflows/find-people-target";
@@ -190,41 +188,6 @@ async function ensureCompanyRow(
 	);
 }
 
-async function runRosterStep(
-	ctx: CompanyLoopContext,
-	domain: string,
-	identifier: string,
-	runCompanyId: string,
-): Promise<{
-	candidates: Candidate[];
-	clayRecords: number;
-	costEntries: CostEntry[];
-}> {
-	return ctx.step.do(
-		`people-${domain}-roster`,
-		config.stepConfig.paidCall,
-		async () => {
-			const ledger = new CostLedger();
-			const result = await seniorRoster(identifier, ctx.buyer, ctx.env, ledger);
-			await appendEvidence(
-				ctx.env,
-				result.raw.map((body) =>
-					rawEvidenceRow(runCompanyId, "roster", "clay", body),
-				),
-			);
-			const candidates =
-				result.candidates.length > 0
-					? result.candidates
-					: await fallbackRoster(ctx, domain, runCompanyId);
-			return {
-				candidates,
-				clayRecords: result.quotaUsed,
-				costEntries: ledger.toJSON().entries,
-			};
-		},
-	);
-}
-
 export async function recordCompanySpend(
 	ctx: CompanyLoopContext,
 	progress: Pick<CompanyProgress, "domain" | "spentSoFar" | "ledger">,
@@ -335,8 +298,11 @@ export async function runOneCompany(
 		rescued ??
 		(await runRosterStep(
 			ctx,
-			company.domain,
-			resolved.identifier,
+			{
+				domain: company.domain,
+				identifier: resolved.identifier,
+				name: resolved.name,
+			},
 			runCompanyId,
 		));
 	applyCostEntries(roster.costEntries, ledger);

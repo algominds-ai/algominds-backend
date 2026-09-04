@@ -4,7 +4,13 @@ import type { CompanyLoopContext } from "@/workflows/find-people-company";
 import { runCompanies, runOneCompany } from "@/workflows/find-people-company";
 import { rescueUnresolved } from "@/workflows/find-people-rescue";
 import { fakeSecretEnv } from "../support/env";
-import { stubClayRejectFetch, stubGetleadsFetch } from "../support/fetch";
+import {
+	exaPeopleSearchResponse,
+	fakeVendors,
+	jsonResponse,
+	stubClayRejectFetch,
+	stubGetleadsFetch,
+} from "../support/fetch";
 import { fakeWorkflowStep } from "../support/step";
 import {
 	bareCompany,
@@ -104,7 +110,10 @@ const STEVE = {
 async function rescue(seed: SeededPeopleRun, domain: string) {
 	const ctx: CompanyLoopContext = {
 		...contextFor(seed, new Map()),
-		env: fakeSecretEnv({ GL_API_KEY: "test-gl-key" }),
+		env: fakeSecretEnv({
+			GL_API_KEY: "test-gl-key",
+			EXA_API_KEY: "test-exa-key",
+		}),
 	};
 	return rescueUnresolved(ctx, bareCompany(domain), crypto.randomUUID(), {
 		how: "unresolved",
@@ -131,10 +140,16 @@ describe("a domain Clay cannot resolve is rescued from GetLeads", () => {
 		}
 	});
 
-	it("returns null when GetLeads holds nobody either", async () => {
+	it("returns null when GetLeads and the Exa people index both hold nobody", async () => {
 		const seed = await seedPeopleRun("rescue-nobody");
 		try {
-			stubGetleadsFetch([]);
+			globalThis.fetch = fakeVendors(
+				{
+					"/api/v1/contacts/lookup/decision-makers": () =>
+						jsonResponse({ ok: "True", contacts: [], query_credits_used: "0" }),
+				},
+				{ "/search": () => exaPeopleSearchResponse([], 0) },
+			);
 			expect(await rescue(seed, "nobody.example")).toBeNull();
 		} finally {
 			globalThis.fetch = originalFetch;

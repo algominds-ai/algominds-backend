@@ -49,6 +49,46 @@ export function exaSearchResultsResponse(
 	});
 }
 
+export type ExaPersonResultSpec = {
+	url: string;
+	name: string;
+	currentTitle: string | null;
+	currentCompany: string | null;
+	location?: string | null;
+};
+
+/** An Exa `/search` people-category reply carrying one person entity per spec, each with a single current (`dates.to: null`) work-history entry. */
+export function exaPeopleSearchResponse(
+	people: readonly ExaPersonResultSpec[],
+	costTotal = 0.007,
+): Response {
+	return jsonResponse({
+		requestId: "req-people",
+		costDollars: { total: costTotal },
+		results: people.map((person) => ({
+			id: `id-${person.url}`,
+			url: person.url,
+			title: person.name,
+			entities: [
+				{
+					type: "person",
+					properties: {
+						name: person.name,
+						location: person.location ?? null,
+						workHistory: [
+							{
+								title: person.currentTitle,
+								dates: { to: null },
+								company: { id: null, name: person.currentCompany },
+							},
+						],
+					},
+				},
+			],
+		})),
+	});
+}
+
 /** A `fetch` that answers Exa calls and model-gateway calls from two separate scripted queues, recording both. */
 export function fakeExaAndModel(
 	exa: readonly Response[],
