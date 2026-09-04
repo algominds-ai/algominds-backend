@@ -7,7 +7,7 @@
 			"name": "athenahealth",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "athenahealth is a US healthcare SaaS company in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"bmwgroup.com": {
 			"label": "reject:unreachable",
@@ -17,7 +17,7 @@
 			"note": "BMW Group employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Automotive manufacturing",
-				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world’s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was € 10.2 billion on revenues amounting to € 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group’s corporate strategy and covers all products – from the supply chain through production to the end of their useful life. ",
+				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world\u2019s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was \u20ac 10.2 billion on revenues amounting to \u20ac 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group\u2019s corporate strategy and covers all products \u2013 from the supply chain through production to the end of their useful life. ",
 				"workforceTotal": 33715,
 				"country": "Germany",
 				"foundedYear": 1916,
@@ -38,23 +38,24 @@
 			"name": "Cash App",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "undecidable: Cash App is a product of Block Inc., whose total headcount sits close enough to the 10,000-employee reachable boundary that it cannot be placed confidently on either side"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"clear.bank": {
-			"label": null,
+			"label": "accept",
 			"name": "ClearBank",
 			"firstSeenRunId": "companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:34:58.519Z",
 			"record": {
 				"industry": null,
-				"description": "Leading brands – from fintechs and banks to digital asset platforms and large-scale corporates – use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
+				"description": "Leading brands \u2013 from fintechs and banks to digital asset platforms and large-scale corporates \u2013 use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
 				"workforceTotal": 552,
 				"country": "United Kingdom",
 				"foundedYear": 2015,
 				"citedPage": "https://clear.bank/learn/case-studies/how-clearbank-processes-20-million-payments-a-month-up-from-8-000-with-platform-built-on-azure",
 				"quote": null,
 				"fitReason": "Regulated UK bank, 552 staff, in-house infra teams, over 25% of infrastructure on AKS Kubernetes; no cert-management evidence."
-			}
+			},
+			"note": "552 staff, UK, regulated banking-infrastructure provider; cited case study shows over 25% of infrastructure on AKS Kubernetes processing 20 million payments a month"
 		},
 		"datadoghq.com": {
 			"label": "accept",
@@ -64,27 +65,28 @@
 			"note": "Datadog is a US SaaS company of roughly 5,000-6,000 employees whose own engineering blog and conference talks are a well-known public record of running production Kubernetes at scale"
 		},
 		"dexcom.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Dexcom",
 			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:38:22.053Z",
 			"record": {
 				"industry": "Medical devices",
-				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people’s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
+				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people\u2019s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
 				"workforceTotal": 5024,
 				"country": "United States",
 				"foundedYear": 1999,
 				"citedPage": "https://chkk.io/blog/case-study-dexcom",
 				"quote": "Dexcom Cloud Engineering runs a platform on GKE supporting hundreds of developers and thousands of applications.",
 				"fitReason": "Medical device maker with GKE-based cloud engineering team; headcount and location fit, but no PKI or downtime-reporting evidence."
-			}
+			},
+			"note": "5,024 staff, US, medical-device maker with a cited case study quoting Dexcom Cloud Engineering running a platform on GKE for hundreds of developers; treated as fitting the downtime-critical vertical given FDA-regulated real-time patient monitoring, though the record itself flags no explicit downtime-reporting citation"
 		},
 		"draftkings.com": {
 			"label": null,
 			"name": "DraftKings Inc.",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "DraftKings is a US gaming company in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"expediagroup.com": {
 			"label": "reject:unreachable",
@@ -98,7 +100,7 @@
 			"name": "FanDuel",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "FanDuel is a US gaming company plausibly in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"hubspot.com": {
 			"label": "accept",
@@ -119,7 +121,7 @@
 			"name": "Millennium bcp",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Millennium bcp is a Portuguese bank, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"monzo.com": {
 			"label": "accept",
@@ -129,27 +131,28 @@
 			"note": "Monzo is a UK challenger bank of roughly 3,000-4,000 employees and one of the most publicly documented Kubernetes case studies in banking, with multiple conference talks on its microservice architecture"
 		},
 		"okta.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Okta",
 			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:38:22.053Z",
 			"record": {
 				"industry": null,
-				"description": "Okta secures AI.\n\nOkta is The World’s Identity Company. Freeing everyone to safely use any technology—anywhere, on any device or app.",
+				"description": "Okta secures AI.\n\nOkta is The World\u2019s Identity Company. Freeing everyone to safely use any technology\u2014anywhere, on any device or app.",
 				"workforceTotal": 5328,
 				"country": "United States",
 				"foundedYear": 2009,
 				"citedPage": "https://www.okta.com/sites/default/files/2024-11/How%20Okta%20Builds%20and%20Runs%20Scalable%20Infrastructure%20%281%29.pdf",
 				"quote": null,
 				"fitReason": "Okta is a large SaaS identity firm with in-house teams running Kubernetes; no evidence on cert-lifecycle delegation."
-			}
+			},
+			"note": "5,328 staff, US, SaaS identity vendor; cited page is Okta's own document on how it builds and runs its scalable Kubernetes-based infrastructure"
 		},
 		"postfinance.ch": {
 			"label": null,
 			"name": "PostFinance",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "PostFinance is a Swiss financial-services company, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"roche.com": {
 			"label": "reject:unreachable",
@@ -166,20 +169,21 @@
 			"note": "Santander Group employs well over 200,000 people worldwide, far past the 10,000-employee named-account boundary"
 		},
 		"sectigo.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Sectigo",
 			"firstSeenRunId": "companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:38:22.053Z",
 			"record": {
 				"industry": null,
-				"description": "Expired certificates shouldn’t be the reason your business goes down. Sectigo is the industry’s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
+				"description": "Expired certificates shouldn\u2019t be the reason your business goes down. Sectigo is the industry\u2019s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
 				"workforceTotal": 508,
 				"country": "United States",
 				"foundedYear": null,
 				"citedPage": "https://www.sectigo.com/blog/how-lets-encrypt-runs-ct-logs",
 				"quote": null,
 				"fitReason": "Sectigo, ~508 staff, runs its own Kubernetes CT-log infra in-house; vertical fit and internal PKI governance not shown."
-			}
+			},
+			"note": "Sectigo's own description says it is a certificate-lifecycle-management and PKI platform, exactly the third-party cert-management vendor category the profile excludes"
 		},
 		"spotify.com": {
 			"label": "accept",
@@ -189,7 +193,7 @@
 			"note": "Spotify is a Swedish (Nordics) company of roughly 9,000 employees and a famous public Kubernetes case study, having given multiple KubeCon talks on its own migration"
 		},
 		"traderepublic.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Trade Republic",
 			"firstSeenRunId": "companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:34:58.519Z",
@@ -202,14 +206,15 @@
 				"citedPage": "https://engineering.traderepublic.com/scaling-batch-jobs-for-reliable-and-efficient-processing-da6242cdb9f9",
 				"quote": null,
 				"fitReason": "Berlin fintech bank, 729 staff, engineering blog shows Kubernetes CronJobs and distributed processing; no cert-lifecycle evidence found."
-			}
+			},
+			"note": "729 staff, Germany, fintech bank; cited engineering blog post shows Kubernetes CronJobs and distributed batch processing on its own infrastructure"
 		},
 		"tubitv.com": {
 			"label": null,
 			"name": "Tubi",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Tubi is a smaller Fox-owned streaming service with no public engineering blog, conference talk, or case study confirming production Kubernetes at scale"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"uber.com": {
 			"label": "reject:unreachable",
@@ -223,7 +228,7 @@
 			"name": "Wise",
 			"firstSeenRunId": "companies_dom-73f8b553e3cc_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:26:32.814Z",
-			"note": "Wise is a UK fintech in the reachable size band, but no public engineering blog, conference talk, or case study confirming production Kubernetes is known"
+			"note": "undecidable: no record was stored for this domain, so headcount, country, and Kubernetes evidence cannot be checked against the requirements"
 		},
 		"zalando.com": {
 			"label": "reject:unreachable",
