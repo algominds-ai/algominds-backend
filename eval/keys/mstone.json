@@ -6,613 +6,715 @@
 			"label": null,
 			"name": "Acenda Life",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "undecidable: no known public record of Acenda Life's headcount, revenue, or country of operation"
 		},
 		"afgonline.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "AFG",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "AFG (Australian Finance Group) is an ASX-listed mortgage-aggregation and financial-services corporate headquartered in Perth with several hundred staff and revenue well over $100M"
 		},
 		"agl.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "AGL",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "AGL Energy is a major ASX-listed Australian energy generator and retailer with thousands of staff"
 		},
 		"aia.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "AIA Australia",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "AIA Australia is a large Australian life insurer with over a thousand staff, fitting the insurer vertical"
 		},
 		"aldicareers.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "ALDI Stores Australia",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "ALDI Stores Australia is a national supermarket chain with tens of thousands of staff and multi-billion revenue"
 		},
 		"alintaenergy.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Alinta Energy",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Alinta Energy is a major Australian energy retailer and generator with thousands of staff"
 		},
 		"allianz.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Allianz Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Allianz Australia is a large insurer, part of the global Allianz group, with thousands of AU staff"
 		},
 		"aurecongroup.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Aurecon",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Aurecon is a large Australia-headquartered engineering and infrastructure advisory firm, not an IT services or staffing seller"
 		},
 		"ausnetservices.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "AusNet",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "AusNet is a Victorian electricity and gas transmission-distribution utility with thousands of staff"
 		},
 		"australianretirementtrust.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Australian Retirement Trust",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Australian Retirement Trust is one of Australia's largest superannuation funds, an explicitly fitting vertical"
 		},
 		"australiansuper.com": {
-			"label": null,
+			"label": "accept",
 			"name": "AustralianSuper",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "AustralianSuper is the largest Australian superannuation fund by staff and assets"
 		},
 		"australianunity.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Australian Unity",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Australian Unity is a diversified healthcare, wealth and insurance mutual with thousands of staff"
 		},
 		"aware.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Aware Super",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Aware Super is a large industry superannuation fund formed from First State Super, VicSuper and WA Super"
 		},
 		"bankwest.com.au": {
-			"label": null,
+			"label": "same-as:commbank.com.au",
 			"name": "Bankwest",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Bankwest has been a wholly owned brand of Commonwealth Bank since 2008, named as a same-as pair in the ruling"
 		},
 		"bapcor.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Bapcor Limited",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Bapcor Limited is an ASX-listed automotive parts retail group (Repco, Autobarn) with thousands of staff"
 		},
 		"bendigoadelaide.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Bendigo Bank",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Bendigo and Adelaide Bank is a major ASX-listed regional bank with thousands of staff"
 		},
 		"beyondbank.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Beyond Bank Australia",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Beyond Bank Australia is a customer-owned mutual bank with roughly 900 staff and assets over $10B"
 		},
 		"boq.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "BOQ Group",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Bank of Queensland (BOQ Group) is a major ASX-listed bank with thousands of staff"
 		},
 		"boral.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Boral",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Boral is a large ASX-listed building-materials corporate with thousands of staff and multi-billion revenue"
 		},
 		"bt.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "BT",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "BT is a large Australian wealth-platform and superannuation brand, fitting the wealth-platforms vertical regardless of current parent ownership"
 		},
 		"built.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Built",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Built Group is one of Australia's largest privately owned construction companies, with revenue over $1B"
 		},
 		"bunnings.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Bunnings",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Bunnings is a large Wesfarmers hardware-retail subsidiary with tens of thousands of staff"
 		},
 		"carlislehomes.com.au": {
 			"label": null,
 			"name": "Carlisle Homes",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "undecidable: a Victorian volume home builder whose direct headcount against the 201-staff floor cannot be confirmed from name alone"
 		},
 		"carsales.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "carsales",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "carsales is named directly in the ruling as an accept example"
 		},
 		"cbussuper.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Cbus Super Fund",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Cbus Super Fund is a large industry superannuation fund with hundreds of staff and tens of billions under management"
 		},
 		"chemistwarehouse.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Chemist Warehouse",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Chemist Warehouse is a large Australian pharmacy retail group with multi-billion revenue"
 		},
 		"coates.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Coates",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Coates Hire is a large equipment-rental corporate, part of Seven Group Holdings, with thousands of staff"
 		},
 		"colescareers.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Coles Group",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Coles Group is a major Australian supermarket chain with well over a hundred thousand staff"
 		},
 		"commbank.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Commonwealth Bank",
 			"firstSeenRunId": "companies_dom-7f758a0ed8b3_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:17:13.302Z"
+			"lastSeenAt": "2026-09-03T06:17:13.302Z",
+			"note": "Commonwealth Bank is one of Australia's Big Four banks"
 		},
 		"commsec.com.au": {
-			"label": null,
+			"label": "same-as:commbank.com.au",
 			"name": "CommSec",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "CommSec is Commonwealth Bank's own online-broking brand, not a separately staffed corporate"
 		},
 		"comparethemarket.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Compare the Market Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Compare the Market Australia is an established financial-services comparison business with several hundred staff"
 		},
 		"computershare.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Computershare Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Computershare is a large ASX-listed share-registry and financial-services corporate headquartered in Melbourne"
 		},
 		"costagroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Costa",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Costa Group is a large Australian produce grower and distributor with thousands of staff and revenue over $1B"
 		},
 		"countryroadgroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Country Road Group",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Country Road Group is a large Australian fashion retail group (Country Road, Witchery, Mimco, Trenery) with thousands of staff"
 		},
 		"cpbcon.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "CPB Contractors",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "CPB Contractors is a major construction and infrastructure contractor with thousands of staff"
 		},
 		"cuscal.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Cuscal Limited",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Cuscal sells payments and card-processing technology infrastructure to banks and credit unions, a form of software delivery to businesses"
 		},
 		"davidjones.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "David Jones",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "David Jones is a large Australian department-store chain with thousands of staff"
 		},
 		"dickerdata.com.au": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Dicker Data",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Dicker Data is named directly in the ruling as an excluded-type example, an IT hardware distributor and reseller"
 		},
 		"downergroup.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Downer",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Downer EDI is a large ASX-listed infrastructure and utilities services corporate, not an IT services or staffing seller"
 		},
 		"easygo.io": {
 			"label": null,
 			"name": "Easygo",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "undecidable: a private company with no verifiable public headcount or revenue figures"
 		},
 		"elders.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Elders",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Elders is a large ASX-listed agribusiness with thousands of staff and revenue around $2B"
 		},
 		"energyq.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Energy Queensland",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Energy Queensland is a state-owned energy network utility with thousands of staff, fitting the utilities vertical"
 		},
 		"engie.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "ENGIE AU",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "ENGIE AU is the Australian arm of the French multinational energy company with over a thousand staff"
 		},
 		"equifax.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Equifax Australia",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Equifax Australia is a large credit-reporting and data-analytics corporate, not an IT services or staffing seller"
 		},
 		"foxtelgroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Foxtel Group",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Foxtel Group is a large Australian pay-TV and streaming media corporate, fitting the telecommunications vertical"
 		},
 		"fredon.com.au": {
 			"label": null,
 			"name": "Fredon",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "undecidable: a specialist electrical and mechanical services contractor whose headcount and revenue against the profile's floor cannot be confirmed"
 		},
 		"glencore.ws": {
-			"label": null,
+			"label": "accept",
 			"name": "Glencore Australia",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Glencore Australia is the Australian coal-mining arm of the global mining and commodities group Glencore"
 		},
 		"greatsouthernbank.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Great Southern Bank",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Great Southern Bank (formerly Credit Union Australia) is a customer-owned mutual bank with roughly 800 staff and assets around $14B"
 		},
 		"hansenyuncken.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Hansen Yuncken",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Hansen Yuncken is a major Australian building contractor with over a thousand staff"
 		},
 		"harrisfarm.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Harris Farm Markets",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Harris Farm Markets operates around thirty large-format grocery stores across NSW and QLD, well past the staff floor"
 		},
 		"hcf.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "HCF Australia",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "HCF Australia is a major not-for-profit private health insurer with thousands of staff"
 		},
 		"iberdrola.com.au": {
 			"label": null,
 			"name": "Iberdrola Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "undecidable: Iberdrola's Australian renewables arm may run a much smaller local team than its global parent, and its AU headcount cannot be confirmed"
 		},
 		"ing.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "ING Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "ING Australia is the Dutch ING Group's Australian retail-banking arm with over a thousand staff"
 		},
 		"inpex.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "INPEX Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "INPEX Australia runs the large Ichthys LNG project with several hundred to a thousand staff and substantial revenue"
 		},
 		"iress.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Iress",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Iress builds and sells trading, wealth-management and mortgage software to banks and brokers, a software-delivery business"
 		},
 		"ivegroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "IVE Group",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "IVE Group is a large ASX-listed marketing and print-communications corporate with thousands of staff"
 		},
 		"kmart.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Kmart Australia Limited",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Kmart Australia is a large Wesfarmers discount-retail subsidiary with tens of thousands of staff"
 		},
 		"leidos.com": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Leidos Australia",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Leidos is named directly in the ruling as an excluded-type example, a global IT and defence services and consulting company"
 		},
 		"macmahon.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Macmahon",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Macmahon is an ASX-listed mining-services contractor, an explicitly fitting vertical, with thousands of staff"
 		},
 		"mebank.com.au": {
-			"label": null,
+			"label": "same-as:boq.com.au",
 			"name": "ME Bank",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "ME Bank was acquired by Bank of Queensland in 2021 and folded into BOQ Group"
 		},
 		"meriton.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Meriton Group",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Meriton Group is Australia's largest private apartment developer and builder, well past the profile's size floor"
 		},
 		"middys.com.au": {
 			"label": null,
 			"name": "Middy's Electrical",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "undecidable: Middy's Electrical is a regional Western Australian retail chain whose revenue against the $100M floor cannot be confirmed"
 		},
 		"mitre10.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Mitre 10 Australia",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Mitre 10 is part of Metcash's Home Improvement pillar, a large national hardware retail network"
 		},
 		"mycar.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "mycar",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "mycar is a large national automotive-service retail chain, formerly Kmart Tyre & Auto, owned by Continental"
 		},
 		"myer.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "MYER",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "MYER is a major ASX-listed department-store chain with thousands of staff"
 		},
 		"nab.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "NAB",
 			"firstSeenRunId": "companies_dom-7f758a0ed8b3_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:17:13.302Z"
+			"lastSeenAt": "2026-09-03T06:17:13.302Z",
+			"note": "National Australia Bank is one of Australia's Big Four banks"
 		},
 		"nbn.com.au": {
-			"label": null,
-			"name": "nbn® Australia",
+			"label": "accept",
+			"name": "nbn\u00ae Australia",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "nbn is Australia's national wholesale broadband infrastructure operator, fitting the telecommunications vertical, and operates commercially rather than as a procurement-panel-bound body"
 		},
 		"ngmgroup.com.au": {
 			"label": null,
 			"name": "NGM Group",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "undecidable: no known public record of NGM Group's industry, headcount, or revenue"
 		},
 		"nib.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "nib Group",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "nib Group is a major ASX-listed private health insurer with thousands of staff"
 		},
 		"novigi.com.au": {
-			"label": null,
+			"label": "reject:excluded-type",
 			"name": "Novigi",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Novigi is named directly in the ruling as an excluded-type example, an IT services and software consultancy"
 		},
 		"optus.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Optus",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Optus is a major Australian telecom carrier, a Singtel subsidiary, with thousands of staff"
 		},
 		"otr.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "OTR",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "On The Run is a large South Australian fuel and convenience-retail network with thousands of staff"
 		},
 		"peoplefirstbank.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "People First Bank",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "People First Bank, formed from the Heritage Bank and People's Choice merger, is a large mutual bank with over a thousand staff"
 		},
 		"perpetual.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Perpetual Limited",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Perpetual Limited is an ASX-listed asset-management and wealth-platform corporate, an explicitly fitting vertical"
 		},
 		"pharmacare.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "PharmaCare Laboratories",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "PharmaCare Laboratories is an established Australian consumer-health manufacturer of meaningful scale"
 		},
 		"rabobank.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Rabobank Australia",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Rabobank Australia is the Dutch agricultural bank's large Australian lending arm"
 		},
 		"seek.com": {
-			"label": null,
+			"label": "accept",
 			"name": "SEEK",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "SEEK is named directly in the ruling as an accept example"
 		},
 		"servicestream.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Service Stream",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Service Stream is an ASX-listed telecom and utilities field-services corporate, not an IT services or staffing seller"
 		},
 		"shellenergy.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Shell Energy Australia",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Shell Energy Australia (formerly ERM Power) is a large Australian energy retailer"
 		},
 		"sportsbet.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Sportsbet",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Sportsbet is a large Australian online betting company with well over a thousand staff and over $1B revenue"
 		},
 		"stan.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Stan.",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Stan. is Nine Entertainment's Australian streaming service with several hundred staff and several hundred million in revenue"
 		},
 		"stanwell.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Stanwell Corporation Limited",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Stanwell Corporation is a Queensland Government-owned electricity generator operating commercially at large scale"
 		},
 		"stgeorge.com.au": {
-			"label": null,
+			"label": "same-as:westpac.com.au",
 			"name": "St.George Bank",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "St.George Bank has been part of Westpac Group since 2008, named directly in the ruling as a same-as pair"
 		},
 		"suncorpbank.com.au": {
-			"label": null,
+			"label": "same-as:suncorpgroup.com.au",
 			"name": "Suncorp Bank",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Suncorp Bank and Suncorp Group are named directly in the ruling as a same-as pair"
 		},
 		"suncorpgroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Suncorp Group",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Suncorp Group is a major ASX-listed insurance and financial-services group"
 		},
 		"superretailgroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Super Retail Group",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Super Retail Group (Supercheap Auto, Rebel, BCF, Macpac) is a large ASX-listed retail group"
 		},
 		"tabcorp.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Tabcorp",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Tabcorp is a major ASX-listed wagering and gaming corporate with thousands of staff"
 		},
 		"thiess.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Thiess",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "Thiess is a major mining-services contractor, an explicitly fitting vertical, with well over ten thousand staff"
 		},
 		"tpgtelecom.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "TPG Telecom",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "TPG Telecom is a major ASX-listed telecom carrier formed from the TPG and Vodafone AU merger"
 		},
 		"transurban.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Transurban",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Transurban is a major ASX-listed toll-road and transport-infrastructure operator, an explicitly fitting vertical"
 		},
 		"ugllimited.com": {
-			"label": null,
+			"label": "accept",
 			"name": "UGL",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "UGL is a large engineering and infrastructure-services corporate, part of CIMIC Group, not an IT services seller"
 		},
 		"uhg.com.au": {
 			"label": null,
 			"name": "UHG (Unified Healthcare Group)",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "undecidable: no known public record of Unified Healthcare Group's headcount or revenue"
 		},
 		"unisuper.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "UniSuper",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "UniSuper is a large industry superannuation fund for the university sector with over $140B under management"
 		},
 		"vanguard.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Vanguard Australia",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Vanguard Australia is the Australian arm of the global asset manager, fitting the wealth-platforms vertical"
 		},
 		"ventia.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Ventia",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Ventia is a large ASX-listed infrastructure-services corporate with tens of thousands of staff"
 		},
 		"vivaenergy.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Viva Energy Australia",
 			"firstSeenRunId": "companies_15ac4f10-20f3-4970-967e-a1882a57f28f_2026-09-04",
-			"lastSeenAt": "2026-09-04T00:33:07.397Z"
+			"lastSeenAt": "2026-09-04T00:33:07.397Z",
+			"note": "Viva Energy Australia is a major ASX-listed fuel refiner and retailer with thousands of staff"
 		},
 		"wesfarmershealth.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Wesfarmers Health",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Wesfarmers Health includes Priceline Pharmacy and API, a large healthcare and retail corporate"
 		},
 		"westpac.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Westpac",
 			"firstSeenRunId": "companies_dom-50299dbb267e_2026-09-03",
-			"lastSeenAt": "2026-09-03T20:48:08.500Z"
+			"lastSeenAt": "2026-09-03T20:48:08.500Z",
+			"note": "Westpac is one of Australia's Big Four banks"
 		},
 		"woolworths.com.au": {
-			"label": null,
+			"label": "same-as:woolworthsgroup.com.au",
 			"name": "Woolworths Supermarkets",
 			"firstSeenRunId": "companies_dom-041049f5ff13_2026-09-04",
-			"lastSeenAt": "2026-09-04T04:23:30.559Z"
+			"lastSeenAt": "2026-09-04T04:23:30.559Z",
+			"note": "woolworths.com.au is the supermarkets consumer brand site for the same ASX-listed Woolworths Group corporate entity"
 		},
 		"woolworthsgroup.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Woolworths Group",
 			"firstSeenRunId": "companies_dom-68a224f1026b_2026-09-04",
-			"lastSeenAt": "2026-09-04T01:51:12.679Z"
+			"lastSeenAt": "2026-09-04T01:51:12.679Z",
+			"note": "Woolworths Group is a major ASX-listed retail conglomerate with well over a hundred thousand staff"
 		},
 		"yancoal.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Yancoal Australia Ltd",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Yancoal Australia is an ASX-listed coal-mining corporate, an explicitly fitting vertical, with thousands of staff"
 		},
 		"zurich.com.au": {
-			"label": null,
+			"label": "accept",
 			"name": "Zurich Australia",
 			"firstSeenRunId": "companies_dom-f307c44d4668_2026-09-03",
-			"lastSeenAt": "2026-09-03T06:22:12.855Z"
+			"lastSeenAt": "2026-09-03T06:22:12.855Z",
+			"note": "Zurich Australia is the Australian arm of the global Zurich Insurance Group"
 		}
 	}
 }
