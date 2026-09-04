@@ -190,24 +190,51 @@ export type RoundTraceRecord = {
 	funnel: RoundFunnel;
 	startedAt: string;
 	seconds: number | null;
+	secondsByDep: Record<string, number>;
 };
 
-/** One round's plan, funnel and elapsed seconds, read from `round` alone. Seconds are bounded by the next round's start, or `finishedAt` for the last round; dollars are not stored per round (only cumulatively on `run`), so they are not reported here. */
-export async function readRoundTraceRecords(
+const RoundTimingsValueSchema = z.object({
+	round: z.number(),
+	timings: z.array(z.object({ dep: z.string(), seconds: z.number() })),
+});
+
+/** Seconds per dependency for every round of `runId`, summed by dependency name from the `round-timings` evidence rows, keyed by round ordinal. */
+export async function readRoundTimings(
 	sql: Sql,
 	runId: string,
-	finishedAt: string | null,
+): Promise<Map<number, Record<string, number>>> {
+	const rows = await sql`
+		select value from evidence
+		where subject_type = 'run' and subject_id = ${runId} and kind = 'round-timings'`;
+	const byRound = new Map<number, Record<string, number>>();
+	for (const row of rows) {
+		const parsed = RoundTimingsValueSchema.parse(JSON.parse(String(row.value)));
+		const totals: Record<string, number> = {};
+		for (const timing of parsed.timings) {
+			totals[timing.dep] = (totals[timing.dep] ?? 0) + timing.seconds;
+		}
+		byRound.set(parsed.round, totals);
+	}
+	return byRound;
+}
+
+/** One round's plan, funnel, elapsed seconds and seconds per dependency. A round row is inserted when the round ends, so its seconds run from the previous round's insert, or the run's start, to its own; dollars are not stored per round (only cumulatively on `run`), so they are not reported here. */
+export async function readRoundTraceRecords(
+	sql: Sql,
+	run: RunReport,
 ): Promise<RoundTraceRecord[]> {
 	const rows = await sql`
 		select ordinal, plan, found, rejected, started_at
-		from round where run_id = ${runId} order by ordinal`;
+		from round where run_id = ${run.runId} order by ordinal`;
 	const parsed = rows.map((row) => RoundTraceRowSchema.parse(row));
+	const timings = await readRoundTimings(sql, run.runId);
 	return parsed.map((row, index) => {
-		const next = parsed[index + 1];
-		const endsAt = next ? next.started_at.toISOString() : finishedAt;
-		const seconds = endsAt
-			? (new Date(endsAt).getTime() - row.started_at.getTime()) / 1000
-			: null;
+		const previous = parsed[index - 1];
+		const beganAt = previous
+			? previous.started_at.toISOString()
+			: run.startedAt;
+		const seconds =
+			(row.started_at.getTime() - new Date(beganAt).getTime()) / 1000;
 		const plans = row.plan ?? [];
 		return {
 			ordinal: row.ordinal,
@@ -216,6 +243,7 @@ export async function readRoundTraceRecords(
 			funnel: roundFunnel(row.found, row.rejected ?? null),
 			startedAt: row.started_at.toISOString(),
 			seconds,
+			secondsByDep: timings.get(row.ordinal) ?? {},
 		};
 	});
 }

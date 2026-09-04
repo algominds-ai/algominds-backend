@@ -35,7 +35,7 @@ export async function traceCompaniesRun(
 	meta: RunTraceMeta,
 ): Promise<SpanSpec> {
 	const run = await readRunReport(sql, runId);
-	const rounds = await readRoundTraceRecords(sql, runId, run.finishedAt);
+	const rounds = await readRoundTraceRecords(sql, run);
 	const refusalsByRound = await readRoundRefusals(sql, runId);
 	const companies = await readCompanyTraceRecords(sql, runId);
 	const requiresProvingPass = await readRequiresProvingPass(sql, scoring.icpId);

@@ -56,6 +56,7 @@ function round(overrides: Partial<RoundTraceRecord> = {}): RoundTraceRecord {
 		},
 		startedAt: "2026-01-01T00:00:00.000Z",
 		seconds: 30,
+		secondsByDep: {},
 		...overrides,
 	};
 }

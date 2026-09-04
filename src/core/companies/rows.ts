@@ -122,6 +122,24 @@ function refusedRow(reject: FindCompaniesReject): RefusedRow | null {
 	};
 }
 
+export type RoundTiming = { dep: string; seconds: number };
+
+/** One append-only evidence row per round carrying the seconds each dependency spent, so a slow round can be attributed to its search, proof or judge; null when nothing was timed. */
+export function roundTimingsEvidenceRow(
+	runId: string,
+	round: number,
+	timings: readonly RoundTiming[],
+): NewEvidence | null {
+	if (timings.length === 0) return null;
+	return {
+		subjectType: "run",
+		subjectId: runId,
+		kind: "round-timings",
+		value: JSON.stringify({ runId, round, timings }),
+		source: EVIDENCE_SOURCE,
+	};
+}
+
 /** One append-only evidence row per round carrying every row the judge refused, with its domain, reason and statuses, bounded to `ROUND_REFUSALS_MAX_CHARS`; null when the round refused nothing. */
 export function roundRefusalsEvidenceRow(
 	runId: string,

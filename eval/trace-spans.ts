@@ -112,6 +112,7 @@ function roundSpan(
 		},
 		output: {
 			funnel: round.funnel,
+			secondsByDep: round.secondsByDep,
 			carriesHardRequirements: query
 				? queryCarriesHardRequirements(query, hardRecordRequirementTexts)
 				: null,
