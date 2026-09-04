@@ -20,6 +20,7 @@
 		"db:test:reset": "TEST_DB=${TEST_DB:-algo_test}; PGPASSWORD=postgres dropdb --if-exists -h localhost -p 5432 -U postgres \"$TEST_DB\" && PGPASSWORD=postgres createdb -h localhost -p 5432 -U postgres \"$TEST_DB\" && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/$TEST_DB drizzle-kit migrate",
 		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
 		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs",
+		"eval:onboard": "bun eval/onboard-run.ts",
 		"schemas": "schemalint check-node --profile openai --source 'src/**/*.ts' --exclude 'src/core/providers/exa/*.ts' --exclude 'src/http/schemas.ts' --config package.json --format human"
 	},
 	"dependencies": {
