@@ -277,7 +277,7 @@ function toBounds(
  * settle there is nothing for an agent round to demand, so such a round is a
  * plain search whatever the model said.
  */
-export function routeFor(
+function routeFor(
 	chosen: (typeof ROUND_ROUTES)[number] | null,
 	requirements: readonly Requirement[],
 ): (typeof ROUND_ROUTES)[number] {

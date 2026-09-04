@@ -1005,6 +1005,13 @@ describe("evidence outside the window the profile asks for is refused in code", 
 	it("keeps an undated page when the profile asks for nothing recent", () => {
 		expect(outcomeFor(null, null).rows).toHaveLength(1);
 	});
+
+	it("refuses a page whose date the code cannot read at all", () => {
+		const outcome = outcomeFor("not-a-date", 30);
+
+		expect(outcome.rows).toHaveLength(0);
+		expect(outcome.rejects[0]?.reason).toBe("the evidence date is not a date");
+	});
 });
 
 describe("a thin round comes back thin, never empty", () => {

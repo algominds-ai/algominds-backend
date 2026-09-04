@@ -6,12 +6,12 @@ import type {
 	FindCompaniesOptions,
 } from "../src/core/companies";
 import { anglesForRound, findCompanies } from "../src/core/companies";
-import { decideRows, provenRate } from "../src/core/companies/decide";
 import type { CompanyRow } from "../src/core/companies/gate";
 import { gate } from "../src/core/companies/gate";
 import type { Verdict } from "../src/core/companies/judge";
-import type { ProvingHit } from "../src/core/companies/proving";
-import { applyRecords, mergeEntity } from "../src/core/companies/record";
+import { decideRows, provenRate } from "../src/core/companies/judge";
+import type { ProvingHit } from "../src/core/companies/proof";
+import { applyRecords } from "../src/core/companies/record";
 import { CostLedger } from "../src/core/cost";
 import type { ExaResult } from "../src/core/providers/exa/search";
 import type { Requirement } from "../src/core/requirements";
@@ -34,6 +34,14 @@ const recordRequirement: Requirement = {
 const pageRequirement: Requirement = {
 	id: "r2",
 	text: "the company published an engineering page about its platform",
+	kind: "hard",
+	proof: "page",
+	windowDays: 730,
+};
+
+const pageRequirement2: Requirement = {
+	id: "r4",
+	text: "the company published a security compliance page",
 	kind: "hard",
 	proof: "page",
 	windowDays: 730,
@@ -336,6 +344,78 @@ describe("proving runs before the judge, never after it", () => {
 	});
 });
 
+describe("every hard page requirement gets its own proof", () => {
+	it("proves each hard page requirement separately, and gives the judge every page found", async () => {
+		const proveCalls: string[] = [];
+		let evidenceSeenByJudge:
+			| ReadonlyMap<number, ReadonlyMap<string, { url: string; quote: string }>>
+			| undefined;
+		const spy = spyingDeps({
+			route: "search",
+			requirements: [pageRequirement, pageRequirement2],
+			results: [exaResult("bank.com", 900)],
+		});
+		const deps: FindCompaniesDeps = {
+			...spy.deps,
+			prove: async (rows, requirement) => {
+				proveCalls.push(requirement.id);
+				const hit =
+					requirement.id === pageRequirement.id
+						? {
+								url: "https://bank.com/engineering",
+								quote: "we run our own platform",
+								publishedDate: "2026-01-01",
+								text: "we run our own platform",
+							}
+						: {
+								url: "https://bank.com/security",
+								quote: "SOC 2 type II certified",
+								publishedDate: "2026-01-01",
+								text: "SOC 2 type II certified",
+							};
+				return rows.map((_candidate, index) => ({ index, hit }));
+			},
+			judge: async (_requirements, rows, _env, evidenceByRow) => {
+				evidenceSeenByJudge = evidenceByRow;
+				return {
+					verdicts: rows.map((_row, index) =>
+						verdict({
+							index,
+							statuses: [
+								{ id: pageRequirement.id, status: "proven" },
+								{ id: pageRequirement2.id, status: "proven" },
+							],
+						}),
+					),
+					ledger: new CostLedger(),
+				};
+			},
+		};
+
+		const result = await findCompanies(
+			icp,
+			1,
+			options({ requirements: [pageRequirement, pageRequirement2] }),
+			deps,
+		);
+
+		expect(proveCalls.sort()).toEqual([
+			pageRequirement.id,
+			pageRequirement2.id,
+		]);
+		expect(result.pages.map((page) => page.url).sort()).toEqual([
+			"https://bank.com/engineering",
+			"https://bank.com/security",
+		]);
+		expect(evidenceSeenByJudge?.get(0)?.get(pageRequirement.id)?.quote).toBe(
+			"we run our own platform",
+		);
+		expect(evidenceSeenByJudge?.get(0)?.get(pageRequirement2.id)?.quote).toBe(
+			"SOC 2 type II certified",
+		);
+	});
+});
+
 describe("a search round's own proof reads the same as an agent round's evidence", () => {
 	it("stamps an evidenceCheck on the row it proved, so a search round's evidence reads the same as an agent round's", async () => {
 		const spy = spyingDeps({
@@ -621,8 +701,13 @@ describe("a company this account already holds never comes back", () => {
 
 describe("an agent-found company is bounded by the vendor's record, not its own claim", () => {
 	it("prefers the vendor's figures and keeps the agent's where the vendor is silent", () => {
-		const merged = mergeEntity(
-			{
+		const agentResult: ExaResult = {
+			id: null,
+			url: "https://saxo.com",
+			title: "Saxo",
+			summary: null,
+			person: null,
+			company: {
 				name: "Saxo",
 				description: "a bank",
 				industry: "banking",
@@ -633,7 +718,10 @@ describe("an agent-found company is bounded by the vendor's record, not its own 
 				revenueAnnual: null,
 				fundingTotal: null,
 			},
-			{
+		};
+		const vendorResult: ExaResult = {
+			...agentResult,
+			company: {
 				name: "Saxo Bank",
 				description: "the vendor's description",
 				industry: null,
@@ -644,18 +732,16 @@ describe("an agent-found company is bounded by the vendor's record, not its own 
 				revenueAnnual: null,
 				fundingTotal: null,
 			},
+		};
+
+		const applied = applyRecords(
+			[agentResult],
+			[{ domain: "saxo.com", record: vendorResult }],
 		);
 
-		expect(merged.workforceTotal).toBe(1403);
-		expect(merged.description).toBe("the vendor's description");
-		expect(merged.industry).toBe("banking");
-	});
-
-	it("keeps the agent's own record for a company the vendor's index has never heard of", () => {
-		const agent = exaResult("unknown.com", 17).company;
-		if (!agent) throw new Error("expected a company on the fixture");
-
-		expect(mergeEntity(agent, null).workforceTotal).toBe(17);
+		expect(applied[0]?.company?.workforceTotal).toBe(1403);
+		expect(applied[0]?.company?.description).toBe("the vendor's description");
+		expect(applied[0]?.company?.industry).toBe("banking");
 	});
 
 	it("applies a record only to the domain it was asked for", () => {

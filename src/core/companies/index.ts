@@ -4,20 +4,16 @@ import type {
 	FindCompaniesReject,
 	RetrievedPage,
 } from "@/core/companies/candidates";
-import {
-	collectDomains,
-	groupRejectReasons,
-} from "@/core/companies/candidates";
-
-import { toGateRejects } from "@/core/companies/evidence";
+import { groupRejectReasons } from "@/core/companies/candidates";
 import type {
 	CompanyRow,
 	GateOptions,
 	GateResult,
 	SearchResult,
 } from "@/core/companies/gate";
-import type { JudgeResult } from "@/core/companies/judge";
-import type { ProvenRow } from "@/core/companies/proving";
+import type { JudgeResult, RequirementEvidence } from "@/core/companies/judge";
+import type { ProvenRow } from "@/core/companies/proof";
+import { toGateRejects } from "@/core/companies/proof";
 import type { BackfilledRecord } from "@/core/companies/record";
 import type { RoundOutcome } from "@/core/companies/round";
 import { runRound } from "@/core/companies/round";
@@ -97,6 +93,10 @@ export type FindCompaniesDeps = {
 		requirements: readonly Requirement[],
 		rows: readonly CompanyRow[],
 		env: Env,
+		evidenceByRow?: ReadonlyMap<
+			number,
+			ReadonlyMap<string, RequirementEvidence>
+		>,
 	) => Promise<JudgeResult>;
 };
 
@@ -171,7 +171,9 @@ function absorbRound(
 	outcome: RoundOutcome,
 	seenDomains: Set<string>,
 ): FindCompaniesReject[] {
-	for (const domain of collectDomains(outcome.rows)) seenDomains.add(domain);
+	for (const row of outcome.rows) {
+		if (row.domain) seenDomains.add(normalizeDomain(row.domain));
+	}
 	return [
 		...outcome.filterRejects,
 		...toGateRejects(outcome.rows, outcome.gateRejects),
@@ -189,7 +191,7 @@ type RoundDecision = "complete" | "retry" | "exhausted" | "continue";
  * check. `exhausted` means the opposite: rows survived the filter, but every
  * one of them was a domain this run had already seen.
  */
-export function decideRound(
+function decideRound(
 	found: number,
 	wanted: number,
 	outcome: { resultCount: number; filteredCount: number; unseenCount: number },
@@ -202,7 +204,7 @@ export function decideRound(
 }
 
 /** `empty` only when every round the run paid for matched nothing at all. */
-export function terminalStatus(
+function terminalStatus(
 	status: FindCompaniesStatus,
 	found: number,
 	emptyRounds: number,

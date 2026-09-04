@@ -19,7 +19,7 @@ function sleep(ms: number): Promise<void> {
  * request for `wise.com` also returns `gatewise.com`. The comparison is an
  * identity check on a normalized domain, never a judgement about the company.
  */
-export async function lookupRecord(
+async function lookupRecord(
 	domain: string,
 	env: Env,
 	ledger: CostLedger,
@@ -80,7 +80,7 @@ export async function backfillRecords(
  * agent reported for a company its index has never heard of. A field the
  * vendor left null keeps the agent's own value, since a null is silence.
  */
-export function mergeEntity(
+function mergeEntity(
 	agent: CompanyEntity,
 	vendor: CompanyEntity | null,
 ): CompanyEntity {

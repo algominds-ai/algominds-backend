@@ -47,7 +47,11 @@ import type {
 	SearchPlan,
 	SynthesizeInput,
 } from "../src/core/synthesize";
-import { finalStatus, reportRound } from "../src/workflows/find-companies";
+import { finalStatus } from "../src/workflows/find-companies";
+import {
+	reportRound,
+	roundPlan,
+} from "../src/workflows/find-companies-persist";
 
 const storedRequirements: Requirement[] = [
 	{
@@ -1045,6 +1049,7 @@ describe("collapsing numeric reject reasons for the synthesizer's feedback", () 
 			domain: "wrong.com",
 			reason: "contradicts r1: does not fit icp",
 			stage: "judge",
+			statuses: [{ id: "r1", status: "contradicted" }],
 		});
 		expect(groupRejectReasons(result.rejects)).toEqual([
 			"contradicts r1: does not fit icp",
@@ -1982,6 +1987,21 @@ describe("the status the workflow reports for the whole run", () => {
 
 	it("reports complete once the run saved as many companies as requested", () => {
 		expect(finalStatus(5, 5, "empty")).toBe("complete");
+	});
+});
+
+describe("a round's stored plan keeps every angle it searched", () => {
+	it("keeps every angle an agent round fanned out to, not only the first", () => {
+		const plans = [
+			testPlan({ angle: "fintech" }),
+			testPlan({ angle: "payroll" }),
+		];
+
+		expect(roundPlan(plans)).toEqual(plans);
+	});
+
+	it("is null for a round that produced no angle at all", () => {
+		expect(roundPlan([])).toBeNull();
 	});
 });
 
