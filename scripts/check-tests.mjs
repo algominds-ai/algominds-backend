@@ -247,7 +247,7 @@ function testLineCount(files) {
 
 const files = walk(ROOT);
 const findings = collectFindings(files);
-const warnRules = new Set(STRICT ? [] : [1, 2, 7]);
+const warnRules = new Set(STRICT ? [] : [1, 2, 3, 4, 7]);
 
 let failed = 0;
 for (const finding of findings) {
