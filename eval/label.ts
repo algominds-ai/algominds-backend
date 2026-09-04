@@ -1,4 +1,5 @@
 import { createInterface } from "node:readline/promises";
+import { armDatabaseUrl } from "@eval/arm-db";
 import { keyPath, readKeyFile, writeKeyFile } from "@eval/keys-io";
 import type { CompanyDetail, KeyFile, StoredCompany } from "@eval/label-core";
 import {
@@ -18,18 +19,25 @@ const CompanyRowSchema = z.object({
 	name: z.string(),
 	run_id: z.string(),
 	found_at: z.coerce.date(),
+	evidence_url: z.string().nullish(),
+	evidence_date: z.string().nullish(),
 	data: z
 		.object({
 			entity: z
 				.object({
 					industry: z.string().nullish(),
 					description: z.string().nullish(),
+					workforceTotal: z.number().nullish(),
+					country: z.string().nullish(),
+					foundedYear: z.number().nullish(),
 				})
 				.nullish(),
 			result: z
 				.object({
 					fitReason: z.string().nullish(),
 					url: z.string().nullish(),
+					quote: z.string().nullish(),
+					publishedDate: z.string().nullish(),
 				})
 				.nullish(),
 		})
@@ -38,14 +46,27 @@ const CompanyRowSchema = z.object({
 
 type CompanyRow = z.infer<typeof CompanyRowSchema>;
 
-async function fetchCompanyRows(
-	sql: Sql,
-	icpId: string,
-): Promise<CompanyRow[]> {
+type Scope = { icpId: string } | { armSlug: string };
+
+/** Every company stored for the profile: by profile id in the shared database, or by the `eval-<slug>-t<n>` organizations an arm database seeded. */
+async function fetchCompanyRows(sql: Sql, scope: Scope): Promise<CompanyRow[]> {
+	const where =
+		"icpId" in scope
+			? sql`c.icp_id = ${scope.icpId}`
+			: sql`o.name like ${`eval-${scope.armSlug}-t%`}`;
 	const rows = await sql`
-		select domain, name, run_id, found_at, data
-		from company where icp_id = ${icpId}
-		order by found_at asc`;
+		select c.domain, c.name, c.run_id, c.found_at, c.data,
+			(select e.value from evidence e
+				where e.subject_id = c.id::text and e.kind = 'evidenceUrl' limit 1)
+				as evidence_url,
+			(select e.value from evidence e
+				where e.subject_id = c.id::text and e.kind = 'evidenceDate' limit 1)
+				as evidence_date
+		from company c
+		join run r on r.id = c.run_id
+		join organization o on o.id = r.organization_id
+		where ${where}
+		order by c.found_at asc`;
 	return rows.map((row) => CompanyRowSchema.parse(row));
 }
 
@@ -55,17 +76,29 @@ function toStoredCompany(row: CompanyRow): StoredCompany {
 		name: row.name,
 		runId: row.run_id,
 		foundAt: row.found_at.toISOString(),
+		record: {
+			industry: row.data?.entity?.industry ?? null,
+			description: row.data?.entity?.description ?? null,
+			workforceTotal: row.data?.entity?.workforceTotal ?? null,
+			country: row.data?.entity?.country ?? null,
+			foundedYear: row.data?.entity?.foundedYear ?? null,
+			citedPage: row.evidence_url ?? row.data?.result?.url ?? null,
+			citedDate: row.evidence_date ?? row.data?.result?.publishedDate ?? null,
+			quote: row.data?.result?.quote ?? null,
+			fitReason: row.data?.result?.fitReason ?? null,
+		},
 	};
 }
 
 function toCompanyDetail(row: CompanyRow): CompanyDetail {
+	const stored = toStoredCompany(row);
 	return {
 		domain: row.domain,
 		name: row.name,
-		industry: row.data?.entity?.industry ?? null,
-		description: row.data?.entity?.description ?? null,
-		fitReason: row.data?.result?.fitReason ?? null,
-		citedPage: row.data?.result?.url ?? null,
+		industry: stored.record.industry,
+		description: stored.record.description,
+		fitReason: stored.record.fitReason,
+		citedPage: stored.record.citedPage,
 	};
 }
 
@@ -117,15 +150,19 @@ async function promptForLabels(
 	return labelled;
 }
 
-async function labelProfile(slug: string, seedOnly: boolean): Promise<void> {
+type LabelArgs = { slug: string; seedOnly: boolean; arm: string | null };
+
+async function labelProfile(args: LabelArgs): Promise<void> {
+	const { slug, seedOnly, arm } = args;
 	const profile = profileBySlug(slug);
 	if (!profile) throw new Error(`eval:label unknown profile ${slug}`);
 	let key = readKeyFile(profile.slug, profile.icpId);
-	const databaseUrl = process.env.DATABASE_URL;
+	const databaseUrl = arm ? armDatabaseUrl(arm) : process.env.DATABASE_URL;
 	if (!databaseUrl) throw new Error("eval:label DATABASE_URL is not set");
 	const sql = postgres(databaseUrl, { max: 1 });
 	try {
-		const rows = await fetchCompanyRows(sql, profile.icpId);
+		const scope: Scope = arm ? { armSlug: slug } : { icpId: profile.icpId };
+		const rows = await fetchCompanyRows(sql, scope);
 		key = mergeStoredCompanies(key, rows.map(toStoredCompany));
 		key = sortedKeyFile(key);
 		writeKeyFile(key);
@@ -147,9 +184,13 @@ async function labelProfile(slug: string, seedOnly: boolean): Promise<void> {
 if (import.meta.main) {
 	const slug = process.argv[2];
 	const seedOnly = process.argv.includes("--seed-only");
+	const armIndex = process.argv.indexOf("--arm");
+	const arm = armIndex === -1 ? null : (process.argv[armIndex + 1] ?? null);
 	if (!slug) {
-		console.error("usage: bun run eval:label <profile> [--seed-only]");
+		console.error(
+			"usage: bun run eval:label <profile> [--seed-only] [--arm <arm>]",
+		);
 		process.exit(1);
 	}
-	await labelProfile(slug, seedOnly);
+	await labelProfile({ slug, seedOnly, arm });
 }

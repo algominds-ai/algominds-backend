@@ -24,6 +24,18 @@ describe("isValidLabel", () => {
 	});
 });
 
+const EMPTY_RECORD = {
+	industry: null,
+	description: null,
+	workforceTotal: null,
+	country: null,
+	foundedYear: null,
+	citedPage: null,
+	citedDate: null,
+	quote: null,
+	fitReason: null,
+};
+
 describe("mergeStoredCompanies", () => {
 	it("adds an unlabelled entry for a domain the key has never seen", () => {
 		const key = emptyKeyFile("mstone", "icp-1");
@@ -33,6 +45,7 @@ describe("mergeStoredCompanies", () => {
 				name: "A Inc",
 				runId: "run-1",
 				foundAt: "2026-01-01T00:00:00.000Z",
+				record: EMPTY_RECORD,
 			},
 		]);
 		expect(merged.companies["a.com"]).toEqual({
@@ -40,10 +53,11 @@ describe("mergeStoredCompanies", () => {
 			name: "A Inc",
 			firstSeenRunId: "run-1",
 			lastSeenAt: "2026-01-01T00:00:00.000Z",
+			record: EMPTY_RECORD,
 		});
 	});
 
-	it("never touches an existing entry, labelled or not", () => {
+	it("keeps an existing entry's label and name, filling in only a missing record", () => {
 		const key = emptyKeyFile("mstone", "icp-1");
 		key.companies["a.com"] = {
 			label: "accept",
@@ -57,9 +71,13 @@ describe("mergeStoredCompanies", () => {
 				name: "New Name",
 				runId: "run-2",
 				foundAt: "2026-02-02T00:00:00.000Z",
+				record: EMPTY_RECORD,
 			},
 		]);
-		expect(merged.companies["a.com"]).toEqual(key.companies["a.com"]);
+		expect(merged.companies["a.com"]).toEqual({
+			...key.companies["a.com"],
+			record: EMPTY_RECORD,
+		});
 	});
 });
 

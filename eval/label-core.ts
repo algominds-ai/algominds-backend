@@ -19,11 +19,27 @@ export const LabelSchema = z
 		message: "label must be accept, reject:<category>, or same-as:<domain>",
 	});
 
+export const CompanyRecordSchema = z.object({
+	industry: z.string().nullable(),
+	description: z.string().nullable(),
+	workforceTotal: z.number().nullable(),
+	country: z.string().nullable(),
+	foundedYear: z.number().nullable(),
+	citedPage: z.string().nullable(),
+	citedDate: z.string().nullish(),
+	quote: z.string().nullable(),
+	fitReason: z.string().nullable(),
+});
+
+export type CompanyRecord = z.infer<typeof CompanyRecordSchema>;
+
 export const KeyEntrySchema = z.object({
 	label: LabelSchema,
 	name: z.string().nullable(),
 	firstSeenRunId: z.string(),
 	lastSeenAt: z.string(),
+	note: z.string().nullish(),
+	record: CompanyRecordSchema.nullish(),
 });
 
 export type KeyEntry = z.infer<typeof KeyEntrySchema>;
@@ -45,12 +61,13 @@ export type StoredCompany = {
 	name: string;
 	runId: string;
 	foundAt: string;
+	record: CompanyRecord;
 };
 
 /**
  * `key` with one new unlabelled entry added per domain in `stored` the key
- * does not already carry. An existing entry, labelled or not, is never
- * touched: the key only grows.
+ * does not already carry, and the stored record filled in on any existing
+ * entry that has none. A label is never touched: the key only grows.
  */
 export function mergeStoredCompanies(
 	key: KeyFile,
@@ -58,12 +75,19 @@ export function mergeStoredCompanies(
 ): KeyFile {
 	const companies = { ...key.companies };
 	for (const company of stored) {
-		if (company.domain in companies) continue;
+		const existing = companies[company.domain];
+		if (existing) {
+			if (!existing.record) {
+				companies[company.domain] = { ...existing, record: company.record };
+			}
+			continue;
+		}
 		companies[company.domain] = {
 			label: null,
 			name: company.name,
 			firstSeenRunId: company.runId,
 			lastSeenAt: company.foundAt,
+			record: company.record,
 		};
 	}
 	return { ...key, companies };
