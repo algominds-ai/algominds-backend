@@ -42,6 +42,7 @@ export const config = {
 		clayRetryAfterMaxMs: 5000,
 		companyConcurrency: 5,
 		maxVerifyPerCompany: 25,
+		verifyConcurrency: 3,
 	},
 	enrich: {
 		batchSize: 5,

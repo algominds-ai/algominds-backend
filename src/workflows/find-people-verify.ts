@@ -362,16 +362,23 @@ export async function runBuyerMode(
 	const select = await runSelect(ctx, progress, roster.candidates);
 	progress.ledger.reported("select", "select", select.costDollars);
 	const picks = select.picks.slice(0, config.people.maxVerifyPerCompany);
-	const outcomes = await Promise.all(
-		picks.map((pick, i) =>
-			verifyPick({
-				ctx,
-				progress,
-				name: `people-${progress.domain}-verify-${i}`,
-				candidate: pick.candidate,
-			}),
-		),
-	);
+	const outcomes: PickOutcome[] = [];
+	const width = config.people.verifyConcurrency;
+	for (let at = 0; at < picks.length; at += width) {
+		const chunk = picks.slice(at, at + width);
+		outcomes.push(
+			...(await Promise.all(
+				chunk.map((pick, offset) =>
+					verifyPick({
+						ctx,
+						progress,
+						name: `people-${progress.domain}-verify-${at + offset}`,
+						candidate: pick.candidate,
+					}),
+				),
+			)),
+		);
+	}
 	const results: PickResult[] = [];
 	for (let i = 0; i < picks.length; i++) {
 		const pick = picks[i];
