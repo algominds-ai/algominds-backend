@@ -1,6 +1,13 @@
 import { createInterface } from "node:readline/promises";
 import { armDatabaseUrl } from "@eval/arm-db";
-import { keyPath, readKeyFile, writeKeyFile } from "@eval/keys-io";
+import {
+	keyPath,
+	peopleKeyPath,
+	readKeyFile,
+	readPeopleKeyFile,
+	writeKeyFile,
+	writePeopleKeyFile,
+} from "@eval/keys-io";
 import type { CompanyDetail, KeyFile, StoredCompany } from "@eval/label-core";
 import {
 	formatCompanyDetail,
@@ -9,6 +16,12 @@ import {
 	sortedKeyFile,
 	unlabelledDomains,
 } from "@eval/label-core";
+import type { PeopleKeyFile, StoredPerson } from "@eval/people-key";
+import {
+	mergeStoredPeople,
+	sortedPeopleKeyFile,
+	unlabelledLinkedinUrls,
+} from "@eval/people-key";
 import { profileBySlug } from "@eval/profiles";
 import type { Sql } from "postgres";
 import postgres from "postgres";
@@ -100,6 +113,86 @@ function toCompanyDetail(row: CompanyRow): CompanyDetail {
 		fitReason: stored.record.fitReason,
 		citedPage: stored.record.citedPage,
 	};
+}
+
+const PersonRowSchema = z.object({
+	linkedin_url: z.string(),
+	name: z.string().nullable(),
+	title: z.string().nullable(),
+	domain: z.string(),
+	run_id: z.string(),
+	data: z.object({ location: z.string().nullable() }).nullish(),
+});
+
+type PersonRow = z.infer<typeof PersonRowSchema>;
+
+/** Every verified person stored for the profile's companies: by profile id in the shared database, or by the `eval-<slug>-t<n>` organizations an arm database seeded. */
+async function fetchPersonRows(sql: Sql, scope: Scope): Promise<PersonRow[]> {
+	const where =
+		"icpId" in scope
+			? sql`r.icp_id = ${scope.icpId}`
+			: sql`o.name like ${`eval-${scope.armSlug}-t%`}`;
+	const rows = await sql`
+		select p.linkedin_url, p.name, p.title, p.data, rc.domain, rc.run_id
+		from person p
+		join run_company rc on rc.company_id = p.company_id
+		join run r on r.id = rc.run_id
+		join organization o on o.id = r.organization_id
+		where ${where} and p.data->>'status' = 'verified' and p.linkedin_url is not null
+		order by r.started_at asc`;
+	return rows.map((row) => PersonRowSchema.parse(row));
+}
+
+function toStoredPerson(row: PersonRow): StoredPerson {
+	return {
+		linkedinUrl: row.linkedin_url,
+		name: row.name,
+		title: row.title,
+		company: row.domain,
+		location: row.data?.location ?? null,
+		runId: row.run_id,
+	};
+}
+
+/** `slug`'s person key file, merged with every verified person row `scope` finds and written back sorted. */
+async function seedPeopleKeyFile(
+	sql: Sql,
+	slug: string,
+	scope: Scope,
+): Promise<{ key: PeopleKeyFile }> {
+	const profile = profileBySlug(slug);
+	if (!profile) throw new Error(`eval:label unknown profile ${slug}`);
+	const rows = await fetchPersonRows(sql, scope);
+	const key = sortedPeopleKeyFile(
+		mergeStoredPeople(
+			readPeopleKeyFile(profile.slug, profile.icpId),
+			rows.map(toStoredPerson),
+		),
+	);
+	writePeopleKeyFile(key);
+	return { key };
+}
+
+type LabelPeopleArgs = { slug: string; arm: string | null };
+
+/** `bun run eval:label <slug> --people --seed-only [--arm <arm>]`: seeds the person key from every verified person a scope finds, without prompting. */
+async function labelPeopleProfile(args: LabelPeopleArgs): Promise<void> {
+	const { slug, arm } = args;
+	const profile = profileBySlug(slug);
+	if (!profile) throw new Error(`eval:label unknown profile ${slug}`);
+	const databaseUrl = arm ? armDatabaseUrl(arm) : process.env.DATABASE_URL;
+	if (!databaseUrl) throw new Error("eval:label DATABASE_URL is not set");
+	const sql = postgres(databaseUrl, { max: 1 });
+	try {
+		const scope: Scope = arm ? { armSlug: slug } : { icpId: profile.icpId };
+		const { key } = await seedPeopleKeyFile(sql, slug, scope);
+		const pending = unlabelledLinkedinUrls(key).length;
+		console.log(
+			`${slug}: ${Object.keys(key.people).length} people, ${pending} unlabelled, wrote ${peopleKeyPath(slug)}`,
+		);
+	} finally {
+		await sql.end();
+	}
 }
 
 const LABEL_PROMPT =
@@ -213,13 +306,18 @@ async function labelProfile(args: LabelArgs): Promise<void> {
 if (import.meta.main) {
 	const slug = process.argv[2];
 	const seedOnly = process.argv.includes("--seed-only");
+	const people = process.argv.includes("--people");
 	const armIndex = process.argv.indexOf("--arm");
 	const arm = armIndex === -1 ? null : (process.argv[armIndex + 1] ?? null);
-	if (!slug) {
+	if (!slug || (people && !seedOnly)) {
 		console.error(
-			"usage: bun run eval:label <profile> [--seed-only] [--arm <arm>]",
+			"usage: bun run eval:label <profile> [--seed-only] [--arm <arm>] | --people --seed-only [--arm <arm>]",
 		);
 		process.exit(1);
 	}
-	await labelProfile({ slug, seedOnly, arm });
+	if (people) {
+		await labelPeopleProfile({ slug, arm });
+	} else {
+		await labelProfile({ slug, seedOnly, arm });
+	}
 }

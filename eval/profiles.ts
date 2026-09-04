@@ -26,6 +26,7 @@ export const ProfileSchema = z.object({
 	name: z.string(),
 	keyVar: z.string(),
 	bars: ProfileBarsSchema,
+	countries: z.array(z.string()),
 });
 
 export type Profile = z.infer<typeof ProfileSchema>;
@@ -47,6 +48,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Mstone Group",
 		keyVar: "EVAL_API_KEY_MSTONE",
 		bars: { maxCostDollars: 1, maxSeconds: 120 },
+		countries: ["Australia"],
 	},
 	{
 		slug: "aris",
@@ -54,6 +56,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Aris",
 		keyVar: "EVAL_API_KEY_ARIS",
 		bars: { maxCostDollars: 1, maxSeconds: 120 },
+		countries: ["United States"],
 	},
 	{
 		slug: "form3",
@@ -61,6 +64,27 @@ export const PROFILES: readonly Profile[] = [
 		name: "Form3 Trust Fabric",
 		keyVar: "EVAL_API_KEY_FORM3",
 		bars: { maxCostDollars: 2, maxSeconds: 180 },
+		countries: [
+			"United Kingdom",
+			"Ireland",
+			"United States",
+			"Canada",
+			"Germany",
+			"France",
+			"Netherlands",
+			"Spain",
+			"Sweden",
+			"Denmark",
+			"Norway",
+			"Finland",
+			"Belgium",
+			"Switzerland",
+			"Austria",
+			"Italy",
+			"Poland",
+			"Portugal",
+			"Luxembourg",
+		],
 	},
 	{
 		slug: "carta",
@@ -68,6 +92,18 @@ export const PROFILES: readonly Profile[] = [
 		name: "Carta",
 		keyVar: "EVAL_API_KEY_CARTA",
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
+		countries: [
+			"United States",
+			"Canada",
+			"United Kingdom",
+			"Germany",
+			"France",
+			"Netherlands",
+			"Spain",
+			"Sweden",
+			"Denmark",
+			"Ireland",
+		],
 	},
 	{
 		slug: "ondato",
@@ -75,6 +111,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Ondato",
 		keyVar: "EVAL_API_KEY_ONDATO",
 		bars: { maxCostDollars: 2, maxSeconds: 240 },
+		countries: ["United Kingdom", "Ireland", "United States", "Canada"],
 	},
 	{
 		slug: "dental",
@@ -82,6 +119,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Dental practice management (mid-market vertical SaaS shape)",
 		keyVar: "EVAL_API_KEY_DENTAL",
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
+		countries: ["United States"],
 	},
 	{
 		slug: "hvac",
@@ -89,6 +127,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Commercial HVAC contractors (local services shape)",
 		keyVar: "EVAL_API_KEY_HVAC",
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
+		countries: ["United States"],
 	},
 ] as const;
 
