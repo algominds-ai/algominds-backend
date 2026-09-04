@@ -90,10 +90,10 @@
 				"quote": "Manzil has officially launched self-directed halal stock trading south of the border in what the Toronto-based Islamic FinTech startup claims marks a North American first.",
 				"fitReason": "Toronto-based halal investing platform with funding raised; evidence shows new US market launch of stock trading."
 			},
-			"note": "24 staff, Canada, a halal trading and investment platform with funding raised; the cited BetaKit article reports its US market launch of self-directed halal stock trading, dated 2026-07-14 within the 12-month window"
+			"note": "24 staff, Canada, a halal trading and investment platform within the reachable funding band; the US market launch is a bonus signal, not a condition, under the revised ruling"
 		},
 		"metamask.io": {
-			"label": "accept",
+			"label": "reject:unreachable",
 			"name": "MetaMask",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
@@ -108,10 +108,10 @@
 				"quote": "Enrollment in the card program requires identity verification and compliance checks in line with applicable financial regulations.",
 				"fitReason": "US crypto wallet with disclosed revenue; evidence shows new card product requiring identity verification."
 			},
-			"note": "85 staff, US, a crypto wallet with disclosed revenue; the cited announcement quotes the new US MetaMask Card requiring identity verification and compliance checks at signup, dated 2026-02-26 within the window"
+			"note": "MetaMask's parent Consensys raised a $450M Series D in 2022 alone, already past the $250M ceiling in r4, regardless of the new card-product signal"
 		},
 		"monzo.com": {
-			"label": "accept",
+			"label": "reject:unreachable",
 			"name": "Monzo",
 			"firstSeenRunId": "companies_18c490ee-009d-44b8-afd3-e0103f5a1ae7_2026-09-04",
 			"lastSeenAt": "2026-09-04T17:43:37.914Z",
@@ -126,7 +126,7 @@
 				"quote": "Monzo said it is officially launching on Tuesday in the Republic after 100,000 customers signed up to a user waiting list.",
 				"fitReason": "Same Monzo record with revenue disclosed and Ireland launch evidence."
 			},
-			"note": "4,937 staff, UK, a neobank with disclosed revenue; the cited Irish Times article reports Monzo's launch in Ireland after 100,000 waitlist signups, dated 2026-04-14 within the window"
+			"note": "Monzo has raised far more than the $250M ceiling in r4, a scaled UK neobank now well above the reachable band regardless of its Ireland-launch signal"
 		},
 		"revolut.com": {
 			"label": "reject:unreachable",
