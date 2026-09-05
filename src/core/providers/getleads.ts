@@ -47,26 +47,39 @@ function toRow(contact: z.infer<typeof ContactSchema>): DedupeRow {
 	};
 }
 
+async function requestDecisionMakers(
+	key: string,
+	domain: string,
+): Promise<Response> {
+	try {
+		return await fetch(DECISION_MAKERS_URL, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${key}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ domain }),
+			signal: AbortSignal.timeout(TIMEOUT_MS),
+		});
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		throw new RetryableProviderError(`getleads request failed: ${reason}`);
+	}
+}
+
 /**
  * The senior people GetLeads holds for one company domain, as roster rows,
  * with the raw reply and the credits the call consumed. Throws
- * `RetryableProviderError` on 429 and 5xx, `NonRetryableError` on any other
- * failure or a reply that does not match the expected shape.
+ * `RetryableProviderError` on 429, 5xx, a timeout, or any other transport
+ * failure; `NonRetryableError` on any other failure or a reply that does not
+ * match the expected shape.
  */
 export async function getleadsDecisionMakers(
 	env: Env,
 	domain: string,
 ): Promise<GetleadsRoster> {
 	const key = await env.GL_API_KEY.get();
-	const response = await fetch(DECISION_MAKERS_URL, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${key}`,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ domain }),
-		signal: AbortSignal.timeout(TIMEOUT_MS),
-	});
+	const response = await requestDecisionMakers(key, domain);
 	const raw = await response.text();
 	if (response.status === 429 || response.status >= 500) {
 		throw new RetryableProviderError(`getleads ${response.status}`);

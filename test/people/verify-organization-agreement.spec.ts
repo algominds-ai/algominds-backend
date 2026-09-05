@@ -89,6 +89,86 @@ function organizationIdOverrides(
 	]);
 }
 
+function unknownAgreementOverrides(domain: string): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			`people-${domain}-organization`,
+			{ organizationId: null, costEntries: [] },
+		],
+		[
+			`people-${domain}-select`,
+			{
+				picks: [{ candidate: jordan, basis: "explicit_persona_match" }],
+				droppedIds: [],
+				reply: { picks: [{ id: 0, basis: "explicit_persona_match" }] },
+				costDollars: 0.01,
+			},
+		],
+		[`people-${domain}-verify-0-start`, { id: "agent-run-0" }],
+		[
+			`people-${domain}-verify-0-poll-1`,
+			{
+				run: { status: "completed", output: AGGREGATOR_CONFIRMED_VERDICT },
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-index`,
+			{
+				found: true,
+				employer: "An Ambiguous Employer Name",
+				employerCompanyId: null,
+				reply: "{}",
+				costEntries: [],
+			},
+		],
+		[
+			`people-${domain}-verify-0-agree`,
+			{ label: "UNKNOWN", reply: { employer: "UNKNOWN" }, costEntries: [] },
+		],
+		[
+			`people-${domain}-verify-0-profile`,
+			{
+				employment: "CURRENT",
+				reply: { employment: "CURRENT", title: "VP Sales", since: "2024-01" },
+				costEntries: [],
+			},
+		],
+	]);
+}
+
+describe("FindPeopleWorkflow: an UNKNOWN employer opinion still gets the profile rescue", () => {
+	it("verifies the pick when the index's employer opinion is UNKNOWN but the candidate's own profile shows them currently at the target company", async () => {
+		const domain = `unknown-agree-${crypto.randomUUID()}.example`;
+		const seed = await seedPeopleRun("unknown-agree");
+		try {
+			stubClayFetch([JORDAN_BLAKE_ROSTER_ROW]);
+			const workflowStep = fakeWorkflowStep(unknownAgreementOverrides(domain));
+			const ctx: CompanyLoopContext = {
+				...contextFor(seed),
+				step: workflowStep.step,
+			};
+
+			const result = await runOneCompany(ctx, bareCompany(domain), 0);
+
+			expect(result.outcome.verified).toBe(1);
+			expect(workflowStep.calls).toContain(`people-${domain}-verify-0-profile`);
+			const storedPeople = await personRowsFor(seed.org.id);
+			const jordanBlake = storedPeople.find(
+				(row) => row.linkedinUrl === jordan.url,
+			);
+			if (!jordanBlake) throw new Error("expected jordan blake to be verified");
+			const agreeRow = (await evidenceRowsFor(jordanBlake.id)).find(
+				(row) => row.kind === "verify-agree",
+			);
+			if (!agreeRow) throw new Error("expected verify-agree evidence");
+			expect(JSON.parse(agreeRow.value).body).toEqual({ employer: "UNKNOWN" });
+		} finally {
+			await cleanupPeopleRun(seed);
+		}
+	});
+});
+
 describe("FindPeopleWorkflow: the index second opinion agrees by organization id", () => {
 	it("verifies with no model call when both organization ids match", async () => {
 		const domain = `org-agree-${crypto.randomUUID()}.example`;

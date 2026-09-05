@@ -137,17 +137,17 @@ describe("a domain Clay cannot resolve is rescued from GetLeads", () => {
 		try {
 			stubGetleadsFetch([STEVE]);
 			const rescued = await rescue(seed, "caary.com");
-			expect(rescued?.candidates.map((c) => c.name)).toEqual([
+			expect(rescued.candidates.map((c) => c.name)).toEqual([
 				"Steve Apostolopoulos",
 			]);
-			expect(rescued?.clayRecords).toBe(2);
+			expect(rescued.clayRecords).toBe(2);
 		} finally {
 			globalThis.fetch = originalFetch;
 			await cleanupPeopleRun(seed);
 		}
 	});
 
-	it("returns null when GetLeads and the Exa people index both hold nobody", async () => {
+	it("returns an empty roster, with its cost entries, when GetLeads and the Exa people index both hold nobody", async () => {
 		const seed = await seedPeopleRun("rescue-nobody");
 		try {
 			globalThis.fetch = fakeVendors(
@@ -157,7 +157,12 @@ describe("a domain Clay cannot resolve is rescued from GetLeads", () => {
 				},
 				{ "/search": () => exaPeopleSearchResponse([], 0) },
 			);
-			expect(await rescue(seed, "nobody.example")).toBeNull();
+			const rescued = await rescue(seed, "nobody.example");
+			expect(rescued.candidates).toEqual([]);
+			expect(rescued.clayRecords).toBe(2);
+			expect(rescued.costEntries).toEqual([
+				{ provider: "exa", op: "search", dollars: 0 },
+			]);
 		} finally {
 			globalThis.fetch = originalFetch;
 			await cleanupPeopleRun(seed);
@@ -194,6 +199,46 @@ describe("one company's failure never ends the run", () => {
 			const failure = evidence.find((row) => row.kind === "company-error");
 			expect(failure?.value).toContain(broken);
 			expect(failure?.value).toContain("Model call timed out twice");
+		} finally {
+			await cleanupPeopleRun(seed);
+		}
+	});
+
+	it("still counts the paid identity step's spend when the roster step then throws", async () => {
+		const domain = `roster-throws-${crypto.randomUUID()}.example`;
+		const seed = await seedPeopleRun("roster-throws");
+		try {
+			const overrides = new Map<string, unknown>([
+				[
+					`people-${domain}-identity`,
+					{
+						how: "domain",
+						identifier: domain,
+						name: "Failing Co",
+						clayRecords: 3,
+						costEntries: [{ provider: "clay", op: "search", dollars: 0.05 }],
+					},
+				],
+				[
+					`people-${domain}-organization`,
+					{ organizationId: null, costEntries: [] },
+				],
+				[`people-${domain}-roster`, new Error("roster step blew up")],
+			]);
+
+			const result = await runCompanies(
+				contextFor(seed, overrides),
+				[bareCompany(domain)],
+				0,
+			);
+
+			expect(result.companiesSearched).toBe(1);
+			expect(result.unknownDomains).toEqual([domain]);
+			expect(result.costDollars).toBeCloseTo(0.05);
+			const evidence = await evidenceRowsFor(seed.runId);
+			const failure = evidence.find((row) => row.kind === "company-error");
+			expect(failure?.value).toContain(domain);
+			expect(failure?.value).toContain("roster step blew up");
 		} finally {
 			await cleanupPeopleRun(seed);
 		}

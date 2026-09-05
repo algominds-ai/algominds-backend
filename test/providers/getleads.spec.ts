@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getleadsDecisionMakers } from "@/core/providers/getleads";
+import { RetryableProviderError } from "@/core/providers/waterfall";
 import { fakeSecretEnv } from "../support/env";
 import { jsonResponse } from "../support/fetch";
 
@@ -62,5 +63,18 @@ describe("getleadsDecisionMakers", () => {
 
 		expect(roster.rows).toEqual([]);
 		expect(roster.creditsUsed).toBe(0);
+	});
+
+	it("raises RetryableProviderError instead of a plain error when the fetch itself rejects", async () => {
+		globalThis.fetch = async () => {
+			throw new TypeError("fetch failed");
+		};
+
+		await expect(
+			getleadsDecisionMakers(
+				fakeSecretEnv({ GL_API_KEY: "test-gl-key" }),
+				"caary.com",
+			),
+		).rejects.toThrow(RetryableProviderError);
 	});
 });

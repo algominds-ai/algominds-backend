@@ -41,7 +41,7 @@ type AgreementOutcome = {
 	evidence: PickEvidence[];
 };
 
-/** Whether the index's employer agrees with the target company, and whether a `DIFFERENT` result should still get a profile rescue rather than an outright drop. */
+/** Whether the index's employer agrees with the target company, and whether anything short of `SAME` should still get a profile rescue rather than an outright drop. */
 async function resolveAgreement(
 	pick: PickContext,
 	indexResult: IndexStepResult,
@@ -83,7 +83,7 @@ async function resolveAgreement(
 	applyCostEntries(agreeResult.costEntries, ledger);
 	return {
 		verified: agreeResult.label === "SAME",
-		needsRescue: agreeResult.label === "DIFFERENT",
+		needsRescue: agreeResult.label !== "SAME",
 		evidence: [{ kind: "verify-agree", body: agreeResult.reply }],
 	};
 }

@@ -5,15 +5,12 @@ import { CostLedger } from "@/core/cost";
 import {
 	appendEvidence,
 	createCompanyRow,
-	recordRunSpend,
 	saveRunCompanies,
 	updateRunCompany,
-	upsertPeople,
 } from "@/core/db/queries";
-import type { NewPerson } from "@/core/db/schema";
 import type { ResolvedBuyer } from "@/core/people/buyer";
 import { resolveIdentity } from "@/core/people/identity";
-import { rawEvidenceRow, toNewPerson } from "@/core/people/rows";
+import { rawEvidenceRow } from "@/core/people/rows";
 import { exaOrganizationId } from "@/core/providers/exa/people-roster";
 import { RetryableProviderError } from "@/core/providers/waterfall";
 import type { IcpDoc } from "@/core/synthesize";
@@ -23,6 +20,10 @@ import {
 	runRosterStep,
 	skipFailedCompany,
 } from "@/workflows/find-people-rescue";
+import {
+	finishRosterMode,
+	recordCompanySpend,
+} from "@/workflows/find-people-spend";
 import type { TargetCompany } from "@/workflows/find-people-target";
 import { runBuyerMode } from "@/workflows/find-people-verify";
 
@@ -214,146 +215,120 @@ async function ensureCompanyRow(
 	);
 }
 
-export async function recordCompanySpend(
-	ctx: CompanyLoopContext,
-	progress: Pick<CompanyProgress, "domain" | "spentSoFar" | "ledger">,
-): Promise<number> {
-	const result = await ctx.step.do(
-		`people-${progress.domain}-spend`,
-		config.stepConfig.databaseCall,
-		async () => {
-			const total = progress.spentSoFar + progress.ledger.total();
-			await recordRunSpend(ctx.env, ctx.runId, total);
-			return { total };
-		},
-	);
-	return result.total;
+function rescuedEmpty(rescued: RosterStepResult | null): boolean {
+	return rescued === null || rescued.candidates.length === 0;
 }
 
-async function saveRosterPeople(
-	ctx: CompanyLoopContext,
-	progress: CompanyProgress,
-	roster: RosterStepResult,
-): Promise<number> {
-	const result = await ctx.step.do(
-		`people-${progress.domain}-save`,
-		config.stepConfig.databaseCall,
-		async () => {
-			const rows = roster.candidates
-				.map((candidate) =>
-					toNewPerson(
-						candidate,
-						{
-							companyId: progress.companyId,
-							organizationId: ctx.organizationId,
-						},
-						"roster",
-						null,
-					),
-				)
-				.filter((row): row is NewPerson => row !== null);
-			const stored = await upsertPeople(ctx.env, rows);
-			await updateRunCompany(ctx.env, progress.runCompanyId, {
-				peopleRoster: stored.length,
-				clayRecords: progress.clayRecords,
-				spendDollars: progress.ledger.total(),
-			});
-			return { count: stored.length };
-		},
-	);
-	return result.count;
-}
+type UnresolvedOutcome = {
+	company: TargetCompany;
+	runCompanyId: string;
+	spentSoFar: number;
+	identity: IdentityStepResult;
+	ledger: CostLedger;
+};
 
-async function finishRosterMode(
+async function markCompanyUnresolved(
 	ctx: CompanyLoopContext,
-	progress: CompanyProgress,
-	roster: RosterStepResult,
+	unresolved: UnresolvedOutcome,
 ): Promise<CompanyRunResult> {
-	const rosterCount = await saveRosterPeople(ctx, progress, roster);
-	const costDollars = await recordCompanySpend(ctx, progress);
+	const { company, runCompanyId, spentSoFar, identity, ledger } = unresolved;
+	await markUnresolved(ctx, company.domain, runCompanyId, {
+		clayRecords: identity.clayRecords,
+		spendDollars: ledger.total(),
+	});
+	const costDollars = await recordCompanySpend(ctx, {
+		domain: company.domain,
+		spentSoFar,
+		ledger,
+	});
 	return {
-		outcome: { verified: 0, roster: rosterCount, unresolvedDomain: null },
+		outcome: { verified: 0, roster: 0, unresolvedDomain: company.domain },
 		costDollars,
 	};
 }
 
-/** Runs the measured method for one requested domain: identity, company row, roster, then a roster save or the full buyer pipeline, depending on `ctx.buyer.mode`. */
+/**
+ * Runs the measured method for one requested domain: identity, company row,
+ * roster, then a roster save or the full buyer pipeline, depending on
+ * `ctx.buyer.mode`. Keeps its spend ledger reachable on the way out, so a step
+ * that throws midway still banks what it had already spent, through
+ * `skipFailedCompany`.
+ */
 export async function runOneCompany(
 	ctx: CompanyLoopContext,
 	company: TargetCompany,
 	spentSoFar: number,
 ): Promise<CompanyRunResult> {
-	const runCompanyId = await openCompanyRow(ctx, company);
 	const ledger = new CostLedger();
-	const identity = await runIdentityStep(ctx, company, runCompanyId);
-	applyCostEntries(identity.costEntries, ledger);
-	const organization = await runOrganizationStep(ctx, company.domain);
-	applyCostEntries(organization.costEntries, ledger);
-	const rescued =
-		identity.how === "unresolved"
-			? await rescueUnresolved(
-					ctx,
-					company,
-					{ runCompanyId, organizationId: organization.organizationId },
-					identity,
-				)
-			: null;
-	if (identity.how === "unresolved" && rescued === null) {
-		await markUnresolved(ctx, company.domain, runCompanyId, {
-			clayRecords: identity.clayRecords,
-			spendDollars: ledger.total(),
-		});
-		const costDollars = await recordCompanySpend(ctx, {
-			domain: company.domain,
-			spentSoFar,
-			ledger,
-		});
-		return {
-			outcome: { verified: 0, roster: 0, unresolvedDomain: company.domain },
-			costDollars,
-		};
-	}
-	const resolved =
-		identity.how === "unresolved"
-			? {
-					how: "domain" as const,
-					identifier: company.domain,
-					name: company.name,
-				}
-			: identity;
-	const companyId = await ensureCompanyRow(
-		ctx,
-		company,
-		runCompanyId,
-		resolved,
-	);
-	const roster =
-		rescued ??
-		(await runRosterStep(
+	try {
+		const runCompanyId = await openCompanyRow(ctx, company);
+		const identity = await runIdentityStep(ctx, company, runCompanyId);
+		applyCostEntries(identity.costEntries, ledger);
+		const organization = await runOrganizationStep(ctx, company.domain);
+		applyCostEntries(organization.costEntries, ledger);
+		const rescued =
+			identity.how === "unresolved"
+				? await rescueUnresolved(
+						ctx,
+						company,
+						{ runCompanyId, organizationId: organization.organizationId },
+						identity,
+					)
+				: null;
+		if (identity.how === "unresolved" && rescuedEmpty(rescued)) {
+			if (rescued) applyCostEntries(rescued.costEntries, ledger);
+			return await markCompanyUnresolved(ctx, {
+				company,
+				runCompanyId,
+				spentSoFar,
+				identity,
+				ledger,
+			});
+		}
+		const resolved =
+			identity.how === "unresolved"
+				? {
+						how: "domain" as const,
+						identifier: company.domain,
+						name: company.name,
+					}
+				: identity;
+		const companyId = await ensureCompanyRow(
 			ctx,
-			{
-				domain: company.domain,
-				identifier: resolved.identifier,
-				name: resolved.name,
-				organizationId: organization.organizationId,
-			},
+			company,
 			runCompanyId,
-		));
-	applyCostEntries(roster.costEntries, ledger);
-	const progress: CompanyProgress = {
-		domain: company.domain,
-		companyId,
-		companyName: resolved.name ?? company.name ?? company.domain,
-		runCompanyId,
-		spentSoFar,
-		clayRecords: identity.clayRecords + roster.clayRecords,
-		ledger,
-		exaOrganizationId: organization.organizationId,
-	};
-	if (ctx.buyer.mode === "roster") {
-		return finishRosterMode(ctx, progress, roster);
+			resolved,
+		);
+		const roster =
+			rescued ??
+			(await runRosterStep(
+				ctx,
+				{
+					domain: company.domain,
+					identifier: resolved.identifier,
+					name: resolved.name,
+					organizationId: organization.organizationId,
+				},
+				runCompanyId,
+			));
+		applyCostEntries(roster.costEntries, ledger);
+		const progress: CompanyProgress = {
+			domain: company.domain,
+			companyId,
+			companyName: resolved.name ?? company.name ?? company.domain,
+			runCompanyId,
+			spentSoFar,
+			clayRecords: identity.clayRecords + roster.clayRecords,
+			ledger,
+			exaOrganizationId: organization.organizationId,
+		};
+		if (ctx.buyer.mode === "roster") {
+			return await finishRosterMode(ctx, progress, roster);
+		}
+		return await runBuyerMode(ctx, progress, roster);
+	} catch (error) {
+		return skipFailedCompany(ctx, company, { spentSoFar, ledger }, error);
 	}
-	return runBuyerMode(ctx, progress, roster);
 }
 
 export type PeopleLoopResult = {
@@ -391,11 +366,7 @@ export async function runCompanies(
 		const batchStart = costDollars;
 		const batch = companies.slice(start, start + batchSize);
 		const results = await Promise.all(
-			batch.map((company) =>
-				runOneCompany(ctx, company, batchStart).catch((error: unknown) =>
-					skipFailedCompany(ctx, company, batchStart, error),
-				),
-			),
+			batch.map((company) => runOneCompany(ctx, company, batchStart)),
 		);
 		for (const result of results) {
 			companiesSearched += 1;

@@ -147,13 +147,13 @@ export type RescueRefs = {
 	organizationId: string | null;
 };
 
-/** A roster for a domain Clay could not resolve, from GetLeads by domain, or null when it holds nobody either. */
+/** A roster for a domain Clay could not resolve, from GetLeads by domain, its candidates empty when it holds nobody either. Its cost entries are returned either way, so a rescue that finds nobody still banks what it spent trying. */
 export async function rescueUnresolved(
 	ctx: CompanyLoopContext,
 	company: TargetCompany,
 	refs: RescueRefs,
 	identity: IdentityStepResult,
-): Promise<RosterStepResult | null> {
+): Promise<RosterStepResult> {
 	return ctx.step.do(
 		`people-${company.domain}-rescue`,
 		config.stepConfig.paidCall,
@@ -167,17 +167,18 @@ export async function rescueUnresolved(
 					organizationId: refs.organizationId,
 				},
 			);
-			if (candidates.length === 0) return null;
 			return { candidates, clayRecords: identity.clayRecords, costEntries };
 		},
 	);
 }
 
-/** Records a company whose steps threw as run evidence and reports it unresolved, so one company's failure never ends the run. */
+export type FailureSpend = { spentSoFar: number; ledger: CostLedger };
+
+/** Records a company whose steps threw as run evidence and reports it unresolved, so one company's failure never ends the run. `spend` carries what the company had already spent before it failed, so that spend still counts toward the run total. */
 export async function skipFailedCompany(
 	ctx: CompanyLoopContext,
 	company: TargetCompany,
-	spentSoFar: number,
+	spend: FailureSpend,
 	error: unknown,
 ): Promise<CompanyRunResult> {
 	await ctx.step.do(
@@ -199,6 +200,6 @@ export async function skipFailedCompany(
 	);
 	return {
 		outcome: { verified: 0, roster: 0, unresolvedDomain: company.domain },
-		costDollars: spentSoFar,
+		costDollars: spend.spentSoFar + spend.ledger.total(),
 	};
 }
