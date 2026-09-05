@@ -184,7 +184,7 @@
 		},
 		"https://linkedin.com/in/drmohamadsawwaf": {
 			"label": "accept",
-			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
+			"name": "Dr. Mohamad Sawwaf \u062f. \u0645\u062d\u0645\u062f \u0635\u0648\u0627\u0641",
 			"title": "Founder & Group Chief Executive Officer",
 			"company": "manzil.co",
 			"location": null,
@@ -219,12 +219,13 @@
 			"note": "Co-Founder & President of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
 		},
 		"https://linkedin.com/in/guillaume-torche-4a209790": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Guillaume Torche",
 			"title": "Co-Founder, CTO",
 			"company": "emberfund.io",
 			"location": "Los Angeles, United States",
-			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05"
+			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05",
+			"note": "Co-Founder, CTO at Ember; the CTO half of the title names an engineering role, which is never the buyer regardless of the co-founder tag"
 		},
 		"https://linkedin.com/in/hayden-todd-a52194113": {
 			"label": "accept",
@@ -245,12 +246,13 @@
 			"note": "Head of Product, Fanatics App, an explicit buyer title"
 		},
 		"https://linkedin.com/in/james-pursaill-83b1831ba": {
-			"label": null,
+			"label": "accept",
 			"name": "James Pursaill",
 			"title": "CEO and Co-Founder",
 			"company": "plend.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05"
+			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05",
+			"note": "CEO and Co-Founder of Plend, a company of about 21 staff, well under the 50-person threshold; based in London, UK"
 		},
 		"https://linkedin.com/in/jamie-gersch": {
 			"label": "accept",
@@ -514,12 +516,13 @@
 			"note": "Head of Marketing at Creditspring, functioning as the top marketing role and matching the buyer rubric's conversion-funnel ownership; based in London, UK"
 		},
 		"https://linkedin.com/in/rishi-z-2a22a7": {
-			"label": null,
+			"label": "accept",
 			"name": "Rishi Z.",
 			"title": "Co-Founder & CEO",
 			"company": "lendwise.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05"
+			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05",
+			"note": "Co-Founder & CEO of Lendwise, a company of about 10 staff, well under the 50-person threshold; based in London, UK"
 		},
 		"https://linkedin.com/in/sabrinaloi": {
 			"label": "accept",
