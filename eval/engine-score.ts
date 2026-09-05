@@ -103,13 +103,13 @@ function personMatchesDeliveredEmployer(
 
 function isAcceptedAtAcceptedCompany(
 	acceptedDomains: ReadonlySet<string>,
-	peopleKey: PeopleKeyFile,
+	keys: { key: KeyFile; peopleKey: PeopleKeyFile },
 	person: StoredPersonRecord,
 ): boolean {
 	return (
-		acceptedDomains.has(person.company) &&
-		personLabel(peopleKey, person) === "accept" &&
-		personMatchesDeliveredEmployer(peopleKey, person)
+		acceptedDomains.has(canonicalDomain(keys.key, person.company)) &&
+		personLabel(keys.peopleKey, person) === "accept" &&
+		personMatchesDeliveredEmployer(keys.peopleKey, person)
 	);
 }
 
@@ -188,12 +188,13 @@ export function computeEngineScore(input: EngineScoreInput): EngineScore {
 		input.key,
 		input.storedCompanies,
 	);
+	const keys = { key: input.key, peopleKey: input.peopleKey };
 	const acceptedPeople = input.deliveredPeople.filter((person) =>
-		isAcceptedAtAcceptedCompany(acceptedDomains, input.peopleKey, person),
+		isAcceptedAtAcceptedCompany(acceptedDomains, keys, person),
 	);
 	const acceptedCompanies = acceptedDomains.size;
 	const acceptedCompaniesWithBuyer = new Set(
-		acceptedPeople.map((person) => person.company),
+		acceptedPeople.map((person) => canonicalDomain(input.key, person.company)),
 	).size;
 	const acceptedPeopleCount = new Set(
 		acceptedPeople.map((person) => person.linkedinUrl),
