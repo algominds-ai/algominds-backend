@@ -103,6 +103,32 @@ export class CostLedger {
 	}
 }
 
+/**
+ * Carries a round's own partial spend up through whatever it was doing when
+ * it threw, so the caller that lost the round can still bank what it paid
+ * for. `cause` is the error that actually stopped the round.
+ */
+export class PartialSpendError extends Error {
+	readonly costDollars: number;
+
+	constructor(costDollars: number, cause: unknown) {
+		super("a round failed after it had already spent", { cause });
+		this.name = "PartialSpendError";
+		this.costDollars = costDollars;
+	}
+}
+
+/** Folds `priorSpend` onto whatever `error` already carries, keeping the original cause rather than nesting wrappers. */
+export function addPartialSpend(
+	error: unknown,
+	priorSpend: number,
+): PartialSpendError {
+	if (error instanceof PartialSpendError) {
+		return new PartialSpendError(priorSpend + error.costDollars, error.cause);
+	}
+	return new PartialSpendError(priorSpend, error);
+}
+
 /** True when the AI Gateway served this response from cache. */
 export function isGatewayCacheHit(headers: Headers): boolean {
 	return headers.get("cf-aig-cache-status") === "HIT";

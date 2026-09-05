@@ -1,10 +1,13 @@
 import type { WorkflowStep } from "cloudflare:workers";
 import { config } from "@/config";
 import type {
+	FindCompaniesDeps,
+	FindCompaniesOptions,
 	FindCompaniesReject,
 	FindCompaniesResult,
 	RetrievedPage,
 } from "@/core/companies";
+import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import {
@@ -17,6 +20,7 @@ import {
 	roundTimingsEvidenceRow,
 	toNewCompany,
 } from "@/core/companies/rows";
+import { PartialSpendError } from "@/core/cost";
 import {
 	appendEvidence,
 	recordRunSpend,
@@ -112,6 +116,59 @@ export async function persistRound(input: PersistRoundInput): Promise<void> {
 			if (rows.length > 0) await appendEvidence(env, rows);
 		},
 	);
+}
+
+type PersistRoundFailureInput = {
+	step: WorkflowStep;
+	env: Env;
+	runId: string;
+	round: number;
+	costDollars: number;
+};
+
+/** Banks what a round had already spent before it threw, so a run that dies mid-round still shows the vendor spend it paid for. */
+async function persistRoundFailureSpend(
+	input: PersistRoundFailureInput,
+): Promise<void> {
+	const { step, env, runId, round, costDollars } = input;
+	await step.do(
+		`round_${round}-spend-errored`,
+		config.stepConfig.databaseCall,
+		() => recordRunSpend(env, runId, costDollars),
+	);
+}
+
+export type RoundStepInput = {
+	env: Env;
+	step: WorkflowStep;
+	runId: string;
+	round: number;
+	alreadySpent: number;
+	icp: IcpDoc;
+	remaining: number;
+	opts: FindCompaniesOptions;
+	deps: FindCompaniesDeps;
+};
+
+/** Runs the round's own search, and when it throws after it had already spent something, banks that spend before letting the original error through. */
+export async function runRoundBody(
+	input: RoundStepInput,
+): Promise<FindCompaniesResult> {
+	const { env, step, runId, round, alreadySpent, icp, remaining, opts, deps } =
+		input;
+	try {
+		return await findCompanies(icp, remaining, opts, deps);
+	} catch (error) {
+		if (!(error instanceof PartialSpendError)) throw error;
+		await persistRoundFailureSpend({
+			step,
+			env,
+			runId,
+			round,
+			costDollars: alreadySpent + error.costDollars,
+		});
+		throw error.cause;
+	}
 }
 
 type PersistCompaniesInput = {

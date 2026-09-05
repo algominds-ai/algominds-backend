@@ -25,7 +25,7 @@ import {
 } from "@/core/companies/proof";
 import { proveAndJudge } from "@/core/companies/proving";
 import { applyRecords } from "@/core/companies/record";
-import { CostLedger } from "@/core/cost";
+import { addPartialSpend, CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import type { Requirement } from "@/core/requirements";
@@ -160,50 +160,57 @@ export async function runRound(
 	const first = plans[0];
 	if (!first) throw new Error("findCompanies: the planner produced no angle");
 	const vendorLedger = new CostLedger();
-	const searched = await gather({
-		ctx,
-		opts,
-		deps,
-		route,
-		plans,
-		ledger: vendorLedger,
-	});
-	const filtered = filterEntities(searched.results, first, opts.today);
-	const unseenCount = filtered.rows.filter(
-		(row) => row.domain && !ctx.excluded.has(normalizeDomain(row.domain)),
-	).length;
-	const gated = deps.gate(filtered.rows, {
-		seenDomains: ctx.excluded,
-	});
-	const judged = await judgeSlices({
-		ctx,
-		opts,
-		deps,
-		route,
-		first,
-		gated: gated.kept,
-		captures: filtered.captures,
-	});
-	const unjudgedDomains = gated.kept
-		.slice(judged.judgedCount)
-		.map((row) => row.domain)
-		.filter((domain) => domain !== null);
-	return {
-		plans: [...plans],
-		rows: filtered.rows,
-		filterRejects: filtered.rejects,
-		gateRejects: gated.rejects,
-		evidenceRejects: judged.evidenceRejects,
-		accepted: judged.accepted,
-		judgeRejects: judged.judgeRejects,
-		provenRate: provenRate(ctx.requirements, judged.verdicts),
-		unseenCount,
-		resultCount: searched.results.length,
-		ledger: CostLedger.merge(synthesized.ledger, vendorLedger, judged.ledger),
-		captures: filtered.captures,
-		pages: judged.pages,
-		unjudgedDomains,
-	};
+	try {
+		const searched = await gather({
+			ctx,
+			opts,
+			deps,
+			route,
+			plans,
+			ledger: vendorLedger,
+		});
+		const filtered = filterEntities(searched.results, first, opts.today);
+		const unseenCount = filtered.rows.filter(
+			(row) => row.domain && !ctx.excluded.has(normalizeDomain(row.domain)),
+		).length;
+		const gated = deps.gate(filtered.rows, {
+			seenDomains: ctx.excluded,
+		});
+		const judged = await judgeSlices({
+			ctx,
+			opts,
+			deps,
+			route,
+			first,
+			gated: gated.kept,
+			captures: filtered.captures,
+		});
+		const unjudgedDomains = gated.kept
+			.slice(judged.judgedCount)
+			.map((row) => row.domain)
+			.filter((domain) => domain !== null);
+		return {
+			plans: [...plans],
+			rows: filtered.rows,
+			filterRejects: filtered.rejects,
+			gateRejects: gated.rejects,
+			evidenceRejects: judged.evidenceRejects,
+			accepted: judged.accepted,
+			judgeRejects: judged.judgeRejects,
+			provenRate: provenRate(ctx.requirements, judged.verdicts),
+			unseenCount,
+			resultCount: searched.results.length,
+			ledger: CostLedger.merge(synthesized.ledger, vendorLedger, judged.ledger),
+			captures: filtered.captures,
+			pages: judged.pages,
+			unjudgedDomains,
+		};
+	} catch (error) {
+		throw addPartialSpend(
+			error,
+			synthesized.ledger.total() + vendorLedger.total(),
+		);
+	}
 }
 
 type SliceInput = {
@@ -233,35 +240,39 @@ async function judgeOneSlice(
 ): Promise<SliceOutcome> {
 	const { ctx, opts, deps, route, first, captures } = input;
 	const ledger = new CostLedger();
-	const checked = demandsEvidenceProof(first)
-		? await verifyEvidenceRows(candidates, opts.env, ledger)
-		: { kept: candidates, rejects: [], checks: {}, pages: [] };
-	applyEvidenceChecks(captures, checked.checks);
-	const proved = await proveAndJudge({
-		route,
-		deps,
-		requirements: ctx.requirements,
-		checked,
-		env: opts.env,
-		ledger,
-		captures,
-		today: opts.today,
-	});
-	const decision = decideRows({
-		requirements: ctx.requirements,
-		rows: proved.rows,
-		verdicts: proved.verdicts,
-		excluded: ctx.excluded,
-	});
-	return {
-		accepted: decision.stored,
-		judgeRejects: decision.rejects,
-		evidenceRejects: toEvidenceRejects(candidates, checked.rejects),
-		verdicts: [...proved.verdicts],
-		pages: proved.pages,
-		ledger: CostLedger.merge(ledger, proved.ledger),
-		judgedCount: candidates.length,
-	};
+	try {
+		const checked = demandsEvidenceProof(first)
+			? await verifyEvidenceRows(candidates, opts.env, ledger)
+			: { kept: candidates, rejects: [], checks: {}, pages: [] };
+		applyEvidenceChecks(captures, checked.checks);
+		const proved = await proveAndJudge({
+			route,
+			deps,
+			requirements: ctx.requirements,
+			checked,
+			env: opts.env,
+			ledger,
+			captures,
+			today: opts.today,
+		});
+		const decision = decideRows({
+			requirements: ctx.requirements,
+			rows: proved.rows,
+			verdicts: proved.verdicts,
+			excluded: ctx.excluded,
+		});
+		return {
+			accepted: decision.stored,
+			judgeRejects: decision.rejects,
+			evidenceRejects: toEvidenceRejects(candidates, checked.rejects),
+			verdicts: [...proved.verdicts],
+			pages: proved.pages,
+			ledger: CostLedger.merge(ledger, proved.ledger),
+			judgedCount: candidates.length,
+		};
+	} catch (error) {
+		throw addPartialSpend(error, ledger.total());
+	}
 }
 
 /** Judges the gated candidates one slice at a time, at most `MAX_JUDGE_SLICES_PER_ROUND` slices, moving on only while the round is short of its count; brand collapse applies within a slice only. */
@@ -281,14 +292,21 @@ async function judgeSlices(input: SliceInput): Promise<SliceOutcome> {
 		if (at >= input.gated.length || total.accepted.length >= input.ctx.count) {
 			break;
 		}
-		const judged = await judgeOneSlice(input, input.gated.slice(at, at + size));
-		total.judgedCount = at + judged.judgedCount;
-		total.accepted.push(...judged.accepted);
-		total.judgeRejects.push(...judged.judgeRejects);
-		total.evidenceRejects.push(...judged.evidenceRejects);
-		total.verdicts.push(...judged.verdicts);
-		total.pages.push(...judged.pages);
-		total.ledger = CostLedger.merge(total.ledger, judged.ledger);
+		try {
+			const judged = await judgeOneSlice(
+				input,
+				input.gated.slice(at, at + size),
+			);
+			total.judgedCount = at + judged.judgedCount;
+			total.accepted.push(...judged.accepted);
+			total.judgeRejects.push(...judged.judgeRejects);
+			total.evidenceRejects.push(...judged.evidenceRejects);
+			total.verdicts.push(...judged.verdicts);
+			total.pages.push(...judged.pages);
+			total.ledger = CostLedger.merge(total.ledger, judged.ledger);
+		} catch (error) {
+			throw addPartialSpend(error, total.ledger.total());
+		}
 	}
 	return total;
 }
