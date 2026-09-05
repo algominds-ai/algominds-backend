@@ -285,13 +285,14 @@ function unprovenRequirement(
 
 /**
  * Whether one judged row is stored.
- * Returns true if no hard requirement is contradicted and no page-gated requirement is unproven.
+ * Returns true if the judge produced a verdict for the row, no hard requirement is contradicted, and no page-gated requirement is unproven.
  */
 function keepsRow(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): boolean {
 	return (
+		verdict !== undefined &&
 		contradictedRequirement(requirements, verdict) === null &&
 		unprovenRequirement(requirements, verdict) === null
 	);
@@ -301,10 +302,10 @@ function refusalReason(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): string {
+	if (verdict === undefined)
+		return "the judge produced no verdict for this row";
 	const detail =
-		verdict?.reason && verdict.reason.length > 0
-			? verdict.reason
-			: "the judge gave no reason";
+		verdict.reason.length > 0 ? verdict.reason : "the judge gave no reason";
 	const bad = contradictedRequirement(requirements, verdict);
 	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);
