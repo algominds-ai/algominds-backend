@@ -1,3 +1,4 @@
+import type { ManifestInput } from "@eval/manifest";
 import { buildManifest, sha256Hex, WINNER_RULE } from "@eval/manifest";
 import { describe, expect, it } from "vitest";
 
@@ -11,22 +12,44 @@ describe("sha256Hex", () => {
 	});
 });
 
+function manifestInput(overrides: Partial<ManifestInput> = {}): ManifestInput {
+	return {
+		experiment: "abc123-baseline",
+		commit: "abc123",
+		arm: "baseline",
+		datasetSnapshotIds: { mstone: "snap-1" },
+		configText: "companies:\n  maxRounds: 3\n",
+		scorerPrompts: { fitReading: "read the fit and explain why" },
+		resolvedModelIds: { reasoning: "gpt-5" },
+		runIds: { mstone: ["run-1", "run-2"] },
+		startedAt: "2026-01-01T00:00:00.000Z",
+		finishedAt: "2026-01-01T00:10:00.000Z",
+		totalSpendDollars: 1.5,
+		perProfileSpendDollars: { mstone: 1.5 },
+		scoredRows: [
+			{
+				slug: "mstone",
+				trialIndex: 0,
+				companies: [{ domain: "a.com", label: "accept" }],
+				people: [
+					{
+						linkedinUrl: "https://linkedin.com/in/a",
+						company: "a.com",
+						label: "accept",
+					},
+				],
+			},
+		],
+		keyFileVersions: {
+			mstone: { companyKeyHash: "hash-1", peopleKeyHash: "hash-2" },
+		},
+		...overrides,
+	};
+}
+
 describe("buildManifest", () => {
 	it("hashes the config text and every named scorer prompt", async () => {
-		const manifest = await buildManifest({
-			experiment: "abc123-baseline",
-			commit: "abc123",
-			arm: "baseline",
-			datasetSnapshotIds: { mstone: "snap-1" },
-			configText: "companies:\n  maxRounds: 3\n",
-			scorerPrompts: { fitReading: "read the fit and explain why" },
-			resolvedModelIds: { reasoning: "gpt-5" },
-			runIds: { mstone: ["run-1", "run-2"] },
-			startedAt: "2026-01-01T00:00:00.000Z",
-			finishedAt: "2026-01-01T00:10:00.000Z",
-			totalSpendDollars: 1.5,
-			perProfileSpendDollars: { mstone: 1.5 },
-		});
+		const manifest = await buildManifest(manifestInput());
 		expect(manifest.configHash).toBe(
 			await sha256Hex("companies:\n  maxRounds: 3\n"),
 		);
@@ -38,37 +61,21 @@ describe("buildManifest", () => {
 		expect(manifest.datasetSnapshotIds.mstone).toBe("snap-1");
 	});
 
+	it("carries the scored rows and key file versions through unchanged", async () => {
+		const manifest = await buildManifest(manifestInput());
+		expect(manifest.scoredRows[0]?.companies[0]?.label).toBe("accept");
+		expect(manifest.scoredRows[0]?.people[0]?.company).toBe("a.com");
+		expect(manifest.keyFileVersions.mstone?.companyKeyHash).toBe("hash-1");
+		expect(manifest.keyFileVersions.mstone?.peopleKeyHash).toBe("hash-2");
+	});
+
 	it("carries a different config hash for a config that changed by one byte", async () => {
-		const base = { text: "companies:\n  maxRounds: 3\n" };
-		const changed = { text: "companies:\n  maxRounds: 4\n" };
-		const a = await buildManifest({
-			experiment: "e",
-			commit: "c",
-			arm: "a",
-			datasetSnapshotIds: {},
-			configText: base.text,
-			scorerPrompts: {},
-			resolvedModelIds: {},
-			runIds: {},
-			startedAt: "t",
-			finishedAt: "t",
-			totalSpendDollars: 0,
-			perProfileSpendDollars: {},
-		});
-		const b = await buildManifest({
-			experiment: "e",
-			commit: "c",
-			arm: "a",
-			datasetSnapshotIds: {},
-			configText: changed.text,
-			scorerPrompts: {},
-			resolvedModelIds: {},
-			runIds: {},
-			startedAt: "t",
-			finishedAt: "t",
-			totalSpendDollars: 0,
-			perProfileSpendDollars: {},
-		});
+		const a = await buildManifest(
+			manifestInput({ configText: "companies:\n  maxRounds: 3\n" }),
+		);
+		const b = await buildManifest(
+			manifestInput({ configText: "companies:\n  maxRounds: 4\n" }),
+		);
 		expect(a.configHash).not.toBe(b.configHash);
 	});
 });

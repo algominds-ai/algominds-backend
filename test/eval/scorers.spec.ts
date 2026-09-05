@@ -1,4 +1,4 @@
-import type { EngineScore } from "@eval/engine-score";
+import type { EngineGates, EngineScore } from "@eval/engine-score";
 import type { TrialOutput } from "@eval/scorers";
 import {
 	buyerCoverage,
@@ -11,12 +11,29 @@ import {
 } from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
+function passingGates(): EngineGates {
+	return {
+		noKeyRejectedStored: true,
+		noDuplicateOrganisationGroup: true,
+		provingPassesWhereRequired: true,
+		peopleGatesPass: true,
+		bothRunsComplete: true,
+		everyStoredCompanyLabelled: true,
+		everyDeliveredPersonLabelled: true,
+		noRejectedPersonDelivered: true,
+		noOverDelivery: true,
+		costValidAndUnderBar: true,
+		secondsValidAndUnderBar: true,
+	};
+}
+
 function engine(overrides: Partial<EngineScore> = {}): EngineScore {
 	return {
 		acceptedCompanies: 1,
 		acceptedCompaniesWithBuyer: 1,
 		acceptedPeople: 1,
 		deliveredPeopleCount: 1,
+		gates: passingGates(),
 		gatesPass: true,
 		companyYield: 1 / 3,
 		companyPrecision: 1,
@@ -39,6 +56,8 @@ function output(overrides: Partial<TrialOutput> = {}): TrialOutput {
 		totalCostDollars: 1,
 		totalSeconds: 60,
 		skipped: null,
+		scoredCompanies: [],
+		scoredPeople: [],
 		...overrides,
 	};
 }

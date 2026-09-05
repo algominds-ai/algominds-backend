@@ -1,6 +1,14 @@
 import type { EngineScore } from "@eval/engine-score";
 import type { PeopleVerdict } from "@eval/people-headline";
 
+export type ScoredCompanyRow = { domain: string; label: string | null };
+
+export type ScoredPersonRow = {
+	linkedinUrl: string | null;
+	company: string;
+	label: string | null;
+};
+
 export type TrialOutput = {
 	engine: EngineScore | null;
 	companiesRunId: string | null;
@@ -9,6 +17,8 @@ export type TrialOutput = {
 	totalCostDollars: number;
 	totalSeconds: number | null;
 	skipped: string | null;
+	scoredCompanies: readonly ScoredCompanyRow[];
+	scoredPeople: readonly ScoredPersonRow[];
 };
 
 export type Score = { name: string; score: number | null };

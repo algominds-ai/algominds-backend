@@ -1,4 +1,5 @@
 import type { SeededTrial } from "@eval/arm-db";
+import type { EngineGates, EngineScore } from "@eval/engine-score";
 import type { TrialCase } from "@eval/full-chain";
 import { budgetBlock, casesFor, newBudget } from "@eval/full-chain";
 import {
@@ -8,7 +9,13 @@ import {
 	PROFILES,
 } from "@eval/profiles";
 import type { ResultRow } from "@eval/run";
-import { parseArgs, runIdsByProfile, selectedProfiles } from "@eval/run";
+import {
+	parseArgs,
+	ratingLine,
+	runIdsByProfile,
+	scoredRowsFrom,
+	selectedProfiles,
+} from "@eval/run";
 import type { TrialOutput } from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
@@ -35,12 +42,16 @@ describe("parseArgs", () => {
 		});
 	});
 
-	it("rejects a trial count below the minimum", () => {
-		expect(() => parseArgs(["--trials", "1"])).toThrow(/at least/);
+	it("accepts a single trial", () => {
+		expect(parseArgs(["--trials", "1"]).trials).toBe(1);
+	});
+
+	it("rejects a trial count below one", () => {
+		expect(() => parseArgs(["--trials", "0"])).toThrow(/positive integer/);
 	});
 
 	it("rejects a trial count that is not an integer", () => {
-		expect(() => parseArgs(["--trials", "abc"])).toThrow(/at least/);
+		expect(() => parseArgs(["--trials", "abc"])).toThrow(/positive integer/);
 	});
 });
 
@@ -130,6 +141,8 @@ function output(overrides: Partial<TrialOutput> = {}): TrialOutput {
 		totalCostDollars: 0,
 		totalSeconds: null,
 		skipped: null,
+		scoredCompanies: [],
+		scoredPeople: [],
 		...overrides,
 	};
 }
@@ -174,5 +187,102 @@ describe("runIdsByProfile", () => {
 	it("omits a trial the budget skipped before it ran", () => {
 		const rows = [row(oneCase(), { skipped: "budget" })];
 		expect(runIdsByProfile(rows)).toEqual({});
+	});
+});
+
+function passingGates(): EngineGates {
+	return {
+		noKeyRejectedStored: true,
+		noDuplicateOrganisationGroup: true,
+		provingPassesWhereRequired: true,
+		peopleGatesPass: true,
+		bothRunsComplete: true,
+		everyStoredCompanyLabelled: true,
+		everyDeliveredPersonLabelled: true,
+		noRejectedPersonDelivered: true,
+		noOverDelivery: true,
+		costValidAndUnderBar: true,
+		secondsValidAndUnderBar: true,
+	};
+}
+
+function scoredEngine(engineScore: number): EngineScore {
+	return {
+		acceptedCompanies: 1,
+		acceptedCompaniesWithBuyer: 1,
+		acceptedPeople: 1,
+		deliveredPeopleCount: 1,
+		gates: passingGates(),
+		gatesPass: true,
+		companyYield: engineScore,
+		companyPrecision: 1,
+		buyerPrecision: 1,
+		buyerCoverage: engineScore,
+		engineQuality: engineScore,
+		engineScore,
+		acceptedPerDollar: 1,
+		acceptedPerMinute: 1,
+	};
+}
+
+describe("ratingLine", () => {
+	it("reports ten times the mean engine score when every profile is fully scored", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), { engine: scoredEngine(0.5) }),
+			row(oneCase({ slug: "aris" }), { engine: scoredEngine(1) }),
+		];
+		expect(ratingLine(rows, [{ slug: "mstone" }, { slug: "aris" }])).toBe(
+			"rating 7.50",
+		);
+	});
+
+	it("reports incomplete the moment one selected profile has a skipped trial", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), { engine: scoredEngine(1) }),
+			row(oneCase({ slug: "aris" }), { skipped: "budget" }),
+		];
+		expect(ratingLine(rows, [{ slug: "mstone" }, { slug: "aris" }])).toBe(
+			"rating incomplete (1 of 2 profiles)",
+		);
+	});
+
+	it("reports incomplete when a selected profile has no rows at all", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), { engine: scoredEngine(1) }),
+		];
+		expect(ratingLine(rows, [{ slug: "mstone" }, { slug: "aris" }])).toBe(
+			"rating incomplete (1 of 2 profiles)",
+		);
+	});
+});
+
+describe("scoredRowsFrom", () => {
+	it("carries each row's slug, trial index and scored companies and people", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), {
+				scoredCompanies: [{ domain: "a.com", label: "accept" }],
+				scoredPeople: [
+					{
+						linkedinUrl: "https://linkedin.com/in/a",
+						company: "a.com",
+						label: "accept",
+					},
+				],
+			}),
+		];
+		expect(scoredRowsFrom(rows)).toEqual([
+			{
+				slug: "mstone",
+				trialIndex: 0,
+				companies: [{ domain: "a.com", label: "accept" }],
+				people: [
+					{
+						linkedinUrl: "https://linkedin.com/in/a",
+						company: "a.com",
+						label: "accept",
+					},
+				],
+			},
+		]);
 	});
 });

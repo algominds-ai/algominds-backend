@@ -7,11 +7,17 @@ import {
 import type { SeededTrial } from "@eval/arm-db";
 import type { EngineScore } from "@eval/engine-score";
 import { computeEngineScore } from "@eval/engine-score";
-import { computeVerdict } from "@eval/headline";
+import { computeVerdict, type StoredCompanyRecord } from "@eval/headline";
 import { readKeyFile, readPeopleKeyFile } from "@eval/keys-io";
-import { computePeopleVerdict } from "@eval/people-headline";
+import type { KeyFile } from "@eval/label-core";
+import {
+	computePeopleVerdict,
+	type PeopleVerdict,
+	type StoredPersonRecord,
+} from "@eval/people-headline";
+import type { PeopleKeyFile } from "@eval/people-key";
 import { fetchRunCompanies, fetchRunPeople } from "@eval/people-run";
-import type { ProfileBars } from "@eval/profiles";
+import type { Profile, ProfileBars } from "@eval/profiles";
 import {
 	MAX_PROFILE_SPEND_DOLLARS,
 	MAX_SPEND_DOLLARS,
@@ -23,7 +29,11 @@ import {
 	readRunStatus,
 	readStoredCompanies,
 } from "@eval/read";
-import type { TrialOutput } from "@eval/scorers";
+import type {
+	ScoredCompanyRow,
+	ScoredPersonRow,
+	TrialOutput,
+} from "@eval/scorers";
 import type { EvalHooks, EvalParameters } from "braintrust";
 import type postgres from "postgres";
 
@@ -102,6 +112,10 @@ function totalWallSeconds(
 	);
 }
 
+function describeError(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
+}
+
 function emptyTrialOutput(skipped: string): TrialOutput {
 	return {
 		engine: null,
@@ -111,21 +125,64 @@ function emptyTrialOutput(skipped: string): TrialOutput {
 		totalCostDollars: 0,
 		totalSeconds: null,
 		skipped,
+		scoredCompanies: [],
+		scoredPeople: [],
 	};
 }
 
-/** Starts and waits out a companies run, then a people run over the domains it stored, scores both against their keys, and folds the two into one engine score. */
-async function runOneTrial(
-	client: ApiClient,
-	sql: postgres.Sql,
-	trial: TrialCase,
+function scoredCompanyRows(
+	key: KeyFile,
+	stored: readonly StoredCompanyRecord[],
+): ScoredCompanyRow[] {
+	return stored.map((row) => ({
+		domain: row.domain,
+		label: key.companies[row.domain]?.label ?? null,
+	}));
+}
+
+function scoredPersonRows(
+	peopleKey: PeopleKeyFile,
+	people: readonly StoredPersonRecord[],
+): ScoredPersonRow[] {
+	return people.map((person) => ({
+		linkedinUrl: person.linkedinUrl,
+		company: person.company,
+		label:
+			person.linkedinUrl === null
+				? null
+				: (peopleKey.people[person.linkedinUrl]?.label ?? null),
+	}));
+}
+
+type RunContext = { client: ApiClient; sql: postgres.Sql };
+
+type StageContext = { context: RunContext; trial: TrialCase; profile: Profile };
+
+type CompaniesStageResult = {
+	companiesRunId: string;
+	companiesStatus: string;
+	companiesCostDollars: number;
+	companiesStartedAt: string;
+	companiesFinishedAt: string | null;
+	storedCompanies: readonly StoredCompanyRecord[];
+	key: KeyFile;
+	companyGates: {
+		noKeyRejectedStored: boolean;
+		noDuplicateOrganisationGroup: boolean;
+		provingPassesWhereRequired: boolean;
+	};
+};
+
+async function runCompaniesStage(
+	stage: StageContext,
 	count: number,
-): Promise<TrialOutput> {
-	const profile = profileBySlug(trial.slug);
-	if (!profile) throw new Error(`eval: unknown profile ${trial.slug}`);
+): Promise<CompaniesStageResult> {
+	const { client, sql } = stage.context;
+	const { trial, profile } = stage;
 	const companiesRunId = await startCompaniesRun(client, trial.icpId, count);
 	await waitForRunTerminal(client, companiesRunId);
 	const companiesRun = await readRunReport(sql, companiesRunId);
+	const companiesStatus = await readRunStatus(sql, companiesRunId);
 	const storedCompanies = await readStoredCompanies(sql, companiesRunId);
 	const requiresProvingPass = await readRequiresProvingPass(sql, trial.icpId);
 	const key = readKeyFile(profile.slug, profile.icpId);
@@ -136,15 +193,61 @@ async function runOneTrial(
 		requiresProvingPass,
 		stored: storedCompanies,
 	});
+	return {
+		companiesRunId,
+		companiesStatus,
+		companiesCostDollars: companiesRun.costDollars,
+		companiesStartedAt: companiesRun.startedAt,
+		companiesFinishedAt: companiesRun.finishedAt,
+		storedCompanies,
+		key,
+		companyGates: {
+			noKeyRejectedStored: companyVerdict.gates.noKeyRejectedStored,
+			noDuplicateOrganisationGroup:
+				companyVerdict.gates.noDuplicateOrganisationGroup,
+			provingPassesWhereRequired:
+				companyVerdict.gates.provingPassesWhereRequired,
+		},
+	};
+}
 
-	const domains = storedCompanies.map((row) => row.domain);
+type PeopleStageResult = {
+	peopleRunId: string | null;
+	peopleStatus: string | null;
+	peopleCostDollars: number;
+	peopleFinishedAt: string | null;
+	deliveredPeople: readonly StoredPersonRecord[];
+	peopleKey: PeopleKeyFile;
+	peopleVerdict: PeopleVerdict | null;
+};
+
+function emptyPeopleStage(peopleKey: PeopleKeyFile): PeopleStageResult {
+	return {
+		peopleRunId: null,
+		peopleStatus: null,
+		peopleCostDollars: 0,
+		peopleFinishedAt: null,
+		deliveredPeople: [],
+		peopleKey,
+		peopleVerdict: null,
+	};
+}
+
+/** Runs `/people/find` for `domains` and scores it, or reports an empty stage at zero cost when there are no domains — `startPeopleRun` is never called on an empty list. */
+async function runPeopleStage(
+	stage: StageContext,
+	domains: readonly string[],
+): Promise<PeopleStageResult> {
+	const { client, sql } = stage.context;
+	const { trial, profile } = stage;
+	const peopleKey = readPeopleKeyFile(profile.slug, profile.icpId);
+	if (domains.length === 0) return emptyPeopleStage(peopleKey);
 	const peopleRunId = await startPeopleRun(client, trial.icpId, domains);
 	await waitForRunTerminal(client, peopleRunId);
 	const peopleRun = await readRunReport(sql, peopleRunId);
 	const peopleStatus = await readRunStatus(sql, peopleRunId);
 	const runCompanies = await fetchRunCompanies(sql, peopleRunId);
 	const deliveredPeople = await fetchRunPeople(sql, peopleRunId);
-	const peopleKey = readPeopleKeyFile(profile.slug, profile.icpId);
 	const peopleVerdict = computePeopleVerdict({
 		key: peopleKey,
 		run: {
@@ -159,38 +262,95 @@ async function runOneTrial(
 			countries: profile.countries,
 		},
 	});
-
-	const totalCostDollars = companiesRun.costDollars + peopleRun.costDollars;
-	const totalSeconds = totalWallSeconds(
-		companiesRun.startedAt,
-		peopleRun.finishedAt,
-	);
-	const engine: EngineScore = computeEngineScore({
-		key,
-		peopleKey,
-		companyGates: {
-			noKeyRejectedStored: companyVerdict.gates.noKeyRejectedStored,
-			noDuplicateOrganisationGroup:
-				companyVerdict.gates.noDuplicateOrganisationGroup,
-			provingPassesWhereRequired:
-				companyVerdict.gates.provingPassesWhereRequired,
-		},
-		storedCompanies,
+	return {
+		peopleRunId,
+		peopleStatus,
+		peopleCostDollars: peopleRun.costDollars,
+		peopleFinishedAt: peopleRun.finishedAt,
 		deliveredPeople,
+		peopleKey,
+		peopleVerdict,
+	};
+}
+
+function scoreTrial(
+	profile: Profile,
+	count: number,
+	companies: CompaniesStageResult,
+	people: PeopleStageResult,
+): TrialOutput {
+	const totalCostDollars =
+		companies.companiesCostDollars + people.peopleCostDollars;
+	const endedAt = people.peopleFinishedAt ?? companies.companiesFinishedAt;
+	const totalSeconds = totalWallSeconds(companies.companiesStartedAt, endedAt);
+	const engine: EngineScore = computeEngineScore({
+		key: companies.key,
+		peopleKey: people.peopleKey,
+		companyGates: companies.companyGates,
+		companiesStatus: companies.companiesStatus,
+		peopleStatus: people.peopleStatus,
+		peopleGatesPass: people.peopleVerdict?.allGatesPass ?? null,
+		storedCompanies: companies.storedCompanies,
+		deliveredPeople: people.deliveredPeople,
 		requested: count,
 		totalCostDollars,
 		totalSeconds,
-		bars: trial.bars,
+		bars: profile.fullChainBars,
 	});
 	return {
 		engine,
-		companiesRunId,
-		peopleRunId,
-		peopleVerdict,
+		companiesRunId: companies.companiesRunId,
+		peopleRunId: people.peopleRunId,
+		peopleVerdict: people.peopleVerdict,
 		totalCostDollars,
 		totalSeconds,
 		skipped: null,
+		scoredCompanies: scoredCompanyRows(
+			companies.key,
+			companies.storedCompanies,
+		),
+		scoredPeople: scoredPersonRows(people.peopleKey, people.deliveredPeople),
 	};
+}
+
+/** Starts and waits out a companies run, then a people run over the domains it stored, scores both against their keys, and folds the two into one engine score. Banks each stage's cost as soon as that stage finishes, and turns a crash after the companies stage into an incomplete-but-informative output rather than losing what already ran. */
+async function runOneTrial(
+	context: RunContext,
+	trial: TrialCase,
+	count: number,
+	bankStage: (dollars: number) => void,
+): Promise<TrialOutput> {
+	const profile = profileBySlug(trial.slug);
+	if (!profile) throw new Error(`eval: unknown profile ${trial.slug}`);
+	const stage: StageContext = { context, trial, profile };
+	let companies: CompaniesStageResult;
+	try {
+		companies = await runCompaniesStage(stage, count);
+	} catch (error) {
+		return emptyTrialOutput(`companies stage failed: ${describeError(error)}`);
+	}
+	bankStage(companies.companiesCostDollars);
+	try {
+		const domains = companies.storedCompanies.map((row) => row.domain);
+		const people = await runPeopleStage(stage, domains);
+		bankStage(people.peopleCostDollars);
+		return scoreTrial(profile, count, companies, people);
+	} catch (error) {
+		return {
+			engine: null,
+			companiesRunId: companies.companiesRunId,
+			peopleRunId: null,
+			peopleVerdict: null,
+			totalCostDollars: companies.companiesCostDollars,
+			totalSeconds: null,
+			skipped: `people stage failed: ${describeError(error)}`,
+			scoredCompanies: scoredCompanyRows(
+				companies.key,
+				companies.storedCompanies,
+			),
+			scoredPeople: [],
+		};
+	}
 }
 
 export type TrialMetadata = {
@@ -225,7 +385,7 @@ function fillMetadata(
 	hooks.metadata.acceptedPerMinute = output.engine?.acceptedPerMinute ?? 0;
 }
 
-/** One trial's task: skip it without spending anything once the budget blocks it, otherwise start, wait, read back and score the full chain, banking what it actually cost. */
+/** One trial's task: skip it without spending anything once the budget blocks it, otherwise start, wait, read back and score the full chain, banking each stage's cost as it lands. */
 export function buildTask(
 	apiUrl: string,
 	sql: postgres.Sql,
@@ -248,8 +408,14 @@ export function buildTask(
 		const blocked = budgetBlock(budget, trial.slug);
 		if (blocked) return emptyTrialOutput(blocked);
 		const client: ApiClient = { baseUrl: apiUrl, apiKey: trial.apiKey };
-		const output = await runOneTrial(client, sql, trial, input.count);
-		bankSpend(budget, trial.slug, output.totalCostDollars);
+		const bankStage = (dollars: number) =>
+			bankSpend(budget, trial.slug, dollars);
+		const output = await runOneTrial(
+			{ client, sql },
+			trial,
+			input.count,
+			bankStage,
+		);
 		fillMetadata(hooks, output);
 		return output;
 	};
