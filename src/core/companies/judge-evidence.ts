@@ -70,22 +70,29 @@ export function judgedFields(
 	};
 }
 
-function evidenceText(fields: JudgedFields): string {
+function evidencePassages(fields: JudgedFields): string[] {
 	const quotes = fields.pageEvidence
 		? Object.values(fields.pageEvidence).map((entry) => entry.quote)
 		: [];
-	return [fields.description, fields.evidenceQuote, ...quotes]
-		.filter((value): value is string => value !== null && value !== undefined)
-		.join("\n");
+	return [fields.description, fields.evidenceQuote, ...quotes].filter(
+		(value): value is string => value !== null && value !== undefined,
+	);
 }
 
 function normalizedWhitespace(text: string): string {
 	return text.replace(/\s+/g, " ").trim();
 }
 
-function quoteFoundIn(quote: string | undefined, text: string): boolean {
+/** Whether the quote occurs verbatim inside one single evidence passage, so a quote cannot be assembled by joining two of them. */
+function quoteFoundIn(
+	quote: string | undefined,
+	passages: readonly string[],
+): boolean {
 	if (quote === undefined || quote.trim().length === 0) return false;
-	return normalizedWhitespace(text).includes(normalizedWhitespace(quote));
+	const normalizedQuote = normalizedWhitespace(quote);
+	return passages.some((passage) =>
+		normalizedWhitespace(passage).includes(normalizedQuote),
+	);
 }
 
 export type GroundingInput = {
@@ -112,7 +119,7 @@ export function withGroundedProof(
 	return verdicts.map((verdict) => {
 		const row = input.rows[verdict.index];
 		if (row === undefined) return verdict;
-		const text = evidenceText(
+		const passages = evidencePassages(
 			judgedFields(row, input.evidenceByRow.get(input.offset + verdict.index)),
 		);
 		return {
@@ -120,7 +127,7 @@ export function withGroundedProof(
 			statuses: verdict.statuses.map((entry) =>
 				groundedIds.has(entry.id) &&
 				entry.status === "proven" &&
-				!quoteFoundIn(entry.quote, text)
+				!quoteFoundIn(entry.quote, passages)
 					? { ...entry, status: "unproven" as const }
 					: entry,
 			),

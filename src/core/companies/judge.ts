@@ -60,12 +60,21 @@ const JUDGE_INSTRUCTIONS = [
 	"row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
 	"under another brand, country domain or subdomain, and to null otherwise.",
-	"For a `page` requirement, or a hard requirement this profile marks strict, a `proven`",
-	"status also needs `quote`: a passage copied verbatim from this row's own evidence text",
-	"that states the required fact itself, not a paraphrase and not a fact about a related",
-	"company; a business can sell through partners and direct at once, so only the quoted",
-	"passage, never the surrounding page, decides. Without a matching quote, mark it unproven.",
+	"A requirement marked `(quote required)` needs `quote` for a `proven` status: a passage",
+	"copied verbatim from this row's own evidence text that states the required fact itself,",
+	"not a paraphrase and not a fact about a related company. The quote must support the fact",
+	"when read in its own context, including any negation, attribution or qualification around",
+	"it. Without a matching quote, mark it unproven.",
 ].join(" ");
+
+function requirementPromptLine(
+	req: Requirement,
+	groundedIds: ReadonlySet<string>,
+): string {
+	return groundedIds.has(req.id)
+		? `${requirementLine(req)} (quote required)`
+		: requirementLine(req);
+}
 
 function judgePrompt(
 	requirements: readonly Requirement[],
@@ -74,9 +83,10 @@ function judgePrompt(
 	evidenceByRow: EvidenceByRow,
 ): string {
 	const hard = hardRequirements(requirements);
+	const groundedIds = new Set(mustBeProven(requirements).map((req) => req.id));
 	const lines = [
 		"Requirements needing a status:",
-		...hard.map(requirementLine),
+		...hard.map((req) => requirementPromptLine(req, groundedIds)),
 	];
 	lines.push("Rows:");
 	for (const [index, row] of rows.entries()) {

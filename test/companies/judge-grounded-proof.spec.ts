@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import type { CompanyRow } from "@/core/companies/gate";
 import { judge } from "@/core/companies/judge";
 import type { Requirement } from "@/core/requirements";
@@ -22,17 +23,20 @@ const plainRequirement: Requirement = {
 	windowDays: null,
 };
 
-function row(description: string): CompanyRow {
+function row(overrides: {
+	description?: string | null;
+	evidenceQuote?: string | null;
+}): CompanyRow {
 	return {
 		name: "Acme",
 		domain: "acme.com",
 		linkedinUrl: null,
 		evidenceUrl: null,
-		evidenceQuote: null,
+		evidenceQuote: overrides.evidenceQuote ?? null,
 		evidencePublisher: null,
 		evidenceKind: null,
 		industry: null,
-		description,
+		description: overrides.description ?? null,
 		signal: null,
 		evidenceDate: null,
 	};
@@ -53,6 +57,18 @@ function verdictReply(statuses: JudgedStatus[]) {
 			],
 		}),
 	});
+}
+
+const RequestBodySchema = z.object({
+	model: z.string(),
+	messages: z.array(z.object({ role: z.string(), content: z.string() })),
+});
+
+function userMessage(call: { body: unknown } | undefined): string {
+	if (!call) throw new Error("expected a captured request");
+	return RequestBodySchema.parse(call.body)
+		.messages.map((message) => message.content)
+		.join("\n");
 }
 
 const originalFetch = globalThis.fetch;
@@ -76,7 +92,11 @@ describe("a strict requirement is proven only by a quoted passage from the row's
 
 		const result = await judge(
 			[strictRequirement],
-			[row("Acme lets consumers sign up for the app themselves")],
+			[
+				row({
+					description: "Acme lets consumers sign up for the app themselves",
+				}),
+			],
 			fakeGatewayEnv(),
 		);
 
@@ -103,7 +123,12 @@ describe("a strict requirement is proven only by a quoted passage from the row's
 
 		const result = await judge(
 			[strictRequirement],
-			[row("Acme distributes its lending platform through bank partners")],
+			[
+				row({
+					description:
+						"Acme distributes its lending platform through bank partners",
+				}),
+			],
 			fakeGatewayEnv(),
 		);
 
@@ -118,12 +143,95 @@ describe("a strict requirement is proven only by a quoted passage from the row's
 
 		const result = await judge(
 			[plainRequirement],
-			[row("Acme is a seed stage fintech in San Francisco")],
+			[row({ description: "Acme is a seed stage fintech in San Francisco" })],
 			fakeGatewayEnv(),
 		);
 
 		expect(result.verdicts[0]?.statuses).toEqual([
 			{ id: "r2", status: "proven" },
 		]);
+	});
+});
+
+describe("the prompt marks which requirements need a quote", () => {
+	it("marks a strict requirement's line and leaves a plain one unmarked", async () => {
+		const gateway = fakeGateway([
+			verdictReply([
+				{ id: "r1", status: "proven", quote: "consumers sign up" },
+				{ id: "r2", status: "proven" },
+			]),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(
+			[strictRequirement, plainRequirement],
+			[row({ description: "Acme lets consumers sign up" })],
+			fakeGatewayEnv(),
+		);
+
+		const sent = userMessage(gateway.calls[0]);
+		expect(sent).toContain(
+			"r1 the company sells direct to consumers who self-serve their own signup (quote required)",
+		);
+		expect(sent).toContain(
+			"r2 the company is a seed stage fintech in San Francisco",
+		);
+		expect(sent).not.toContain(
+			"r2 the company is a seed stage fintech in San Francisco (quote required)",
+		);
+	});
+});
+
+describe("a quote must occur inside one evidence passage, not across two", () => {
+	it("stays proven when the quote occurs inside a single passage", async () => {
+		const gateway = fakeGateway([
+			verdictReply([
+				{
+					id: "r1",
+					status: "proven",
+					quote: "consumers sign up for the app themselves",
+				},
+			]),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await judge(
+			[strictRequirement],
+			[
+				row({
+					description: "Acme lets consumers sign up for the app themselves",
+					evidenceQuote: "bank partners resell the platform",
+				}),
+			],
+			fakeGatewayEnv(),
+		);
+
+		expect(result.verdicts[0]?.statuses[0]?.status).toBe("proven");
+	});
+
+	it("downgrades to unproven when the quote is only assembled by joining two passages", async () => {
+		const gateway = fakeGateway([
+			verdictReply([
+				{
+					id: "r1",
+					status: "proven",
+					quote: "consumers sign up for the app themselves",
+				},
+			]),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await judge(
+			[strictRequirement],
+			[
+				row({
+					description: "Acme lets consumers sign up",
+					evidenceQuote: "for the app themselves",
+				}),
+			],
+			fakeGatewayEnv(),
+		);
+
+		expect(result.verdicts[0]?.statuses[0]?.status).toBe("unproven");
 	});
 });
