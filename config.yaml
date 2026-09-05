@@ -94,9 +94,9 @@ companies:
   # Characters of page text Exa returns per page. The vendor's documented maximum is 10000;
   # a larger number is clamped rather than refused.
   contentsMaxCharacters: 10000
-  # Rows sent to the judge in one model call. A batch of 15 still timed out twice on a
-  # 40-row judge; slicing into batches this size keeps each call inside model.timeoutMs below.
-  judgeBatchSize: 8
+  # Rows sent to the judge in one model call. A batch of 8 rows still exceeded
+  # model.timeoutMs three times in one round; this size keeps each call inside it.
+  judgeBatchSize: 4
   # Cap on the single wait after an Exa 429, whether from Retry-After or the
   # one-second default used when Exa sends no header.
   exaRetryAfterMaxMs: 5000
@@ -189,3 +189,11 @@ stepConfig:
       limit: 5
       delay: 1 second
     timeout: 60 seconds
+  # The judge step. A retry there reruns every slice, including ones that
+  # already produced a verdict, so a timed-out attempt is not retried at
+  # this level; the timeout still covers the slowest real judge call.
+  judgeCall:
+    retries:
+      limit: 0
+      delay: 10 seconds
+    timeout: 5 minutes

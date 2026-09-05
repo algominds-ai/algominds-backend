@@ -312,7 +312,7 @@ function rowCountIn(call: { body: unknown } | undefined): number {
 }
 
 describe("judge: slicing a large batch into concurrent, ordered calls", () => {
-	it("sends 40 rows as five concurrent calls of 8, and returns every index in row order however the calls resolve", async () => {
+	it("sends 40 rows as ten concurrent calls of 4, and returns every index in row order however the calls resolve", async () => {
 		const bigRows: CompanyRow[] = Array.from({ length: 40 }, (_, i) =>
 			row(`Company ${i}`, `co${i}.com`),
 		);
@@ -322,11 +322,11 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		const pending = judge(requirements, bigRows, fakeGatewayEnv());
 
 		for (let i = 0; i < 200; i++) await Promise.resolve();
-		expect(gateway.calls).toHaveLength(5);
+		expect(gateway.calls).toHaveLength(10);
 		const sizes = gateway.calls.map((call) => rowCountIn(call));
-		expect(sizes).toEqual([8, 8, 8, 8, 8]);
+		expect(sizes).toEqual([4, 4, 4, 4, 4, 4, 4, 4, 4, 4]);
 
-		for (const callIndex of [4, 2, 0, 3, 1]) {
+		for (const callIndex of [9, 4, 7, 2, 0, 6, 3, 8, 1, 5]) {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,

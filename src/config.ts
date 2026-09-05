@@ -31,7 +31,7 @@ export const config = {
 		provingConcurrency: 5,
 		provingResults: 3,
 		contentsMaxCharacters: 10000,
-		judgeBatchSize: 8,
+		judgeBatchSize: 4,
 		exaRetryAfterMaxMs: 5000,
 		exaPollBudgetPerSecond: 2,
 		homepageMaxCharacters: 4000,
@@ -77,6 +77,13 @@ export const config = {
 				delay: "1 second",
 			},
 			timeout: "60 seconds",
+		},
+		judgeCall: {
+			retries: {
+				limit: 0,
+				delay: "10 seconds",
+			},
+			timeout: "5 minutes",
 		},
 	},
 } as const;

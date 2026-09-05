@@ -272,3 +272,9 @@ describe("the request schema Exa's agent actually accepts", () => {
 		expect(schema.properties.companies.maxItems).toBe(15);
 	});
 });
+
+describe("the judge step's own retry budget", () => {
+	it("never retries a timed-out judge call, since a retry reruns every slice", () => {
+		expect(config.stepConfig.judgeCall.retries.limit).toBe(0);
+	});
+});

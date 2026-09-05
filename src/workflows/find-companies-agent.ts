@@ -270,7 +270,7 @@ function steppedJudge(
 	return async (requirements, rows, env, evidenceByRow) => {
 		const cached = await step.do(
 			`round_${round}-judge`,
-			config.stepConfig.paidCall,
+			config.stepConfig.judgeCall,
 			async () => {
 				const result = await judge(requirements, rows, env, evidenceByRow);
 				return {

@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 const ROOT = "src/workflows";
 const CALL = /(?:^|[^\w.])(?:ctx\.)?step\.do\(/;
-const CONFIG = /config\.stepConfig\.(paidCall|databaseCall)\b/;
+const CONFIG = /config\.stepConfig\.(paidCall|databaseCall|judgeCall)\b/;
 const LOOKAHEAD = 3;
 
 const failures = [];
