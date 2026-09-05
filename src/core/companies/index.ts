@@ -127,18 +127,25 @@ function spentSoFar(ledgers: readonly CostLedger[]): number {
 	return CostLedger.merge(...ledgers).total();
 }
 
+function clamp(value: number, min: number, max: number): number {
+	return Math.max(min, Math.min(max, value));
+}
+
 /**
- * How many angles one round asks the planner for: one for a search round,
- * because one company search returns a hundred records, and two per company
- * still wanted for an agent round, because an agent run stops as soon as its
- * schema is satisfied and returns few companies whatever it is asked for.
+ * How many angles one round asks the planner for: one angle per ten companies
+ * still wanted for a search round, because a search round now runs every one
+ * of its angles, and two per company still wanted for an agent round, because
+ * an agent run stops as soon as its schema is satisfied and returns few
+ * companies whatever it is asked for.
  */
 export function anglesForRound(
 	requirements: readonly Requirement[],
 	shortfall: number,
 ): number {
-	if (hardPageRequirements(requirements).length === 0) return 1;
-	return Math.max(1, Math.min(MAX_ANGLES_PER_ROUND, shortfall * 2));
+	if (hardPageRequirements(requirements).length === 0) {
+		return clamp(Math.ceil(shortfall / 10), 1, MAX_ANGLES_PER_ROUND);
+	}
+	return clamp(shortfall * 2, 1, MAX_ANGLES_PER_ROUND);
 }
 
 type RunInput = {
@@ -166,13 +173,20 @@ type RoundsAccumulator = {
 const EMPTY_ROUND_FEEDBACK =
 	"the previous query matched no companies at all, so it was too narrow: write a broader angle";
 
-/** Records one round's domains as seen and returns the rejects it produced, in the order the stages ran. */
+/**
+ * Records one round's domains as seen and returns the rejects it produced, in
+ * the order the stages ran. A domain the judge never reached is not marked
+ * seen, so a later round may still judge it.
+ */
 function absorbRound(
 	outcome: RoundOutcome,
 	seenDomains: Set<string>,
 ): FindCompaniesReject[] {
+	const unjudged = new Set(outcome.unjudgedDomains.map(normalizeDomain));
 	for (const row of outcome.rows) {
-		if (row.domain) seenDomains.add(normalizeDomain(row.domain));
+		if (!row.domain) continue;
+		const domain = normalizeDomain(row.domain);
+		if (!unjudged.has(domain)) seenDomains.add(domain);
 	}
 	return [
 		...outcome.filterRejects,

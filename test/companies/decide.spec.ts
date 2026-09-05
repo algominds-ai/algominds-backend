@@ -81,10 +81,14 @@ function exaResult(domain: string, workforce: number | null): ExaResult {
 }
 
 describe("the route a round runs on comes from its requirements", () => {
-	it("asks for one angle when nothing needs a page, and bounds a page-gated round to the round's own cap", () => {
-		expect(anglesForRound([recordRequirement], 20)).toBe(1);
+	it("scales a search round's angles with the shortfall, and bounds a page-gated round to the round's own cap", () => {
+		expect(anglesForRound([recordRequirement], 20)).toBe(2);
+		expect(anglesForRound([recordRequirement], 3)).toBe(1);
 		expect(anglesForRound([recordRequirement, pageRequirement], 3)).toBe(6);
 		expect(anglesForRound([pageRequirement], 500)).toBe(
+			config.companies.maxAnglesPerRound,
+		);
+		expect(anglesForRound([recordRequirement], 1000)).toBe(
 			config.companies.maxAnglesPerRound,
 		);
 	});

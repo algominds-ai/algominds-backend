@@ -198,7 +198,7 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 	};
 }
 describe("a round short of its count judges its next slice before a new round", () => {
-	it("judges the next slice instead of a new round, and still excludes the domains it never judged", async () => {
+	it("judges the next slice instead of a new round, keeps a judged-and-refused domain seen, and forgets one it never judged", async () => {
 		const round1 = Array.from({ length: 5 }, (_, i) =>
 			goodResult(`cand${i}.com`),
 		);
@@ -211,7 +211,10 @@ describe("a round short of its count judges its next slice before a new round", 
 		expect(outcome.rounds).toBe(1);
 		expect(calls).toHaveLength(1);
 		expect(outcome.companies[0]?.domain).toBe("cand2.com");
-		expect(outcome.seenDomains).toEqual(expect.arrayContaining(["cand4.com"]));
+		expect(outcome.seenDomains).toEqual(
+			expect.arrayContaining(["cand0.com", "cand1.com"]),
+		);
+		expect(outcome.seenDomains).not.toContain("cand4.com");
 	});
 
 	it("judges at most three slices in one round, however many candidates remain", async () => {

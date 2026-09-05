@@ -58,6 +58,7 @@ export type RoundOutcome = {
 	ledger: CostLedger;
 	captures: Record<string, CompanyCapture>;
 	pages: RetrievedPage[];
+	unjudgedDomains: string[];
 };
 
 /** Every distinct company domain an agent round named that this run may still return, the list its record backfill is asked for. An excluded domain is never looked up, so a paid record never resurrects a company the account already holds. */
@@ -73,6 +74,45 @@ function agentDomains(
 	return [...domains];
 }
 
+/** The results of every plan a search round ran, kept once by domain: the first plan to name a domain wins. */
+function dedupeByDomain(results: readonly ExaResult[]): ExaResult[] {
+	const seen = new Set<string>();
+	const deduped: ExaResult[] = [];
+	for (const result of results) {
+		const domain = normalizeDomain(result.url);
+		if (seen.has(domain)) continue;
+		seen.add(domain);
+		deduped.push(result);
+	}
+	return deduped;
+}
+
+type SearchAllInput = {
+	plans: readonly SearchPlan[];
+	excluded: readonly string[];
+	opts: FindCompaniesOptions;
+	deps: FindCompaniesDeps;
+	ledger: CostLedger;
+};
+
+/** Runs a company search for every angle a search round wrote, one after another to respect Exa's own rate limit, and returns their results deduped by domain under the first search's request id. */
+async function searchAllPlans(input: SearchAllInput): Promise<ExaSearchResult> {
+	const { plans, excluded, opts, deps, ledger } = input;
+	const results: ExaResult[] = [];
+	let requestId = "";
+	for (const plan of plans) {
+		const found = await deps.search(
+			plan,
+			buildSearchRequest(plan, excluded),
+			opts.env,
+			ledger,
+		);
+		if (!requestId) requestId = found.requestId;
+		results.push(...found.results);
+	}
+	return { requestId, results: dedupeByDomain(results) };
+}
+
 type GatherInput = {
 	ctx: RoundContext;
 	opts: FindCompaniesOptions;
@@ -82,19 +122,13 @@ type GatherInput = {
 	ledger: CostLedger;
 };
 
-/** One round's vendor results: an agent fan-out with every company's own record backfilled onto it, or one company search. */
+/** One round's vendor results: an agent fan-out with every company's own record backfilled onto it, or every plan's company search, deduped by domain. */
 async function gather(input: GatherInput): Promise<ExaSearchResult> {
 	const { ctx, opts, deps, route, plans, ledger } = input;
-	const first = plans[0];
-	if (!first) return { requestId: "", results: [] };
+	if (plans.length === 0) return { requestId: "", results: [] };
 	const excluded = excludedDomains([], ctx.excluded);
 	if (route === "search") {
-		return deps.search(
-			first,
-			buildSearchRequest(first, excluded),
-			opts.env,
-			ledger,
-		);
+		return searchAllPlans({ plans, excluded, opts, deps, ledger });
 	}
 	const found = await deps.agentRound(plans, excluded, opts.env, ledger);
 	const filled = await deps.backfill(
@@ -150,6 +184,10 @@ export async function runRound(
 		gated: gated.kept,
 		captures: filtered.captures,
 	});
+	const unjudgedDomains = gated.kept
+		.slice(judged.judgedCount)
+		.map((row) => row.domain)
+		.filter((domain) => domain !== null);
 	return {
 		plans: [...plans],
 		rows: filtered.rows,
@@ -164,6 +202,7 @@ export async function runRound(
 		ledger: CostLedger.merge(synthesized.ledger, vendorLedger, judged.ledger),
 		captures: filtered.captures,
 		pages: judged.pages,
+		unjudgedDomains,
 	};
 }
 
@@ -184,6 +223,7 @@ type SliceOutcome = {
 	verdicts: Verdict[];
 	pages: RetrievedPage[];
 	ledger: CostLedger;
+	judgedCount: number;
 };
 
 /** Checks, proves and judges one slice of the gated candidates. */
@@ -220,6 +260,7 @@ async function judgeOneSlice(
 		verdicts: [...proved.verdicts],
 		pages: proved.pages,
 		ledger: CostLedger.merge(ledger, proved.ledger),
+		judgedCount: candidates.length,
 	};
 }
 
@@ -233,6 +274,7 @@ async function judgeSlices(input: SliceInput): Promise<SliceOutcome> {
 		verdicts: [],
 		pages: [],
 		ledger: new CostLedger(),
+		judgedCount: 0,
 	};
 	for (let slice = 0; slice < MAX_JUDGE_SLICES_PER_ROUND; slice++) {
 		const at = slice * size;
@@ -240,6 +282,7 @@ async function judgeSlices(input: SliceInput): Promise<SliceOutcome> {
 			break;
 		}
 		const judged = await judgeOneSlice(input, input.gated.slice(at, at + size));
+		total.judgedCount = at + judged.judgedCount;
 		total.accepted.push(...judged.accepted);
 		total.judgeRejects.push(...judged.judgeRejects);
 		total.evidenceRejects.push(...judged.evidenceRejects);
