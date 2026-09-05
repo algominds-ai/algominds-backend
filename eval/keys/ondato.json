@@ -1676,6 +1676,23 @@
 				"fitReason": "Spritz connects individual Web3 users to bill pay via crypto wallets, a consumer self-serve crypto platform meeting all bands."
 			}
 		},
+		"steadypay.co": {
+			"label": null,
+			"name": "SteadyPay",
+			"firstSeenRunId": "companies_b1e8c088-555e-4d72-adde-e596106a6505_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:39:42.089Z",
+			"record": {
+				"industry": null,
+				"description": "Unlock the power of embedded lending solutions to enhance your services. \n\nOur Lending as a Service (LaaS) platform integrates seamlessly, allowing you to offer tailored credit services to small businesses and individuals. \n\nImprove their creditworthiness, pre-assess eligibility, and provide access to credit with our advanced open banking risk engine. Battle-tested with high approval rates and low defaults, our white-label lending products are configurable, so you only plug in what you need. \n\nEmpower your customers’ financial wellbeing and take your services to the next level.\n\nSteadyPay is authorised and regulated by the UK FCA.",
+				"workforceTotal": 14,
+				"country": "United Kingdom",
+				"foundedYear": 2017,
+				"citedPage": "https://steadypay.co/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "UK-based consumer lending app with self-serve app signup; revenue and funding both fall within required ranges."
+			}
+		},
 		"stream.money": {
 			"label": "reject:excluded-type",
 			"name": "Stream.Money",
