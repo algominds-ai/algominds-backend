@@ -11,6 +11,14 @@
 			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
 			"note": "CEO, Founder of Onos Health, a company of about 21 staff, well under the 50-person threshold where the founder/CEO exception applies"
 		},
+		"https://linkedin.com/in/clément-carrier-74009658": {
+			"label": null,
+			"name": "Clément Carrier",
+			"title": "Co-founder & CEO",
+			"company": "helloaria.eu",
+			"location": "Paris, France",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05"
+		},
 		"https://linkedin.com/in/cpeterson42": {
 			"label": "accept",
 			"name": "Carl Peterson",
@@ -38,6 +46,14 @@
 			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
 			"note": "Head of Accounts is not one of the rubric's named finance-function titles (CFO, VP Finance, Head of Finance, Controller), and could as easily be a client-accounts/sales role, a named hard negative"
 		},
+		"https://linkedin.com/in/james-owusu-b1453849": {
+			"label": null,
+			"name": "James Owusu",
+			"title": "Founder & CEO",
+			"company": "kord.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05"
+		},
 		"https://linkedin.com/in/lindseyb": {
 			"label": "accept",
 			"name": "Lindsey B.",
@@ -46,6 +62,22 @@
 			"location": "United States, United States",
 			"firstSeenRunId": "people_dom-c7784ab4c45a_2026-09-05",
 			"note": "VP, Strategy & Finance at karoohealth.com, an explicit VP-of-Finance buyer role owning the company's finance function"
+		},
+		"https://linkedin.com/in/nickknuppe": {
+			"label": null,
+			"name": "Nick Knuppe",
+			"title": "Founder & CEO",
+			"company": "neno.co",
+			"location": "Amsterdam, Netherlands",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05"
+		},
+		"https://linkedin.com/in/nitesh-shroff-08855148": {
+			"label": null,
+			"name": "Nitesh Shroff",
+			"title": "CEO and Co-Founder",
+			"company": "arintra.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05"
 		},
 		"https://linkedin.com/in/patrick-driscoll-3487a315": {
 			"label": "accept",
@@ -74,6 +106,14 @@
 			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
 			"note": "Assured has about 88 staff, above the 50-person threshold where the founder/CEO exception applies, and CEO alone is not one of the rubric's named finance-function titles once that exception no longer applies"
 		},
+		"https://linkedin.com/in/wade-ang-a89b48": {
+			"label": null,
+			"name": "Wade Ang",
+			"title": "CFO",
+			"company": "augusthealth.com",
+			"location": "Mountain View, United States",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05"
+		},
 		"https://linkedin.com/in/william-messina-032917175": {
 			"label": "accept",
 			"name": "Will Messina",
@@ -82,6 +122,14 @@
 			"location": "New York, United States",
 			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
 			"note": "Co-Founder & CEO of GrailPay, a company of about 16 staff, well under the 50-person threshold"
+		},
+		"https://linkedin.com/in/zandrecoetzee": {
+			"label": null,
+			"name": "Zandre Coetzee CA(SA)",
+			"title": "Chief Financial Officer",
+			"company": "helloaria.eu",
+			"location": "Belgium, Belgium",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05"
 		}
 	}
 }

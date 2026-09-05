@@ -7,7 +7,7 @@
 			"name": "01Health",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "citedDate 2026-06-10 is within 90 days of 2026-09-03; a \u20ac12.9M Series A, London, 100 staff",
+			"note": "citedDate 2026-06-10 is within 90 days of 2026-09-03; a €12.9M Series A, London, 100 staff",
 			"record": {
 				"industry": "Digital healthcare",
 				"description": "Healthcare delivery platform enabling local clinics to provide specialist services through clinical protocols, operational workflows, and technology infrastructure.",
@@ -16,8 +16,8 @@
 				"foundedYear": 2022,
 				"citedPage": "https://www.eu-startups.com/2026/06/london-based-01health-bags-e12-9-million-to-bring-specialist-care-from-harley-street-to-the-high-street/",
 				"citedDate": "2026-06-10",
-				"quote": "London-based HealthTech startup 01Health has raised \u20ac12.9 million ($15 million) in Series A funding to scale its healthcare delivery platform, which enables specialist services to be provided through local clinics rather than being concentrated in hospitals and major healthcare centres.",
-				"fitReason": "London healthtech operator, 100 staff, closed \u20ac12.9M ($15M) Series A round."
+				"quote": "London-based HealthTech startup 01Health has raised €12.9 million ($15 million) in Series A funding to scale its healthcare delivery platform, which enables specialist services to be provided through local clinics rather than being concentrated in hospitals and major healthcare centres.",
+				"fitReason": "London healthtech operator, 100 staff, closed €12.9M ($15M) Series A round."
 			}
 		},
 		"adaptyvbio.com": {
@@ -28,13 +28,13 @@
 			"note": "citedDate 2026-08-25 is within the window; a $40M Series A led by Highland Europe, Switzerland, 30 staff",
 			"record": {
 				"industry": "Biotechnology research",
-				"description": "Proteins are the most advanced nanotechnology we know of. At Adaptyv Bio we\u2019re building a next-gen protein foundry to allow you to synthesize and test any protein you design.\n",
+				"description": "Proteins are the most advanced nanotechnology we know of. At Adaptyv Bio we’re building a next-gen protein foundry to allow you to synthesize and test any protein you design.\n",
 				"workforceTotal": 30,
 				"country": "Switzerland",
 				"foundedYear": null,
 				"citedPage": "https://www.adaptyvbio.com/blog/series-a",
 				"citedDate": "2026-08-25",
-				"quote": "We\u2019ve raised a $40M Series A to build the automated lab for agentic biology, led by Highland Europe with existing investors Ace Ventures, ByFounders and Y Combinator doubling down.",
+				"quote": "We’ve raised a $40M Series A to build the automated lab for agentic biology, led by Highland Europe with existing investors Ace Ventures, ByFounders and Y Combinator doubling down.",
 				"fitReason": "Own blog post announces $40M Series A led by Highland Europe; matches size, location, venture backing."
 			}
 		},
@@ -46,7 +46,7 @@
 			"note": "citedDate 2026-07-23 is within the window; a $36M Series A, US, 18 staff",
 			"record": {
 				"industry": "Email cybersecurity",
-				"description": "Aegis AI is an AI-native Email Security platform. Our AI agents think like human analysts\u2014stopping Zero-day Phishing, BEC, and Malware attacks while cutting false positives by up to 90%.",
+				"description": "Aegis AI is an AI-native Email Security platform. Our AI agents think like human analysts—stopping Zero-day Phishing, BEC, and Malware attacks while cutting false positives by up to 90%.",
 				"workforceTotal": 18,
 				"country": "United States",
 				"foundedYear": null,
@@ -61,7 +61,7 @@
 			"name": "amber",
 			"firstSeenRunId": "companies_0aca9a7d-fcb3-49ee-b028-70560173ab18_2026-09-04",
 			"lastSeenAt": "2026-09-04T11:08:05.329Z",
-			"note": "citedDate 2026-08-17 is within the window; a \u20ac7M Series A, Germany, 45 staff",
+			"note": "citedDate 2026-08-17 is within the window; a €7M Series A, Germany, 45 staff",
 			"record": {
 				"industry": "Enterprise software",
 				"description": "AI platform helping small and medium-sized businesses organize, search, and operationalize institutional knowledge and workflows.",
@@ -70,8 +70,8 @@
 				"foundedYear": 2021,
 				"citedPage": "https://amber.de/en/series-a/",
 				"citedDate": "2026-08-17",
-				"quote": "Aachen, Germany \u2013 August 17, 2026 \u2013 amber, the AI platform transforming how small and medium-sized enterprises access and use company knowledge, today announced the successful close of a \u20ac7 million Series A.",
-				"fitReason": "Aachen-based AI operating company, 50 staff, closed \u20ac7M Series A, venture-backed and private."
+				"quote": "Aachen, Germany – August 17, 2026 – amber, the AI platform transforming how small and medium-sized enterprises access and use company knowledge, today announced the successful close of a €7 million Series A.",
+				"fitReason": "Aachen-based AI operating company, 50 staff, closed €7M Series A, venture-backed and private."
 			}
 		},
 		"arc-intelligence.de": {
@@ -79,16 +79,16 @@
 			"name": "ARC Intelligence",
 			"firstSeenRunId": "companies_5fad5de1-a39a-4a8e-a19b-cf898409d636_2026-09-04",
 			"lastSeenAt": "2026-09-04T12:24:04.028Z",
-			"note": "citedDate 2026-07-07 is within the window; a \u20ac4M seed round led by 42CAP, Germany, 11 staff",
+			"note": "citedDate 2026-07-07 is within the window; a €4M seed round led by 42CAP, Germany, 11 staff",
 			"record": {
 				"industry": "Financial software",
-				"description": "From Berlin, Germany, we build AI-powered software that streamlines the work of multi-entity CFO teams and PEs worldwide \u2014 so they can speed up month-end close and explain performance in near real-time.",
+				"description": "From Berlin, Germany, we build AI-powered software that streamlines the work of multi-entity CFO teams and PEs worldwide — so they can speed up month-end close and explain performance in near real-time.",
 				"workforceTotal": 11,
 				"country": "Germany",
 				"foundedYear": 2024,
 				"citedPage": "https://tech.eu/2026/07/07/arc-intelligence-raises-eur4m-to-scale-its-ai-native-finance-platform",
 				"citedDate": "2026-07-07",
-				"quote": "Berlin-based ARC Intelligence, a software company developing an AI-native finance platform for enterprises, has raised \u20ac4 million in a seed funding round led by 42CAP.",
+				"quote": "Berlin-based ARC Intelligence, a software company developing an AI-native finance platform for enterprises, has raised €4 million in a seed funding round led by 42CAP.",
 				"fitReason": "ARC Intelligence is a Berlin startup with 11 employees, dated seed round naming lead investor 42CAP."
 			}
 		},
@@ -100,14 +100,31 @@
 			"note": "citedDate 2026-08-26 is within the window; a $25M Series B, US, 120 staff",
 			"record": {
 				"industry": "Healthcare revenue cycle",
-				"description": "Arintra provides the industry\u2019s leading GenAI-native autonomous coding platform, enabling health systems to get paid accurately and efficiently for the care they deliver, driving revenue assurance at scale. By combining cutting-edge AI with deep clinical expertise, Arintra autonomously codes charts with high accuracy, without human intervention. Unlike bolt-on tools, Arintra works directly within the EHR, ensuring seamless adoption with zero workflow changes or data integrity risk. Health systems use Arintra to unlock missed revenue due to coding gaps, documentation issues, and unchallenged denials - achieving 5%+ uplift in revenue, 12%+ reduction in A/R days, and 43%+ fewer denials.",
+				"description": "Arintra provides the industry’s leading GenAI-native autonomous coding platform, enabling health systems to get paid accurately and efficiently for the care they deliver, driving revenue assurance at scale. By combining cutting-edge AI with deep clinical expertise, Arintra autonomously codes charts with high accuracy, without human intervention. Unlike bolt-on tools, Arintra works directly within the EHR, ensuring seamless adoption with zero workflow changes or data integrity risk. Health systems use Arintra to unlock missed revenue due to coding gaps, documentation issues, and unchallenged denials - achieving 5%+ uplift in revenue, 12%+ reduction in A/R days, and 43%+ fewer denials.",
 				"workforceTotal": 120,
 				"country": "United States",
 				"foundedYear": 2020,
 				"citedPage": "https://www.arintra.com/resources/press-release/arintra-raises-25m-to-pioneer-revenue-assurance-for-americas-health-systems",
 				"citedDate": "2026-08-26",
-				"quote": "San Francisco, CA (August 26, 2026) \u2014 Arintra, the first and only enterprise AI platform for revenue assurance in healthcare, today announced a $25 million Series B funding round, bringing the company's total funding to $51 million.",
+				"quote": "San Francisco, CA (August 26, 2026) — Arintra, the first and only enterprise AI platform for revenue assurance in healthcare, today announced a $25 million Series B funding round, bringing the company's total funding to $51 million.",
 				"fitReason": "Austin healthcare AI startup, 120 staff, closed $25M Series B round."
+			}
+		},
+		"augusthealth.com": {
+			"label": null,
+			"name": "August Health",
+			"firstSeenRunId": "companies_3edb3c35-7309-4c50-b4ea-9f982db04704_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:08:39.473Z",
+			"record": {
+				"industry": "Senior care technology",
+				"description": "Our mission is to empower the essential work of caring for all our elders. \n\nAugust Health is the easy-to-use EHR platform that caregivers love, known for improving care quality, simplifying compliance, and enabling better care tracking and analytics. Designed with senior living experts and built by world-class engineers, the software platform makes it easier for communities to provide the best care. With the addition of August Intelligence, the platform will offer AI-powered insights that help communities act faster and more confidently. Since launching in 2020, August Health has been adopted by leading operators across the country, including Sonida Senior Living, 12 Oaks Senior Living, Bickford Senior Living, Koelsch Communities, and Westmont Living. Learn more at augusthealth.com",
+				"workforceTotal": 81,
+				"country": "United States",
+				"foundedYear": 2020,
+				"citedPage": "https://www.augusthealth.com/resources/memo-from-the-co-founders-announcing-our-series-b",
+				"citedDate": "2026-08-20",
+				"quote": "We’re excited to announce that August Health has secured $29 million in Series B funding, led by Base10 Partners, to further our mission to empower the essential work of caring for our elders.",
+				"fitReason": ""
 			}
 		},
 		"augustus.com": {
@@ -125,7 +142,7 @@
 				"citedPage": "https://augustus.com/newsroom/augustus-announces-180m-series-b-at-1b-valuation",
 				"citedDate": "2026-07-21",
 				"quote": "Augustus, the company building the Global Dollar Bank, today announced a $180 million Series B at a $1 billion valuation.",
-				"fitReason": "Financial infra startup, NY, 52 staff, Series B $180M announced, venture\u2011backed."
+				"fitReason": "Financial infra startup, NY, 52 staff, Series B $180M announced, venture‑backed."
 			}
 		},
 		"axle.insure": {
@@ -136,14 +153,14 @@
 			"note": "citedDate 2026-08-11 is within the window; a $17.5M Series A, US, 27 staff",
 			"record": {
 				"industry": "Insurance technology",
-				"description": "Axle is Plaid for insurance\u00a0- a universal API for insurance data. With Axle, companies can instantly verify insurance and monitor ongoing coverage, helping them reduce operational cost while creating a frictionless experience for users. Axle is backed by leading investors including Google's AI-focused venture fund, Y Combinator, and angels from industry leaders like Plaid and Cox Automotive.",
+				"description": "Axle is Plaid for insurance - a universal API for insurance data. With Axle, companies can instantly verify insurance and monitor ongoing coverage, helping them reduce operational cost while creating a frictionless experience for users. Axle is backed by leading investors including Google's AI-focused venture fund, Y Combinator, and angels from industry leaders like Plaid and Cox Automotive.",
 				"workforceTotal": 27,
 				"country": "United States",
 				"foundedYear": 2022,
 				"citedPage": "https://www.axle.insure/blog/announcing-our-17-5m-series-a-led-by-base10",
 				"citedDate": "2026-08-11",
 				"quote": "We're thrilled to announce $17.5M in Series A funding led by Base10 Partners, with continued investment from Y Combinator, and Gradient Ventures; and participation from Stage2 Capital, Chris Bayley (Co-Founder of Cover Genius), and other industry angel investors.",
-				"fitReason": "Insurance\u2011tech startup, NYC, 27 staff, Series A led by Base10, private."
+				"fitReason": "Insurance‑tech startup, NYC, 27 staff, Series A led by Base10, private."
 			}
 		},
 		"beacon.security": {
@@ -154,7 +171,7 @@
 			"note": "citedDate 2026-07-16 is within the window; a $13M seed round, US, 15 staff",
 			"record": {
 				"industry": "Enterprise cybersecurity",
-				"description": "Beacon is the security data management platform that helps modern security teams escape the tradeoff between coverage, context, and cost. With Beacon, you can seamlessly collect, reduce, enrich, and route your security data \u2013\u00a0so analysts and AI agents have the context and visibility to focus on security, not data wrangling. The result: cleaner data, faster investigations, and smarter security at scale.",
+				"description": "Beacon is the security data management platform that helps modern security teams escape the tradeoff between coverage, context, and cost. With Beacon, you can seamlessly collect, reduce, enrich, and route your security data – so analysts and AI agents have the context and visibility to focus on security, not data wrangling. The result: cleaner data, faster investigations, and smarter security at scale.",
 				"workforceTotal": 15,
 				"country": "United States",
 				"foundedYear": null,
@@ -190,7 +207,7 @@
 			"note": "citedDate 2026-07-22 is within the window; an $8M seed round led by Menlo Ventures, US, 21 staff",
 			"record": {
 				"industry": "Biopharma software",
-				"description": "Cheiron is building the AI-native operating system for drug development \u2014 the system where biopharma teams execute scientific, clinical, regulatory, and competitive workflows end-to-end on a unified intelligence layer.\n\nCheiron integrates literature, clinical trials, regulatory precedent, safety data, and patents into a single Lifesciences Knowledge Graph. On this structured substrate, workflow-native AI agents produce decision-ready outputs \u2014 grounded in cross-domain evidence, fully traceable, and built for real-world execution.\n\nTry Cheiron \u2192 https://www.cheiron.bio",
+				"description": "Cheiron is building the AI-native operating system for drug development — the system where biopharma teams execute scientific, clinical, regulatory, and competitive workflows end-to-end on a unified intelligence layer.\n\nCheiron integrates literature, clinical trials, regulatory precedent, safety data, and patents into a single Lifesciences Knowledge Graph. On this structured substrate, workflow-native AI agents produce decision-ready outputs — grounded in cross-domain evidence, fully traceable, and built for real-world execution.\n\nTry Cheiron → https://www.cheiron.bio",
 				"workforceTotal": 21,
 				"country": "United States",
 				"foundedYear": 2024,
@@ -215,7 +232,7 @@
 				"citedPage": "https://conveo.ai/mediakit/series-a",
 				"citedDate": "2026-09-02",
 				"quote": "Conveo announced a $50 million Series A from DST Global Partners, Balderton Capital, Visionaries, 6 Degrees Capital and Y Combinator, bringing total funding to $55.8 million.",
-				"fitReason": "London market\u2011research SaaS, 65 employees, closed $50M Series A with named investors and round size."
+				"fitReason": "London market‑research SaaS, 65 employees, closed $50M Series A with named investors and round size."
 			}
 		},
 		"convex.dev": {
@@ -233,7 +250,7 @@
 				"citedPage": "https://news.convex.dev/convex-raises-57m/",
 				"citedDate": "2026-08-04",
 				"quote": "Today we're announcing our $57 million Series B led by Insight Partners, with participation from Etna Labs, Spark Capital, a16z, and Justin Kan.",
-				"fitReason": "Developer infra startup, SF HQ, 29 employees, Series B led by Insight Partners, VC\u2011funded, private."
+				"fitReason": "Developer infra startup, SF HQ, 29 employees, Series B led by Insight Partners, VC‑funded, private."
 			}
 		},
 		"cusp.ai": {
@@ -286,7 +303,7 @@
 				"foundedYear": 2022,
 				"citedPage": "https://www.cytix.io/resources/cytix-announces-7-million-series-a-funding-round",
 				"citedDate": "2026-08-12",
-				"quote": "Cytix has announced a $7M Series A funding round to accelerate the company\u2019s mission to tackle the problems created by rapid software change.",
+				"quote": "Cytix has announced a $7M Series A funding round to accelerate the company’s mission to tackle the problems created by rapid software change.",
 				"fitReason": "Manchester cybersecurity startup, 10 staff, closed $7M Series A funding round."
 			}
 		},
@@ -298,14 +315,14 @@
 			"note": "citedDate 2026-07-30 is within the window; a $40M Series B led by Insight Partners, US, 89 staff",
 			"record": {
 				"industry": "Enterprise data management",
-				"description": "Databahn is redefining how enterprises manage the explosion of security and operational data in the AI era. Our AI-powered data pipeline and fabric platform helps organizations securely collect, enrich, orchestrate, and optimize enterprise data\u2014including security, application, observability, and IoT/OT telemetry\u2014for analytics, automation, and AI. \n\nWith native support for over 500 integrations and built-in enrichment capabilities, Databahn streamlines fragmented data workflows and reduces SIEM and infrastructure costs from day one. The platform requires no specialist training, enabling security and IT teams to extract insights in real time and adapt quickly to new demands. We've helped Fortune 500 and Global 2000 companies reduce data processing costs by over 60% and automate more than 80% of their data engineering workloads. \n\nOur founding team brings decades of experience in cybersecurity and infrastructure, having previously managed environments ingesting more than 12 petabytes of data per day. That deep domain expertise informs our bold, opinionated approach to solving one of the biggest pain points in enterprise infrastructure: how to unify and act on fragmented, fast-growing data streams. \n\nPurpose-built for scale, speed, and simplicity, Databahn replaces patchwork stacks with a single intuitive solution that accelerates time to value and turns security data from a cost center into a strategic asset. ",
+				"description": "Databahn is redefining how enterprises manage the explosion of security and operational data in the AI era. Our AI-powered data pipeline and fabric platform helps organizations securely collect, enrich, orchestrate, and optimize enterprise data—including security, application, observability, and IoT/OT telemetry—for analytics, automation, and AI. \n\nWith native support for over 500 integrations and built-in enrichment capabilities, Databahn streamlines fragmented data workflows and reduces SIEM and infrastructure costs from day one. The platform requires no specialist training, enabling security and IT teams to extract insights in real time and adapt quickly to new demands. We've helped Fortune 500 and Global 2000 companies reduce data processing costs by over 60% and automate more than 80% of their data engineering workloads. \n\nOur founding team brings decades of experience in cybersecurity and infrastructure, having previously managed environments ingesting more than 12 petabytes of data per day. That deep domain expertise informs our bold, opinionated approach to solving one of the biggest pain points in enterprise infrastructure: how to unify and act on fragmented, fast-growing data streams. \n\nPurpose-built for scale, speed, and simplicity, Databahn replaces patchwork stacks with a single intuitive solution that accelerates time to value and turns security data from a cost center into a strategic asset. ",
 				"workforceTotal": 89,
 				"country": "United States",
 				"foundedYear": null,
 				"citedPage": "https://www.databahn.ai/press-releases/databahn-raises-40-million-series-b-led-by-insight-partners",
 				"citedDate": "2026-07-30",
 				"quote": "DataBahn today announced the closing of a $40 million Series B funding round led by Insight Partners, with participation from existing investors Forgepoint, GTM Capital and S3 Ventures.",
-				"fitReason": "Data platform startup, Dallas HQ, 89 employees, $40M Series B led by Insight Partners, private VC\u2011backed."
+				"fitReason": "Data platform startup, Dallas HQ, 89 employees, $40M Series B led by Insight Partners, private VC‑backed."
 			}
 		},
 		"diameterpay.com": {
@@ -331,9 +348,10 @@
 			"name": "Discern Security",
 			"firstSeenRunId": "companies_40065978-c573-407d-b746-54a0c2cf5434_2026-09-05",
 			"lastSeenAt": "2026-09-05T07:48:51.578Z",
+			"note": "30 staff, US, venture-backed cybersecurity SaaS operating company; announced a $13M Series A on 2026-07-30, within the 90-day window",
 			"record": {
 				"industry": "Cybersecurity",
-				"description": "Underutilization of security tools, lack of cross-platform intelligence, and challenges in realizing ROI from security investments are the top concerns facing security leaders today.\n\nDiscern Security\u2019s AI-powered Security Controls and Posture Assessment and Optimization platform helps CISOs and security leaders by:\n\n- Maximizing the efficacy of security investments: Fine-tuning security controls and policies to ensure optimal performance and protection.\n\n- Delivering cross-platform intelligence: By creating a cybermesh, Discern offers insights into overall security health, coverage gaps, configuration weaknesses, and user and device risks across multiple platforms.\n\n- Tailored dashboards and recommendations: Generate custom dashboards with actionable insights and strategic recommendations to improve security posture and resilience.\n\n- Comprehensive asset management: Identify, score, and remediate user and device risks throughout the organization, supported by no-code workflows that streamline asset management.\n\n- Building value narratives: Help security leaders demonstrate the value they've added to the organization by delivering measurable security improvements, backed by key metrics and alignment with frameworks like MITRE.\n\nDiscern Security automates the assessment and optimization of security controls for leading tools such as Microsoft, Google, Okta, CrowdStrike, SentinelOne, and SailPoint. Our platform evaluates these tools against specific risks, including functional and organizational risks, ensuring that each tool operates in alignment with the unique security challenges faced by our customers.",
+				"description": "Underutilization of security tools, lack of cross-platform intelligence, and challenges in realizing ROI from security investments are the top concerns facing security leaders today.\n\nDiscern Security’s AI-powered Security Controls and Posture Assessment and Optimization platform helps CISOs and security leaders by:\n\n- Maximizing the efficacy of security investments: Fine-tuning security controls and policies to ensure optimal performance and protection.\n\n- Delivering cross-platform intelligence: By creating a cybermesh, Discern offers insights into overall security health, coverage gaps, configuration weaknesses, and user and device risks across multiple platforms.\n\n- Tailored dashboards and recommendations: Generate custom dashboards with actionable insights and strategic recommendations to improve security posture and resilience.\n\n- Comprehensive asset management: Identify, score, and remediate user and device risks throughout the organization, supported by no-code workflows that streamline asset management.\n\n- Building value narratives: Help security leaders demonstrate the value they've added to the organization by delivering measurable security improvements, backed by key metrics and alignment with frameworks like MITRE.\n\nDiscern Security automates the assessment and optimization of security controls for leading tools such as Microsoft, Google, Okta, CrowdStrike, SentinelOne, and SailPoint. Our platform evaluates these tools against specific risks, including functional and organizational risks, ensuring that each tool operates in alignment with the unique security challenges faced by our customers.",
 				"workforceTotal": 30,
 				"country": "United States",
 				"foundedYear": 2023,
@@ -341,8 +359,7 @@
 				"citedDate": "2026-07-30",
 				"quote": "SUNNYVALE, Calif., July 30, 2026 /PRNewswire/ -- Discern Security, the company transforming cybersecurity posture through proactive, agent-driven optimization of security controls, today announced $13 million in Series A funding led by Forgepoint Capital, with participation from First Rays Ventures, Growth Enjin Partners, Vela Ventures, and other angel investors.",
 				"fitReason": ""
-			},
-			"note": "30 staff, US, venture-backed cybersecurity SaaS operating company; announced a $13M Series A on 2026-07-30, within the 90-day window"
+			}
 		},
 		"fsh.org": {
 			"label": "accept",
@@ -388,7 +405,7 @@
 			"note": "citedDate 2026-07-28 is within the window; a $27M Series B, UK, 50 staff",
 			"record": {
 				"industry": "Waste management",
-				"description": "Greyparrot [greyparrot.ai], the leader in AI waste analytics, is applying AI to globally scale recycling and save millions of tonnes of waste from landfills and incinerators. By providing deeper, more intelligent insights about waste stream composition and financial value, Greyparrot is helping the waste sector recover more value from waste processing lines and reduce the environmental impact of waste.\nThe company\u2019s waste intelligence platform, including Greyparrot Analyzer and Greyparrot Sync (API), reveals real-time insights on over 70 waste categories across seven layers of data, including financial value, brand, and GHG emissions, captured at multiple locations across a recycling facility. In 2023, Greyparrot analysed over 25 billion waste objects helping drive efficiency to save hundreds of thousands, to millions, of dollars per facility \u2013 while diverting millions of tonnes of waste away from landfills, oceans, and incinerators.\nUsing Greyparrot insights, recycling professionals, plant builders, packaging producers, and FMCG brands can make decisions to help them increase recycling efficiency, comply with recycling regulations, and improve recyclable packaging design.\n\nGreyparrot is recognised as:\n\n- Global Cleantech 100 2024\n- World Economic Forum \u201cTech Pioneer\u201d 2021\n- PWC \u201cNetZero Future 50\u201d 2022\n- WIRED \u201cEurope's 100 Hottest Startups\u201d 2021\n- CB Insights \u201cTop 100 most promising AI company globally\u201d 2021",
+				"description": "Greyparrot [greyparrot.ai], the leader in AI waste analytics, is applying AI to globally scale recycling and save millions of tonnes of waste from landfills and incinerators. By providing deeper, more intelligent insights about waste stream composition and financial value, Greyparrot is helping the waste sector recover more value from waste processing lines and reduce the environmental impact of waste.\nThe company’s waste intelligence platform, including Greyparrot Analyzer and Greyparrot Sync (API), reveals real-time insights on over 70 waste categories across seven layers of data, including financial value, brand, and GHG emissions, captured at multiple locations across a recycling facility. In 2023, Greyparrot analysed over 25 billion waste objects helping drive efficiency to save hundreds of thousands, to millions, of dollars per facility – while diverting millions of tonnes of waste away from landfills, oceans, and incinerators.\nUsing Greyparrot insights, recycling professionals, plant builders, packaging producers, and FMCG brands can make decisions to help them increase recycling efficiency, comply with recycling regulations, and improve recyclable packaging design.\n\nGreyparrot is recognised as:\n\n- Global Cleantech 100 2024\n- World Economic Forum “Tech Pioneer” 2021\n- PWC “NetZero Future 50” 2022\n- WIRED “Europe's 100 Hottest Startups” 2021\n- CB Insights “Top 100 most promising AI company globally” 2021",
 				"workforceTotal": 50,
 				"country": "United Kingdom",
 				"foundedYear": 2019,
@@ -413,7 +430,7 @@
 				"citedPage": "https://www.helcim.com/company/helcim-raises-series-c/",
 				"citedDate": "2026-08-21",
 				"quote": "We've just raised a $53 million Series C, and we want to share what it means for the future of Helcim and the merchants who trust us every day.",
-				"fitReason": "Helcim is Calgary payments operating company, 143 employees, raised $53M Series C; private venture\u2011backed firm."
+				"fitReason": "Helcim is Calgary payments operating company, 143 employees, raised $53M Series C; private venture‑backed firm."
 			}
 		},
 		"helloaria.eu": {
@@ -421,17 +438,17 @@
 			"name": "Aria",
 			"firstSeenRunId": "companies_a86f451b-0a01-402d-9996-743a32fbfe0b_2026-09-04",
 			"lastSeenAt": "2026-09-04T11:42:13.696Z",
-			"note": "citedDate 2026-07-09 is within the window; a \u20ac7M Series A extension plus debt facility, France, 53 staff",
+			"note": "citedDate 2026-07-09 is within the window; a €7M Series A extension plus debt facility, France, 53 staff",
 			"record": {
 				"industry": "Financial services",
-				"description": "Where money moves.\n\nWe're transforming payment experiences for software companies by making it easier to move money. \n\nOur view is that when two companies work together, everything has to move fast. By building products like invoice financing and flexible payment terms \u2014 and working with some of the leading tech companies around the world \u2014 we\u2019re making this a real possibility. \n\nTailored for B2B marketplaces, vertical SaaS, and enterprise software, our solution simplifies the payment process for businesses, enabling clients of all sizes to pay their partners and vendors instantly.",
+				"description": "Where money moves.\n\nWe're transforming payment experiences for software companies by making it easier to move money. \n\nOur view is that when two companies work together, everything has to move fast. By building products like invoice financing and flexible payment terms — and working with some of the leading tech companies around the world — we’re making this a real possibility. \n\nTailored for B2B marketplaces, vertical SaaS, and enterprise software, our solution simplifies the payment process for businesses, enabling clients of all sizes to pay their partners and vendors instantly.",
 				"workforceTotal": 53,
 				"country": "France",
 				"foundedYear": 2019,
 				"citedPage": "https://fintech.global/2026/07/09/aria-raises-e7m-and-secures-e240m-facility-for-invoices/",
 				"citedDate": "2026-07-09",
-				"quote": "Aria, the Paris-based embedded invoice financing platform, has secured a \u20ac7m Series A extension alongside a new \u20ac240m debt facility as it looks to expand its financing capacity and combat the late payments crisis affecting businesses across Europe.",
-				"fitReason": "Paris fintech, 53 staff, secured \u20ac7M Series A extension; no lead investor named in quote."
+				"quote": "Aria, the Paris-based embedded invoice financing platform, has secured a €7m Series A extension alongside a new €240m debt facility as it looks to expand its financing capacity and combat the late payments crisis affecting businesses across Europe.",
+				"fitReason": "Paris fintech, 53 staff, secured €7M Series A extension; no lead investor named in quote."
 			}
 		},
 		"henry.ai": {
@@ -442,7 +459,7 @@
 			"note": "citedDate 2026-07-29 is within the window; a $16.5M Series A led by FirstMark Capital, US, 23 staff",
 			"record": {
 				"industry": "Commercial real estate software",
-				"description": "Henry helps commercial real estate professionals turn raw deal data into polished, on-brand decks in minutes. Built for closers, not marketers. Henry automates everything from comp stacks to rent rolls, translating messy spreadsheets into stunning, ready-to-send presentations. Used by top-performing brokers and owners across multifamily, self-storage, senior housing, and more.If your name\u2019s on the sign, Henry makes sure your deck looks like it belongs there.",
+				"description": "Henry helps commercial real estate professionals turn raw deal data into polished, on-brand decks in minutes. Built for closers, not marketers. Henry automates everything from comp stacks to rent rolls, translating messy spreadsheets into stunning, ready-to-send presentations. Used by top-performing brokers and owners across multifamily, self-storage, senior housing, and more.If your name’s on the sign, Henry makes sure your deck looks like it belongs there.",
 				"workforceTotal": 23,
 				"country": "United States",
 				"foundedYear": 2024,
@@ -460,7 +477,7 @@
 			"note": "citedDate 2026-09-02 is within the window; a $100M Series B, US, 120 staff",
 			"record": {
 				"industry": "Cybersecurity software",
-				"description": "HiddenLayer, a Gartner-recognized Cool Vendor for AI Security, is the leading provider of Security for AI. Its AISec Platform unifies supply chain security, runtime defense, posture management, and automated red teaming to protect agentic, generative and predictive AI applications. The platform enables organizations across the private and public sectors to reduce risk, ensure compliance, and adopt AI with confidence.\n\nFounded by a team of cybersecurity and machine learning veterans, HiddenLayer combines patented technology with industry-leading research to defend against prompt injection, adversarial manipulation, model theft, and supply chain compromise. The company is backed by strategic investors including M12 (Microsoft\u2019s Venture Fund), Moore Strategic Ventures, Booz Allen Ventures, IBM Ventures, and Capital One Ventures.",
+				"description": "HiddenLayer, a Gartner-recognized Cool Vendor for AI Security, is the leading provider of Security for AI. Its AISec Platform unifies supply chain security, runtime defense, posture management, and automated red teaming to protect agentic, generative and predictive AI applications. The platform enables organizations across the private and public sectors to reduce risk, ensure compliance, and adopt AI with confidence.\n\nFounded by a team of cybersecurity and machine learning veterans, HiddenLayer combines patented technology with industry-leading research to defend against prompt injection, adversarial manipulation, model theft, and supply chain compromise. The company is backed by strategic investors including M12 (Microsoft’s Venture Fund), Moore Strategic Ventures, Booz Allen Ventures, IBM Ventures, and Capital One Ventures.",
 				"workforceTotal": 120,
 				"country": "United States",
 				"foundedYear": 2022,
@@ -493,7 +510,7 @@
 			"name": "Kord",
 			"firstSeenRunId": "companies_a840cd9b-3c9b-4be8-81ee-a13bf39a6857_2026-09-04",
 			"lastSeenAt": "2026-09-04T10:40:51.022Z",
-			"note": "the cited tech.eu article's own URL is dated 2026-07-08, within 90 days of 2026-09-03, and its quote names a \u00a36.4M Series A; 21 staff, UK, venture-backed operating company",
+			"note": "the cited tech.eu article's own URL is dated 2026-07-08, within 90 days of 2026-09-03, and its quote names a £6.4M Series A; 21 staff, UK, venture-backed operating company",
 			"record": {
 				"industry": "Financial services",
 				"description": "The gap between client identity and client money is where most regulated firms encounter fraud and money laundering risk. On top of the increasing regulatory scrutiny imposed on firms, this creates a serious burden that manual and disconnected checks can simply no longer meet.\n\nBut by verifying and securing both on the same identity-bound rails, Kord creates a closed loop that eliminates this gap, and reduces risk to your firm and your clients.\n\nIt unites everything regulated firms need to identify and verify clients, safeguard and move their money, and create evidence-based audit trails on one platform:\n\n- Client due diligence: identity verification, AML, KYC, and PEPs and sanctions screening\n- Source of funds and source of wealth through open banking\n- Biometric ID verification to meet the Safe Harbour standard\n- Enhanced data insights from HM Land Registry and credit reference agencies\n- Instant, secure payments\n- Third-party managed accounts for client money\n- Fraud prevention and reporting\n\nThis allows you to replace manual processes and disconnected platforms with a closed loop, where trust and verification are built on defensible, evidenced, identity-bound rails.\n\nProtect your clients, meet your regulatory obligations, remove the risk of fraud, and build trust without friction.",
@@ -502,7 +519,7 @@
 				"foundedYear": 2020,
 				"citedPage": "https://tech.eu/2026/07/08/kord-secures-ps64m-to-unify-onboarding-compliance-and-payments/",
 				"citedDate": "2026-07-08",
-				"quote": "UK fintech Kord, the end-to-end platform making onboarding clients, identity verification and payment processing simpler and more secure, has raised \u00a36.4 million in a Series A funding round.",
+				"quote": "UK fintech Kord, the end-to-end platform making onboarding clients, identity verification and payment processing simpler and more secure, has raised £6.4 million in a Series A funding round.",
 				"fitReason": "Kord is a UK fintech operating company, 21 employees, raised Series A; private venture-backed startup."
 			}
 		},
@@ -514,14 +531,14 @@
 			"note": "citedDate 2026-08-05 is within the window; a $21M Series A, UK, 62 staff",
 			"record": {
 				"industry": "Private markets",
-				"description": "LemonEdge is a next-generation private capital platform for financial services, built on advanced cloud-native and API technologies. \n\nOur Path Allocation Engine significantly reduces the time spent on legacy processes such as Equity Pick Up, while supporting full look-through capability across fund structures.\n\nLemonEdge also provides fast, powerful reporting and scenario planning, delivering real-time insights through our canvas technology.\n\nOur portfolio management suite supports complex calculations including:\n\n\u2022 IRRs\n\u2022 waterfalls\n\u2022 valuations\n\nThese capabilities help firms improve operational efficiency while maintaining flexibility as they scale.\n\nThrough our no-code and low-code tools, firms can customise the platform or build additional applications on top of it up to 10x faster than traditional systems.\n\nLemonEdge\u2019s building blocks for financial services support everything from multi-currency general ledger, auditing, risk management and reporting to handling complex financial data at scale.\n\nVisit our website to learn more: https://www.lemonedge.com/ ",
+				"description": "LemonEdge is a next-generation private capital platform for financial services, built on advanced cloud-native and API technologies. \n\nOur Path Allocation Engine significantly reduces the time spent on legacy processes such as Equity Pick Up, while supporting full look-through capability across fund structures.\n\nLemonEdge also provides fast, powerful reporting and scenario planning, delivering real-time insights through our canvas technology.\n\nOur portfolio management suite supports complex calculations including:\n\n• IRRs\n• waterfalls\n• valuations\n\nThese capabilities help firms improve operational efficiency while maintaining flexibility as they scale.\n\nThrough our no-code and low-code tools, firms can customise the platform or build additional applications on top of it up to 10x faster than traditional systems.\n\nLemonEdge’s building blocks for financial services support everything from multi-currency general ledger, auditing, risk management and reporting to handling complex financial data at scale.\n\nVisit our website to learn more: https://www.lemonedge.com/ ",
 				"workforceTotal": 62,
 				"country": "United Kingdom",
 				"foundedYear": 2020,
 				"citedPage": "https://www.finsmes.com/2026/08/lemonedge-closes-21m-series-a-funding-round.html",
 				"citedDate": "2026-08-05",
 				"quote": "LemonEdge, a London, UK-based provider of a fund accounting platform for private markets, closed a $21m Series A funding round.",
-				"fitReason": "London fund\u2011accounting software firm, 62 employees, closed $21M Series A; no lead investor named for r11."
+				"fitReason": "London fund‑accounting software firm, 62 employees, closed $21M Series A; no lead investor named for r11."
 			}
 		},
 		"meticulous.ai": {
@@ -556,7 +573,7 @@
 				"foundedYear": 2022,
 				"citedPage": "https://www.metriport.com/blog/metriport-series-a",
 				"citedDate": "2026-08-27",
-				"quote": "Metriport has raised $26 million in new funding to give clinicians a secure, comprehensive picture of their patients\u2019 health history and what\u2019s most relevant in the moment, right at the point of care.",
+				"quote": "Metriport has raised $26 million in new funding to give clinicians a secure, comprehensive picture of their patients’ health history and what’s most relevant in the moment, right at the point of care.",
 				"fitReason": "Health tech operating company in SF, 30 staff, raised $26M in a Series A round."
 			}
 		},
@@ -568,7 +585,7 @@
 			"note": "citedDate 2026-08-12 is within the window; a $30M Series A, US, 24 staff",
 			"record": {
 				"industry": "AI cybersecurity",
-				"description": "Mindgard is the leading provider of AI Security solutions. Spun out from over a decade of AI security research at Lancaster University and headquartered in Boston and London, Mindgard helps enterprises secure their AI models, agents, and applications across the AI lifecycle.\n\nAI introduces risks that traditional security tools cannot detect, leaving organizations unable to find, measure, or secure their AI. Security teams struggle with a lack of visibility into AI activity and its attack surfaces. Difficulty reproducing agentic AI behavior creates uncertainty and compliance challenges. Ultimately, an inability to enforce AI controls heights the risk of compromise. \n\nMindgard delivers AI detection and response through attack-driven defense, giving enterprises the ability to map their AI attack surface, measure and validate AI risk, and actively defend their AI. \n\n- Visibility into AI inventory and activity reveals what attackers can find out about your AI. \n- Agentic AI red teaming assesses how attackers can exploit your AI. \n- Enforcement controls and policies at runtime stops attackers from breaching your AI. \n\nMindgard stands out for its: \n- Flexibility: Test AI models directly or via apps using CI/CD, our web UI, or tools like Burp Suite.\n- Usability: The only non-open-source AI red teaming platform, fast and easy to set up, test, and report with.\n- R&D pipeline: Backed by a decade of university research and active PhD-level innovation and publishing.\n\nMindgard works with the AI models and guardrails you build, buy and use. Extensive coverage beyond LLMs, including image, audio, and multi-modal. Whether you are using open source, internally developed, 3rd party purchased, or popular LLMs like OpenAI and Claude, we\u2019ve got you covered.\n\nTrusted by leading organizations in finance, healthcare, and technology, Mindgard is backed by investors including .406 Ventures, IQ Capital, Atlantic Bridge, and Lakestar.",
+				"description": "Mindgard is the leading provider of AI Security solutions. Spun out from over a decade of AI security research at Lancaster University and headquartered in Boston and London, Mindgard helps enterprises secure their AI models, agents, and applications across the AI lifecycle.\n\nAI introduces risks that traditional security tools cannot detect, leaving organizations unable to find, measure, or secure their AI. Security teams struggle with a lack of visibility into AI activity and its attack surfaces. Difficulty reproducing agentic AI behavior creates uncertainty and compliance challenges. Ultimately, an inability to enforce AI controls heights the risk of compromise. \n\nMindgard delivers AI detection and response through attack-driven defense, giving enterprises the ability to map their AI attack surface, measure and validate AI risk, and actively defend their AI. \n\n- Visibility into AI inventory and activity reveals what attackers can find out about your AI. \n- Agentic AI red teaming assesses how attackers can exploit your AI. \n- Enforcement controls and policies at runtime stops attackers from breaching your AI. \n\nMindgard stands out for its: \n- Flexibility: Test AI models directly or via apps using CI/CD, our web UI, or tools like Burp Suite.\n- Usability: The only non-open-source AI red teaming platform, fast and easy to set up, test, and report with.\n- R&D pipeline: Backed by a decade of university research and active PhD-level innovation and publishing.\n\nMindgard works with the AI models and guardrails you build, buy and use. Extensive coverage beyond LLMs, including image, audio, and multi-modal. Whether you are using open source, internally developed, 3rd party purchased, or popular LLMs like OpenAI and Claude, we’ve got you covered.\n\nTrusted by leading organizations in finance, healthcare, and technology, Mindgard is backed by investors including .406 Ventures, IQ Capital, Atlantic Bridge, and Lakestar.",
 				"workforceTotal": 24,
 				"country": "United States",
 				"foundedYear": 2022,
@@ -583,7 +600,7 @@
 			"name": "naaia.ai",
 			"firstSeenRunId": "companies_a86f451b-0a01-402d-9996-743a32fbfe0b_2026-09-04",
 			"lastSeenAt": "2026-09-04T11:42:13.696Z",
-			"note": "citedDate 2026-07-07 is within the window; a \u20ac6M Series A led by Ventech, France, 18 staff",
+			"note": "citedDate 2026-07-07 is within the window; a €6M Series A led by Ventech, France, 18 staff",
 			"record": {
 				"industry": "AI governance",
 				"description": "Naaia provides a leading BtoB SaaS platform to manage AI risks & compliance for public and private organisations. Through an end-to-end, multi regulatory & multi framework approach, Naaia ensures the accelerated implementation of trusted AI.",
@@ -592,8 +609,8 @@
 				"foundedYear": 2022,
 				"citedPage": "https://naaia.ai/en/naaia-raises-6-million-euros-trusted-ai-europe/",
 				"citedDate": "2026-07-07",
-				"quote": "Naaia, the French AI risk and compliance management platform, announced today a \u20ac6 million Series A funding round led by Ventech, a pan-European venture capital firm, with the participation of software industry operators, including the founders and executives of a fintech unicorn.",
-				"fitReason": "Paris AI SaaS startup, 18 staff, closed \u20ac6M Series A led by Ventech, venture-backed."
+				"quote": "Naaia, the French AI risk and compliance management platform, announced today a €6 million Series A funding round led by Ventech, a pan-European venture capital firm, with the participation of software industry operators, including the founders and executives of a fintech unicorn.",
+				"fitReason": "Paris AI SaaS startup, 18 staff, closed €6M Series A led by Ventech, venture-backed."
 			}
 		},
 		"natural.com": {
@@ -622,14 +639,31 @@
 			"note": "citedDate 2026-07-15 is within the window; a $700M Series C, Sweden, 462 staff, still within the qualifying Seed-C range",
 			"record": {
 				"industry": "Preventive healthcare",
-				"description": "Neko Health is a healthcare technology company co-founded in 2018 by Swedish engineer Hjalmar Nilsonne and Spotify founder Daniel Ek.\u2028\n\u200d\nOur vision is to provide healthcare that\u2019s proactive instead of reactive \u2013 so that people can live longer, healthier lives. By combining proprietary technology and thoughtful design with best-in-class clinical care and research, Neko has pioneered an affordable preventive health scan unlike any other.",
+				"description": "Neko Health is a healthcare technology company co-founded in 2018 by Swedish engineer Hjalmar Nilsonne and Spotify founder Daniel Ek. \n‍\nOur vision is to provide healthcare that’s proactive instead of reactive – so that people can live longer, healthier lives. By combining proprietary technology and thoughtful design with best-in-class clinical care and research, Neko has pioneered an affordable preventive health scan unlike any other.",
 				"workforceTotal": 462,
 				"country": "Sweden",
 				"foundedYear": 2018,
 				"citedPage": "https://www.nekohealth.com/us/en/press/neko-health-raises-usd700m-series-c-ahead-of-us-launch",
 				"citedDate": "2026-07-15",
-				"quote": "Founded by Spotify\u2019s Daniel Ek and Hjalmar Nilsonne, Neko Health, the health technology company redefining how people understand and act on their health, today announced the completion of its $700 million Series C funding round.",
+				"quote": "Founded by Spotify’s Daniel Ek and Hjalmar Nilsonne, Neko Health, the health technology company redefining how people understand and act on their health, today announced the completion of its $700 million Series C funding round.",
 				"fitReason": "Operating startup, Sweden (Continental Europe), large headcount, completed $700M Series C, but no lead investor named."
+			}
+		},
+		"neno.co": {
+			"label": null,
+			"name": "neno",
+			"firstSeenRunId": "companies_3edb3c35-7309-4c50-b4ea-9f982db04704_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:08:39.473Z",
+			"record": {
+				"industry": "Financial services",
+				"description": "Neno is a full-stack AI financial services company merging financial technology with embedded professional payroll, accounting and tax services - everything an entrepreneur needs without the admin headache or high fees that come with it. \n\nBehind it all is a team of ambitious, curious and slightly unconventional AI builders, ex-founders, fintech operators, chartered accountants and creatives from all over the world who hate admin just as much as you do. \n\nIf you thrive in a high-commitment, high-reward culture and want the autonomy to deliver your best work, neno will be the most exciting mission you ever join.\n\nBacked by Firstminute Capital, Motive Partners and angels from Miro, a16z, Coinbase, Mollie, Juni, Deel, Navro, Copper, Wise and PayPal.",
+				"workforceTotal": 19,
+				"country": "Netherlands",
+				"foundedYear": 2025,
+				"citedPage": "https://www.neno.co/resources/content/blog/neno-raises-%E2%82%AC6.6-million-to-build-ai-native-financial-services-for-europe-s-smes",
+				"citedDate": "2026-08-25",
+				"quote": "We've raised €6.6 million in seed funding.",
+				"fitReason": ""
 			}
 		},
 		"nogginhq.com": {
@@ -637,7 +671,7 @@
 			"name": "Noggin HQ",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "citedDate 2026-08-25 is within the window; a \u00a32.3M seed round, UK, 10 staff meets the floor",
+			"note": "citedDate 2026-08-25 is within the window; a £2.3M seed round, UK, 10 staff meets the floor",
 			"record": {
 				"industry": "Consumer credit",
 				"description": "Consumer credit technology company using open-banking data to provide alternative credit-scoring infrastructure to lenders.",
@@ -646,8 +680,8 @@
 				"foundedYear": 2021,
 				"citedPage": "https://www.finsmes.com/2026/08/noggin-hq-raises-2-3m-in-seed-funding.html",
 				"citedDate": "2026-08-25",
-				"quote": "Noggin HQ, a Newcastle upon Tyne, UK-based consumer credit technology startup, raised \u00a32.3m in seed funding.",
-				"fitReason": "UK consumer\u2011credit startup, 10 staff, seed round raised, venture\u2011backed private."
+				"quote": "Noggin HQ, a Newcastle upon Tyne, UK-based consumer credit technology startup, raised £2.3m in seed funding.",
+				"fitReason": "UK consumer‑credit startup, 10 staff, seed round raised, venture‑backed private."
 			}
 		},
 		"norberthealth.com": {
@@ -658,14 +692,14 @@
 			"note": "citedDate 2026-09-01 is within the window; a $14M Series A, US, 13 staff",
 			"record": {
 				"industry": "Health technology",
-				"description": "Norbert is a physical and medical AI module that turns any robot into a health assistant \u2014 bringing care delivery to wherever patients are.\nCurrently deployed in the real-world, and built for healthcare environments, Norbert enables robots to naturally interact with patients, measure vitals without contact, assess mobility and various behavioral signals, and share insights with care teams. By combining robotics, AI, and human-centered design, Norbert helps nurses and caregivers deliver safer, more preventive, and more personalized care. With no added staff or complex change management.\n\nWe\u2019re partnering with forward-thinking care providers to redefine how AI and robotics enhance care delivery and patient engagement.",
+				"description": "Norbert is a physical and medical AI module that turns any robot into a health assistant — bringing care delivery to wherever patients are.\nCurrently deployed in the real-world, and built for healthcare environments, Norbert enables robots to naturally interact with patients, measure vitals without contact, assess mobility and various behavioral signals, and share insights with care teams. By combining robotics, AI, and human-centered design, Norbert helps nurses and caregivers deliver safer, more preventive, and more personalized care. With no added staff or complex change management.\n\nWe’re partnering with forward-thinking care providers to redefine how AI and robotics enhance care delivery and patient engagement.",
 				"workforceTotal": 13,
 				"country": "United States",
 				"foundedYear": 2019,
 				"citedPage": "https://www.prnewswire.com/news-releases/norbert-health-raises-14-million-series-a-to-power-autonomous-robotic-nursing-assistants-302865486.html",
 				"citedDate": "2026-09-01",
 				"quote": "Norbert Health, whose physical AI control system turns robotic hardware platforms into autonomous nursing assistants, today announced its $14 million Series A, supported by William A. Marino with Cardinal Group, with participation from Exor Seeds, CareIT, and angel investors including Alexis Le-Quoc and Olivier Pomel (Datadog), Saeju Jeong (Noom) and Thomas Clozel (Owkin).",
-				"fitReason": "Health\u2011tech robotics startup, Brooklyn, 13 staff, Series A led by Cardinal Group, private."
+				"fitReason": "Health‑tech robotics startup, Brooklyn, 13 staff, Series A led by Cardinal Group, private."
 			}
 		},
 		"ognomy.com": {
@@ -694,14 +728,14 @@
 			"note": "citedDate 2026-08-26 is within the window; a $17M Series A, US, 21 staff",
 			"record": {
 				"industry": "Health technology",
-				"description": "We\u2019re building a system that unites providers and payers with one goal: delivering the highest quality care while eliminating waste.",
+				"description": "We’re building a system that unites providers and payers with one goal: delivering the highest quality care while eliminating waste.",
 				"workforceTotal": 21,
 				"country": "United States",
 				"foundedYear": null,
 				"citedPage": "https://www.prnewswire.com/news-releases/onos-health-raises-17-million-series-a-to-accelerate-adoption-of-its-behavioral-health-ai-platform-for-health-plans-302860046.html",
 				"citedDate": "2026-08-26",
 				"quote": "Onos Health, the behavioral health clinical intelligence platform for payers today announced a $17 million Series A financing round led by Costanoa, with participation from Flare Capital Partners and strategic investment from CVS Health Ventures.",
-				"fitReason": "Same Onos Health entity, Series A led by Costanoa, venture\u2011backed private US firm."
+				"fitReason": "Same Onos Health entity, Series A led by Costanoa, venture‑backed private US firm."
 			}
 		},
 		"onyx.security": {
@@ -712,14 +746,14 @@
 			"note": "citedDate 2026-07-29 is within the window; a $113M Series B led by Bessemer Venture Partners, US, 72 staff",
 			"record": {
 				"industry": "Enterprise cybersecurity",
-				"description": "Onyx Security accelerates enterprise AI adoption, securely. The company\u2019s secure AI control plane offers a single platform to serve security, governance, and infrastructure teams as they oversee how AI agents are used, ensure they are secure and compliant, and measure their effectiveness. Powered by its proprietary models and agentic technology, Onyx is already trusted by leading Fortune 500 companies. To maximize the value from AI and minimize the risks, visit onyx.security.",
+				"description": "Onyx Security accelerates enterprise AI adoption, securely. The company’s secure AI control plane offers a single platform to serve security, governance, and infrastructure teams as they oversee how AI agents are used, ensure they are secure and compliant, and measure their effectiveness. Powered by its proprietary models and agentic technology, Onyx is already trusted by leading Fortune 500 companies. To maximize the value from AI and minimize the risks, visit onyx.security.",
 				"workforceTotal": 72,
 				"country": "United States",
 				"foundedYear": 2024,
 				"citedPage": "https://www.onyx.security/blog/onyx-113m-series-b-keeping-humans-in-control-as-ai-becomes-smarter",
 				"citedDate": "2026-07-29",
 				"quote": "That is why we built the Secure AI Control Plane. And that is why, today, I am announcing that Onyx has raised $113 million in Series B funding led by Bessemer Venture Partners, with participation from Cyberstarts, TCV, Conviction, FirstMark, Vintage Investment Partners, QuantumLight, and G Squared.",
-				"fitReason": "Cybersecurity startup, NY HQ, 72 employees, $113M Series B led by Bessemer, private, venture\u2011backed."
+				"fitReason": "Cybersecurity startup, NY HQ, 72 employees, $113M Series B led by Bessemer, private, venture‑backed."
 			}
 		},
 		"oreenergy.com": {
@@ -730,7 +764,7 @@
 			"note": "citedDate 2026-08-04 is within the window; a $43M Series A, Netherlands, 32 staff",
 			"record": {
 				"industry": "Energy storage",
-				"description": "Ore Energy is developing the next generation of long-duration energy storage to enable a fully renewable power system. Our iron-air battery technology stores electricity for up to 100 hours, making it possible to keep grids running through multi-day periods of low wind and sun.\n\nUnlike conventional batteries, our systems use abundant, non-toxic materials: iron, air, and water. This makes them safe, cost-effective, and scalable without relying on scarce minerals or fragile supply chains. When charging, the battery converts rust into metallic iron. When discharging, it reverses the reaction, consuming oxygen and producing rust again. This simple, proven chemistry has the potential to deliver energy at a fraction of the cost of other storage technologies.\n\nFounded at TU Delft in the Netherlands, Ore Energy is focused on real-world deployment. In 2025, we connected the world's first iron-air battery to the grid in Delft. This milestone demonstrated that multi-day storage can be integrated directly into modern energy systems.\n\nAs countries expand renewable generation, the challenge of balancing supply and demand is becoming urgent. We believe long-duration storage is a critical part of the solution and that it must be safe, sustainable, and affordable at scale.\n\nOre Energy\u2019s mission is clear: to store renewable energy anywhere, for as long as needed, using materials that are available to everyone. By combining deep electrochemistry expertise with practical engineering, we are turning one of Earth\u2019s most abundant resources into a cornerstone of the clean energy transition.\n\nTo learn more about our technology, deployments, and career opportunities, visit: www.oreenergy.com",
+				"description": "Ore Energy is developing the next generation of long-duration energy storage to enable a fully renewable power system. Our iron-air battery technology stores electricity for up to 100 hours, making it possible to keep grids running through multi-day periods of low wind and sun.\n\nUnlike conventional batteries, our systems use abundant, non-toxic materials: iron, air, and water. This makes them safe, cost-effective, and scalable without relying on scarce minerals or fragile supply chains. When charging, the battery converts rust into metallic iron. When discharging, it reverses the reaction, consuming oxygen and producing rust again. This simple, proven chemistry has the potential to deliver energy at a fraction of the cost of other storage technologies.\n\nFounded at TU Delft in the Netherlands, Ore Energy is focused on real-world deployment. In 2025, we connected the world's first iron-air battery to the grid in Delft. This milestone demonstrated that multi-day storage can be integrated directly into modern energy systems.\n\nAs countries expand renewable generation, the challenge of balancing supply and demand is becoming urgent. We believe long-duration storage is a critical part of the solution and that it must be safe, sustainable, and affordable at scale.\n\nOre Energy’s mission is clear: to store renewable energy anywhere, for as long as needed, using materials that are available to everyone. By combining deep electrochemistry expertise with practical engineering, we are turning one of Earth’s most abundant resources into a cornerstone of the clean energy transition.\n\nTo learn more about our technology, deployments, and career opportunities, visit: www.oreenergy.com",
 				"workforceTotal": 32,
 				"country": "Netherlands",
 				"foundedYear": 2023,
@@ -748,7 +782,7 @@
 			"note": "18 staff, US, venture-backed healthcare-marketing CDP operating company; announced a $15M Series A on 2026-08-19, within the 90-day window",
 			"record": {
 				"industry": "Healthcare marketing",
-				"description": "We believe that you shouldn\u2019t have to choose between growth and patient privacy. Our HIPAA-compliant customer data platform enables marketers to use best in class tools - GTM, GA4, Google Ads, Meta, and more - without sacrificing patient privacy. Our CDP removes PHI so you can optimize every step of your funnel with confidence.\n\nOurs Privacy is built by experts in healthcare, martech, and security, helping you scale responsibly, with confidence. We're lucky to be backed by an experienced group of investors, including Serena Ventures, Adam Grant, Lakehouse, Andy Dunn, TMV, Bullish, Collab Fund, GreyMatter, Switch Ventures and more.",
+				"description": "We believe that you shouldn’t have to choose between growth and patient privacy. Our HIPAA-compliant customer data platform enables marketers to use best in class tools - GTM, GA4, Google Ads, Meta, and more - without sacrificing patient privacy. Our CDP removes PHI so you can optimize every step of your funnel with confidence.\n\nOurs Privacy is built by experts in healthcare, martech, and security, helping you scale responsibly, with confidence. We're lucky to be backed by an experienced group of investors, including Serena Ventures, Adam Grant, Lakehouse, Andy Dunn, TMV, Bullish, Collab Fund, GreyMatter, Switch Ventures and more.",
 				"workforceTotal": 18,
 				"country": "United States",
 				"foundedYear": 2024,
@@ -766,13 +800,13 @@
 			"note": "citedDate 2026-09-01 is within the window; a $46M Series A, US, 28 staff",
 			"record": {
 				"industry": "Energy technology",
-				"description": "Light turns power into a platform. We help leading brands\u2014like solar providers, automakers, and home platforms\u2014offer embedded, branded electricity plans to their customers. Our partners are reshaping how people experience energy, unlocking better customer experiences or the full potential of products like batteries, EVs, and other smart devices.\n\nWe\u2019re bringing together the best builders in tech and energy, backed by top investors and angels. Based in Austin, TX, we\u2019re not just building a better utility\u2014we\u2019re redefining what a power company can be.",
+				"description": "Light turns power into a platform. We help leading brands—like solar providers, automakers, and home platforms—offer embedded, branded electricity plans to their customers. Our partners are reshaping how people experience energy, unlocking better customer experiences or the full potential of products like batteries, EVs, and other smart devices.\n\nWe’re bringing together the best builders in tech and energy, backed by top investors and angels. Based in Austin, TX, we’re not just building a better utility—we’re redefining what a power company can be.",
 				"workforceTotal": 28,
 				"country": "United States",
 				"foundedYear": 2023,
 				"citedPage": "https://www.poweredbylight.com/press/light-raises-46-million-to-scale-the-power-company-for-embedded-electricity",
 				"citedDate": "2026-09-01",
-				"quote": "AUSTIN, Texas \u2014 September 1, 2026 \u2014 Light, the power company enabling embedded electricity products for businesses, today announced $46 million in Series A funding led by Matrix and joined by Activate Capital and existing investors including Spark Capital, Mischief, Gigascale Capital, MCJ and BoxGroup.",
+				"quote": "AUSTIN, Texas — September 1, 2026 — Light, the power company enabling embedded electricity products for businesses, today announced $46 million in Series A funding led by Matrix and joined by Activate Capital and existing investors including Spark Capital, Mischief, Gigascale Capital, MCJ and BoxGroup.",
 				"fitReason": "Light is a US energy operating company with 28 employees and a freshly announced $46M Series A led by Matrix."
 			}
 		},
@@ -844,7 +878,7 @@
 				"foundedYear": 2024,
 				"citedPage": "https://scifin.ai/blog/scifin-emerges-from-stealth-with-44-million-in-funding-to-help-revenue-teams-see-risk-earlier-and-act-faster",
 				"citedDate": null,
-				"quote": "SAN FRANCISCO, September 1, 2026 \u2014 SciFin, which helps revenue teams turn fragmented information into timely action, today emerged from stealth and announced $44 million in funding. This includes a seed round that was co-led by Altimeter and Madrona with participation from Foundation Capital, S32, Zetta Ventures and others.\n...\nThe funding will support Sci\n...\n's continued investment in product development, go-to-market expansion, customer\n...\nits vision to close the Context Gap within the enterprise.\n...\ncorrecting scattered context across",
+				"quote": "SAN FRANCISCO, September 1, 2026 — SciFin, which helps revenue teams turn fragmented information into timely action, today emerged from stealth and announced $44 million in funding. This includes a seed round that was co-led by Altimeter and Madrona with participation from Foundation Capital, S32, Zetta Ventures and others.\n...\nThe funding will support Sci\n...\n's continued investment in product development, go-to-market expansion, customer\n...\nits vision to close the Context Gap within the enterprise.\n...\ncorrecting scattered context across",
 				"fitReason": "San Francisco operating company, 45 staff, seed round co-led by Altimeter/Madrona, $44M total, venture-backed."
 			}
 		},
@@ -898,7 +932,7 @@
 				"foundedYear": 2024,
 				"citedPage": "https://www.telli.com/articles/telli-raises-15m-seed-to-put-ai-agents-in-charge-of-customer-ops",
 				"citedDate": "2026-07-28",
-				"quote": "Exclusive: Berlin\u2019s telli raises $15M seed to put AI agents in charge of customer ops, backed by redalpine, Cherry, and YC",
+				"quote": "Exclusive: Berlin’s telli raises $15M seed to put AI agents in charge of customer ops, backed by redalpine, Cherry, and YC",
 				"fitReason": "Berlin operating company, 23 employees, announced $15M seed backed by VCs and YC, matches all core criteria."
 			}
 		},
@@ -910,13 +944,13 @@
 			"note": "citedDate 2026-08-19 is within the window; a $13M Series A, US, 10 staff",
 			"record": {
 				"industry": "Data center infrastructure",
-				"description": "We are a team of systems engineers solving the GPU capacity shortage.\n\nUse our virtualization software in Thunder Compute\u2019s managed cloud, or work with our team to increase usable GPU capacity across your existing fleet.",
+				"description": "We are a team of systems engineers solving the GPU capacity shortage.\n\nUse our virtualization software in Thunder Compute’s managed cloud, or work with our team to increase usable GPU capacity across your existing fleet.",
 				"workforceTotal": 10,
 				"country": "United States",
 				"foundedYear": 2024,
 				"citedPage": "https://www.thundercompute.com/blog/thunder-compute-series-a",
 				"citedDate": "2026-08-19",
-				"quote": "Today, we are announcing our $13 million Series A round to accelerate our mission to unlock the world\u2019s idle compute.",
+				"quote": "Today, we are announcing our $13 million Series A round to accelerate our mission to unlock the world’s idle compute.",
 				"fitReason": "US infrastructure startup, 10 employees, closed $13M Series A; no lead investor named, VC-backed and private."
 			}
 		},
@@ -925,16 +959,16 @@
 			"name": "Triver",
 			"firstSeenRunId": "companies_3930d334-20e3-4197-8c9a-f97759a241ae_2026-09-04",
 			"lastSeenAt": "2026-09-04T12:18:14.726Z",
-			"note": "citedDate 2026-08-31 (round announced 2026-08-27) is within the window; an additional \u00a38M Series B round led by Calderwood Capital, UK, 30 staff",
+			"note": "citedDate 2026-08-31 (round announced 2026-08-27) is within the window; an additional £8M Series B round led by Calderwood Capital, UK, 30 staff",
 			"record": {
 				"industry": "Business finance",
-				"description": "Triver provides small businesses with instant capital in a click. Using Open Banking, accounting data and AI models, we are revolutionising how small businesses can access finance.\u200b\n\nOur API-first platform is designed to be embedded with the digital service providers of the real economy (accounting software, digital banks, procurement software, etc.). We serve small businesses from any industry, enabling a broad range of partners to offer a flexible capital solution to their small business clients without complexity. \u200b",
+				"description": "Triver provides small businesses with instant capital in a click. Using Open Banking, accounting data and AI models, we are revolutionising how small businesses can access finance.​\n\nOur API-first platform is designed to be embedded with the digital service providers of the real economy (accounting software, digital banks, procurement software, etc.). We serve small businesses from any industry, enabling a broad range of partners to offer a flexible capital solution to their small business clients without complexity. ​",
 				"workforceTotal": 30,
 				"country": "United Kingdom",
 				"foundedYear": 2023,
 				"citedPage": "https://triver.com/blog/triver-raises-an-additional-8m-to-build-its-cash-flow-streaming-proposition",
 				"citedDate": "2026-08-31",
-				"quote": "Triver announced on 27 August 2026 that it raised an additional \u00a38 million in a Series B equity round led by Calderwood Capital with participation from existing investors.",
+				"quote": "Triver announced on 27 August 2026 that it raised an additional £8 million in a Series B equity round led by Calderwood Capital with participation from existing investors.",
 				"fitReason": "UK fintech, 30 staff, announced Series B close with lead investor and size, venture-backed private."
 			}
 		},
@@ -946,14 +980,14 @@
 			"note": "citedDate 2026-08-06 is within the window; a Series A led by Smedvig Ventures, Denmark, 47 staff",
 			"record": {
 				"industry": "Experience payments",
-				"description": "Powering experience makers.\n\nThat\u2019s what we do at Understory.\n\nOur platform gives you all the tools you need to run an experience business. Bookings, payments, and marketing made simple, so hosts and experience creators can focus on creating unforgettable experiences.\n\nWe see ourselves as the \"understory\" for our hosts.\n\nIn nature, the understory is a part of the forest \u2013 a hidden but essential space where growth happens, connections are built, and potential is nurtured.\n\nUnderstory is here to lift, nourish, and empower those shaping the world of experiences.",
+				"description": "Powering experience makers.\n\nThat’s what we do at Understory.\n\nOur platform gives you all the tools you need to run an experience business. Bookings, payments, and marketing made simple, so hosts and experience creators can focus on creating unforgettable experiences.\n\nWe see ourselves as the \"understory\" for our hosts.\n\nIn nature, the understory is a part of the forest – a hidden but essential space where growth happens, connections are built, and potential is nurtured.\n\nUnderstory is here to lift, nourish, and empower those shaping the world of experiences.",
 				"workforceTotal": 47,
 				"country": "Denmark",
 				"foundedYear": 2023,
 				"citedPage": "https://understory.io/blog-posts/understory-raises-12-million-in-series-a-funding",
 				"citedDate": "2026-08-06",
 				"quote": "The funding round is a Series A investment led by London-based Smedvig Ventures, a high conviction investor backing the best of B2B tech across Europe.",
-				"fitReason": "Same Understory entity, Series A led by Smedvig Ventures, \u20ac12M raised, venture-backed and private."
+				"fitReason": "Same Understory entity, Series A led by Smedvig Ventures, €12M raised, venture-backed and private."
 			}
 		},
 		"vals.ai": {
@@ -979,17 +1013,17 @@
 			"name": "Velatir",
 			"firstSeenRunId": "companies_dom-cbc55e3cb454_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:18:34.881Z",
-			"note": "citedDate 2026-08-20 is within the window; a \u20ac5M seed round, Denmark, 23 staff",
+			"note": "citedDate 2026-08-20 is within the window; a €5M seed round, Denmark, 23 staff",
 			"record": {
 				"industry": "AI governance",
-				"description": "Enabling European businesses to lead, not just follow the AI revolution, with speed, resilience and integrity.\u00a0\n\nEurope is at a crossroads. To remain competitive on the global stage, our industries must adopt AI at scale, but they must do so responsibly. \n\nAt Velatir, we are the bridge between \"potential\" and \"production.\" We are building the infrastructure for European AI adoption. We aren't just building a company; we are building European resilience.",
+				"description": "Enabling European businesses to lead, not just follow the AI revolution, with speed, resilience and integrity. \n\nEurope is at a crossroads. To remain competitive on the global stage, our industries must adopt AI at scale, but they must do so responsibly. \n\nAt Velatir, we are the bridge between \"potential\" and \"production.\" We are building the infrastructure for European AI adoption. We aren't just building a company; we are building European resilience.",
 				"workforceTotal": 23,
 				"country": "Denmark",
 				"foundedYear": 2025,
 				"citedPage": "https://www.linkedin.com/posts/velatir_today-were-excited-to-announce-our-5m-seed-activity-7496083605782249472-cNy-",
 				"citedDate": "2026-08-20",
-				"quote": "Today we're excited to announce our \u20ac5M seed round.",
-				"fitReason": "Danish AI governance startup, 23 staff, announced \u20ac5M seed round via LinkedIn post."
+				"quote": "Today we're excited to announce our €5M seed round.",
+				"fitReason": "Danish AI governance startup, 23 staff, announced €5M seed round via LinkedIn post."
 			}
 		},
 		"velocity.xyz": {
@@ -1000,14 +1034,14 @@
 			"note": "citedDate 2026-07-14 is within the window; a $38M Series A, UK, 30 staff",
 			"record": {
 				"industry": "Payments infrastructure",
-				"description": "Move and manage capital seamlessly across banks, blockchains, and borders. \n\nVelocity is an enterprise-first platform that combines the programmability of stablecoins with the rigour of traditional finance \u2014 solving real-world challenges in cross-border settlement, liquidity, and treasury.",
+				"description": "Move and manage capital seamlessly across banks, blockchains, and borders. \n\nVelocity is an enterprise-first platform that combines the programmability of stablecoins with the rigour of traditional finance — solving real-world challenges in cross-border settlement, liquidity, and treasury.",
 				"workforceTotal": 30,
 				"country": "United Kingdom",
 				"foundedYear": 2025,
 				"citedPage": "https://www.linkedin.com/posts/velocityxyz_today-were-excited-to-share-that-velocity-activity-7482776219197976577-GUmj",
 				"citedDate": "2026-07-14",
-				"quote": "Today, we\u2019re excited to share that Velocity has raised a $38 million Series A.",
-				"fitReason": "Velocity is London payments\u2011infra operating company, 30 employees, raised $38M Series A; private venture\u2011backed startup."
+				"quote": "Today, we’re excited to share that Velocity has raised a $38 million Series A.",
+				"fitReason": "Velocity is London payments‑infra operating company, 30 employees, raised $38M Series A; private venture‑backed startup."
 			}
 		},
 		"withassured.com": {
@@ -1036,7 +1070,7 @@
 			"note": "citedDate 2026-08-27 is within the window; a $30M Series B led by Harbert Growth Partners, US, 53 staff",
 			"record": {
 				"industry": "Workforce technology",
-				"description": "Trust used to be assumed. Now it has to be proven.\n\nYardstik is the creator of the Human Trust Platform\u2014technology built for a world where AI-driven fraud, fake identities, and outdated background checks put people and businesses at risk.\n\nTraditional screening was built for a slower era. One-time checks. Point-in-time decisions. Blind spots everywhere. In today\u2019s hiring landscape, that approach isn\u2019t just outdated, it\u2019s dangerous.\n\nYardstik moves organizations beyond background checks into continuous verification before and after hire. Our platform combines fraud detection, identity verification, screening, and credential monitoring to make trust measurable, ongoing, and real.\n\nWe help organizations:\n\n- Background screen candidates to identify who is credible\n- Stop identity fraud before bad actors get in\n- Verify that the right person shows up on day one\u2014and every day after\n- Continuously monitor risk so trust doesn\u2019t quietly degrade over time\n\nThousands of customers across gig marketplaces, staffing, transportation, and healthcare rely on Yardstik to protect their workforce, their customers, and their reputation\u2014without slowing down hiring.\n\nBecause trust isn\u2019t earned once. It\u2019s maintained.",
+				"description": "Trust used to be assumed. Now it has to be proven.\n\nYardstik is the creator of the Human Trust Platform—technology built for a world where AI-driven fraud, fake identities, and outdated background checks put people and businesses at risk.\n\nTraditional screening was built for a slower era. One-time checks. Point-in-time decisions. Blind spots everywhere. In today’s hiring landscape, that approach isn’t just outdated, it’s dangerous.\n\nYardstik moves organizations beyond background checks into continuous verification before and after hire. Our platform combines fraud detection, identity verification, screening, and credential monitoring to make trust measurable, ongoing, and real.\n\nWe help organizations:\n\n- Background screen candidates to identify who is credible\n- Stop identity fraud before bad actors get in\n- Verify that the right person shows up on day one—and every day after\n- Continuously monitor risk so trust doesn’t quietly degrade over time\n\nThousands of customers across gig marketplaces, staffing, transportation, and healthcare rely on Yardstik to protect their workforce, their customers, and their reputation—without slowing down hiring.\n\nBecause trust isn’t earned once. It’s maintained.",
 				"workforceTotal": 53,
 				"country": "United States",
 				"foundedYear": 2020,
