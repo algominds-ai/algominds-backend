@@ -84,12 +84,13 @@
 			"note": "Chief Technology Officer at skyscanner.net, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/anoopgopalakrishnan": {
-			"label": null,
+			"label": "accept",
 			"name": "Anoop Gopalakrishnan",
 			"title": "Vice President Of Engineering",
 			"company": "guidewire.com",
 			"location": "Pleasanton, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Vice President Of Engineering at guidewire.com, a VP Engineering role"
 		},
 		"https://linkedin.com/in/anushadharmalingam": {
 			"label": "accept",
@@ -155,12 +156,13 @@
 			"note": "VP, Engineering at skyscanner.net, a VP Engineering role"
 		},
 		"https://linkedin.com/in/benhallbenhall": {
-			"label": null,
+			"label": "accept",
 			"name": "Ben Hall",
 			"title": "VP of Engineering",
 			"company": "zynga.com",
 			"location": "Fairfield, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "VP of Engineering at zynga.com, a VP Engineering role"
 		},
 		"https://linkedin.com/in/bherrington": {
 			"label": "accept",
@@ -280,12 +282,13 @@
 			"note": "Head of Platform at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/cmandair": {
-			"label": null,
+			"label": "accept",
 			"name": "Chet M.",
 			"title": "Chief Information Officer",
 			"company": "guidewire.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Chief Information Officer at guidewire.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/cmazal": {
 			"label": "accept",
@@ -324,20 +327,22 @@
 			"note": "Head of Engineering at whatnot, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/daniellonborg": {
-			"label": null,
+			"label": "accept",
 			"name": "Dan Lonborg",
 			"title": "Vice President, Engineering",
 			"company": "guidewire.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Vice President, Engineering at guidewire.com, a VP Engineering role"
 		},
 		"https://linkedin.com/in/david-seidman-1a68023": {
-			"label": null,
+			"label": "accept",
 			"name": "David Seidman",
 			"title": "Head of Platform Security",
 			"company": "plaid.com",
 			"location": "Issaquah, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Head of Platform Security at plaid.com, matching both the Head of Platform and Head of Security buyer bands"
 		},
 		"https://linkedin.com/in/dennisvanrooijen": {
 			"label": "accept",
@@ -376,12 +381,13 @@
 			"note": "Senior Vice President, Head of Security at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/dominic-lobbia-40456a4": {
-			"label": null,
+			"label": "accept",
 			"name": "Dominic Lobbia",
 			"title": "Vice President, Engineering",
 			"company": "zynga.com",
 			"location": "Seattle, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Vice President, Engineering at zynga.com, a VP Engineering role"
 		},
 		"https://linkedin.com/in/don-stearns-mba-pmp-4701b6a": {
 			"label": "accept",
@@ -430,7 +436,7 @@
 		},
 		"https://linkedin.com/in/emanuel-fl%c3%bcck-aa791a82": {
 			"label": "accept",
-			"name": "Emanuel Flück",
+			"name": "Emanuel Fl\u00fcck",
 			"title": "Head Cloud Center of Excellence PostFinance",
 			"company": "postfinance.ch",
 			"location": "Berne, Switzerland",
@@ -514,7 +520,7 @@
 			"name": "Gerrit Lober",
 			"title": "Head of Cloud Foundation & Technology",
 			"company": "cariad.technology",
-			"location": "Hannover-Braunschweig-Göttingen-Wolfsburg Region, Germany",
+			"location": "Hannover-Braunschweig-G\u00f6ttingen-Wolfsburg Region, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Cloud Foundation & Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
@@ -537,12 +543,13 @@
 			"note": "Head Of Technology at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/gustavoguiomar": {
-			"label": null,
+			"label": "accept",
 			"name": "Gustavo Guiomar",
 			"title": "Head of Product and Engineering",
 			"company": "farfetch.com",
 			"location": "Portugal, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Head of Product and Engineering at farfetch.com, matching the Head of Engineering buyer band"
 		},
 		"https://linkedin.com/in/harishpratapani": {
 			"label": "accept",
@@ -589,9 +596,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Senior Vice President of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/ian-kurtén-55456": {
+		"https://linkedin.com/in/ian-kurt\u00e9n-55456": {
 			"label": "accept",
-			"name": "Ian Kurtén",
+			"name": "Ian Kurt\u00e9n",
 			"title": "Head of High Security",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -600,7 +607,7 @@
 		},
 		"https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141": {
 			"label": "accept",
-			"name": "Ignacio Jiménez Pi",
+			"name": "Ignacio Jim\u00e9nez Pi",
 			"title": "SVP Platform Engineering",
 			"company": "adyen.com",
 			"location": "Amsterdam, Netherlands",
@@ -630,13 +637,13 @@
 			"name": "Ioannis Papadopoulos",
 			"title": "Chief Technology Officer",
 			"company": "trivago.com",
-			"location": "Düsseldorf, Germany",
+			"location": "D\u00fcsseldorf, Germany",
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "Chief Technology Officer at trivago.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12": {
 			"label": "accept",
-			"name": "Iván Lugo",
+			"name": "Iv\u00e1n Lugo",
 			"title": "Vice President of Global Engineering",
 			"company": "dexcom.com",
 			"location": "Irvine, United States",
@@ -653,12 +660,13 @@
 			"note": "Chief Technology Officer, Metasearch at lastminute.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/james-dolph-ba39027": {
-			"label": null,
+			"label": "accept",
 			"name": "James Dolph",
 			"title": "Chief Information Security Officer (CISO)",
 			"company": "guidewire.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Chief Information Security Officer at guidewire.com, explicit c-suite security executive"
 		},
 		"https://linkedin.com/in/jarno-vainio-32a46243": {
 			"label": "accept",
@@ -706,12 +714,13 @@
 			"note": "Global CISO at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/jmendes": {
-			"label": null,
-			"name": "João Mendes",
+			"label": "accept",
+			"name": "Jo\u00e3o Mendes",
 			"title": "VP, Information Security",
 			"company": "farfetch.com",
 			"location": "Maia, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "VP, Information Security at farfetch.com, an explicit VP Security role"
 		},
 		"https://linkedin.com/in/joe-nuts-974903223": {
 			"label": "accept",
@@ -749,13 +758,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Director of Engineering is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
-		"https://linkedin.com/in/joão-madureira": {
-			"label": null,
-			"name": "João Madureira",
+		"https://linkedin.com/in/jo\u00e3o-madureira": {
+			"label": "accept",
+			"name": "Jo\u00e3o Madureira",
 			"title": "Head Of Engineering",
 			"company": "farfetch.com",
 			"location": "Maia, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Head Of Engineering at farfetch.com, an explicit rubric buyer title"
 		},
 		"https://linkedin.com/in/julian-christopher-zeug-58237a98": {
 			"label": "accept",
@@ -830,12 +840,13 @@
 			"note": "VP, Engineering at skyscanner.net, a VP Engineering role"
 		},
 		"https://linkedin.com/in/kevin-wong-03a3ab5": {
-			"label": null,
+			"label": "accept",
 			"name": "Kevin Wong",
 			"title": "VP Engineering, Cloud Applications and Services",
 			"company": "guidewire.com",
 			"location": "Danville, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "VP Engineering, Cloud Applications and Services at guidewire.com, a VP Engineering/Cloud role"
 		},
 		"https://linkedin.com/in/kimberly-wolk-50297a1": {
 			"label": "accept",
@@ -919,12 +930,13 @@
 			"note": "Head of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/luiscarvalho": {
-			"label": null,
+			"label": "accept",
 			"name": "Luis Carvalho",
 			"title": "Chief Technology Officer",
 			"company": "farfetch.com",
 			"location": "Porto, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Chief Technology Officer at farfetch.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/luke-hargrove-9849a1151": {
 			"label": "accept",
@@ -974,7 +986,7 @@
 		"https://linkedin.com/in/markus-fuhrer-422422a0": {
 			"label": "accept",
 			"name": "Markus Fuhrer",
-			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Geschäftsleitung",
+			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Gesch\u00e4ftsleitung",
 			"company": "postfinance.ch",
 			"location": "Bolligen, Switzerland",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
@@ -1028,19 +1040,20 @@
 		"https://linkedin.com/in/michael-wildpaner-b9b8591": {
 			"label": "accept",
 			"name": "Michael Wildpaner",
-			"title": "VP of Engineering — Security",
+			"title": "VP of Engineering \u2014 Security",
 			"company": "gitlab.com",
 			"location": "Zurich, Switzerland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
-			"note": "VP of Engineering — Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+			"note": "VP of Engineering \u2014 Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/mihirkapadia": {
-			"label": null,
+			"label": "accept",
 			"name": "Mihir Kapadia",
 			"title": "VP Engineering, Publishing",
 			"company": "zynga.com",
 			"location": "Toronto, Canada",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "VP Engineering, Publishing at zynga.com, a VP-level Engineering role, matching the same product-line-scoped VP Engineering pattern already accepted elsewhere in this key"
 		},
 		"https://linkedin.com/in/mike-bidgoli-579b607": {
 			"label": "accept",
@@ -1189,7 +1202,7 @@
 		"https://linkedin.com/in/patricia-stich-a5046b27": {
 			"label": "reject:not-buyer",
 			"name": "Patricia Stich",
-			"title": "Vorständin Volkswagen Group Info Services AG",
+			"title": "Vorst\u00e4ndin Volkswagen Group Info Services AG",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
@@ -1223,12 +1236,13 @@
 			"note": "Vice President of Infrastructure at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/pedrotaveira": {
-			"label": null,
+			"label": "accept",
 			"name": "Pedro Taveira",
 			"title": "Head of Engineering",
 			"company": "farfetch.com",
 			"location": "Porto, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Head of Engineering at farfetch.com, an explicit rubric buyer title"
 		},
 		"https://linkedin.com/in/pello-olaskoaga-9048288": {
 			"label": "reject:not-buyer",
@@ -1249,12 +1263,13 @@
 			"note": "SVP of Engineering - Platforms and Financial Services at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/premjithrayaroth": {
-			"label": null,
+			"label": "accept",
 			"name": "Premjith Rayaroth",
 			"title": "Vice President Of Engineering",
 			"company": "guidewire.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Vice President Of Engineering at guidewire.com, a VP Engineering role"
 		},
 		"https://linkedin.com/in/riley-white-6747958": {
 			"label": "accept",
@@ -1365,12 +1380,13 @@
 			"note": "Head of Global Engineering Operations at DraftKings at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/seanacassidy": {
-			"label": null,
+			"label": "accept",
 			"name": "Sean Cassidy",
 			"title": "Chief Information Security Officer",
 			"company": "plaid.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Chief Information Security Officer at plaid.com, explicit c-suite security executive"
 		},
 		"https://linkedin.com/in/sebastien-vincent-b4278b34": {
 			"label": "accept",
@@ -1391,12 +1407,13 @@
 			"note": "CTO and Co-Founder of appdirect.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/sergiofsoliveira": {
-			"label": null,
-			"name": "Sérgio Oliveira",
+			"label": "accept",
+			"name": "S\u00e9rgio Oliveira",
 			"title": "VP Global Technology",
 			"company": "farfetch.com",
 			"location": "Braga, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "VP Global Technology at farfetch.com, a VP-level technology executive equivalent to VP Engineering"
 		},
 		"https://linkedin.com/in/seshendranalla": {
 			"label": "accept",
@@ -1417,12 +1434,13 @@
 			"note": "CTO and co-founder of pandadoc.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/simpsonpt": {
-			"label": null,
+			"label": "accept",
 			"name": "Renato Rodrigues",
 			"title": "Head of Application Security",
 			"company": "farfetch.com",
 			"location": "Porto, Portugal",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Head of Application Security at farfetch.com, a specialized Head of Security role within the rubric's Security function"
 		},
 		"https://linkedin.com/in/stacey-stewart-90495b4": {
 			"label": "accept",
@@ -1523,9 +1541,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/timo-hänninen-0b899071": {
+		"https://linkedin.com/in/timo-h\u00e4nninen-0b899071": {
 			"label": "accept",
-			"name": "Timo Hänninen",
+			"name": "Timo H\u00e4nninen",
 			"title": "Business Lead, Head of Cloud and Infrastructure services",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -1651,7 +1669,7 @@
 		},
 		"https://linkedin.com/in/whats": {
 			"label": "accept",
-			"name": "Albert Sellarès",
+			"name": "Albert Sellar\u00e8s",
 			"title": "CTO / Global VP of Engineering (entire Adevinta group)",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
@@ -1659,20 +1677,22 @@
 			"note": "CTO / Global VP of Engineering (entire Adevinta group) at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/will-manning-0869625": {
-			"label": null,
+			"label": "accept",
 			"name": "Will Manning",
 			"title": "Vice President of Engineering, EMEA",
 			"company": "guidewire.com",
 			"location": "Ireland, Ireland",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Vice President of Engineering, EMEA at guidewire.com, a VP Engineering role"
 		},
 		"https://linkedin.com/in/will-robinson-686a753": {
-			"label": null,
+			"label": "accept",
 			"name": "Will Robinson",
 			"title": "Chief Technology Officer",
 			"company": "plaid.com",
 			"location": "Menlo Park, United States",
-			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05"
+			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
+			"note": "Chief Technology Officer at plaid.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/zacharymaybury": {
 			"label": "accept",
@@ -1692,9 +1712,9 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "SVP, Engineering at tubitv.com, a VP Engineering role"
 		},
-		"https://linkedin.com/in/àngel-puigventós-76a35147": {
+		"https://linkedin.com/in/\u00e0ngel-puigvent\u00f3s-76a35147": {
 			"label": "accept",
-			"name": "Àngel Puigventós",
+			"name": "\u00c0ngel Puigvent\u00f3s",
 			"title": "Head of Security Operations",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
