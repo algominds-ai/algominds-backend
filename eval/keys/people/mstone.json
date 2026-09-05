@@ -212,11 +212,11 @@
 		"https://linkedin.com/in/david-grozdan-1355b03b": {
 			"label": "accept",
 			"name": "David Grozdan",
-			"title": "Head of IT ‐ Manufacturing",
+			"title": "Head of IT \u2010 Manufacturing",
 			"company": "blackmores.com.au",
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
-			"note": "Head of IT ‐ Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
+			"note": "Head of IT \u2010 Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/elzanne-van-der-westhuizen-0ba53933": {
 			"label": "accept",
@@ -453,12 +453,13 @@
 			"note": "Head of Engineering - Search Engine Acquisition (SEA) & Discover at seek, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/linda-da-silva-22a4a910": {
-			"label": null,
+			"label": "accept",
 			"name": "Linda Da Silva",
 			"title": "Group Chief Technology & Transformation Officer",
 			"company": "nib.com.au",
 			"location": "Sydney, Australia",
-			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05"
+			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05",
+			"note": "Group Chief Technology & Transformation Officer at nib.com.au, an explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/lisa-tobin-b975403": {
 			"label": "accept",
@@ -470,12 +471,13 @@
 			"note": "Group Executive Technology at seek.com, a group-executive-level technology leader in Australia"
 		},
 		"https://linkedin.com/in/luisa-ramirez-b8711b65": {
-			"label": null,
+			"label": "accept",
 			"name": "Luisa Ramirez Garcia",
 			"title": "Head of Engineering",
 			"company": "seek.com",
 			"location": "Melbourne, Australia",
-			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05"
+			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05",
+			"note": "Head of Engineering at seek.com, an explicit rubric buyer title"
 		},
 		"https://linkedin.com/in/luisaramirezgarcia": {
 			"label": "accept",
@@ -532,12 +534,13 @@
 			"note": "Head of IT: Merchandise, Supply Chain & Enterprise Applications at countryroadgroup, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/michael-watterson-271a604": {
-			"label": null,
+			"label": "accept",
 			"name": "Michael Watterson",
 			"title": "Group Head of Cloud and Technology Services",
 			"company": "nib.com.au",
 			"location": "Newcastle, Australia",
-			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05"
+			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05",
+			"note": "Group Head of Cloud and Technology Services at nib.com.au, an explicit Head of Cloud/Technology match"
 		},
 		"https://linkedin.com/in/morleym": {
 			"label": "accept",
