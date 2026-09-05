@@ -16,7 +16,8 @@
 			"kind": "hard",
 			"text": "The company operates in a vertical where a regulator or transacting customer base treats downtime as a reportable event, such as SaaS, e-commerce/retail marketplaces, banking/fintech, automotive, energy, pharma, gaming, media, travel, telecom, or public-sector services.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"strict": true
 		},
 		{
 			"id": "r2",
