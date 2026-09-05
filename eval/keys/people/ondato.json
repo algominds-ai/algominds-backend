@@ -184,7 +184,7 @@
 		},
 		"https://linkedin.com/in/drmohamadsawwaf": {
 			"label": "accept",
-			"name": "Dr. Mohamad Sawwaf \u062f. \u0645\u062d\u0645\u062f \u0635\u0648\u0627\u0641",
+			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
 			"title": "Founder & Group Chief Executive Officer",
 			"company": "manzil.co",
 			"location": null,
@@ -218,6 +218,14 @@
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "Co-Founder & President of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
 		},
+		"https://linkedin.com/in/guillaume-torche-4a209790": {
+			"label": null,
+			"name": "Guillaume Torche",
+			"title": "Co-Founder, CTO",
+			"company": "emberfund.io",
+			"location": "Los Angeles, United States",
+			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05"
+		},
 		"https://linkedin.com/in/hayden-todd-a52194113": {
 			"label": "accept",
 			"name": "Hayden Todd",
@@ -235,6 +243,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Head of Product, Fanatics App, an explicit buyer title"
+		},
+		"https://linkedin.com/in/james-pursaill-83b1831ba": {
+			"label": null,
+			"name": "James Pursaill",
+			"title": "CEO and Co-Founder",
+			"company": "plend.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05"
 		},
 		"https://linkedin.com/in/jamie-gersch": {
 			"label": "accept",
@@ -496,6 +512,14 @@
 			"location": "London, United Kingdom",
 			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05",
 			"note": "Head of Marketing at Creditspring, functioning as the top marketing role and matching the buyer rubric's conversion-funnel ownership; based in London, UK"
+		},
+		"https://linkedin.com/in/rishi-z-2a22a7": {
+			"label": null,
+			"name": "Rishi Z.",
+			"title": "Co-Founder & CEO",
+			"company": "lendwise.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05"
 		},
 		"https://linkedin.com/in/sabrinaloi": {
 			"label": "accept",
