@@ -12,14 +12,16 @@
 			"kind": "hard",
 			"text": "The company is a commercial HVAC contractor with 20 to 200 staff.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"strict": true
 		},
 		{
 			"id": "r2",
 			"kind": "hard",
 			"text": "The company is headquartered or operates in Texas, Florida, or Georgia.",
 			"proof": "record",
-			"windowDays": null
+			"windowDays": null,
+			"strict": true
 		},
 		{
 			"id": "r3",
