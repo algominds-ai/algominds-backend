@@ -1,0 +1,558 @@
+{
+	"slug": "mstone",
+	"icpId": "15ac4f10-20f3-4970-967e-a1882a57f28f",
+	"people": {
+		"https://linkedin.com/in/aaron-boatwright-8608041bb": {
+			"label": null,
+			"name": "Aaron Boatwright",
+			"title": "Head of Technology Infrastructure",
+			"company": "bunnings.com.au",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/alex-richards-7572313b": {
+			"label": null,
+			"name": "Alex Richards",
+			"title": "Managing Director National IT",
+			"company": "aldicareers.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/alistair-simpson-4b94123": {
+			"label": null,
+			"name": "Alistair Simpson",
+			"title": "Head of Technology - Service Management",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/andrew-grech-b214045": {
+			"label": null,
+			"name": "Andrew Grech",
+			"title": "Director IT Engineering & Operations",
+			"company": "blackmores.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/anthony-carnovale-b045b287": {
+			"label": null,
+			"name": "Anthony Carnovale",
+			"title": "Head of Technology Planning & Performance",
+			"company": "bunnings.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/arpanrana": {
+			"label": null,
+			"name": "Arpan R.",
+			"title": "Head of Data and Integrations",
+			"company": "costagroup.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/ashokmj3": {
+			"label": null,
+			"name": "Ashok Jayaprakash",
+			"title": "Head of Data & AI Engineering",
+			"company": "bigw.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/ben-youl-888763a9": {
+			"label": null,
+			"name": "Ben Youl",
+			"title": "Head of Technology - Commercial & Liquor",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/brentwhelan": {
+			"label": null,
+			"name": "Brent Whelan",
+			"title": "Head of Technology, AI and Data Engineering",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/brian-townshend-4350034": {
+			"label": null,
+			"name": "Brian Townshend",
+			"title": "Chief Information Officer - Food & Liquor",
+			"company": "metcashcareers.com",
+			"location": "Noosa Heads, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/chris-helderman-macs-cp-a7395153": {
+			"label": null,
+			"name": "Chris Helderman MACS CP",
+			"title": "National IT Director",
+			"company": "aldicareers.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/cnapoli": {
+			"label": null,
+			"name": "Chris Napoli",
+			"title": "Group Head of Core Retail Technology (General Manager)",
+			"company": "bunnings.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/dafina-zdravkovski-23b9b9a": {
+			"label": null,
+			"name": "Dafina Zdravkovski",
+			"title": "Head of Enterprise Application Technology",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/daniel-dos-santos-4537387a": {
+			"label": null,
+			"name": "Daniel Dos Santos",
+			"title": "Head of Technology Services",
+			"company": "metcashcareers.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/david-grozdan-1355b03b": {
+			"label": null,
+			"name": "David Grozdan",
+			"title": "Head of IT ‐ Manufacturing",
+			"company": "blackmores.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/elzanne-van-der-westhuizen-0ba53933": {
+			"label": null,
+			"name": "Elzanne van der Westhuizen",
+			"title": "Head of Technology - eCommerce Services",
+			"company": "colescareers.com.au",
+			"location": "Exford, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/eric-baker-b86946356": {
+			"label": null,
+			"name": "Eric Baker",
+			"title": "Head of Technology Retail Media",
+			"company": "metcashcareers.com",
+			"location": "Australia, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/ettiennegous": {
+			"label": null,
+			"name": "Ettienne Gous",
+			"title": "Head of Engineering - Digital Platforms",
+			"company": "bunnings.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/genevieve-elliott": {
+			"label": null,
+			"name": "Genevieve Elliott",
+			"title": "Chief Information Officer",
+			"company": "bunnings.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/hughfahy": {
+			"label": null,
+			"name": "Hugh Fahy",
+			"title": "Chief Technology Officer",
+			"company": "davidjones.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/ian-westlake-8788a03": {
+			"label": null,
+			"name": "Ian Westlake",
+			"title": "Head Of Technology - Supply Chain Logistics",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/ivan-anissimov-92214286": {
+			"label": null,
+			"name": "Ivan Anissimov",
+			"title": "Head of Technology Operations and Service Management",
+			"company": "kmart.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/ivandretvic": {
+			"label": null,
+			"name": "Ivan Dretvic",
+			"title": "IT Director of Enterprise Services and Architecture",
+			"company": "blackmores.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/jaizee": {
+			"label": null,
+			"name": "John Zuniga",
+			"title": "Head of Information Technology",
+			"company": "costagroup.com.au",
+			"location": "Docklands, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/joe-razavi-ab08813": {
+			"label": null,
+			"name": "Joe Razavi",
+			"title": "Head of Information Technology Operations",
+			"company": "chemistwarehouse.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/jsette": {
+			"label": null,
+			"name": "Joseph Sette",
+			"title": "Head of Digital & Technology (QuiteLike)",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/karen-sue-24b20637": {
+			"label": null,
+			"name": "Karen Sue",
+			"title": "Head of Technology, Workplace Services",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/karlneubauer": {
+			"label": null,
+			"name": "Karl Neubauer",
+			"title": "Chief Information Officer",
+			"company": "globalretailbrands.net",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/karuna-panuganti-11428b13": {
+			"label": null,
+			"name": "Karuna Panuganti",
+			"title": "Head of Engineering (Quality and Release)",
+			"company": "davidjones.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/kevin-boots-3173611": {
+			"label": null,
+			"name": "Kevin Boots",
+			"title": "Head of Engineering and Delivery",
+			"company": "kmart.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/kris-ellis-a53a16": {
+			"label": null,
+			"name": "Kris Ellis",
+			"title": "Chief Information Officer",
+			"company": "blackmores.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/laurikainen-jari": {
+			"label": null,
+			"name": "Jari Laurikainen",
+			"title": "IT Director, Enterprise Applications at The Arnott's Group",
+			"company": "arnotts.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/leonard-rajeev-rawat": {
+			"label": null,
+			"name": "Leonard Rajeev Rawat",
+			"title": "Head - Infrastructure, Security & Operations",
+			"company": "harrisfarm.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/manish-goel-5b4b5816": {
+			"label": null,
+			"name": "Manish Goel",
+			"title": "Head of Corporate Systems",
+			"company": "kmart.com.au",
+			"location": "Officer South, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/marc-stephan-69ab59a8": {
+			"label": null,
+			"name": "Marc Stephan",
+			"title": "Group Director IT and Project Management @ ALDI Stores",
+			"company": "aldicareers.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/marina-cavka-70a278": {
+			"label": null,
+			"name": "Marina Cavka",
+			"title": "Head of Platform Engineering and Operations",
+			"company": "bunnings.com.au",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/michael-hua-7003b021": {
+			"label": null,
+			"name": "Michael Hua",
+			"title": "Head of IT: Merchandise, Supply Chain & Enterprise Applications",
+			"company": "countryroadgroup.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/morleym": {
+			"label": null,
+			"name": "Michael Morley",
+			"title": "Director IT Operations",
+			"company": "arnotts.com",
+			"location": "Brisbane, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/morrislieberman": {
+			"label": null,
+			"name": "Morris L.",
+			"title": "Chief Technology Officer",
+			"company": "bapcor.com.au",
+			"location": "Kew, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/neil-whiteing-732a": {
+			"label": null,
+			"name": "Neil Whiteing",
+			"title": "Group Chief Information Officer",
+			"company": "metcashcareers.com",
+			"location": "Australia, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/nick-dimitropoulos-699a995": {
+			"label": null,
+			"name": "Nick Dimitropoulos",
+			"title": "Head of Operations (Technology)",
+			"company": "kmart.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/nicolas-brunelli-78747422": {
+			"label": null,
+			"name": "Nicolas Brunelli",
+			"title": "Head of Technology Management",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/nicole-hogan-49680a190": {
+			"label": null,
+			"name": "Nicole Hogan",
+			"title": "Head of Retail Technonlgy Food and Liquor for Retailers at Metcash",
+			"company": "metcashcareers.com",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/nicole-stearman-923a7286": {
+			"label": null,
+			"name": "Nicole Stearman",
+			"title": "Head of Technology - Store Operations",
+			"company": "colescareers.com.au",
+			"location": "Brisbane, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/orass-latif-b627aa29": {
+			"label": null,
+			"name": "Orass Latif",
+			"title": "Director of Enterprise Technology, Digital & Data Transformation",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/owen-o-connor-157a4a268": {
+			"label": null,
+			"name": "Owen O'Connor",
+			"title": "Head of Engineering & Delivery",
+			"company": "kmart.com.au",
+			"location": "Cheltenham, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/paulbunn": {
+			"label": null,
+			"name": "Paul Bunn",
+			"title": "Head of Supply Chain Technology",
+			"company": "bunnings.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/peter-maye-6821056": {
+			"label": null,
+			"name": "Peter Maye",
+			"title": "Head of IT Operations",
+			"company": "blackmores.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/peter-mitchley-hughes": {
+			"label": null,
+			"name": "Peter Mitchley-Hughes",
+			"title": "Chief Information Officer - Total Tools and Hardware Group",
+			"company": "metcashcareers.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/phil-cribb-b2a1691": {
+			"label": null,
+			"name": "Phil Cribb",
+			"title": "Chief Technology Officer",
+			"company": "harrisfarm.com.au",
+			"location": "Homebush, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/phil-lewis-6102073": {
+			"label": null,
+			"name": "Phil Lewis",
+			"title": "Chief Information Officer",
+			"company": "countryroadgroup.com.au",
+			"location": "Australia, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/reyner-stephens-3b14bb11b": {
+			"label": null,
+			"name": "Reyner Stephens",
+			"title": "Director of Information Technology",
+			"company": "aldicareers.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/richard-crane-08757a5": {
+			"label": null,
+			"name": "Richard Crane",
+			"title": "Head of Data & Integration Platforms",
+			"company": "bunnings.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/rickywhiteaustralia": {
+			"label": null,
+			"name": "Ricky White",
+			"title": "Head of Public and Private Cloud",
+			"company": "bunnings.com.au",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/rkalyanasundaram": {
+			"label": null,
+			"name": "Ram Kalyanasundaram",
+			"title": "Chief Information and Digital Officer",
+			"company": "harrisfarm.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/robporzig": {
+			"label": null,
+			"name": "Rob Porzig",
+			"title": "Head of Oracle Platforms",
+			"company": "bunnings.com.au",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/sai-namuduri-a5865b58": {
+			"label": null,
+			"name": "Sai Namuduri",
+			"title": "Head of AI and Data Platform",
+			"company": "davidjones.com.au",
+			"location": "Australia, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/samel-silva-3ab4a534": {
+			"label": null,
+			"name": "Samel Silva",
+			"title": "Chief Information Officer - Wholesale and Supply Chain",
+			"company": "metcashcareers.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/saurav-sachdev-6990903a": {
+			"label": null,
+			"name": "Saurav Sachdev",
+			"title": "Head of Technology - Data & AI Platform",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/scott-grant-8288a7212": {
+			"label": null,
+			"name": "Scott Grant",
+			"title": "Engineering Director",
+			"company": "blackmores.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/seanmclintock01": {
+			"label": null,
+			"name": "Sean McLintock",
+			"title": "Chief Digital & Technology Officer",
+			"company": "arnotts.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/shane-west-79393415": {
+			"label": null,
+			"name": "Shane West",
+			"title": "Director Of Engineering",
+			"company": "arnotts.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/sharonsamson": {
+			"label": null,
+			"name": "Sharon Samson",
+			"title": "Head of Technology Corporate",
+			"company": "colescareers.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/smitasuravajjala": {
+			"label": null,
+			"name": "Smita S.",
+			"title": "Head of Engineering & Delivery - Supply Chain - Kmart & Target",
+			"company": "kmart.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/steven-bruce-31b1611": {
+			"label": null,
+			"name": "Steven Bruce",
+			"title": "Head of Technology - Engineering",
+			"company": "bigw.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/steven-stockbridge-789b31103": {
+			"label": null,
+			"name": "Steven Stockbridge",
+			"title": "Head of Network and Communication Services",
+			"company": "bunnings.com.au",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/swechchha-boki-shrestha-2b03974": {
+			"label": null,
+			"name": "Swechchha Boki Shrestha",
+			"title": "Head of Technology Delivery and Transformation",
+			"company": "harrisfarm.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/tony-latella-20231516": {
+			"label": null,
+			"name": "Tony latella",
+			"title": "Head of IT - Service Intergration & Management (SIAM)",
+			"company": "countryroadgroup.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		},
+		"https://linkedin.com/in/viv-da-ros-22795814": {
+			"label": null,
+			"name": "Viv Da Ros",
+			"title": "Chief Information Officer",
+			"company": "kmart.com.au",
+			"location": "Cremorne, Australia",
+			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05"
+		}
+	}
+}
