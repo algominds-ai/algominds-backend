@@ -1,10 +1,5 @@
 import { normalizeDomain } from "@/core/db/schema";
 
-export type SearchResult = {
-	publishedDate?: string;
-	score?: number;
-};
-
 const FIELD_NAMES = [
 	"name",
 	"domain",
@@ -101,7 +96,6 @@ function rejectReason(row: CompanyRow, opts: GateOptions): RejectReason | null {
  */
 export function gate(
 	rows: readonly CompanyRow[],
-	_results: readonly SearchResult[],
 	opts: GateOptions,
 ): GateResult {
 	const kept: CompanyRow[] = [];

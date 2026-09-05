@@ -62,15 +62,15 @@ describe("scoreOnboardProfile", () => {
 		expect(checks.length).toBeGreaterThan(0);
 	});
 
-	it("fails the window check and a bound check when a hard requirement carries a window and drops the upper bound", () => {
+	it("fails the banned-word check and a bound check when a hard requirement carries a bonus-only word and drops the upper bound", () => {
 		const written = buildWritten({
 			requirements: [
 				{
 					id: "w1",
 					kind: "hard",
 					proof: "page",
-					windowDays: 90,
-					text: "The company is privately held with more than $2M in funding.",
+					windowDays: null,
+					text: "The company recently launched with more than $2M in funding.",
 				},
 				{
 					id: "w2",
@@ -84,9 +84,7 @@ describe("scoreOnboardProfile", () => {
 		const checks = scoreOnboardProfile(written, fixture);
 		const byName = new Map(checks.map((check) => [check.name, check.passed]));
 		expect(
-			byName.get(
-				"no written hard requirement carries a window or a bonus-only word",
-			),
+			byName.get("no written hard requirement carries a bonus-only word"),
 		).toBe(false);
 		expect(
 			byName.get("numeric bound 250M appears in a written hard requirement"),

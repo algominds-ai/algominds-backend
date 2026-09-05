@@ -31,7 +31,7 @@ describe("gate — required fields", () => {
 			companyRow({ domain: null }),
 		];
 
-		const result = gate(rows, [{}, {}, {}], { seenDomains: new Set() });
+		const result = gate(rows, { seenDomains: new Set() });
 
 		expect(result.kept).toEqual([rows[0]]);
 		expect(result.rejects).toEqual([
@@ -48,7 +48,7 @@ describe("gate — dedupe", () => {
 			companyRow({ domain: "https://fresh.com" }),
 		];
 
-		const result = gate(rows, [{}, {}], {
+		const result = gate(rows, {
 			seenDomains: new Set(["acme.com"]),
 		});
 
@@ -66,7 +66,7 @@ describe("gate — no judgement of fit", () => {
 			companyRow({ domain: "low-score.com" }),
 		];
 
-		const result = gate(rows, [{}, {}, { score: 0.01 }], {
+		const result = gate(rows, {
 			seenDomains: new Set(),
 		});
 
@@ -78,7 +78,7 @@ describe("gate — safety", () => {
 	it("does not throw when a row has no matching search result at all", () => {
 		const rows = [companyRow(), companyRow({ domain: "second.com" })];
 
-		const result = gate(rows, [], { seenDomains: new Set() });
+		const result = gate(rows, { seenDomains: new Set() });
 
 		expect(result.kept).toHaveLength(2);
 	});
@@ -91,7 +91,7 @@ describe("gate — safety", () => {
 		];
 		const snapshot = structuredClone(rows);
 
-		const result = gate(rows, [{}, {}, {}], {
+		const result = gate(rows, {
 			seenDomains: new Set(["seen.com"]),
 		});
 
@@ -110,13 +110,7 @@ describe("gate — a profile page is not the company's own site", () => {
 		];
 		const rows = badDomains.map((domain) => companyRow({ domain }));
 
-		const result = gate(
-			rows,
-			rows.map(() => ({})),
-			{
-				seenDomains: new Set(),
-			},
-		);
+		const result = gate(rows, { seenDomains: new Set() });
 
 		expect(result.kept).toEqual([]);
 		expect(result.rejects).toEqual(
@@ -130,7 +124,7 @@ describe("gate — a profile page is not the company's own site", () => {
 	it("keeps a real company domain that merely contains a host name", () => {
 		const rows = [companyRow({ domain: "github-metrics.io" })];
 
-		const result = gate(rows, [{}], { seenDomains: new Set() });
+		const result = gate(rows, { seenDomains: new Set() });
 
 		expect(result.kept).toEqual(rows);
 	});

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { config } from "@/config";
-import type { CompanyRow, SearchResult } from "@/core/companies/gate";
+import type { CompanyRow } from "@/core/companies/gate";
 import { NOT_A_COMPANY_DOMAIN } from "@/core/companies/gate";
 import type { RejectDetail } from "@/core/companies/limits";
 import { entityRejectReason, planConstraints } from "@/core/companies/limits";
@@ -150,12 +150,6 @@ function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 	};
 }
 
-function toSearchResult(result: ExaResult): SearchResult {
-	return {
-		...(result.score !== undefined ? { score: result.score } : {}),
-	};
-}
-
 function toCompanyMatch(result: ExaResult): CompanyMatch {
 	return {
 		id: result.id,
@@ -193,7 +187,6 @@ export function companyExaId(data: unknown): string | null {
 
 export type FilterOutcome = {
 	rows: CompanyRow[];
-	results: SearchResult[];
 	rejects: FindCompaniesReject[];
 	captures: Record<string, CompanyCapture>;
 };
@@ -249,7 +242,6 @@ export function filterEntities(
 ): FilterOutcome {
 	const outcome: FilterOutcome = {
 		rows: [],
-		results: [],
 		rejects: [],
 		captures: {},
 	};
@@ -275,7 +267,6 @@ export function filterEntities(
 		}
 		const row = toCompanyRow(result, entity);
 		outcome.rows.push(row);
-		outcome.results.push(toSearchResult(result));
 		if (row.domain) {
 			outcome.captures[row.domain] = {
 				entity,

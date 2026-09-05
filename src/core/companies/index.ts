@@ -9,7 +9,6 @@ import type {
 	CompanyRow,
 	GateOptions,
 	GateResult,
-	SearchResult,
 } from "@/core/companies/gate";
 import type { JudgeResult, RequirementEvidence } from "@/core/companies/judge";
 import type { ProvenRow, ProvingDemand } from "@/core/companies/proof";
@@ -89,11 +88,7 @@ export type FindCompaniesDeps = {
 		env: Env,
 		ledger: CostLedger,
 	) => Promise<RetrievedPage[]>;
-	gate: (
-		rows: readonly CompanyRow[],
-		results: readonly SearchResult[],
-		opts: GateOptions,
-	) => GateResult;
+	gate: (rows: readonly CompanyRow[], opts: GateOptions) => GateResult;
 	judge: (
 		requirements: readonly Requirement[],
 		rows: readonly CompanyRow[],

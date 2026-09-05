@@ -80,7 +80,7 @@ describe("the linkedin evidence cache", () => {
 	function linkedinProvider(
 		run: (input: LinkedinInput) => Promise<LinkedinResult | null>,
 	): Provider<LinkedinInput, LinkedinResult> {
-		return { id: "linkedin-search", channels: ["linkedin"], cost: 0, run };
+		return { id: "linkedin-search", run };
 	}
 
 	it("reuses evidence inside the thirty-day window", async () => {

@@ -172,7 +172,7 @@ export async function runRound(
 	const unseenCount = filtered.rows.filter(
 		(row) => row.domain && !ctx.excluded.has(normalizeDomain(row.domain)),
 	).length;
-	const gated = deps.gate(filtered.rows, filtered.results, {
+	const gated = deps.gate(filtered.rows, {
 		seenDomains: ctx.excluded,
 	});
 	const judged = await judgeSlices({

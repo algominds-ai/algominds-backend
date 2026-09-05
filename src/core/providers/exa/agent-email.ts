@@ -139,8 +139,6 @@ async function startEmailRun(
 export const exaAgentEmailProvider: Provider<FindymailInput, FindymailResult> =
 	{
 		id: "exa-agent-email",
-		channels: ["email"],
-		cost: 3,
 		async run(input, env, ledger = new CostLedger()) {
 			const description = personDescription(input);
 			if (!description) return null;
