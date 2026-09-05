@@ -2,6 +2,7 @@ import { CostLedger } from "@/core/cost";
 import type { Candidate } from "@/core/people/candidate";
 import type { DedupeRow } from "@/core/people/dedupe";
 import { dedupe } from "@/core/people/dedupe";
+import type { ClaySearchResult } from "@/core/providers/clay";
 import { claySearch } from "@/core/providers/clay";
 import type { IcpBuyer } from "@/core/synthesize";
 
@@ -40,21 +41,20 @@ export async function seniorRoster(
 		})),
 	];
 
-	const results = await Promise.all(
-		slices.map(async (slice) => {
-			const sliceLedger = new CostLedger();
-			const result = await claySearch(
-				env,
-				{
-					identifier,
-					bands: [...slice.bands],
-					...(slice.keywords ? { keywords: slice.keywords } : {}),
-				},
-				sliceLedger,
-			);
-			return { result, sliceLedger };
-		}),
-	);
+	const results: { result: ClaySearchResult; sliceLedger: CostLedger }[] = [];
+	for (const slice of slices) {
+		const sliceLedger = new CostLedger();
+		const result = await claySearch(
+			env,
+			{
+				identifier,
+				bands: [...slice.bands],
+				...(slice.keywords ? { keywords: slice.keywords } : {}),
+			},
+			sliceLedger,
+		);
+		results.push({ result, sliceLedger });
+	}
 	for (const [index, { result, sliceLedger }] of results.entries()) {
 		const slice = slices[index];
 		if (!slice) continue;

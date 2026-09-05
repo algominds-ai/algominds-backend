@@ -7,6 +7,7 @@ const STEPS = [
 	["biome", "bunx", ["biome", "check", "."]],
 	["comments", "bun", ["scripts/check-comments.mjs"]],
 	["language", "bun", ["scripts/check-language.mjs"]],
+	["tests-shape", "bun", ["scripts/check-tests.mjs"]],
 	["steps", "bun", ["scripts/check-step-config.mjs"]],
 	["step-mocks", "bun", ["scripts/check-step-mocks.mjs"]],
 	["tests", "bunx", ["vitest", "run"]],

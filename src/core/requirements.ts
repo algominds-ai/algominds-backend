@@ -11,7 +11,18 @@ export const RequirementSchema = z.object({
 	kind: z.enum(REQUIREMENT_KINDS),
 	proof: z.enum(REQUIREMENT_PROOFS),
 	windowDays: z.number().int().positive().nullable(),
+	strict: z.boolean().optional(),
 });
+
+/** Every hard requirement a row must be proven on to be stored: the page requirements, plus the record requirements the profile marked strict, whose silence disqualifies. */
+export function mustBeProven(
+	requirements: readonly Requirement[],
+): Requirement[] {
+	return requirements.filter(
+		(req) =>
+			req.kind === "hard" && (req.proof === "page" || req.strict === true),
+	);
+}
 
 export type Requirement = z.infer<typeof RequirementSchema>;
 

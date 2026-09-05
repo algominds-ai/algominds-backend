@@ -66,11 +66,33 @@ export function planConstraints(plan: SearchPlan): string {
 
 export type RejectDetail = { reason: string; group?: string };
 
+const STATED_HEADCOUNT = [
+	/(\d{1,3}(?:,\d{3})+|\d+)\s*\+?\s*(?:[a-z-]+\s+)?(?:employees|team members|staff|colleagues|professionals|workers|technicians)\b/i,
+	/\bemploys\s+(?:over|more than|about|nearly|around|some)?\s*(\d{1,3}(?:,\d{3})+|\d+)\b/i,
+];
+
+/** The headcount a company's own description states, or null when it states none. */
+export function statedHeadcount(entity: CompanyEntity): number | null {
+	if (entity.description === null) return null;
+	for (const pattern of STATED_HEADCOUNT) {
+		const match = entity.description.match(pattern);
+		if (match?.[1]) return Number(match[1].replace(/,/g, ""));
+	}
+	return null;
+}
+
+const STATED_HEADCOUNT_LIMIT: NumericLimit = {
+	label: "headcount stated in the description",
+	reading: statedHeadcount,
+	floor: (plan) => plan.minWorkforce,
+	ceiling: (plan) => plan.maxWorkforce,
+};
+
 function numericRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
 ): RejectDetail | null {
-	for (const limit of NUMERIC_LIMITS) {
+	for (const limit of [...NUMERIC_LIMITS, STATED_HEADCOUNT_LIMIT]) {
 		const reading = limit.reading(entity);
 		if (reading === null) continue;
 		const ceiling = limit.ceiling(plan);

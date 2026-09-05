@@ -12,12 +12,17 @@ import {
 } from "@/core/db/queries";
 import type { NewPerson } from "@/core/db/schema";
 import type { ResolvedBuyer } from "@/core/people/buyer";
-import type { Candidate } from "@/core/people/candidate";
 import { resolveIdentity } from "@/core/people/identity";
-import { seniorRoster } from "@/core/people/roster";
 import { rawEvidenceRow, toNewPerson } from "@/core/people/rows";
+import { exaOrganizationId } from "@/core/providers/exa/people-roster";
+import { RetryableProviderError } from "@/core/providers/waterfall";
 import type { IcpDoc } from "@/core/synthesize";
 import { applyCostEntries } from "@/workflows/agent-poll";
+import {
+	rescueUnresolved,
+	runRosterStep,
+	skipFailedCompany,
+} from "@/workflows/find-people-rescue";
 import type { TargetCompany } from "@/workflows/find-people-target";
 import { runBuyerMode } from "@/workflows/find-people-verify";
 
@@ -38,6 +43,7 @@ export type CompanyProgress = {
 	spentSoFar: number;
 	clayRecords: number;
 	ledger: CostLedger;
+	exaOrganizationId: string | null;
 };
 
 export type CompanyOutcome = {
@@ -83,7 +89,7 @@ async function openCompanyRow(
 	);
 }
 
-type IdentityStepResult =
+export type IdentityStepResult =
 	| {
 			how: "domain" | "linkedin";
 			identifier: string;
@@ -155,6 +161,29 @@ async function markUnresolved(
 	);
 }
 
+/** The Exa organization id for `domain`, resolved once per company so both the roster fallback and the verify second opinion can compare against it by id rather than by name. A miss, or any non-retryable failure, is `null`. */
+async function runOrganizationStep(
+	ctx: CompanyLoopContext,
+	domain: string,
+): Promise<{ organizationId: string | null; costEntries: CostEntry[] }> {
+	return ctx.step.do(
+		`people-${domain}-organization`,
+		config.stepConfig.paidCall,
+		async () => {
+			const ledger = new CostLedger();
+			const organizationId = await exaOrganizationId(
+				ctx.env,
+				domain,
+				ledger,
+			).catch((error: unknown) => {
+				if (error instanceof RetryableProviderError) throw error;
+				return null;
+			});
+			return { organizationId, costEntries: ledger.toJSON().entries };
+		},
+	);
+}
+
 async function ensureCompanyRow(
 	ctx: CompanyLoopContext,
 	company: TargetCompany,
@@ -181,37 +210,6 @@ async function ensureCompanyRow(
 			}
 			await updateRunCompany(ctx.env, runCompanyId, { identity: identity.how });
 			return company.id;
-		},
-	);
-}
-
-async function runRosterStep(
-	ctx: CompanyLoopContext,
-	domain: string,
-	identifier: string,
-	runCompanyId: string,
-): Promise<{
-	candidates: Candidate[];
-	clayRecords: number;
-	costEntries: CostEntry[];
-}> {
-	return ctx.step.do(
-		`people-${domain}-roster`,
-		config.stepConfig.paidCall,
-		async () => {
-			const ledger = new CostLedger();
-			const result = await seniorRoster(identifier, ctx.buyer, ctx.env, ledger);
-			await appendEvidence(
-				ctx.env,
-				result.raw.map((body) =>
-					rawEvidenceRow(runCompanyId, "roster", "clay", body),
-				),
-			);
-			return {
-				candidates: result.candidates,
-				clayRecords: result.quotaUsed,
-				costEntries: ledger.toJSON().entries,
-			};
 		},
 	);
 }
@@ -289,7 +287,18 @@ export async function runOneCompany(
 	const ledger = new CostLedger();
 	const identity = await runIdentityStep(ctx, company, runCompanyId);
 	applyCostEntries(identity.costEntries, ledger);
-	if (identity.how === "unresolved") {
+	const organization = await runOrganizationStep(ctx, company.domain);
+	applyCostEntries(organization.costEntries, ledger);
+	const rescued =
+		identity.how === "unresolved"
+			? await rescueUnresolved(
+					ctx,
+					company,
+					{ runCompanyId, organizationId: organization.organizationId },
+					identity,
+				)
+			: null;
+	if (identity.how === "unresolved" && rescued === null) {
 		await markUnresolved(ctx, company.domain, runCompanyId, {
 			clayRecords: identity.clayRecords,
 			spendDollars: ledger.total(),
@@ -304,27 +313,42 @@ export async function runOneCompany(
 			costDollars,
 		};
 	}
+	const resolved =
+		identity.how === "unresolved"
+			? {
+					how: "domain" as const,
+					identifier: company.domain,
+					name: company.name,
+				}
+			: identity;
 	const companyId = await ensureCompanyRow(
 		ctx,
 		company,
 		runCompanyId,
-		identity,
+		resolved,
 	);
-	const roster = await runRosterStep(
-		ctx,
-		company.domain,
-		identity.identifier,
-		runCompanyId,
-	);
+	const roster =
+		rescued ??
+		(await runRosterStep(
+			ctx,
+			{
+				domain: company.domain,
+				identifier: resolved.identifier,
+				name: resolved.name,
+				organizationId: organization.organizationId,
+			},
+			runCompanyId,
+		));
 	applyCostEntries(roster.costEntries, ledger);
 	const progress: CompanyProgress = {
 		domain: company.domain,
 		companyId,
-		companyName: identity.name ?? company.name ?? company.domain,
+		companyName: resolved.name ?? company.name ?? company.domain,
 		runCompanyId,
 		spentSoFar,
 		clayRecords: identity.clayRecords + roster.clayRecords,
 		ledger,
+		exaOrganizationId: organization.organizationId,
 	};
 	if (ctx.buyer.mode === "roster") {
 		return finishRosterMode(ctx, progress, roster);
@@ -367,7 +391,11 @@ export async function runCompanies(
 		const batchStart = costDollars;
 		const batch = companies.slice(start, start + batchSize);
 		const results = await Promise.all(
-			batch.map((company) => runOneCompany(ctx, company, batchStart)),
+			batch.map((company) =>
+				runOneCompany(ctx, company, batchStart).catch((error: unknown) =>
+					skipFailedCompany(ctx, company, batchStart, error),
+				),
+			),
 		);
 		for (const result of results) {
 			companiesSearched += 1;

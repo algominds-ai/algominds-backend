@@ -12,7 +12,7 @@ import type {
 	SearchResult,
 } from "@/core/companies/gate";
 import type { JudgeResult, RequirementEvidence } from "@/core/companies/judge";
-import type { ProvenRow } from "@/core/companies/proof";
+import type { ProvenRow, ProvingDemand } from "@/core/companies/proof";
 import { toGateRejects } from "@/core/companies/proof";
 import type { BackfilledRecord } from "@/core/companies/record";
 import type { RoundOutcome } from "@/core/companies/round";
@@ -80,7 +80,7 @@ export type FindCompaniesDeps = {
 	) => Promise<BackfilledRecord[]>;
 	prove: (
 		rows: readonly CompanyRow[],
-		requirement: Requirement,
+		demand: ProvingDemand,
 		env: Env,
 		ledger: CostLedger,
 	) => Promise<ProvenRow[]>;
