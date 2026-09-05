@@ -2,6 +2,14 @@
 	"slug": "form3",
 	"icpId": "cf9f5feb-bdb7-43ab-8899-09f1e1fa468b",
 	"people": {
+		"https://linkedin.com/in/-adam-jordan-": {
+			"label": null,
+			"name": "Adam Jordan",
+			"title": "VP Engineering",
+			"company": "clear.bank",
+			"location": "Cardiff, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/aaroncote": {
 			"label": "accept",
 			"name": "Aaron Cote",
@@ -110,6 +118,14 @@
 			"firstSeenRunId": "people_dom-3cef6f6217d8_2026-09-05",
 			"note": "CIO at mendix.com, an explicit c-suite technology executive"
 		},
+		"https://linkedin.com/in/asad-ali-2b7aa5a": {
+			"label": null,
+			"name": "Asad Ali",
+			"title": "Head of Engineering - EPOS",
+			"company": "sainsburys.jobs",
+			"location": "Cambridge, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/ashley-miller-1905757": {
 			"label": "accept",
 			"name": "Ashley Miller",
@@ -118,6 +134,22 @@
 			"location": "Brooklyn, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP, Application Infrastructure at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/austin-higgins-493085a0": {
+			"label": null,
+			"name": "Austin Higgins",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "Milton Keynes, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
+		"https://linkedin.com/in/babagana-zannah-6a76521b7": {
+			"label": null,
+			"name": "Babagana Zannah",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/babak-moghimi": {
 			"label": "accept",
@@ -208,6 +240,14 @@
 			"location": "San Francisco, United States",
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "CTO, North America & Asia/Pacific at zdsk.co, a regional c-suite technology executive"
+		},
+		"https://linkedin.com/in/carl-molyneux-65b0b1a4": {
+			"label": null,
+			"name": "Carl Molyneux",
+			"title": "Director of Engineering - Infra & Platform",
+			"company": "clear.bank",
+			"location": "Taunton, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/carsten-bernhard-4261293": {
 			"label": "accept",
@@ -335,6 +375,14 @@
 			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
 			"note": "Vice President, Engineering at guidewire.com, a VP Engineering role"
 		},
+		"https://linkedin.com/in/davemarsland": {
+			"label": null,
+			"name": "Dave Marsland",
+			"title": "VP of Engineering",
+			"company": "clear.bank",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/david-seidman-1a68023": {
 			"label": "accept",
 			"name": "David Seidman",
@@ -343,6 +391,14 @@
 			"location": "Issaquah, United States",
 			"firstSeenRunId": "people_dom-8cbff3a0c9a2_2026-09-05",
 			"note": "Head of Platform Security at plaid.com, matching both the Head of Platform and Head of Security buyer bands"
+		},
+		"https://linkedin.com/in/david-w-roberts": {
+			"label": null,
+			"name": "David Roberts",
+			"title": "CTO / CPO (CTPO) | Board Member",
+			"company": "allegro.eu",
+			"location": "Warsaw, Poland",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/dennisvanrooijen": {
 			"label": "accept",
@@ -425,6 +481,14 @@
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "SVP, Trust | Chief Risk & Security Officer at appfolio.com, an explicit c-suite security executive"
 		},
+		"https://linkedin.com/in/edwin-renner-46aab056": {
+			"label": null,
+			"name": "Edwin Renner",
+			"title": "Executive Director IT Operations & Transaction Service Management",
+			"company": "payone.com",
+			"location": "Vienna, Austria",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/eleni-fragkiadaki": {
 			"label": "reject:not-buyer",
 			"name": "Eleni Fragkiadaki",
@@ -436,7 +500,7 @@
 		},
 		"https://linkedin.com/in/emanuel-fl%c3%bcck-aa791a82": {
 			"label": "accept",
-			"name": "Emanuel Fl\u00fcck",
+			"name": "Emanuel Flück",
 			"title": "Head Cloud Center of Excellence PostFinance",
 			"company": "postfinance.ch",
 			"location": "Berne, Switzerland",
@@ -479,6 +543,14 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "Vice President of Technology at bhvr.com, a VP-level technology executive equivalent to VP Engineering"
 		},
+		"https://linkedin.com/in/fernando-fanton-43641413": {
+			"label": null,
+			"name": "Fernando Fanton",
+			"title": "Chief Technology and Product Officer (CPTO)",
+			"company": "monzo.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/florbela-viegas": {
 			"label": "accept",
 			"name": "Florbela Viegas",
@@ -506,6 +578,14 @@
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "Senior Vice President of Engineering at zdsk.co, a VP Engineering role"
 		},
+		"https://linkedin.com/in/gary-barron-383b6a3": {
+			"label": null,
+			"name": "Gary Barron",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/gerhard-esterhuizen-8272761": {
 			"label": "accept",
 			"name": "Gerhard Esterhuizen",
@@ -520,7 +600,7 @@
 			"name": "Gerrit Lober",
 			"title": "Head of Cloud Foundation & Technology",
 			"company": "cariad.technology",
-			"location": "Hannover-Braunschweig-G\u00f6ttingen-Wolfsburg Region, Germany",
+			"location": "Hannover-Braunschweig-Göttingen-Wolfsburg Region, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Cloud Foundation & Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
@@ -605,9 +685,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Senior Vice President of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/ian-kurt\u00e9n-55456": {
+		"https://linkedin.com/in/ian-kurtén-55456": {
 			"label": "accept",
-			"name": "Ian Kurt\u00e9n",
+			"name": "Ian Kurtén",
 			"title": "Head of High Security",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -616,7 +696,7 @@
 		},
 		"https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141": {
 			"label": "accept",
-			"name": "Ignacio Jim\u00e9nez Pi",
+			"name": "Ignacio Jiménez Pi",
 			"title": "SVP Platform Engineering",
 			"company": "adyen.com",
 			"location": "Amsterdam, Netherlands",
@@ -646,13 +726,13 @@
 			"name": "Ioannis Papadopoulos",
 			"title": "Chief Technology Officer",
 			"company": "trivago.com",
-			"location": "D\u00fcsseldorf, Germany",
+			"location": "Düsseldorf, Germany",
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "Chief Technology Officer at trivago.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12": {
 			"label": "accept",
-			"name": "Iv\u00e1n Lugo",
+			"name": "Iván Lugo",
 			"title": "Vice President of Global Engineering",
 			"company": "dexcom.com",
 			"location": "Irvine, United States",
@@ -713,6 +793,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Vice President of Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/jens-knobloch-ec-a6315991": {
+			"label": null,
+			"name": "Jens Knobloch_ec",
+			"title": "CIO / Executive Director Transaction Platforms",
+			"company": "payone.com",
+			"location": "Cologne Bonn Region, Germany",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/jesuscholiz": {
 			"label": "accept",
 			"name": "Jesus Choliz",
@@ -724,7 +812,7 @@
 		},
 		"https://linkedin.com/in/jmendes": {
 			"label": "accept",
-			"name": "Jo\u00e3o Mendes",
+			"name": "João Mendes",
 			"title": "VP, Information Security",
 			"company": "farfetch.com",
 			"location": "Maia, Portugal",
@@ -767,9 +855,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Director of Engineering is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
-		"https://linkedin.com/in/jo\u00e3o-madureira": {
+		"https://linkedin.com/in/joão-madureira": {
 			"label": "accept",
-			"name": "Jo\u00e3o Madureira",
+			"name": "João Madureira",
 			"title": "Head Of Engineering",
 			"company": "farfetch.com",
 			"location": "Maia, Portugal",
@@ -902,6 +990,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "SVP Engineering  / Core Engineering Team at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/lefteris-kokkonas-8b853845": {
+			"label": null,
+			"name": "Lefteris Kokkonas",
+			"title": "Head of Engineering for Media Agency",
+			"company": "sainsburys.jobs",
+			"location": "Loughton, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/leo-shemesh-6620a15": {
 			"label": "accept",
 			"name": "Leo Shemesh",
@@ -937,6 +1033,14 @@
 			"location": "Alpharetta, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP, Security Operations, Trust, and Safety at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/luca-zangari": {
+			"label": null,
+			"name": "Luca Zangari",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/lucacanducci": {
 			"label": "accept",
@@ -1004,7 +1108,7 @@
 		"https://linkedin.com/in/markus-fuhrer-422422a0": {
 			"label": "accept",
 			"name": "Markus Fuhrer",
-			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Gesch\u00e4ftsleitung",
+			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Geschäftsleitung",
 			"company": "postfinance.ch",
 			"location": "Bolligen, Switzerland",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
@@ -1018,6 +1122,14 @@
 			"location": "Helsinki, Finland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Vice President and CIO at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/markus-koerner-54232668": {
+			"label": null,
+			"name": "Markus Koerner",
+			"title": "CIO",
+			"company": "payone.com",
+			"location": "Frankfurt, Germany",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/martin-hofer-17b590213": {
 			"label": "accept",
@@ -1058,11 +1170,11 @@
 		"https://linkedin.com/in/michael-wildpaner-b9b8591": {
 			"label": "accept",
 			"name": "Michael Wildpaner",
-			"title": "VP of Engineering \u2014 Security",
+			"title": "VP of Engineering — Security",
 			"company": "gitlab.com",
 			"location": "Zurich, Switzerland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
-			"note": "VP of Engineering \u2014 Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+			"note": "VP of Engineering — Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/mihirkapadia": {
 			"label": "accept",
@@ -1081,6 +1193,14 @@
 			"location": "San Francisco, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "Chief Product & Technology Officer at tubitv.com, a c-suite role that includes the CTO scope"
+		},
+		"https://linkedin.com/in/mike-reeves-b4b27586": {
+			"label": null,
+			"name": "Mike Reeves",
+			"title": "Head of Engineering - Connected Stores",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/miladinp": {
 			"label": "accept",
@@ -1127,6 +1247,14 @@
 			"firstSeenRunId": "people_dom-3e7b4d79e430_2026-09-05",
 			"note": "SVP Engineering at appdirect.com, a VP Engineering role"
 		},
+		"https://linkedin.com/in/murshidah": {
+			"label": null,
+			"name": "Murshidah Boksh",
+			"title": "Head of Information Security",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/naveenaerrabotu": {
 			"label": "accept",
 			"name": "Naveen Aerrabotu",
@@ -1136,6 +1264,22 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/neil-drennan-1649156a": {
+			"label": null,
+			"name": "Neil Drennan",
+			"title": "Chief Technology Officer - Clearbank",
+			"company": "clear.bank",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
+		"https://linkedin.com/in/neilbartlett": {
+			"label": null,
+			"name": "Neil Bartlett",
+			"title": "Head of Technology - Infastructure",
+			"company": "sainsburys.jobs",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/nick-vigier-ab45aa1": {
 			"label": "accept",
 			"name": "Nick Vigier",
@@ -1144,6 +1288,14 @@
 			"location": "Commack, United States",
 			"firstSeenRunId": "people_dom-b88d1e0fded9_2026-09-05",
 			"note": "Chief Information Security Officer at hioscar.com, explicit c-suite security executive"
+		},
+		"https://linkedin.com/in/nidhi-sharma-04aa9936": {
+			"label": null,
+			"name": "Nidhi Sharma",
+			"title": "Global Head Of Engineering AI and Incubation",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/niklas-gustavsson-a062213": {
 			"label": "accept",
@@ -1220,7 +1372,7 @@
 		"https://linkedin.com/in/patricia-stich-a5046b27": {
 			"label": "reject:not-buyer",
 			"name": "Patricia Stich",
-			"title": "Vorst\u00e4ndin Volkswagen Group Info Services AG",
+			"title": "Vorständin Volkswagen Group Info Services AG",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
@@ -1297,6 +1449,14 @@
 			"location": "Charlton, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Head of Engineering, epocrates at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/rob-barnes": {
+			"label": null,
+			"name": "Rob Barnes",
+			"title": "Chief Technology Officer",
+			"company": "sainsburys.jobs",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/robin-mohseni-72375080": {
 			"label": "accept",
@@ -1444,7 +1604,7 @@
 		},
 		"https://linkedin.com/in/sergiofsoliveira": {
 			"label": "accept",
-			"name": "S\u00e9rgio Oliveira",
+			"name": "Sérgio Oliveira",
 			"title": "VP Global Technology",
 			"company": "farfetch.com",
 			"location": "Braga, Portugal",
@@ -1468,6 +1628,14 @@
 			"location": "St. Petersburg, United States",
 			"firstSeenRunId": "people_dom-3e7b4d79e430_2026-09-05",
 			"note": "CTO and co-founder of pandadoc.com, explicit c-suite technology executive"
+		},
+		"https://linkedin.com/in/simon-bonds": {
+			"label": null,
+			"name": "Simon Bonds",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "Telford, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
 		},
 		"https://linkedin.com/in/simpsonpt": {
 			"label": "accept",
@@ -1541,6 +1709,14 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "influencer by the frozen Director rule"
 		},
+		"https://linkedin.com/in/tamsin-harrison-nee-petty-b1372b19": {
+			"label": null,
+			"name": "Tamsin Harrison (nee Petty)",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "Milton Keynes, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/thayyil": {
 			"label": "reject:not-buyer",
 			"name": "Ranjit Thayyil",
@@ -1568,6 +1744,14 @@
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "Head of Hybrid Platform & Developer Experience at trivago.com, a Head of Platform role"
 		},
+		"https://linkedin.com/in/tim-williams-15943214": {
+			"label": null,
+			"name": "Tim Williams",
+			"title": "Head Of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/tim-zallmann-505b2b4b": {
 			"label": "accept",
 			"name": "Tim Zallmann",
@@ -1577,9 +1761,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/timo-h\u00e4nninen-0b899071": {
+		"https://linkedin.com/in/timo-hänninen-0b899071": {
 			"label": "accept",
-			"name": "Timo H\u00e4nninen",
+			"name": "Timo Hänninen",
 			"title": "Business Lead, Head of Cloud and Infrastructure services",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -1685,6 +1869,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Chief Technology and AI Officer, Elisa Corporate Customers at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/viswanath-reddy-102361a": {
+			"label": null,
+			"name": "Viswanatha Reddy",
+			"title": "Head of Engineering",
+			"company": "sainsburys.jobs",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-df65f469d423_2026-09-05"
+		},
 		"https://linkedin.com/in/vstulski": {
 			"label": "accept",
 			"name": "Vitaliy Stulski",
@@ -1723,7 +1915,7 @@
 		},
 		"https://linkedin.com/in/whats": {
 			"label": "accept",
-			"name": "Albert Sellar\u00e8s",
+			"name": "Albert Sellarès",
 			"title": "CTO / Global VP of Engineering (entire Adevinta group)",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
@@ -1766,9 +1958,9 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "SVP, Engineering at tubitv.com, a VP Engineering role"
 		},
-		"https://linkedin.com/in/\u00e0ngel-puigvent\u00f3s-76a35147": {
+		"https://linkedin.com/in/àngel-puigventós-76a35147": {
 			"label": "accept",
-			"name": "\u00c0ngel Puigvent\u00f3s",
+			"name": "Àngel Puigventós",
 			"title": "Head of Security Operations",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
