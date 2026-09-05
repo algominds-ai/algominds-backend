@@ -86,6 +86,7 @@ describe("a round whose judge gives up never re-runs the round's own synthesize"
 		const round = 1;
 		const deps = roundDeps({
 			accumulatedDomains: new Set(),
+			runId: "companies_round-retry",
 			step,
 			round,
 			today: "2026-09-05",
