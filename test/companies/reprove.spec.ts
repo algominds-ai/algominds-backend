@@ -88,6 +88,7 @@ function deps(hits: ProvingHit | null): {
 			backfill: unreachable,
 			gate: () => ({ kept: [], rejects: [] }),
 			prove: async (rows) => rows.map((_row, index) => ({ index, hit: hits })),
+			homepages: async () => [],
 			judge: async (_requirements, rows) => {
 				judged.push([...rows]);
 				return { verdicts: [], ledger: new CostLedger() };

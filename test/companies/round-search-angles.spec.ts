@@ -110,6 +110,7 @@ function twoPlanSearchDeps(searchedAngles: string[]): FindCompaniesDeps {
 			throw new Error("a search round should not reach the agent");
 		},
 		backfill: async () => [],
+		homepages: async () => [],
 		prove: async (rows) => rows.map((_row, index) => ({ index, hit: null })),
 		gate,
 		judge: acceptAll(),

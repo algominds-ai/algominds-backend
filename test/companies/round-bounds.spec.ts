@@ -72,6 +72,7 @@ describe("the round loop stays bounded", () => {
 			},
 			backfill: async () => [],
 			prove: async () => [],
+			homepages: async () => [],
 			gate,
 			judge: async () => ({ verdicts: [], ledger: new CostLedger() }),
 		};

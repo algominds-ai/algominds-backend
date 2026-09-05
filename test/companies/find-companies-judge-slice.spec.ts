@@ -57,6 +57,7 @@ function testDeps(
 			throw new Error("this round should not have backfilled a record");
 		},
 		prove: async () => [],
+		homepages: async () => [],
 		...overrides,
 	};
 }

@@ -171,6 +171,7 @@ describe("a round that demanded proof checks its own evidence before the judge s
 			agentRound,
 			backfill: passthroughBackfill,
 			prove: async () => [],
+			homepages: async () => [],
 			gate,
 			judge: noopJudge,
 		});
@@ -208,6 +209,7 @@ describe("a round that demanded proof checks its own evidence before the judge s
 			agentRound,
 			backfill: passthroughBackfill,
 			prove: async () => [],
+			homepages: async () => [],
 			gate,
 			judge: noopJudge,
 		});
@@ -235,6 +237,7 @@ describe("a round that demanded proof but never had it to check", () => {
 			agentRound,
 			backfill: passthroughBackfill,
 			prove: async () => [],
+			homepages: async () => [],
 			gate,
 			judge: noopJudge,
 		});
@@ -258,6 +261,7 @@ describe("a round that demanded proof but never had it to check", () => {
 			agentRound,
 			backfill: passthroughBackfill,
 			prove: async () => [],
+			homepages: async () => [],
 			gate,
 			judge: noopJudge,
 		});
@@ -266,28 +270,31 @@ describe("a round that demanded proof but never had it to check", () => {
 	});
 });
 
+function agentCoCompany(): ExaAgentCompany {
+	return {
+		name: "Agent Co",
+		website: "https://agentco.com",
+		linkedinUrl: null,
+		description: "found by the agent",
+		industry: null,
+		foundedYear: 2020,
+		workforceTotal: 12,
+		city: "Austin",
+		country: "United States",
+		revenueAnnual: null,
+		fundingTotal: null,
+		signal: "opened a platform engineering role",
+		evidenceUrl: "https://jobs.example.com/agent-co/platform",
+		evidenceDate: "2026-08-12",
+		evidenceQuote: "Agent Co is hiring a Platform Engineer.",
+		evidencePublisher: "Agent Co Careers",
+		evidenceKind: null,
+	};
+}
+
 describe("captures across sources agree on shape", () => {
 	it("captures an agent-sourced company under the same shape as a search-sourced one", async () => {
-		const agentCompany: ExaAgentCompany = {
-			name: "Agent Co",
-			website: "https://agentco.com",
-			linkedinUrl: null,
-			description: "found by the agent",
-			industry: null,
-			foundedYear: 2020,
-			workforceTotal: 12,
-			city: "Austin",
-			country: "United States",
-			revenueAnnual: null,
-			fundingTotal: null,
-			signal: "opened a platform engineering role",
-			evidenceUrl: "https://jobs.example.com/agent-co/platform",
-			evidenceDate: "2026-08-12",
-			evidenceQuote: "Agent Co is hiring a Platform Engineer.",
-			evidencePublisher: "Agent Co Careers",
-			evidenceKind: null,
-		};
-		const agentSearchResult = toExaSearchResult("req-1", [agentCompany]);
+		const agentSearchResult = toExaSearchResult("req-1", [agentCoCompany()]);
 
 		const result = await findCompanies(icp, 1, exaOptions(), {
 			recentDomains: async () => [],
@@ -298,6 +305,7 @@ describe("captures across sources agree on shape", () => {
 			},
 			backfill: passthroughBackfill,
 			prove: async () => [],
+			homepages: async () => [],
 			gate,
 			judge: noopJudge,
 		});

@@ -103,6 +103,10 @@ companies:
   # Poll requests the whole angle fan-out may spend per second; a round's poll
   # interval scales up with the angles in flight to stay under this.
   exaPollBudgetPerSecond: 2
+  # Characters of a candidate's own homepage handed to the judge next to its record.
+  # Small on purpose: the judge only needs what the company sells, to whom, and
+  # whether it still operates, not the whole page.
+  homepageMaxCharacters: 4000
 
 people:
   # Seconds between polls of a running exa-agent run.

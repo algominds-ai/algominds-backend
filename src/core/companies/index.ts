@@ -84,6 +84,11 @@ export type FindCompaniesDeps = {
 		env: Env,
 		ledger: CostLedger,
 	) => Promise<ProvenRow[]>;
+	homepages: (
+		domains: readonly string[],
+		env: Env,
+		ledger: CostLedger,
+	) => Promise<RetrievedPage[]>;
 	gate: (
 		rows: readonly CompanyRow[],
 		results: readonly SearchResult[],

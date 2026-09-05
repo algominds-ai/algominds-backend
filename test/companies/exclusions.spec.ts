@@ -126,6 +126,7 @@ function agentDeps(
 			return domains.map((domain) => ({ domain, record: null }));
 		},
 		prove: async () => [],
+		homepages: async () => [],
 		gate,
 		judge: async (_requirements, rows) => ({
 			verdicts: verdicts

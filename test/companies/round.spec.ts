@@ -156,6 +156,10 @@ function spyingDeps(script: RoundScript): RoundSpy {
 				hit: script.hits?.[candidate.domain ?? ""] ?? null,
 			}));
 		},
+		homepages: async () => {
+			order.push("homepages");
+			return [];
+		},
 		gate,
 		judge: async (_requirements, rows) => {
 			order.push("judge");
@@ -253,7 +257,7 @@ describe("proving runs before the judge, and every hard page requirement gets it
 			spy.deps,
 		);
 
-		expect(spy.order).toEqual(["search", "prove", "judge"]);
+		expect(spy.order).toEqual(["search", "prove", "homepages", "judge"]);
 		expect(result.pages).toEqual([
 			{
 				domain: "bank.com",

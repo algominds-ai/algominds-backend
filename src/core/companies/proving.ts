@@ -193,6 +193,34 @@ export type ProveAndJudgeOutcome = {
 	ledger: CostLedger;
 };
 
+/**
+ * Fetches every proved row's own homepage and folds it onto `evidenceByRow`
+ * under the `"homepage"` key, so the judge weighs the company's own current
+ * statement next to its record. A domain no homepage was found for is left
+ * exactly as it was.
+ */
+async function attachHomepages(
+	deps: FindCompaniesDeps,
+	proved: ProvedCandidates,
+	env: Env,
+	ledger: CostLedger,
+): Promise<void> {
+	const domains = [
+		...new Set(proved.rows.flatMap((row) => (row.domain ? [row.domain] : []))),
+	];
+	if (domains.length === 0) return;
+	const homepages = await deps.homepages(domains, env, ledger);
+	const byDomain = new Map(homepages.map((page) => [page.domain, page]));
+	proved.rows.forEach((row, index) => {
+		const homepage = row.domain ? byDomain.get(row.domain) : undefined;
+		if (!homepage) return;
+		const perRow =
+			proved.evidenceByRow.get(index) ?? new Map<string, RequirementEvidence>();
+		perRow.set("homepage", { url: homepage.url, quote: homepage.text });
+		proved.evidenceByRow.set(index, perRow);
+	});
+}
+
 /** Proves what the round's rows still need proving, then judges them, recording the evidence and the verdicts onto `captures`. */
 export async function proveAndJudge(
 	input: ProveAndJudgeInput,
@@ -219,6 +247,7 @@ export async function proveAndJudge(
 				});
 	applyEvidenceChecks(captures, proved.checks);
 	applyRowEvidence(captures, proved.rows);
+	await attachHomepages(deps, proved, env, ledger);
 	const judged =
 		proved.rows.length > 0
 			? await deps.judge(requirements, proved.rows, env, proved.evidenceByRow)

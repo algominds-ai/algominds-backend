@@ -217,12 +217,9 @@ export async function profileOpinion(
 	env: Env,
 	ledger: CostLedger,
 ): Promise<ProfileOpinionResult> {
-	const contents = await exaContents(
-		[input.url],
-		env,
-		ledger,
-		PROFILE_TEXT_MAX_CHARACTERS,
-	);
+	const contents = await exaContents([input.url], env, ledger, {
+		maxCharacters: PROFILE_TEXT_MAX_CHARACTERS,
+	});
 	const text = contents.results[0]?.text ?? "";
 	const reply = await generateStructured(
 		{
