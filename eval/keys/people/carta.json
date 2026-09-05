@@ -39,12 +39,13 @@
 			"note": "Head of Accounts is not one of the rubric's named finance-function titles (CFO, VP Finance, Head of Finance, Controller), and could as easily be a client-accounts/sales role, a named hard negative"
 		},
 		"https://linkedin.com/in/lindseyb": {
-			"label": null,
+			"label": "accept",
 			"name": "Lindsey B.",
 			"title": "VP, Strategy & Finance",
 			"company": "karoohealth.com",
 			"location": "United States, United States",
-			"firstSeenRunId": "people_dom-c7784ab4c45a_2026-09-05"
+			"firstSeenRunId": "people_dom-c7784ab4c45a_2026-09-05",
+			"note": "VP, Strategy & Finance at karoohealth.com, an explicit VP-of-Finance buyer role owning the company's finance function"
 		},
 		"https://linkedin.com/in/patrick-driscoll-3487a315": {
 			"label": "accept",
