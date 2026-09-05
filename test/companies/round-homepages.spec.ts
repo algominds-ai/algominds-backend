@@ -121,7 +121,7 @@ function testDeps(script: Script): Harness {
 			return {
 				verdicts: rows.map((_row, index) => ({
 					index,
-					statuses: [],
+					statuses: [{ id: recordRequirement.id, status: "proven" }],
 					soft: [],
 					reason: "a reason",
 					sameOrganizationAs: null,

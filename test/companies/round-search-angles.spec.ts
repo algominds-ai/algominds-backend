@@ -81,7 +81,7 @@ function acceptAll(): FindCompaniesDeps["judge"] {
 	return async (_requirements, rows) => ({
 		verdicts: rows.map((_row, index) => ({
 			index,
-			statuses: [],
+			statuses: [{ id: recordRequirement.id, status: "proven" }],
 			soft: [],
 			reason: "fits",
 			sameOrganizationAs: null,
