@@ -39,28 +39,31 @@
 			"note": "Chief Operating Officer at aircond.com, a c-suite operations leader owning the budget, matching the rubric's operations-leader buyer band"
 		},
 		"https://linkedin.com/in/gus-garza-3311a634": {
-			"label": null,
+			"label": "accept",
 			"name": "Gus Garza",
 			"title": "Area Manager",
 			"company": "amsco-ac.com",
 			"location": "Spring Hill, Florida, United States",
-			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05",
+			"note": "Area Manager at amsco-ac.com, a 21-staff multi-branch company where an area manager functions as the location-level operations leader owning that branch's budget, distinct from the field-service/dispatch influencer roles"
 		},
 		"https://linkedin.com/in/kevin-self-27458371": {
-			"label": null,
+			"label": "accept",
 			"name": "Kevin Self",
 			"title": "Founder/Executive Chairman",
 			"company": "acisinc.com",
 			"location": "McKinney, United States",
-			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05",
+			"note": "Founder/Executive Chairman at acisinc.com, an explicit owner-level buyer role"
 		},
 		"https://linkedin.com/in/mark-castellano-68b0a554": {
-			"label": null,
+			"label": "accept",
 			"name": "Mark Castellano",
 			"title": "Branch Manager",
 			"company": "amsco-ac.com",
 			"location": "Englewood, Florida, United States",
-			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05",
+			"note": "Branch Manager at amsco-ac.com, a 21-staff multi-branch company where a branch manager functions as the location-level operations leader owning that branch's budget"
 		},
 		"https://linkedin.com/in/raymond-perez-msi": {
 			"label": "accept",
@@ -72,12 +75,13 @@
 			"note": "Chief Operating Officer at msifla, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/sean-jones-35011363": {
-			"label": null,
+			"label": "accept",
 			"name": "Sean Jones",
 			"title": "General Manager",
 			"company": "pagemech.com",
 			"location": "Fort Myers, United States",
-			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05",
+			"note": "General Manager at pagemech.com, an explicit GM buyer role"
 		},
 		"https://linkedin.com/in/wes-bailey-88721520": {
 			"label": "accept",
@@ -89,12 +93,13 @@
 			"note": "General Manager at engcool, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/zak-keller-669895112": {
-			"label": null,
+			"label": "accept",
 			"name": "Zak Keller",
 			"title": "Vice President Operations - DFW",
 			"company": "acisinc.com",
 			"location": "Sherman, United States",
-			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05",
+			"note": "Vice President Operations - DFW at acisinc.com, an explicit VP of Operations buyer role"
 		}
 	}
 }
