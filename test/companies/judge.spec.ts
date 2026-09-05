@@ -229,9 +229,7 @@ describe("judge: verdicts and retries", () => {
 		expect(result.verdicts).toHaveLength(rows.length);
 		expect(result.verdicts.every(kept)).toBe(false);
 		for (const verdict of result.verdicts) {
-			expect(verdict.statuses).toEqual([
-				{ id: "r1", status: "unproven", quote: "" },
-			]);
+			expect(verdict.statuses).toEqual([{ id: "r1", status: "unproven" }]);
 		}
 	});
 });

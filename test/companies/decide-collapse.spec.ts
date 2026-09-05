@@ -28,7 +28,7 @@ function provenVerdict(
 ): Verdict {
 	return verdict({
 		index,
-		statuses: [{ id: "r1", status: "proven", quote: "" }],
+		statuses: [{ id: "r1", status: "proven" }],
 		...overrides,
 	});
 }

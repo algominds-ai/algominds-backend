@@ -11,7 +11,6 @@ import {
 	JudgeModelSchema,
 	judgedFields,
 	REQUIREMENT_STATUSES,
-	withGroundedProof,
 } from "@/core/companies/judge-evidence";
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
@@ -60,22 +59,7 @@ const JUDGE_INSTRUCTIONS = [
 	"row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
 	"under another brand, country domain or subdomain, and to null otherwise.",
-	"Every status carries a `quote`. A requirement marked `(quote required)` needs, for a",
-	"`proven` status, a passage copied verbatim from this row's own evidence text that states",
-	"the required fact itself, not a paraphrase and not a fact about a related company. The",
-	"quote must support the fact when read in its own context, including any negation,",
-	"attribution or qualification around it. Without a matching quote, mark it unproven. A",
-	"requirement not marked `(quote required)` gets an empty `quote`.",
 ].join(" ");
-
-function requirementPromptLine(
-	req: Requirement,
-	groundedIds: ReadonlySet<string>,
-): string {
-	return groundedIds.has(req.id)
-		? `${requirementLine(req)} (quote required)`
-		: requirementLine(req);
-}
 
 function judgePrompt(
 	requirements: readonly Requirement[],
@@ -84,10 +68,9 @@ function judgePrompt(
 	evidenceByRow: EvidenceByRow,
 ): string {
 	const hard = hardRequirements(requirements);
-	const groundedIds = new Set(mustBeProven(requirements).map((req) => req.id));
 	const lines = [
 		"Requirements needing a status:",
-		...hard.map((req) => requirementPromptLine(req, groundedIds)),
+		...hard.map(requirementLine),
 	];
 	lines.push("Rows:");
 	for (const [index, row] of rows.entries()) {
@@ -126,7 +109,6 @@ function unjudgedSlice(
 	const statuses = hardRequirements(requirements).map((req) => ({
 		id: req.id,
 		status: "unproven" as const,
-		quote: "",
 	}));
 	return slice.rows.map((_row, index) => ({
 		index: index + slice.offset,
@@ -179,17 +161,9 @@ async function judgeSlice(
 		ctx.ledger,
 		"judge",
 	);
-	if (!output) return unjudgedSlice(slice, ctx.requirements);
-	const grounded = withGroundedProof(
-		{
-			requirements: ctx.requirements,
-			rows: slice.rows,
-			evidenceByRow: ctx.evidenceByRow,
-			offset: slice.offset,
-		},
-		output.verdicts,
-	);
-	return shiftVerdicts(slice, grounded);
+	return output
+		? shiftVerdicts(slice, output.verdicts)
+		: unjudgedSlice(slice, ctx.requirements);
 }
 
 /**

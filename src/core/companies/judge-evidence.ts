@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { config } from "@/config";
 import type { CompanyRow } from "@/core/companies/gate";
-import type { Requirement } from "@/core/requirements";
-import { mustBeProven } from "@/core/requirements";
 
 const JUDGE_DESCRIPTION_CHARS = config.companies.descriptionChars;
 
@@ -17,7 +15,6 @@ export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number];
 const StatusSchema = z.object({
 	id: z.string(),
 	status: z.enum(REQUIREMENT_STATUSES),
-	quote: z.string(),
 });
 
 const VerdictSchema = z.object({
@@ -68,66 +65,4 @@ export function judgedFields(
 			? { pageEvidence: Object.fromEntries(extra) }
 			: {}),
 	};
-}
-
-function evidencePassages(fields: JudgedFields): string[] {
-	const quotes = fields.pageEvidence
-		? Object.values(fields.pageEvidence).map((entry) => entry.quote)
-		: [];
-	return [fields.description, fields.evidenceQuote, ...quotes].filter(
-		(value): value is string => value !== null && value !== undefined,
-	);
-}
-
-function normalizedWhitespace(text: string): string {
-	return text.replace(/\s+/g, " ").trim();
-}
-
-/** Whether the quote occurs verbatim inside one single evidence passage, so a quote cannot be assembled by joining two of them. */
-function quoteFoundIn(quote: string, passages: readonly string[]): boolean {
-	if (quote.trim().length === 0) return false;
-	const normalizedQuote = normalizedWhitespace(quote);
-	return passages.some((passage) =>
-		normalizedWhitespace(passage).includes(normalizedQuote),
-	);
-}
-
-export type GroundingInput = {
-	requirements: readonly Requirement[];
-	rows: readonly CompanyRow[];
-	evidenceByRow: EvidenceByRow;
-	offset: number;
-};
-
-/**
- * Downgrades a `proven` status on a requirement in `mustBeProven` to
- * `unproven` when its quote is missing or does not occur verbatim in that
- * row's own evidence text, so a strict or page requirement cannot be proven
- * on a reading the row's evidence never states.
- */
-export function withGroundedProof(
-	input: GroundingInput,
-	verdicts: readonly Verdict[],
-): Verdict[] {
-	const groundedIds = new Set(
-		mustBeProven(input.requirements).map((req) => req.id),
-	);
-	if (groundedIds.size === 0) return [...verdicts];
-	return verdicts.map((verdict) => {
-		const row = input.rows[verdict.index];
-		if (row === undefined) return verdict;
-		const passages = evidencePassages(
-			judgedFields(row, input.evidenceByRow.get(input.offset + verdict.index)),
-		);
-		return {
-			...verdict,
-			statuses: verdict.statuses.map((entry) =>
-				groundedIds.has(entry.id) &&
-				entry.status === "proven" &&
-				!quoteFoundIn(entry.quote, passages)
-					? { ...entry, status: "unproven" as const }
-					: entry,
-			),
-		};
-	});
 }
