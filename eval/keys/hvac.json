@@ -146,6 +146,23 @@
 				"fitReason": "Helios HVACR has 107 staff, is based in Maitland, Florida, and offers commercial HVACR solutions as core business."
 			}
 		},
+		"intfs.com": {
+			"label": null,
+			"name": "Integrated Facility Services",
+			"firstSeenRunId": "companies_4bd7bd46-b994-412b-94c9-f0dcfcc7850b_2026-09-05",
+			"lastSeenAt": "2026-09-05T07:45:00.901Z",
+			"record": {
+				"industry": null,
+				"description": "The Integrated Facility Services’ team of talented engineers and skilled technicians design, build and manage sustainable HVAC and facility solutions. Our goal is to ensure occupant comfort and safety, optimize systems performance, save energy, and reduce operational costs over the lifetime of a building.\nAt IFS, more than 200 professional and trade employees proudly partner with client facility teams in the Midwest and around the country. We’re ready to partner with you. \n\nFor over 50 years, we have provided a wide range of mechanical engineering and building services including HVAC, plumbing, building automation controls, fire protection, 24-hour service and more!",
+				"workforceTotal": 74,
+				"country": "United States",
+				"foundedYear": 1966,
+				"citedPage": "https://intfs.com/",
+				"citedDate": "2026-06-26T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "Based in Midwest, serving 'around the country'; no Texas, Florida, or Georgia location specified."
+			}
+		},
 		"issmechanical.com": {
 			"label": "accept",
 			"name": "ISS Mechanical",
@@ -180,6 +197,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "Houston, TX contractor with 21 staff doing commercial HVAC install, repair, maintenance as core business."
+			}
+		},
+		"mccloskeymechanical.com": {
+			"label": null,
+			"name": "McCloskey Mechanical Contractors, Inc.",
+			"firstSeenRunId": "companies_4bd7bd46-b994-412b-94c9-f0dcfcc7850b_2026-09-05",
+			"lastSeenAt": "2026-09-05T07:45:00.901Z",
+			"record": {
+				"industry": null,
+				"description": "McCloskey Mechanical Contractors is a national, family-owned mechanical contractor that serves as a one-stop-shop for all of your HVACR/Plumbing needs - from design to construction, preventative maintenance to 24-hour emergency service, installation to rehabilitation - we got you covered!\n\nWith over 39 years of experience, the McCloskey family has built a strong foundation by maintaining relationships with contractors, suppliers, and customers alike, providing them with all of their heating, ventilation, air conditioning, refrigeration and plumbing needs.\n\nBy incorporating business segments such as scheduling, accounting, project bidding, estimating, project managing and purchasing, McCloskey Mechanical welcomes projects of all scopes and sizes and has become a leader in the industry today!",
+				"workforceTotal": 59,
+				"country": "United States",
+				"foundedYear": 1985,
+				"citedPage": "https://mccloskeymechanical.com/",
+				"citedDate": "2026-06-24T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "Licensed in 43 states nationwide but no specific mention of Texas, Florida, or Georgia operations."
 			}
 		},
 		"miinclp.com": {
@@ -234,6 +268,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "32-staff Fort Myers, FL firm provides commercial mechanical/HVAC services across many building types."
+			}
+		},
+		"powers-hvac.com": {
+			"label": null,
+			"name": "Powers: Building HVAC, Controls, and Service",
+			"firstSeenRunId": "companies_4bd7bd46-b994-412b-94c9-f0dcfcc7850b_2026-09-05",
+			"lastSeenAt": "2026-09-05T07:45:00.901Z",
+			"record": {
+				"industry": null,
+				"description": "Our goal at Powers is to make your buildings productive, comfortable, and efficient to operate. And we have the tools to do just that.\n\nWe know how to help you with your Heating, Ventilation, and Air-Conditioning (HVAC) for commercial buildings. From installing controls, to selecting HVAC equipment, to laying out air distribution devices, to providing service to keep the systems operating at the most efficient level, the Powers Team is ready to help you.\n\nOur team includes leaders in the industry who have the experience, hands-on knowledge, and technical expertise to solve your HVAC issues, maintain your facilities, help in design and installation, implement energy management, and make you comfortable.\n\nAs an \"Arkansas Business of the Year\" winner, we are recognized in the marketplace as the leader in Building HVAC, Controls, and Service. We are dedicated to acquiring and maintaining the right people, technologies, and skills to deliver best-of-class service. It’s the best way we’ve found to create customers for life.",
+				"workforceTotal": 85,
+				"country": "United States",
+				"foundedYear": 1985,
+				"citedPage": "https://powers-hvac.com/",
+				"citedDate": "2026-06-27T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "HQ in North Little Rock, Arkansas; no mention of Texas, Florida, or Georgia operations."
 			}
 		},
 		"thermalconcepts.com": {

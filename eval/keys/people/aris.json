@@ -11,6 +11,22 @@
 			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
 			"note": "President, Managing Partner and Cofounder at wheelhouseit, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
 		},
+		"https://linkedin.com/in/charley-boudreau-255ab86": {
+			"label": null,
+			"name": "Charley Boudreau",
+			"title": "VP of IT Services & Chief Operating Officer",
+			"company": "computersupport.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05"
+		},
+		"https://linkedin.com/in/dave-mcgilvray-3280973": {
+			"label": null,
+			"name": "Dave McGilvray",
+			"title": "Director of Helpdesk & Field Support",
+			"company": "computersupport.com",
+			"location": "Wilmington, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05"
+		},
 		"https://linkedin.com/in/frank-w-vitetta-704b8980": {
 			"label": "accept",
 			"name": "Frank W. Vitetta",
@@ -38,6 +54,30 @@
 			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
 			"note": "Director of Operations at valortech, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
 		},
+		"https://linkedin.com/in/kevin-spargo-a46153127": {
+			"label": null,
+			"name": "Kevin Spargo",
+			"title": "Chief Operating Officer",
+			"company": "csu-it.com",
+			"location": "Owings Mills, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05"
+		},
+		"https://linkedin.com/in/max-minkov": {
+			"label": null,
+			"name": "Max Minkov",
+			"title": "Chief Executive Officer",
+			"company": "csu-it.com",
+			"location": "Owings Mills, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05"
+		},
+		"https://linkedin.com/in/oleg-kaufman-5a69204": {
+			"label": null,
+			"name": "Oleg Kaufman",
+			"title": "VP Tech Services",
+			"company": "onwardtek.com",
+			"location": "Chicago, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05"
+		},
 		"https://linkedin.com/in/rick-sherman-111a2b4": {
 			"label": "accept",
 			"name": "Rick Sherman",
@@ -55,6 +95,14 @@
 			"location": "Wooster, Ohio, United States",
 			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
 			"note": "Director of IT Operations Manager at netopsconsulting, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/slava-ruderman-b016991": {
+			"label": null,
+			"name": "Slava Ruderman",
+			"title": "President",
+			"company": "onwardtek.com",
+			"location": "Chicago, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05"
 		}
 	}
 }
