@@ -37,7 +37,13 @@ function fanoutFor(
 	step: ReturnType<typeof fakeWorkflowStep>["step"],
 	seller: Parameters<typeof agentFanout>[0]["seller"] = null,
 ) {
-	return agentFanout({ step, round: 1, today: "2026-08-30", seller });
+	return agentFanout({
+		step,
+		round: 1,
+		today: "2026-08-30",
+		seller,
+		runId: "test-run-1",
+	});
 }
 
 const AgentRunBodySchema = z.object({

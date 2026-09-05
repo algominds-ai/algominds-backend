@@ -122,6 +122,22 @@ function refusedRow(reject: FindCompaniesReject): RefusedRow | null {
 	};
 }
 
+export type StartedAgentRun = { id: string; angle: string; effort: string };
+
+/** One append-only evidence row recording an Exa agent run the moment it starts, so a poll failure later in the round still leaves the run id behind for vendor-cost reconciliation. */
+export function agentRunEvidenceRow(
+	runId: string,
+	started: StartedAgentRun,
+): NewEvidence {
+	return {
+		subjectType: "run",
+		subjectId: runId,
+		kind: "agent-run",
+		value: JSON.stringify(started),
+		source: EVIDENCE_SOURCE,
+	};
+}
+
 export type RoundTiming = { dep: string; seconds: number };
 
 /** One append-only evidence row per round carrying the seconds each dependency spent, so a slow round can be attributed to its search, proof or judge; null when nothing was timed. */

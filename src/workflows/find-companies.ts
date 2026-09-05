@@ -147,6 +147,7 @@ async function runOneRound(
 		today,
 		seller: icp.seller,
 		timings,
+		runId: target.runId,
 	});
 	const remaining = payload.count - state.companies.length;
 	const stepResult = await step.do(

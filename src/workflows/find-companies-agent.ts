@@ -11,8 +11,9 @@ import { judge } from "@/core/companies/judge";
 import { proveRows } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
 import type { RoundTiming } from "@/core/companies/rows";
+import { agentRunEvidenceRow } from "@/core/companies/rows";
 import { CostLedger } from "@/core/cost";
-import { recentDomains } from "@/core/db/queries";
+import { appendEvidence, recentDomains } from "@/core/db/queries";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
 import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
 import type { ExaResult } from "@/core/providers/exa/search";
@@ -45,6 +46,7 @@ export type AgentSearchInput = {
 	round: number;
 	today: string;
 	seller: IcpSeller | null;
+	runId: string;
 };
 
 type AngleInput = {
@@ -68,7 +70,7 @@ async function runAngle(
 	ledger: CostLedger,
 ): Promise<ExaAgentCompany[]> {
 	const { input, plan, slot, anglesInFlight, excludeDomains } = angle;
-	const { step, round, today, seller } = input;
+	const { step, round, today, seller, runId } = input;
 	const name = `round_${round}-angle_${slot}`;
 	if (slot > 0) {
 		await step.sleep(
@@ -90,6 +92,15 @@ async function runAngle(
 				}),
 				env,
 			),
+	);
+	await step.do(`${name}-start-evidence`, config.stepConfig.databaseCall, () =>
+		appendEvidence(env, [
+			agentRunEvidenceRow(runId, {
+				id,
+				angle: plan.angle,
+				effort: plan.agentEffort,
+			}),
+		]),
 	);
 	return pollAgentRun(
 		{
@@ -293,6 +304,7 @@ export type RoundDepsInput = {
 	today: string;
 	seller: IcpDoc["seller"];
 	timings: RoundTiming[];
+	runId: string;
 };
 
 function timed<A extends unknown[], R>(
@@ -337,7 +349,7 @@ export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 		},
 		synthesize: agentSynthesize(step, round),
 		search: (_plan, req, env, ledger) => search(req, env, ledger),
-		agentRound: agentFanout({ step, round, today, seller }),
+		agentRound: agentFanout({ step, round, today, seller, runId: input.runId }),
 		backfill: steppedBackfill(step, round),
 		prove: steppedProve(step, round),
 		homepages: steppedHomepages(step, round),
