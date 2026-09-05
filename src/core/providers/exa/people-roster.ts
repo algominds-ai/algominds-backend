@@ -1,4 +1,5 @@
 import type { CostLedger } from "@/core/cost";
+import { normalizeDomain, publicDomain } from "@/core/db/schema";
 import type { DedupeRow } from "@/core/people/dedupe";
 import type { ExaResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
@@ -23,10 +24,12 @@ export type ExaPeopleRosterResult = {
 };
 
 /**
- * The Exa organization id for `domain`, from a one-result company search
- * restricted to it. Null when Exa's company index does not carry the
- * domain. Throws `RetryableProviderError` on 429 and 5xx, `NonRetryableError`
- * on a reply that does not match the expected shape.
+ * The Exa organization id for `domain`, from a company search restricted to
+ * it, kept only for the result whose own public domain equals `domain` —
+ * `includeDomains` on the company category matches a hostname suffix, so a
+ * request for `wise.com` also returns `gatewise.com`. Null when no returned
+ * result is on the domain. Throws `RetryableProviderError` on 429 and 5xx,
+ * `NonRetryableError` on a reply that does not match the expected shape.
  */
 export async function exaOrganizationId(
 	env: Env,
@@ -38,13 +41,17 @@ export async function exaOrganizationId(
 			query: domain,
 			category: "company",
 			type: "fast",
-			numResults: 1,
+			numResults: 3,
 			includeDomains: [domain],
 		},
 		env,
 		ledger,
 	);
-	return reply.results[0]?.id ?? null;
+	const wanted = normalizeDomain(domain);
+	const match = reply.results.find(
+		(result) => publicDomain(result.url) === wanted,
+	);
+	return match?.id ?? null;
 }
 
 function currentRole(result: ExaResult): {

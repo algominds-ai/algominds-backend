@@ -7,6 +7,7 @@ import {
 import { fakeSecretEnv } from "../support/env";
 import {
 	exaCompanySearchResponse,
+	exaCompanySearchResultsResponse,
 	exaPeopleSearchResponse,
 } from "../support/fetch";
 
@@ -28,7 +29,7 @@ describe("exaOrganizationId", () => {
 			{};
 		globalThis.fetch = async (_input, init) => {
 			body = JSON.parse(String(init?.body));
-			return exaCompanySearchResponse(ORG_ID);
+			return exaCompanySearchResponse(ORG_ID, "https://acme.com");
 		};
 
 		const id = await exaOrganizationId(exaEnv(), "acme.com", new CostLedger());
@@ -46,6 +47,30 @@ describe("exaOrganizationId", () => {
 			"nobody.example",
 			new CostLedger(),
 		);
+
+		expect(id).toBeNull();
+	});
+
+	it("skips a suffix-matched result and returns the one actually on the domain", async () => {
+		globalThis.fetch = async () =>
+			exaCompanySearchResultsResponse([
+				{ id: "id-gatewise", url: "https://gatewise.com/" },
+				{ id: "id-wise", url: "https://wise.com/about" },
+			]);
+
+		const id = await exaOrganizationId(exaEnv(), "wise.com", new CostLedger());
+
+		expect(id).toBe("id-wise");
+	});
+
+	it("returns null when none of the results are on the requested domain", async () => {
+		globalThis.fetch = async () =>
+			exaCompanySearchResultsResponse([
+				{ id: "id-gatewise", url: "https://gatewise.com/" },
+				{ id: "id-pairwise", url: "https://pairwise.com/" },
+			]);
+
+		const id = await exaOrganizationId(exaEnv(), "wise.com", new CostLedger());
 
 		expect(id).toBeNull();
 	});

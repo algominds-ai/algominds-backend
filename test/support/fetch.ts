@@ -93,9 +93,10 @@ export function exaPeopleSearchResponse(
 	});
 }
 
-/** An Exa `/search` company-category reply carrying one company result named by `id`, or none when `id` is null. */
+/** An Exa `/search` company-category reply carrying one company result named by `id` on `url`, or none when `id` is null. */
 export function exaCompanySearchResponse(
 	id: string | null,
+	url = "https://example.com",
 	costTotal = 0.005,
 ): Response {
 	return jsonResponse({
@@ -107,11 +108,30 @@ export function exaCompanySearchResponse(
 				: [
 						{
 							id,
-							url: "https://example.com",
+							url,
 							title: "Example",
 							entities: [{ type: "company", properties: { name: "Example" } }],
 						},
 					],
+	});
+}
+
+export type ExaCompanyResultSpec = { id: string; url: string };
+
+/** An Exa `/search` company-category reply carrying one company result per spec, each on its own url. */
+export function exaCompanySearchResultsResponse(
+	results: readonly ExaCompanyResultSpec[],
+	costTotal = 0.005,
+): Response {
+	return jsonResponse({
+		requestId: "req-company",
+		costDollars: { total: costTotal },
+		results: results.map((result) => ({
+			id: result.id,
+			url: result.url,
+			title: result.url,
+			entities: [{ type: "company", properties: { name: result.url } }],
+		})),
 	});
 }
 
