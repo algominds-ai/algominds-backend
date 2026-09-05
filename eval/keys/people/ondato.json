@@ -56,6 +56,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "CEO of a subsidiary (IG Securities) at a company well over 50 people that already has a CMO and a Head of Product listed"
 		},
+		"https://linkedin.com/in/andrew-lawson-6754381": {
+			"label": null,
+			"name": "Andrew Lawson",
+			"title": "Group CEO",
+			"company": "fluro.co.uk",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-c2552308e5b0_2026-09-05"
+		},
 		"https://linkedin.com/in/andrew-low-ah-kee-b112742": {
 			"label": "reject:not-buyer",
 			"name": "Andrew Low Ah Kee",
@@ -370,6 +378,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "CEO & Co-Founder of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
+		},
+		"https://linkedin.com/in/john-downie-1b9562": {
+			"label": null,
+			"name": "John Downie",
+			"title": "CEO & Founder",
+			"company": "steadypay.co",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-c2552308e5b0_2026-09-05"
 		},
 		"https://linkedin.com/in/johnroneill": {
 			"label": "accept",
