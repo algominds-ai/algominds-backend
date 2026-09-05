@@ -6,6 +6,7 @@ node_modules/
 .dev.vars.*
 .wrangler/
 wrangler.eval-*.jsonc
+eval/logs/
 dist/
 .DS_Store
 *.log

@@ -147,6 +147,11 @@ export function profileBySlug(slug: string): Profile | undefined {
 	return PROFILES.find((profile) => profile.slug === slug);
 }
 
+/** Twice the profile's full-chain seconds bar: how long the harness waits on one stage's run before it gives up and fails that stage. */
+export function stageCeilingSeconds(profile: Profile): number {
+	return profile.fullChainBars.maxSeconds * 2;
+}
+
 /** Every profile when `slug` is null, or the one profile it names; throws for a slug no profile carries. */
 export function profilesFor(slug: string | null): readonly Profile[] {
 	if (!slug) return PROFILES;
