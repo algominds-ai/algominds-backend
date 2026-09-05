@@ -1,7 +1,7 @@
 {
 	"buyer": {
 		"bands": ["founder", "c-suite", "vp", "director", "head", "manager"],
-		"rubric": "Accept the internal finance owner: CFO, VP or Head of Finance, or Controller. A Head of Accounts qualifies only when the role demonstrably owns finance and accounting, not customer accounts. A Founder or CEO qualifies only with evidenced headcount below 50 and no identified finance owner; missing headcount or a sparse roster does not establish that exception.",
+		"rubric": "The budget and decision for this purchase sit with the person who owns the company's finance function at the moment a priced round closes — typically the CFO, VP of Finance, Head of Finance, or Controller, since this is the person who must produce the 409A valuation, update the cap table, and report to new investors. At companies under fifty employees where no such role exists yet, the founder or CEO personally owns this decision and should be treated as the buyer. Legal counsel and outside law firms influence the process by helping issue equity and structure the round but do not own the purchase. Hard negatives are HR, People Ops, sales, marketing, and engineering leaders — even senior ones — since they have no ownership of cap table, 409A, or investor reporting responsibilities regardless of title seniority; a VP of Engineering or Head of People is never the buyer here. The exception is company size: below fifty employees, the founder/CEO band replaces the finance-leader band as the primary buyer.",
 		"keywordBands": []
 	},
 	"seller": {
