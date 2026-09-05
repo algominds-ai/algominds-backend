@@ -289,7 +289,11 @@ export function scoreTrial(
 		companyGates: companies.companyGates,
 		companiesStatus: companies.companiesStatus,
 		peopleStatus: people.peopleStatus,
-		peopleGatesPass: people.peopleVerdict?.allGatesPass ?? null,
+		peopleGatesPass: people.peopleVerdict
+			? people.peopleVerdict.gates.runCompleted &&
+				people.peopleVerdict.gates.noKeyRejectedStored &&
+				people.peopleVerdict.gates.everyoneReachable
+			: null,
 		storedCompanies: companies.storedCompanies,
 		deliveredPeople: people.deliveredPeople,
 		requested: count,
