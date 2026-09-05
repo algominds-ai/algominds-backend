@@ -1,7 +1,18 @@
-import { z } from "zod";
 import { config } from "@/config";
 import type { FindCompaniesReject } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import type {
+	EvidenceByRow,
+	RequirementEvidence,
+	RequirementStatus,
+	Verdict,
+} from "@/core/companies/judge-evidence";
+import {
+	JudgeModelSchema,
+	judgedFields,
+	REQUIREMENT_STATUSES,
+	withGroundedProof,
+} from "@/core/companies/judge-evidence";
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import { generateStructured, reasoningModel } from "@/core/model";
@@ -13,48 +24,16 @@ import {
 	requirementLine,
 } from "@/core/requirements";
 
+export type { RequirementEvidence, RequirementStatus, Verdict };
+export { REQUIREMENT_STATUSES };
+
 const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 const JUDGE_BATCH_SIZE = config.companies.judgeBatchSize;
-const JUDGE_DESCRIPTION_CHARS = config.companies.descriptionChars;
-
-export const REQUIREMENT_STATUSES = [
-	"proven",
-	"unproven",
-	"contradicted",
-] as const;
-
-export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number];
-
-const StatusSchema = z.object({
-	id: z.string(),
-	status: z.enum(REQUIREMENT_STATUSES),
-});
-
-const VerdictSchema = z.object({
-	index: z.number().int().nonnegative(),
-	statuses: z.array(StatusSchema),
-	reason: z.string(),
-	sameOrganizationAs: z.number().int().nonnegative().nullable(),
-});
-
-export type Verdict = z.infer<typeof VerdictSchema>;
-
-const JudgeModelSchema = z.object({
-	verdicts: z.array(VerdictSchema),
-});
 
 export type JudgeResult = {
 	verdicts: Verdict[];
 	ledger: CostLedger;
 };
-
-/** One page a search proved for one requirement id, so the judge can weigh a second or third hard page requirement on its own evidence rather than only the first. */
-export type RequirementEvidence = { url: string; quote: string };
-
-type EvidenceByRow = ReadonlyMap<
-	number,
-	ReadonlyMap<string, RequirementEvidence>
->;
 
 const JUDGE_INSTRUCTIONS = [
 	"For every row, by index, return one status per id: `proven` when the row's record or",
@@ -81,36 +60,12 @@ const JUDGE_INSTRUCTIONS = [
 	"row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
 	"under another brand, country domain or subdomain, and to null otherwise.",
+	"For a `page` requirement, or a hard requirement this profile marks strict, a `proven`",
+	"status also needs `quote`: a passage copied verbatim from this row's own evidence text",
+	"that states the required fact itself, not a paraphrase and not a fact about a related",
+	"company; a business can sell through partners and direct at once, so only the quoted",
+	"passage, never the surrounding page, decides. Without a matching quote, mark it unproven.",
 ].join(" ");
-
-type JudgedFields = {
-	name: string | null;
-	domain: string | null;
-	description: string | null;
-	evidenceUrl?: string;
-	evidenceQuote?: string;
-	pageEvidence?: Record<string, RequirementEvidence>;
-};
-
-/** The row cut to only the fields the judge instructions read: its own record, and the page it cites when it cites one. Everything else — signal, dates, publisher, the kind label — never changes a verdict. */
-function judgedFields(
-	row: CompanyRow,
-	extra: ReadonlyMap<string, RequirementEvidence> | undefined,
-): JudgedFields {
-	return {
-		name: row.name,
-		domain: row.domain,
-		description:
-			row.description === null
-				? null
-				: row.description.slice(0, JUDGE_DESCRIPTION_CHARS),
-		...(row.evidenceUrl !== null ? { evidenceUrl: row.evidenceUrl } : {}),
-		...(row.evidenceQuote !== null ? { evidenceQuote: row.evidenceQuote } : {}),
-		...(extra && extra.size > 0
-			? { pageEvidence: Object.fromEntries(extra) }
-			: {}),
-	};
-}
 
 function judgePrompt(
 	requirements: readonly Requirement[],
@@ -212,9 +167,17 @@ async function judgeSlice(
 		ctx.ledger,
 		"judge",
 	);
-	return output
-		? shiftVerdicts(slice, output.verdicts)
-		: unjudgedSlice(slice, ctx.requirements);
+	if (!output) return unjudgedSlice(slice, ctx.requirements);
+	const grounded = withGroundedProof(
+		{
+			requirements: ctx.requirements,
+			rows: slice.rows,
+			evidenceByRow: ctx.evidenceByRow,
+			offset: slice.offset,
+		},
+		output.verdicts,
+	);
+	return shiftVerdicts(slice, grounded);
 }
 
 /**
