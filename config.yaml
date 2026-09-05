@@ -129,7 +129,7 @@ people:
   maxVerifyPerCompany: 25
   # Picks verified at once per company. Exa allows ten requests a second across the whole
   # run, and a batch of five companies starting every pick together bursts far past it.
-  verifyConcurrency: 3
+  verifyConcurrency: 5
 
 enrich:
   batchSize: 5
