@@ -18,7 +18,7 @@ function textByUrl(contents: ExaContentsResult): Map<string, string> {
 	);
 	const found = new Map<string, string>();
 	for (const result of contents.results) {
-		if (result.text !== null && !failed.has(result.url)) {
+		if (result.text !== null && result.text !== "" && !failed.has(result.url)) {
 			found.set(result.url, result.text);
 		}
 	}
@@ -28,8 +28,8 @@ function textByUrl(contents: ExaContentsResult): Map<string, string> {
 /**
  * Every candidate's own homepage, one Exa `/contents` call for the whole
  * batch with a cached page reused when fresh and a fresh crawl otherwise. A
- * domain whose homepage is missing or fails to crawl is simply absent from
- * the result.
+ * domain whose homepage fails to crawl or crawls empty is simply absent from
+ * the result, leaving that row's judgment on its record exactly as it was.
  */
 export async function fetchHomepages(
 	domains: readonly string[],
