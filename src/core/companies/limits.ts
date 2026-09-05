@@ -44,26 +44,39 @@ export const NUMERIC_LIMITS: readonly NumericLimit[] = [
 	FUNDING_RAISED_LIMIT,
 ];
 
-function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
+function limitClause(limit: NumericLimit, plan: SearchPlan): string | null {
 	const floor = limit.floor(plan);
 	const ceiling = limit.ceiling(plan);
 	if (floor !== null && ceiling !== null) {
-		return `Every company must have a ${limit.label} between ${floor} and ${ceiling}.`;
+		return `${limit.label} between ${floor} and ${ceiling}`;
 	}
-	if (ceiling !== null) {
-		return `Every company must have a ${limit.label} of at most ${ceiling}.`;
-	}
-	if (floor !== null) {
-		return `Every company must have a ${limit.label} of at least ${floor}.`;
-	}
+	if (ceiling !== null) return `${limit.label} of at most ${ceiling}`;
+	if (floor !== null) return `${limit.label} of at least ${floor}`;
 	return null;
+}
+
+function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
+	const clause = limitClause(limit, plan);
+	return clause === null ? null : `Every company must have a ${clause}.`;
+}
+
+/** The revenue-or-funding sentence when the plan bounds both, so a company only needs to satisfy one side. Null when the plan bounds at most one of them. */
+function moneyBandRule(plan: SearchPlan): string | null {
+	const revenue = limitClause(ANNUAL_REVENUE_LIMIT, plan);
+	const funding = limitClause(FUNDING_RAISED_LIMIT, plan);
+	if (revenue === null || funding === null) return null;
+	return `Every company must have a ${revenue} or ${funding}.`;
 }
 
 /** The plan's bounds and countries as sentences, appended to a query so the vendor's search and any agent both see them stated. */
 export function planConstraints(plan: SearchPlan): string {
-	const rules = NUMERIC_LIMITS.map((limit) => limitRule(limit, plan)).filter(
-		(rule): rule is string => rule !== null,
-	);
+	const moneyBand = moneyBandRule(plan);
+	const limits =
+		moneyBand === null ? NUMERIC_LIMITS : [WORKFORCE_LIMIT, FOUNDED_YEAR_LIMIT];
+	const rules = limits
+		.map((limit) => limitRule(limit, plan))
+		.filter((rule): rule is string => rule !== null);
+	if (moneyBand !== null) rules.push(moneyBand);
 	if (plan.countries.length > 0) {
 		rules.push(
 			`Every company must be based in ${plan.countries.join(" or ")}.`,
@@ -130,18 +143,22 @@ function readLimit(
 	return { present: true, detail: null };
 }
 
-/** Rejects on revenue and funding together only when every reading present for the pair fails its bound. */
+function boundedOnPlan(limit: NumericLimit, plan: SearchPlan): boolean {
+	return limit.floor(plan) !== null || limit.ceiling(plan) !== null;
+}
+
+/** Rejects on revenue and funding together only when every reading present for a bounded side of the pair fails its bound. A side the plan does not bound is ignored, exactly like an absent reading. */
 function financialBandRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
 ): RejectDetail | null {
 	const readings = [ANNUAL_REVENUE_LIMIT, FUNDING_RAISED_LIMIT]
+		.filter((limit) => boundedOnPlan(limit, plan))
 		.map((limit) => readLimit(limit, entity, plan))
 		.filter((reading) => reading.present);
 	if (readings.length === 0) return null;
 	if (readings.some((reading) => reading.detail === null)) return null;
-	const failing = readings.find((reading) => reading.detail !== null);
-	return failing?.detail ?? null;
+	return readings[0]?.detail ?? null;
 }
 
 function numericRejectReason(

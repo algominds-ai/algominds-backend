@@ -234,6 +234,15 @@ function sizeBandRequirementText(band: SizeBand): string | null {
 		: sizeSentence;
 }
 
+const CURRENCY_AMOUNT = /[$£€]\s?\d/;
+const MAGNITUDE_WITH_MONEY_WORD =
+	/\b\d+(?:\.\d+)?\s*(?:m|b|million|billion)\b.*\b(?:raised|funding|revenue)\b|\b(?:raised|funding|revenue)\b.*\b\d+(?:\.\d+)?\s*(?:m|b|million|billion)\b/i;
+
+/** Whether a requirement's text states a numeric funding or revenue figure, as opposed to merely mentioning funds or revenue in passing. */
+function statesMoneyBand(text: string): boolean {
+	return CURRENCY_AMOUNT.test(text) || MAGNITUDE_WITH_MONEY_WORD.test(text);
+}
+
 function nextRequirementId(requirements: readonly Requirement[]): string {
 	const numbers = requirements
 		.map((req) => Number.parseInt(req.id.replace(/^r/, ""), 10))
@@ -242,7 +251,7 @@ function nextRequirementId(requirements: readonly Requirement[]): string {
 	return `r${max + 1}`;
 }
 
-/** The model's requirements with a structured size band appended as its own hard requirement, dropping any prose requirement it also wrote about funding or revenue. Requirements pass through unchanged when there is no size band to state. */
+/** The model's requirements with a structured size band appended as its own hard requirement, dropping any prose requirement that states a numeric funding or revenue figure. Requirements pass through unchanged when there is no size band to state. */
 export function applySizeBand(
 	requirements: readonly Requirement[],
 	sizeBand: SizeBand | null,
@@ -250,7 +259,7 @@ export function applySizeBand(
 	const text = sizeBand && sizeBandRequirementText(sizeBand);
 	if (!text) return [...requirements];
 	const withoutProseBound = requirements.filter(
-		(req) => !/fund|revenue/i.test(req.text),
+		(req) => !statesMoneyBand(req.text),
 	);
 	return [
 		...withoutProseBound,
