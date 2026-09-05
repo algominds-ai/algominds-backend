@@ -220,12 +220,28 @@
 		},
 		"https://linkedin.com/in/drmohamadsawwaf": {
 			"label": "accept",
-			"name": "Dr. Mohamad Sawwaf \u062f. \u0645\u062d\u0645\u062f \u0635\u0648\u0627\u0641",
+			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
 			"title": "Founder & Group Chief Executive Officer",
 			"company": "manzil.co",
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Founder & Group CEO of Manzil, a company of about 24 staff, well under the 50-person exception threshold"
+		},
+		"https://linkedin.com/in/edokaidoko": {
+			"label": null,
+			"name": "Edoka Idoko",
+			"title": "Chief Executive Officer",
+			"company": "mypryme.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+		},
+		"https://linkedin.com/in/emmasayle": {
+			"label": null,
+			"name": "Emma Sayle",
+			"title": "Founder & CEO",
+			"company": "killingkittens.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
 		},
 		"https://linkedin.com/in/ericshoemaker": {
 			"label": "accept",
@@ -245,6 +261,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Technology and Product Officer blends an engineering role into the title, and Monzo already has a separate CPO covering the pure product function"
 		},
+		"https://linkedin.com/in/george-rawlings-32b726112": {
+			"label": null,
+			"name": "George Rawlings",
+			"title": "Co-Founder",
+			"company": "thursday.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+		},
 		"https://linkedin.com/in/gino-guatavita-7269139b": {
 			"label": "accept",
 			"name": "Gino Guatavita",
@@ -253,6 +277,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "Co-Founder & President of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
+		},
+		"https://linkedin.com/in/grantroscoe": {
+			"label": null,
+			"name": "Grant Roscoe",
+			"title": "CEO & Founder",
+			"company": "getcrescent.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
 		},
 		"https://linkedin.com/in/guillaume-torche-4a209790": {
 			"label": "reject:not-buyer",
@@ -362,6 +394,14 @@
 			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05",
 			"note": "VP, Growth at Midnite, a senior growth-ownership title matching the buyer rubric; based in London, UK"
 		},
+		"https://linkedin.com/in/joshhine": {
+			"label": null,
+			"name": "Josh Hine",
+			"title": "Head Of Growth Marketing",
+			"company": "thursday.com",
+			"location": "Maidstone, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+		},
 		"https://linkedin.com/in/justin-tsai-b637011": {
 			"label": "accept",
 			"name": "Justin Tsai",
@@ -416,6 +456,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Executive Officer - Fanatics Italy, a regional subsidiary chief outside the qualifying countries"
 		},
+		"https://linkedin.com/in/lucy-reeves-8b69337": {
+			"label": null,
+			"name": "Lucy Reeves",
+			"title": "Owner",
+			"company": "muddymatches.co.uk",
+			"location": "Greater Northampton Area, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+		},
 		"https://linkedin.com/in/mario-l-52603783": {
 			"label": "accept",
 			"name": "Mario L.",
@@ -442,6 +490,22 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "CEO of a division (Fanatics Betting & Gaming) at a company well over 50 people that already has multiple CMOs and CPOs listed"
+		},
+		"https://linkedin.com/in/matthew-xavier-hunter-73786966": {
+			"label": null,
+			"name": "Matthew Xavier Hunter",
+			"title": "Founder",
+			"company": "thursday.com",
+			"location": "Brooklyn, United States",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+		},
+		"https://linkedin.com/in/matthewmcneilllove": {
+			"label": null,
+			"name": "Matthew McNeill Love",
+			"title": "Co-Founder",
+			"company": "thursday.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
 		},
 		"https://linkedin.com/in/michael-carney-6776991": {
 			"label": "reject:not-buyer",
@@ -605,6 +669,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "title names 'Head of Business Development' at Coinbase, an explicit buyer title"
 		},
+		"https://linkedin.com/in/sean-sanders-382992108": {
+			"label": null,
+			"name": "Sean Sanders",
+			"title": "Founder & CEO",
+			"company": "altify.app",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+		},
 		"https://linkedin.com/in/selena-kalvaria-00830066": {
 			"label": "accept",
 			"name": "Selena Kalvaria",
@@ -649,6 +721,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Senior Director, Business Development and Strategic Partnerships is a director-level role, not a Head-of-level buyer title"
+		},
+		"https://linkedin.com/in/temitope-alabi-39619b78": {
+			"label": null,
+			"name": "Tope Alabi",
+			"title": "Co-Founder",
+			"company": "afriex.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
 		},
 		"https://linkedin.com/in/timomall": {
 			"label": "accept",
