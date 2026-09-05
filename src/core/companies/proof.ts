@@ -56,6 +56,7 @@ type ProvingRequest = {
 	numResults: number;
 	type: "fast";
 	includeDomains?: string[];
+	startPublishedDate?: string;
 	contents: {
 		text: { maxCharacters: number };
 		highlights: { query: string };
@@ -92,9 +93,28 @@ async function postProvingSearch(
 	return null;
 }
 
+export type ProvingDemand = {
+	requirement: Requirement;
+	notBefore: string | null;
+};
+
+const MS_PER_DAY = 86_400_000;
+
+/** The requirement paired with the earliest date a page may carry and still prove it: `today` less its window, or null when it has no window. */
+export function provingDemand(
+	requirement: Requirement,
+	today: string,
+): ProvingDemand {
+	if (requirement.windowDays === null) return { requirement, notBefore: null };
+	const notBefore = new Date(
+		new Date(today).getTime() - requirement.windowDays * MS_PER_DAY,
+	);
+	return { requirement, notBefore: notBefore.toISOString().slice(0, 10) };
+}
+
 function provingRequest(
 	query: string,
-	requirementText: string,
+	demand: ProvingDemand,
 	domain: string | null,
 ): ProvingRequest {
 	return {
@@ -102,9 +122,10 @@ function provingRequest(
 		numResults: PROVING_RESULTS,
 		type: "fast",
 		...(domain ? { includeDomains: [domain] } : {}),
+		...(demand.notBefore ? { startPublishedDate: demand.notBefore } : {}),
 		contents: {
 			text: { maxCharacters: CONTENTS_MAX_CHARACTERS },
-			highlights: { query: requirementText },
+			highlights: { query: demand.requirement.text },
 		},
 	};
 }
@@ -117,25 +138,22 @@ function provingRequest(
  */
 async function proveRequirement(
 	row: CompanyRow,
-	requirement: Requirement,
+	demand: ProvingDemand,
 	env: Env,
 	ledger: CostLedger,
 ): Promise<ProvingHit | null> {
 	const name = row.name ?? row.domain ?? "";
 	const domain = row.domain === null ? null : normalizeDomain(row.domain);
 	if (domain === null) return null;
+	const text = demand.requirement.text;
 	const scoped = await postProvingSearch(
-		provingRequest(`${name}: ${requirement.text}`, requirement.text, domain),
+		provingRequest(`${name}: ${text}`, demand, domain),
 		env,
 		ledger,
 	);
 	if (scoped) return scoped;
 	return postProvingSearch(
-		provingRequest(
-			`${name} (${domain}): ${requirement.text}`,
-			requirement.text,
-			null,
-		),
+		provingRequest(`${name} (${domain}): ${text}`, demand, null),
 		env,
 		ledger,
 	);
@@ -150,7 +168,7 @@ export type ProvenRow = { index: number; hit: ProvingHit | null };
  */
 export async function proveRows(
 	rows: readonly CompanyRow[],
-	requirement: Requirement,
+	demand: ProvingDemand,
 	env: Env,
 	ledger: CostLedger,
 ): Promise<ProvenRow[]> {
@@ -160,7 +178,7 @@ export async function proveRows(
 		const hits = await Promise.all(
 			slice.map(async (row, offset) => ({
 				index: at + offset,
-				hit: await proveRequirement(row, requirement, env, ledger),
+				hit: await proveRequirement(row, demand, env, ledger),
 			})),
 		);
 		proven.push(...hits);
@@ -305,15 +323,8 @@ function entryPage(
 }
 
 /**
- * Confirms every gated row's evidence page really exists, for a round whose
- * plan demanded proof from the agent. A row with no quote at all is
- * missing-required. Every row that does carry a quote to check is fetched
- * over the deduplicated url list (two rows can cite one page), in concurrent
- * `exaContents` batches. A row whose page truly does not exist or cannot be
- * fetched at all — `CRAWL_NOT_FOUND` or `UNSUPPORTED_URL` — is
- * evidence-not-on-page; every other outcome (missing, a timeout, a source the
- * crawler was refused) keeps the row, records the check for the judge to
- * see, and keeps the crawled page as evidence when the crawl returned one.
+ * Confirms every gated row's evidence page really exists.
+ * Returns kept rows, rejects with reasons, checks performed, and retrieved pages.
  */
 export async function verifyEvidenceRows(
 	rows: readonly CompanyRow[],
@@ -360,6 +371,23 @@ export function toEvidenceRejects(
 		reason: reject.detail ?? reject.reason,
 		stage: "gate",
 	}));
+}
+
+/** Copies each row's cited page onto its capture, so the stored company names the page that proved it rather than the one the search or agent first returned. */
+export function applyRowEvidence(
+	captures: Record<string, CompanyCapture>,
+	rows: readonly CompanyRow[],
+): void {
+	for (const row of rows) {
+		const capture = row.domain === null ? undefined : captures[row.domain];
+		if (!capture || row.evidenceUrl === null) continue;
+		capture.result.url = row.evidenceUrl;
+		capture.result.quote = row.evidenceQuote;
+		capture.result.publisher = row.evidencePublisher;
+		capture.result.kind = row.evidenceKind;
+		capture.result.publishedDate = row.evidenceDate;
+		capture.result.signal = row.signal;
+	}
 }
 
 /** Records each kept row's evidence check onto its capture, so the judge and the read routes can see it. */

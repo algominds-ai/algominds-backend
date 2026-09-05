@@ -1,0 +1,69 @@
+{
+	"buyer": {
+		"bands": ["founder", "c-suite", "vp", "director", "head"],
+		"rubric": "The buyer is the Chief Revenue Officer, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or the Founder or CEO at a company under about 50 people. Compliance officers, MLROs, heads of risk, general counsel and CISOs are never the buyer.",
+		"keywordBands": []
+	},
+	"seller": {
+		"domain": "ondato.com",
+		"customers": [
+			"Ooredoo",
+			"OnlyFans",
+			"Fansly",
+			"Fintrust AG",
+			"TonyBet",
+			"Twinsbet",
+			"Saldo Bank",
+			"Guru Pay",
+			"7bet",
+			"Blue EMI",
+			"1stopVAT",
+			"InRento",
+			"LKU Group",
+			"HeavyFinance",
+			"TGS Baltic",
+			"Fjord Bank"
+		],
+		"competitorTest": "A competitor sells vendor-agnostic identity-verification, KYC or age-assurance infrastructure into compliance, risk, legal and MLRO functions who need regulatory defensibility, not into growth or product teams optimizing signup conversion."
+	},
+	"description": "Ondato sells identity verification and age assurance as a conversion product: 97% pass rate, 30-second onboarding. It sells to privately held consumer fintechs, neobanks, payments and PSPs, lending, trading, crypto, and age-gated platforms that run high-volume self-serve signup in the UK, Ireland, the US or Canada, with $2M to $250M raised or $1M to $150M revenue. Public companies, larger groups, verification vendors, consultancies, agencies and non-profits are out. The buyer owns the signup funnel and is measured on conversion; compliance roles are never the buyer. A dated situation is a bonus for the message, never a condition: a new market or licence, a consumer product launch needing signup verification, a funding round in the last 120 days, users complaining about stuck verification, or age-assurance exposure under the UK Online Safety Act or US state laws.",
+	"requirements": [
+		{
+			"id": "r1",
+			"kind": "hard",
+			"text": "The company is headquartered in, or serves consumers or SMBs in, the United Kingdom, Ireland, the United States or Canada.",
+			"proof": "record",
+			"windowDays": null
+		},
+		{
+			"id": "r2",
+			"kind": "hard",
+			"text": "The company runs a high-volume consumer or SMB self-serve signup in fintech, neobanking, payments, lending, trading, crypto or an age-gated consumer platform. The company signs customers up through its own product. A company that reaches customers through partners, brokers, resellers or embedded platforms, or that serves only businesses through sales-led onboarding, or whose record shows no self-serve signup, does not qualify.",
+			"proof": "record",
+			"windowDays": null,
+			"strict": true
+		},
+		{
+			"id": "r3",
+			"kind": "hard",
+			"text": "The company is not a verification vendor, a compliance consultancy, an agency or a non-profit.",
+			"proof": "record",
+			"windowDays": null
+		},
+		{
+			"id": "r4",
+			"kind": "hard",
+			"text": "The company is privately held with $2M to $250M raised or $1M to $150M revenue. A record with neither figure, a public company, or one above the band does not qualify.",
+			"proof": "record",
+			"windowDays": null,
+			"strict": true
+		},
+		{
+			"id": "r5",
+			"kind": "soft",
+			"text": "Within the last 12 months: a new market entry or licence; a consumer product launch that needs signup verification; a funding round in the last 120 days; users complaining about stuck verification; or an age-assurance statement under the UK Online Safety Act or a US state law.",
+			"proof": "page",
+			"windowDays": 365
+		}
+	]
+}

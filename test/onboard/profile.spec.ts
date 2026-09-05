@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { applySizeBand } from "@/core/onboard";
 import { IcpDocSchema, SENIOR_BANDS } from "@/core/synthesize";
 import {
 	chatCompletionResponse,
@@ -115,5 +116,85 @@ describe("buildIcp: the profile it writes", () => {
 
 		expect(result.description).toBe(note);
 		expect(result.buyer).toBeNull();
+	});
+});
+
+describe("applySizeBand", () => {
+	const proseFundingRequirement = {
+		id: "r3",
+		text: "The company has raised $2M in funding, consistent with a growth stage.",
+		kind: "hard" as const,
+		proof: "record" as const,
+		windowDays: null,
+	};
+
+	it("appends a hard requirement stating both funding ends and the public-company exclusion, dropping the model's prose mention", () => {
+		const result = applySizeBand([proseFundingRequirement], {
+			minFundingTotal: 2_000_000,
+			maxFundingTotal: 250_000_000,
+			minRevenueAnnual: null,
+			maxRevenueAnnual: null,
+			publiclyListedExcluded: true,
+		});
+
+		expect(result).toHaveLength(1);
+		expect(result[0]?.id).toBe("r4");
+		expect(result[0]?.kind).toBe("hard");
+		expect(result[0]?.proof).toBe("record");
+		expect(result[0]?.text).toContain("$2M to $250M in funding");
+		expect(result[0]?.text).toContain(
+			"Publicly listed companies do not qualify.",
+		);
+	});
+
+	it("leaves the requirements unchanged when there is no size band", () => {
+		const result = applySizeBand([proseFundingRequirement], null);
+
+		expect(result).toEqual([proseFundingRequirement]);
+	});
+
+	it("keeps a requirement that mentions funds without a numeric figure", () => {
+		const fundsRequirement = {
+			id: "r3",
+			text: "The company serves investment funds.",
+			kind: "hard" as const,
+			proof: "record" as const,
+			windowDays: null,
+		};
+
+		const result = applySizeBand([fundsRequirement], {
+			minFundingTotal: 2_000_000,
+			maxFundingTotal: 250_000_000,
+			minRevenueAnnual: null,
+			maxRevenueAnnual: null,
+			publiclyListedExcluded: false,
+		});
+
+		expect(result.map((req) => req.text)).toContain(
+			"The company serves investment funds.",
+		);
+	});
+
+	it("drops a requirement that states a numeric funding figure", () => {
+		const numericFundingRequirement = {
+			id: "r3",
+			text: "The company has raised $2M–$250M.",
+			kind: "hard" as const,
+			proof: "record" as const,
+			windowDays: null,
+		};
+
+		const result = applySizeBand([numericFundingRequirement], {
+			minFundingTotal: 2_000_000,
+			maxFundingTotal: 250_000_000,
+			minRevenueAnnual: null,
+			maxRevenueAnnual: null,
+			publiclyListedExcluded: false,
+		});
+
+		expect(result.map((req) => req.text)).not.toContain(
+			"The company has raised $2M–$250M.",
+		);
+		expect(result).toHaveLength(1);
 	});
 });

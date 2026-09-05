@@ -34,6 +34,7 @@ export const config = {
 		judgeBatchSize: 8,
 		exaRetryAfterMaxMs: 5000,
 		exaPollBudgetPerSecond: 2,
+		homepageMaxCharacters: 4000,
 	},
 	people: {
 		exaAgentPollIntervalSeconds: 5,
@@ -42,6 +43,7 @@ export const config = {
 		clayRetryAfterMaxMs: 5000,
 		companyConcurrency: 5,
 		maxVerifyPerCompany: 25,
+		verifyConcurrency: 3,
 	},
 	enrich: {
 		batchSize: 5,

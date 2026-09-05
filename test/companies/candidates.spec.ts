@@ -155,6 +155,7 @@ function keptDeps(): FindCompaniesDeps {
 		},
 		backfill: async () => [],
 		prove: async () => [],
+		homepages: async () => [],
 		gate,
 		judge: async (requirements, rows) => ({
 			verdicts: rows.map((_row, index) => ({

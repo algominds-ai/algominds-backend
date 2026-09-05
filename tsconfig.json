@@ -17,7 +17,14 @@
 		"skipLibCheck": true,
 		"noEmit": true,
 		"isolatedModules": true,
-		"paths": { "@/*": ["./src/*"] }
+		"resolveJsonModule": true,
+		"paths": { "@/*": ["./src/*"], "@eval/*": ["./eval/*"] }
 	},
-	"include": ["src/**/*.ts", "test/**/*.ts", "build/**/*.ts", "*.ts"]
+	"include": [
+		"src/**/*.ts",
+		"test/**/*.ts",
+		"build/**/*.ts",
+		"eval/**/*.ts",
+		"*.ts"
+	]
 }

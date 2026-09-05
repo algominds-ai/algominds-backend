@@ -103,6 +103,10 @@ companies:
   # Poll requests the whole angle fan-out may spend per second; a round's poll
   # interval scales up with the angles in flight to stay under this.
   exaPollBudgetPerSecond: 2
+  # Characters of a candidate's own homepage handed to the judge next to its record.
+  # A shorter cap measured mostly navigation and a vague heading; a sunset notice or
+  # a signup label often sits lower on the page, so this reaches past the fold.
+  homepageMaxCharacters: 4000
 
 people:
   # Seconds between polls of a running exa-agent run.
@@ -123,6 +127,9 @@ people:
   # selection. Every rubric match up to this count is verified; the rubric and
   # the spend ceiling are the real limits.
   maxVerifyPerCompany: 25
+  # Picks verified at once per company. Exa allows ten requests a second across the whole
+  # run, and a batch of five companies starting every pick together bursts far past it.
+  verifyConcurrency: 3
 
 enrich:
   batchSize: 5

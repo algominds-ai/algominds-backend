@@ -222,12 +222,9 @@ describe("FindPeopleWorkflow: a step that throws after the run opens", () => {
 					{ companies: [bareCompany(domain)], icpId: null, unknownDomains: [] },
 				);
 				await m.mockStepResult({ name: `people-${domain}-open` }, "rc-1");
-				await m.mockStepError(
-					{ name: `people-${domain}-identity` },
-					new NonRetryableError(
-						"a step failure must close the run, not leave it running",
-					),
-				);
+				const failed = new NonRetryableError("a step failed");
+				await m.mockStepError({ name: `people-${domain}-identity` }, failed);
+				await m.mockStepError({ name: `people-${domain}-failed` }, failed);
 			});
 
 			await testEnv.FIND_PEOPLE.create({

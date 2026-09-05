@@ -5,6 +5,20 @@ import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 
 const EXA_CONTENTS_MAX_CHARACTERS = 20_000;
 
+const EXA_LIVECRAWL_OPTIONS = [
+	"always",
+	"fallback",
+	"never",
+	"preferred",
+] as const;
+
+export type ExaLivecrawl = (typeof EXA_LIVECRAWL_OPTIONS)[number];
+
+export type ExaContentsOptions = {
+	maxCharacters?: number;
+	livecrawl?: ExaLivecrawl;
+};
+
 const ExaContentsStatusSchema = z.object({
 	id: z.string(),
 	status: z.enum(["success", "error"]),
@@ -53,13 +67,16 @@ function parseResponse(
 /**
  * Posts the given URLs to the Exa `/contents` endpoint and returns each URL's
  * crawled text (or its per-URL failure tag), after reporting the response's
- * cost into `ledger`. HTTP 200 covers a per-URL failure; only a transport
- * failure, a 429/5xx, or a malformed body reaches the caller as a thrown error.
+ * cost into `ledger`. `options.maxCharacters` defaults to 20000 and
+ * `options.livecrawl` is left to the vendor's own default when omitted. HTTP
+ * 200 covers a per-URL failure; only a transport failure, a 429/5xx, or a
+ * malformed body reaches the caller as a thrown error.
  */
 export async function exaContents(
 	urls: readonly string[],
 	env: Env,
 	ledger: CostLedger,
+	options: ExaContentsOptions = {},
 ): Promise<ExaContentsResult> {
 	const apiKey = await env.EXA_API_KEY.get();
 	const body = await exaFetch(
@@ -69,7 +86,10 @@ export async function exaContents(
 			headers: { "x-api-key": apiKey, "content-type": "application/json" },
 			body: JSON.stringify({
 				urls,
-				text: { maxCharacters: EXA_CONTENTS_MAX_CHARACTERS },
+				text: {
+					maxCharacters: options.maxCharacters ?? EXA_CONTENTS_MAX_CHARACTERS,
+				},
+				...(options.livecrawl ? { livecrawl: options.livecrawl } : {}),
 			}),
 		},
 		"Exa contents",

@@ -81,16 +81,50 @@ function exaResult(domain: string, workforce: number | null): ExaResult {
 }
 
 describe("the route a round runs on comes from its requirements", () => {
-	it("asks for one angle when nothing needs a page, and bounds a page-gated round to the round's own cap", () => {
-		expect(anglesForRound([recordRequirement], 20)).toBe(1);
+	it("scales a search round's angles with the shortfall, and bounds a page-gated round to the round's own cap", () => {
+		expect(anglesForRound([recordRequirement], 20)).toBe(2);
+		expect(anglesForRound([recordRequirement], 3)).toBe(1);
 		expect(anglesForRound([recordRequirement, pageRequirement], 3)).toBe(6);
 		expect(anglesForRound([pageRequirement], 500)).toBe(
+			config.companies.maxAnglesPerRound,
+		);
+		expect(anglesForRound([recordRequirement], 1000)).toBe(
 			config.companies.maxAnglesPerRound,
 		);
 	});
 });
 
 describe("the refusal policy differs by what can prove a requirement", () => {
+	it("refuses a row whose strict record requirement the record does not establish, and keeps one whose plain record requirement is merely unproven", () => {
+		const strict: Requirement = {
+			...recordRequirement,
+			id: "r9",
+			strict: true,
+		};
+		const refused = decideRows({
+			requirements: [strict],
+			rows: [row("a.com")],
+			verdicts: [verdict({ statuses: [{ id: "r9", status: "unproven" }] })],
+			excluded: new Set(),
+		});
+		expect(refused.stored).toHaveLength(0);
+		expect(refused.rejects[0]?.reason).toContain(
+			"the record does not establish r9",
+		);
+
+		const kept = decideRows({
+			requirements: [recordRequirement],
+			rows: [row("a.com")],
+			verdicts: [
+				verdict({
+					statuses: [{ id: recordRequirement.id, status: "unproven" }],
+				}),
+			],
+			excluded: new Set(),
+		});
+		expect(kept.stored).toHaveLength(1);
+	});
+
 	it("refuses a row that contradicts a hard requirement, whatever its proof", () => {
 		const decision = decideRows({
 			requirements: [recordRequirement],

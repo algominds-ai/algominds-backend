@@ -9,6 +9,7 @@ import type { Requirement } from "@/core/requirements";
 import {
 	hardPageRequirements,
 	hardRequirements,
+	mustBeProven,
 	requirementLine,
 } from "@/core/requirements";
 
@@ -62,11 +63,16 @@ const JUDGE_INSTRUCTIONS = [
 	"excludes or not what it requires, e.g. selling IT services contradicts an IT-services",
 	"exclusion; `unproven` when they say nothing either way, e.g. silence on hiring is",
 	"unproven, not contradicted, for hiring.",
+	"A row whose name or description says the company was acquired, merged, shut down, sunset",
+	"or no longer operates contradicts every hard requirement, so the row is refused.",
 	"A row's evidence page proves a requirement only when the quote is about the company the",
 	"row names and the page records it; a quote about another company proves nothing.",
 	"A row's `pageEvidence` object, when present, gives the quote already found for one or",
 	"more requirement ids; an id missing there had no page found for it, so a `page`",
 	"requirement with no entry stays unproven unless the record itself settles it.",
+	"A row's homepage text, keyed `homepage` in `pageEvidence`, is the company's own current",
+	"statement and establishes what it sells, to whom, through what signup, and whether it",
+	'still operates; a word like "partners" alone does not disqualify a row.',
 	"Give one reason of twenty-five words or fewer describing only what that row's own",
 	"fields show, and never invent a fact the row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
@@ -275,20 +281,15 @@ function unprovenRequirement(
 	verdict: Verdict | undefined,
 ): Requirement | null {
 	return (
-		hardPageRequirements(requirements).find(
+		mustBeProven(requirements).find(
 			(req) => statusOf(verdict, req.id) !== "proven",
 		) ?? null
 	);
 }
 
 /**
- * Whether one judged row is stored. A hard requirement the row contradicts
- * refuses it. A hard requirement that only a page can settle must be `proven`
- * from a cited page, and every row reaches the judge with its evidence already
- * attached, so `unproven` there means no page proved it and the row is
- * refused. A hard requirement the record settles is judged on the record, so
- * `unproven` keeps the row: a record that states nothing is silence, not a
- * contradiction. Soft requirements never gate.
+ * Whether one judged row is stored.
+ * Returns true if no hard requirement is contradicted and no page-gated requirement is unproven.
  */
 function keepsRow(
 	requirements: readonly Requirement[],
@@ -308,6 +309,9 @@ function refusalReason(
 	const bad = contradictedRequirement(requirements, verdict);
 	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);
+	if (missing?.proof === "record") {
+		return `the record does not establish ${missing.id}: ${detail}`;
+	}
 	return `no page proved ${missing?.id ?? "a required signal"}: ${detail}`;
 }
 

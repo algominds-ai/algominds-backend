@@ -6,6 +6,7 @@ import {
 	toExaSearchResult,
 } from "@/core/companies/agent-search";
 import { gate } from "@/core/companies/gate";
+import { fetchHomepages } from "@/core/companies/homepages";
 import { judge } from "@/core/companies/judge";
 import { proveRows } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
@@ -196,6 +197,26 @@ export function steppedProve(
 	};
 }
 
+/** Wraps the homepage fetch in one durable step, so a replay reuses the pages it already paid for. */
+export function steppedHomepages(
+	step: WorkflowStep,
+	round: number,
+): FindCompaniesDeps["homepages"] {
+	return async (domains, env, ledger) => {
+		const cached = await step.do(
+			`round_${round}-homepages`,
+			config.stepConfig.paidCall,
+			async () => {
+				const stepLedger = new CostLedger();
+				const pages = await fetchHomepages(domains, env, stepLedger);
+				return { pages, costEntries: stepLedger.toJSON().entries };
+			},
+		);
+		applyCostEntries(cached.costEntries, ledger);
+		return cached.pages;
+	};
+}
+
 /**
  * Wraps `synthesize` in its own durable step so a replay triggered by a
  * later `step.sleep` in the same round returns the cached plan instead of
@@ -286,6 +307,7 @@ export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 		agentRound: agentFanout({ step, round, today, seller }),
 		backfill: steppedBackfill(step, round),
 		prove: steppedProve(step, round),
+		homepages: steppedHomepages(step, round),
 		gate,
 		judge: steppedJudge(step, round),
 	};

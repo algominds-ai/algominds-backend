@@ -21,6 +21,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": resolve("src"),
+			"@eval": resolve("eval"),
 		},
 	},
 	test: {

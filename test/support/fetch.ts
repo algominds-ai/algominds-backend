@@ -49,6 +49,92 @@ export function exaSearchResultsResponse(
 	});
 }
 
+export type ExaPersonResultSpec = {
+	url: string;
+	name: string;
+	currentTitle: string | null;
+	currentCompany: string | null;
+	currentCompanyId?: string | null;
+	location?: string | null;
+};
+
+/** An Exa `/search` people-category reply carrying one person entity per spec, each with a single current (`dates.to: null`) work-history entry. */
+export function exaPeopleSearchResponse(
+	people: readonly ExaPersonResultSpec[],
+	costTotal = 0.007,
+): Response {
+	return jsonResponse({
+		requestId: "req-people",
+		costDollars: { total: costTotal },
+		results: people.map((person) => ({
+			id: `id-${person.url}`,
+			url: person.url,
+			title: person.name,
+			entities: [
+				{
+					type: "person",
+					properties: {
+						name: person.name,
+						location: person.location ?? null,
+						workHistory: [
+							{
+								title: person.currentTitle,
+								dates: { to: null },
+								company: {
+									id: person.currentCompanyId ?? null,
+									name: person.currentCompany,
+								},
+							},
+						],
+					},
+				},
+			],
+		})),
+	});
+}
+
+/** An Exa `/search` company-category reply carrying one company result named by `id` on `url`, or none when `id` is null. */
+export function exaCompanySearchResponse(
+	id: string | null,
+	url = "https://example.com",
+	costTotal = 0.005,
+): Response {
+	return jsonResponse({
+		requestId: "req-company",
+		costDollars: { total: costTotal },
+		results:
+			id === null
+				? []
+				: [
+						{
+							id,
+							url,
+							title: "Example",
+							entities: [{ type: "company", properties: { name: "Example" } }],
+						},
+					],
+	});
+}
+
+export type ExaCompanyResultSpec = { id: string; url: string };
+
+/** An Exa `/search` company-category reply carrying one company result per spec, each on its own url. */
+export function exaCompanySearchResultsResponse(
+	results: readonly ExaCompanyResultSpec[],
+	costTotal = 0.005,
+): Response {
+	return jsonResponse({
+		requestId: "req-company",
+		costDollars: { total: costTotal },
+		results: results.map((result) => ({
+			id: result.id,
+			url: result.url,
+			title: result.url,
+			entities: [{ type: "company", properties: { name: result.url } }],
+		})),
+	});
+}
+
 /** A `fetch` that answers Exa calls and model-gateway calls from two separate scripted queues, recording both. */
 export function fakeExaAndModel(
 	exa: readonly Response[],
@@ -227,6 +313,8 @@ export type ClayRosterRow = {
 	url: string;
 	title: string;
 	company: string;
+	city?: string;
+	country?: string;
 };
 
 /** Stubs `globalThis.fetch` as Clay's filters-mode search followed by its roster read, answering with `rows`. */
@@ -245,7 +333,10 @@ export function stubClayFetch(rows: ClayRosterRow[]): void {
 				latest_experience_title: row.title,
 				latest_experience_company: row.company,
 				latest_experience_start_date: null,
-				location: null,
+				structured_location: {
+					city: row.city ?? null,
+					country: row.country ?? null,
+				},
 			})),
 			has_more: false,
 			period_quota: { used: rows.length },
@@ -567,4 +658,10 @@ export function deferredGateway(): {
 		});
 	};
 	return { fetch: handler, calls, resolvers };
+}
+
+/** Points `fetch` at a GetLeads decision-makers reply carrying `contacts`. */
+export function stubGetleadsFetch(contacts: unknown[]): void {
+	globalThis.fetch = async () =>
+		jsonResponse({ ok: "True", contacts, query_credits_used: "1" });
 }

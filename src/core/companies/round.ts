@@ -15,27 +15,24 @@ import {
 	filterEntities,
 } from "@/core/companies/candidates";
 import type { CompanyRow, Reject } from "@/core/companies/gate";
-import type { RequirementEvidence, Verdict } from "@/core/companies/judge";
+import type { Verdict } from "@/core/companies/judge";
 import { decideRows, provenRate } from "@/core/companies/judge";
-import type { ProvenRow, ProvingHit } from "@/core/companies/proof";
 import {
 	applyEvidenceChecks,
-	applyJudgeReasons,
 	demandsEvidenceProof,
 	toEvidenceRejects,
 	verifyEvidenceRows,
-	withEvidence,
 } from "@/core/companies/proof";
+import { proveAndJudge } from "@/core/companies/proving";
 import { applyRecords } from "@/core/companies/record";
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
-import type { QuoteCheckReason } from "@/core/providers/exa/contents";
 import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import type { Requirement } from "@/core/requirements";
-import { hardPageRequirements } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeResult } from "@/core/synthesize";
 
 const { judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE } = config.companies;
+const MAX_JUDGE_SLICES_PER_ROUND = 3;
 
 export type RoundContext = {
 	icp: IcpDoc;
@@ -61,6 +58,7 @@ export type RoundOutcome = {
 	ledger: CostLedger;
 	captures: Record<string, CompanyCapture>;
 	pages: RetrievedPage[];
+	unjudgedDomains: string[];
 };
 
 /** Every distinct company domain an agent round named that this run may still return, the list its record backfill is asked for. An excluded domain is never looked up, so a paid record never resurrects a company the account already holds. */
@@ -76,6 +74,45 @@ function agentDomains(
 	return [...domains];
 }
 
+/** The results of every plan a search round ran, kept once by domain: the first plan to name a domain wins. */
+function dedupeByDomain(results: readonly ExaResult[]): ExaResult[] {
+	const seen = new Set<string>();
+	const deduped: ExaResult[] = [];
+	for (const result of results) {
+		const domain = normalizeDomain(result.url);
+		if (seen.has(domain)) continue;
+		seen.add(domain);
+		deduped.push(result);
+	}
+	return deduped;
+}
+
+type SearchAllInput = {
+	plans: readonly SearchPlan[];
+	excluded: readonly string[];
+	opts: FindCompaniesOptions;
+	deps: FindCompaniesDeps;
+	ledger: CostLedger;
+};
+
+/** Runs a company search for every angle a search round wrote, one after another to respect Exa's own rate limit, and returns their results deduped by domain under the first search's request id. */
+async function searchAllPlans(input: SearchAllInput): Promise<ExaSearchResult> {
+	const { plans, excluded, opts, deps, ledger } = input;
+	const results: ExaResult[] = [];
+	let requestId = "";
+	for (const plan of plans) {
+		const found = await deps.search(
+			plan,
+			buildSearchRequest(plan, excluded),
+			opts.env,
+			ledger,
+		);
+		if (!requestId) requestId = found.requestId;
+		results.push(...found.results);
+	}
+	return { requestId, results: dedupeByDomain(results) };
+}
+
 type GatherInput = {
 	ctx: RoundContext;
 	opts: FindCompaniesOptions;
@@ -85,19 +122,13 @@ type GatherInput = {
 	ledger: CostLedger;
 };
 
-/** One round's vendor results: an agent fan-out with every company's own record backfilled onto it, or one company search. */
+/** One round's vendor results: an agent fan-out with every company's own record backfilled onto it, or every plan's company search, deduped by domain. */
 async function gather(input: GatherInput): Promise<ExaSearchResult> {
 	const { ctx, opts, deps, route, plans, ledger } = input;
-	const first = plans[0];
-	if (!first) return { requestId: "", results: [] };
+	if (plans.length === 0) return { requestId: "", results: [] };
 	const excluded = excludedDomains([], ctx.excluded);
 	if (route === "search") {
-		return deps.search(
-			first,
-			buildSearchRequest(first, excluded),
-			opts.env,
-			ledger,
-		);
+		return searchAllPlans({ plans, excluded, opts, deps, ledger });
 	}
 	const found = await deps.agentRound(plans, excluded, opts.env, ledger);
 	const filled = await deps.backfill(
@@ -106,141 +137,6 @@ async function gather(input: GatherInput): Promise<ExaSearchResult> {
 		ledger,
 	);
 	return { ...found, results: applyRecords(found.results, filled) };
-}
-
-type ProveInput = {
-	deps: FindCompaniesDeps;
-	requirements: readonly Requirement[];
-	candidates: readonly CompanyRow[];
-	env: Env;
-	ledger: CostLedger;
-};
-
-type EvidenceByRow = Map<number, Map<string, RequirementEvidence>>;
-
-type ProvedCandidates = {
-	rows: CompanyRow[];
-	pages: RetrievedPage[];
-	checks: Record<string, QuoteCheckReason>;
-	evidenceByRow: EvidenceByRow;
-};
-
-function recordRequirementEvidence(
-	evidenceByRow: EvidenceByRow,
-	index: number,
-	requirementId: string,
-	hit: ProvingHit,
-): void {
-	const perRow =
-		evidenceByRow.get(index) ?? new Map<string, RequirementEvidence>();
-	perRow.set(requirementId, { url: hit.url, quote: hit.quote });
-	evidenceByRow.set(index, perRow);
-}
-
-/** One requirement's proven hit folded onto the round's rows, pages, checks and per-requirement evidence. The first hard page requirement also lands on the row's own single evidence slot, for the display fields that read it. */
-function applyProvenEntry(
-	state: ProvedCandidates,
-	demand: Requirement,
-	isPrimary: boolean,
-	entry: ProvenRow,
-): void {
-	const row = state.rows[entry.index];
-	if (!row || entry.hit === null) return;
-	if (isPrimary) {
-		state.rows[entry.index] = withEvidence(row, entry.hit, demand);
-		if (row.domain !== null) state.checks[row.domain] = "found";
-	}
-	if (row.domain !== null) {
-		state.pages.push({
-			domain: row.domain,
-			url: entry.hit.url,
-			text: entry.hit.text,
-		});
-	}
-	recordRequirementEvidence(
-		state.evidenceByRow,
-		entry.index,
-		demand.id,
-		entry.hit,
-	);
-}
-
-/**
- * Every candidate of a search round with the page proving each of the round's
- * hard page requirements attached, so the one judge call that follows sees
- * every requirement's own evidence and no second pass is needed.
- * `evidenceByRow` carries every requirement's page, keyed by requirement id,
- * so the judge is never left weighing a second or third page requirement on
- * the first one's proof. A candidate no page was found for keeps its own row,
- * and the judge leaves that requirement unproven.
- */
-async function proveCandidates(input: ProveInput): Promise<ProvedCandidates> {
-	const { deps, requirements, candidates, env, ledger } = input;
-	const demands = hardPageRequirements(requirements);
-	const state: ProvedCandidates = {
-		rows: [...candidates],
-		pages: [],
-		checks: {},
-		evidenceByRow: new Map(),
-	};
-	for (const [demandIndex, demand] of demands.entries()) {
-		const proven = await deps.prove(candidates, demand, env, ledger);
-		for (const entry of proven) {
-			applyProvenEntry(state, demand, demandIndex === 0, entry);
-		}
-	}
-	return state;
-}
-
-type ProveAndJudgeInput = {
-	route: SynthesizeResult["route"];
-	deps: FindCompaniesDeps;
-	requirements: readonly Requirement[];
-	checked: { kept: readonly CompanyRow[]; pages: readonly RetrievedPage[] };
-	env: Env;
-	ledger: CostLedger;
-	captures: Record<string, CompanyCapture>;
-};
-
-type ProveAndJudgeOutcome = {
-	rows: CompanyRow[];
-	pages: RetrievedPage[];
-	verdicts: readonly Verdict[];
-	ledger: CostLedger;
-};
-
-/** Proves every hard page requirement a search round demands, then judges the result — an agent round already carries its own cited evidence, so it skips straight to the judge. Both stages record what they found onto `captures`, for the read routes to see. */
-async function proveAndJudge(
-	input: ProveAndJudgeInput,
-): Promise<ProveAndJudgeOutcome> {
-	const { route, deps, requirements, checked, env, ledger, captures } = input;
-	const proved =
-		route === "search"
-			? await proveCandidates({
-					deps,
-					requirements,
-					candidates: [...checked.kept],
-					env,
-					ledger,
-				})
-			: {
-					rows: [...checked.kept],
-					pages: [...checked.pages],
-					checks: {},
-					evidenceByRow: new Map(),
-				};
-	applyEvidenceChecks(captures, proved.checks);
-	const judged =
-		proved.rows.length > 0
-			? await deps.judge(requirements, proved.rows, env, proved.evidenceByRow)
-			: { verdicts: [], ledger: new CostLedger() };
-	applyJudgeReasons(captures, proved.rows, judged.verdicts);
-	return {
-		rows: proved.rows,
-		pages: proved.pages,
-		verdicts: judged.verdicts,
-		ledger: judged.ledger,
-	};
 }
 
 export async function runRound(
@@ -279,20 +175,77 @@ export async function runRound(
 	const gated = deps.gate(filtered.rows, filtered.results, {
 		seenDomains: ctx.excluded,
 	});
-	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
-	const evidenceLedger = new CostLedger();
+	const judged = await judgeSlices({
+		ctx,
+		opts,
+		deps,
+		route,
+		first,
+		gated: gated.kept,
+		captures: filtered.captures,
+	});
+	const unjudgedDomains = gated.kept
+		.slice(judged.judgedCount)
+		.map((row) => row.domain)
+		.filter((domain) => domain !== null);
+	return {
+		plans: [...plans],
+		rows: filtered.rows,
+		filterRejects: filtered.rejects,
+		gateRejects: gated.rejects,
+		evidenceRejects: judged.evidenceRejects,
+		accepted: judged.accepted,
+		judgeRejects: judged.judgeRejects,
+		provenRate: provenRate(ctx.requirements, judged.verdicts),
+		unseenCount,
+		resultCount: searched.results.length,
+		ledger: CostLedger.merge(synthesized.ledger, vendorLedger, judged.ledger),
+		captures: filtered.captures,
+		pages: judged.pages,
+		unjudgedDomains,
+	};
+}
+
+type SliceInput = {
+	ctx: RoundContext;
+	opts: FindCompaniesOptions;
+	deps: FindCompaniesDeps;
+	route: SynthesizeResult["route"];
+	first: SearchPlan;
+	gated: readonly CompanyRow[];
+	captures: Record<string, CompanyCapture>;
+};
+
+type SliceOutcome = {
+	accepted: CompanyRow[];
+	judgeRejects: FindCompaniesReject[];
+	evidenceRejects: FindCompaniesReject[];
+	verdicts: Verdict[];
+	pages: RetrievedPage[];
+	ledger: CostLedger;
+	judgedCount: number;
+};
+
+/** Checks, proves and judges one slice of the gated candidates. */
+async function judgeOneSlice(
+	input: SliceInput,
+	candidates: readonly CompanyRow[],
+): Promise<SliceOutcome> {
+	const { ctx, opts, deps, route, first, captures } = input;
+	const ledger = new CostLedger();
 	const checked = demandsEvidenceProof(first)
-		? await verifyEvidenceRows(candidates, opts.env, evidenceLedger)
+		? await verifyEvidenceRows(candidates, opts.env, ledger)
 		: { kept: candidates, rejects: [], checks: {}, pages: [] };
-	applyEvidenceChecks(filtered.captures, checked.checks);
+	applyEvidenceChecks(captures, checked.checks);
 	const proved = await proveAndJudge({
 		route,
 		deps,
 		requirements: ctx.requirements,
 		checked,
 		env: opts.env,
-		ledger: evidenceLedger,
-		captures: filtered.captures,
+		ledger,
+		captures,
+		today: opts.today,
 	});
 	const decision = decideRows({
 		requirements: ctx.requirements,
@@ -301,23 +254,41 @@ export async function runRound(
 		excluded: ctx.excluded,
 	});
 	return {
-		plans: [...plans],
-		rows: filtered.rows,
-		filterRejects: filtered.rejects,
-		gateRejects: gated.rejects,
-		evidenceRejects: toEvidenceRejects(candidates, checked.rejects),
 		accepted: decision.stored,
 		judgeRejects: decision.rejects,
-		provenRate: provenRate(ctx.requirements, proved.verdicts),
-		unseenCount,
-		resultCount: searched.results.length,
-		ledger: CostLedger.merge(
-			synthesized.ledger,
-			vendorLedger,
-			evidenceLedger,
-			proved.ledger,
-		),
-		captures: filtered.captures,
+		evidenceRejects: toEvidenceRejects(candidates, checked.rejects),
+		verdicts: [...proved.verdicts],
 		pages: proved.pages,
+		ledger: CostLedger.merge(ledger, proved.ledger),
+		judgedCount: candidates.length,
 	};
+}
+
+/** Judges the gated candidates one slice at a time, at most `MAX_JUDGE_SLICES_PER_ROUND` slices, moving on only while the round is short of its count; brand collapse applies within a slice only. */
+async function judgeSlices(input: SliceInput): Promise<SliceOutcome> {
+	const size = input.ctx.count * JUDGE_CANDIDATE_MULTIPLE;
+	const total: SliceOutcome = {
+		accepted: [],
+		judgeRejects: [],
+		evidenceRejects: [],
+		verdicts: [],
+		pages: [],
+		ledger: new CostLedger(),
+		judgedCount: 0,
+	};
+	for (let slice = 0; slice < MAX_JUDGE_SLICES_PER_ROUND; slice++) {
+		const at = slice * size;
+		if (at >= input.gated.length || total.accepted.length >= input.ctx.count) {
+			break;
+		}
+		const judged = await judgeOneSlice(input, input.gated.slice(at, at + size));
+		total.judgedCount = at + judged.judgedCount;
+		total.accepted.push(...judged.accepted);
+		total.judgeRejects.push(...judged.judgeRejects);
+		total.evidenceRejects.push(...judged.evidenceRejects);
+		total.verdicts.push(...judged.verdicts);
+		total.pages.push(...judged.pages);
+		total.ledger = CostLedger.merge(total.ledger, judged.ledger);
+	}
+	return total;
 }

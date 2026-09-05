@@ -15,11 +15,8 @@ import {
 } from "@/core/people/rows";
 import type { SelectedBuyer, SelectModelReply } from "@/core/people/select";
 import { selectBuyers } from "@/core/people/select";
-import {
-	classifyVerdict,
-	employerOpinion,
-	indexOpinion,
-} from "@/core/people/verify";
+import type { VerdictClassification } from "@/core/people/verify";
+import { classifyVerdict } from "@/core/people/verify";
 import type {
 	ExaAgentVerdict,
 	VerdictRunInput,
@@ -37,7 +34,8 @@ import type {
 	CompanyRunResult,
 	RosterStepResult,
 } from "@/workflows/find-people-company";
-import { recordCompanySpend } from "@/workflows/find-people-company";
+import { secondOpinion } from "@/workflows/find-people-second-opinion";
+import { recordCompanySpend } from "@/workflows/find-people-spend";
 
 async function runSelect(
 	ctx: CompanyLoopContext,
@@ -53,10 +51,7 @@ async function runSelect(
 		`people-${progress.domain}-select`,
 		config.stepConfig.paidCall,
 		() => {
-			const description =
-				ctx.buyer.buyerSource === "captured"
-					? (ctx.profile?.description ?? null)
-					: null;
+			const description = ctx.profile?.description ?? null;
 			return selectBuyers(
 				{ description, buyer: ctx.buyer, candidates },
 				ctx.env,
@@ -65,7 +60,7 @@ async function runSelect(
 	);
 }
 
-type PickEvidence = { kind: string; body: unknown };
+export type PickEvidence = { kind: string; body: unknown };
 
 type PickOutcome = {
 	verified: boolean;
@@ -73,7 +68,7 @@ type PickOutcome = {
 	costEntries: CostEntry[];
 };
 
-type PickContext = {
+export type PickContext = {
 	ctx: CompanyLoopContext;
 	progress: CompanyProgress;
 	name: string;
@@ -89,77 +84,10 @@ function verdictSubject(pick: PickContext): VerdictRunInput {
 	};
 }
 
-type IndexStepResult = {
-	found: boolean;
-	employer: string | null;
-	reply: string;
-	costEntries: CostEntry[];
-};
-
-async function secondOpinion(
-	pick: PickContext,
-	ledger: CostLedger,
-): Promise<{ verified: boolean; evidence: PickEvidence[] }> {
-	const indexResult = await pick.ctx.step.do(
-		`${pick.name}-index`,
-		config.stepConfig.paidCall,
-		async (): Promise<IndexStepResult> => {
-			const stepLedger = new CostLedger();
-			const result = await indexOpinion(
-				{
-					name: pick.candidate.name,
-					title: pick.candidate.title ?? "",
-					company: pick.candidate.company ?? pick.progress.companyName,
-					url: pick.candidate.url,
-				},
-				pick.ctx.env,
-				stepLedger,
-			);
-			return {
-				found: result.found,
-				employer: result.employer,
-				reply: JSON.stringify(result.reply),
-				costEntries: stepLedger.toJSON().entries,
-			};
-		},
-	);
-	applyCostEntries(indexResult.costEntries, ledger);
-	const evidence: PickEvidence[] = [
-		{ kind: "verify-index", body: indexResult.reply },
-	];
-	if (!indexResult.found || indexResult.employer === null) {
-		return { verified: false, evidence };
-	}
-	const employer = indexResult.employer;
-	const agreeResult = await pick.ctx.step.do(
-		`${pick.name}-agree`,
-		config.stepConfig.paidCall,
-		async () => {
-			const stepLedger = new CostLedger();
-			const result = await employerOpinion(
-				{
-					employer,
-					company: pick.progress.companyName,
-					domain: pick.progress.domain,
-				},
-				pick.ctx.env,
-				stepLedger,
-			);
-			return {
-				label: result.label,
-				reply: result.reply,
-				costEntries: stepLedger.toJSON().entries,
-			};
-		},
-	);
-	applyCostEntries(agreeResult.costEntries, ledger);
-	evidence.push({ kind: "verify-agree", body: agreeResult.reply });
-	return { verified: agreeResult.label === "SAME", evidence };
-}
-
 type QuoteCheck = {
 	evidence: PickEvidence | null;
 	costEntries: CostEntry[];
+	missing: boolean;
 };
 
 type QuoteStepResult = {
@@ -171,7 +99,8 @@ type QuoteStepResult = {
 /**
  * Checks the verdict's quote against its own URL and reports the guard's
  * outcome as one `verify-quote` evidence item, so a later run can see why a
- * URL was, or was not, trusted.
+ * URL was, or was not, trusted. `missing` is true only when the page was read
+ * cleanly and the quote was not on it, never on a crawl failure.
  */
 async function checkEvidenceQuote(
 	pick: PickContext,
@@ -179,7 +108,7 @@ async function checkEvidenceQuote(
 	verified: boolean,
 ): Promise<QuoteCheck> {
 	if (!verified || !verdict.evidence_url || !verdict.evidence_quote) {
-		return { evidence: null, costEntries: [] };
+		return { evidence: null, costEntries: [], missing: false };
 	}
 	const url = verdict.evidence_url;
 	const quote = verdict.evidence_quote;
@@ -202,6 +131,7 @@ async function checkEvidenceQuote(
 			body: { url, found: outcome.found, reason: outcome.reason },
 		},
 		costEntries: outcome.costEntries,
+		missing: !outcome.found && outcome.reason === "missing",
 	};
 }
 
@@ -220,6 +150,38 @@ function verifyErrorOutcome(
 		],
 		costEntries: pollLedger.toJSON().entries,
 	};
+}
+
+type VerdictResolution = { verified: boolean; evidence: PickEvidence[] };
+
+/**
+ * Turns a poll's verdict into a verified flag: a first-party or press
+ * confirmation verifies outright unless its quote is checked and missing
+ * from the page, in which case it falls to the same second opinion an
+ * aggregator or LinkedIn confirmation always takes. A crawl failure on the
+ * quote check leaves a first-party or press verdict verified as reported.
+ */
+async function resolveVerdict(
+	pick: PickContext,
+	verdict: ExaAgentVerdict,
+	classification: VerdictClassification,
+	ledger: CostLedger,
+): Promise<VerdictResolution> {
+	if (classification === "needs_index") {
+		const opinion = await secondOpinion(pick, ledger);
+		return { verified: opinion.verified, evidence: opinion.evidence };
+	}
+	const verified = classification === "verified";
+	if (classification !== "verified") return { verified, evidence: [] };
+	const quoteCheck = await checkEvidenceQuote(pick, verdict, verified);
+	applyCostEntries(quoteCheck.costEntries, ledger);
+	const evidence: PickEvidence[] = quoteCheck.evidence
+		? [quoteCheck.evidence]
+		: [];
+	if (!quoteCheck.missing) return { verified, evidence };
+	const opinion = await secondOpinion(pick, ledger);
+	evidence.push(...opinion.evidence);
+	return { verified: opinion.verified, evidence };
 }
 
 /**
@@ -252,19 +214,23 @@ async function verifyPick(pick: PickContext): Promise<PickOutcome> {
 			pollLedger,
 			(ledger) => getAgentVerdictRun(start.id, pick.ctx.env, ledger),
 		);
-		const evidence: PickEvidence[] = [{ kind: "verify-start", body: start }];
-		const classification = classifyVerdict(verdict);
-		let verified = classification === "verified";
-		if (classification === "needs_index") {
-			const opinion = await secondOpinion(pick, pollLedger);
-			verified = opinion.verified;
-			evidence.push(...opinion.evidence);
-		}
-		const quoteCheck = await checkEvidenceQuote(pick, verdict, verified);
-		applyCostEntries(quoteCheck.costEntries, pollLedger);
-		evidence.push({ kind: "verify-poll", body: verdict });
-		if (quoteCheck.evidence) evidence.push(quoteCheck.evidence);
-		return { verified, evidence, costEntries: pollLedger.toJSON().entries };
+		const classification = classifyVerdict(verdict, pick.progress.domain);
+		const resolution = await resolveVerdict(
+			pick,
+			verdict,
+			classification,
+			pollLedger,
+		);
+		const evidence: PickEvidence[] = [
+			{ kind: "verify-start", body: start },
+			{ kind: "verify-poll", body: verdict },
+			...resolution.evidence,
+		];
+		return {
+			verified: resolution.verified,
+			evidence,
+			costEntries: pollLedger.toJSON().entries,
+		};
 	} catch (error) {
 		return verifyErrorOutcome(pollLedger, error);
 	}
@@ -365,16 +331,23 @@ export async function runBuyerMode(
 	const select = await runSelect(ctx, progress, roster.candidates);
 	progress.ledger.reported("select", "select", select.costDollars);
 	const picks = select.picks.slice(0, config.people.maxVerifyPerCompany);
-	const outcomes = await Promise.all(
-		picks.map((pick, i) =>
-			verifyPick({
-				ctx,
-				progress,
-				name: `people-${progress.domain}-verify-${i}`,
-				candidate: pick.candidate,
-			}),
-		),
-	);
+	const outcomes: PickOutcome[] = [];
+	const width = config.people.verifyConcurrency;
+	for (let at = 0; at < picks.length; at += width) {
+		const chunk = picks.slice(at, at + width);
+		outcomes.push(
+			...(await Promise.all(
+				chunk.map((pick, offset) =>
+					verifyPick({
+						ctx,
+						progress,
+						name: `people-${progress.domain}-verify-${at + offset}`,
+						candidate: pick.candidate,
+					}),
+				),
+			)),
+		);
+	}
 	const results: PickResult[] = [];
 	for (let i = 0; i < picks.length; i++) {
 		const pick = picks[i];

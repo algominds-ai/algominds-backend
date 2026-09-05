@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "@/config";
 import type { CompanyRow } from "@/core/companies/gate";
-import { verifyEvidenceRows } from "@/core/companies/proof";
+import {
+	proveRows,
+	provingDemand,
+	verifyEvidenceRows,
+} from "@/core/companies/proof";
 import { CostLedger } from "@/core/cost";
+import type { Requirement } from "@/core/requirements";
 import { fakeSecretEnv } from "../support/env";
 import { exaContentsFetch } from "../support/fetch";
 
@@ -247,5 +252,46 @@ describe("verifyEvidenceRows bounds one exaContents call to a handful of urls", 
 		expect(counting.calls).toBe(3);
 		expect(result.kept).toHaveLength(rows.length);
 		expect(Object.keys(result.checks)).toHaveLength(rows.length);
+	});
+});
+
+const windowed: Requirement = {
+	id: "r5",
+	text: "runs production Kubernetes",
+	kind: "hard",
+	proof: "page",
+	windowDays: 730,
+};
+
+describe("a proving search is bounded by the requirement's window", () => {
+	it("dates the earliest acceptable page at today less the window, and leaves an unwindowed requirement unbounded", () => {
+		expect(provingDemand(windowed, "2026-09-03").notBefore).toBe("2024-09-03");
+		expect(
+			provingDemand({ ...windowed, windowDays: null }, "2026-09-03").notBefore,
+		).toBeNull();
+	});
+
+	it("sends the window as startPublishedDate on every proving search", async () => {
+		const bodies: string[] = [];
+		globalThis.fetch = async (_input, init) => {
+			bodies.push(String(init?.body));
+			return new Response(JSON.stringify({ requestId: "r", results: [] }), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+		};
+		const env = fakeSecretEnv({ EXA_API_KEY: "test-exa-key" });
+
+		await proveRows(
+			[row({ domain: "bank.com", name: "Bank" })],
+			provingDemand(windowed, "2026-09-03"),
+			env,
+			new CostLedger(),
+		);
+
+		expect(bodies.length).toBeGreaterThan(0);
+		for (const body of bodies) {
+			expect(JSON.parse(body).startPublishedDate).toBe("2024-09-03");
+		}
 	});
 });
