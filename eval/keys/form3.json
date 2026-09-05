@@ -21,7 +21,7 @@
 			}
 		},
 		"adyen.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Adyen",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
@@ -35,7 +35,8 @@
 				"citedDate": "2026-07-08",
 				"quote": "At Adyen, we run Cilium CNI across all our 100+ Kubernetes clusters.",
 				"fitReason": "Fintech platform, Amsterdam, 4487 staff, runs Cilium CNI across 100+ in-house Kubernetes clusters."
-			}
+			},
+			"note": "4,487 staff, Netherlands, fintech payments platform; Adyen's own blog quotes running Cilium CNI across 100+ Kubernetes clusters, dated 2026-07-08 within the window"
 		},
 		"appdirect.com": {
 			"label": "accept",
@@ -63,7 +64,7 @@
 			"note": "2,521 staff, UK, online fashion retail; ASOS' own engineering blog quotes updating AKS services during a database migration, dated 2025-04-10 within the window",
 			"record": {
 				"industry": "Online fashion retail",
-				"description": "We exist to give people the confidence to be whoever they want to be, and that goes for our people too. At ASOS, you’re free to be your true self without judgment, and channel your creativity into a platform used by millions.\n\nWhatever your role, ASOS will encourage you to be you, fulfilling your creative potential with our global reach. Push boundaries, and challenge expectations. We’re determined to succeed, so we’ll trust you to deliver. Help drive our journey to becoming the global fashion destination for 20-somethings\n\nAt ASOS our 3,000+ employees are immersed in the creative worlds and have a truly entrepreneurial attitude. Our ASOSers are authentic, brave, creative and disciplined to the core and find ways to blend our passion for fashion with cutting edge technology.\n\nSound up your street? Join us.\n",
+				"description": "We exist to give people the confidence to be whoever they want to be, and that goes for our people too. At ASOS, you\u2019re free to be your true self without judgment, and channel your creativity into a platform used by millions.\n\nWhatever your role, ASOS will encourage you to be you, fulfilling your creative potential with our global reach. Push boundaries, and challenge expectations. We\u2019re determined to succeed, so we\u2019ll trust you to deliver. Help drive our journey to becoming the global fashion destination for 20-somethings\n\nAt ASOS our 3,000+ employees are immersed in the creative worlds and have a truly entrepreneurial attitude. Our ASOSers are authentic, brave, creative and disciplined to the core and find ways to blend our passion for fashion with cutting edge technology.\n\nSound up your street? Join us.\n",
 				"workforceTotal": 2521,
 				"country": "United Kingdom",
 				"foundedYear": 2000,
@@ -81,7 +82,7 @@
 			"note": "6,409 staff, US, healthcare SaaS; AWS blog quotes athenahealth's own Karpenter-managed production EKS clusters, dated 2025-05-08 within the window",
 			"record": {
 				"industry": "Healthcare technology",
-				"description": "athenahealth strives to cure complexity and simplify the practice of healthcare. Our innovative technology includes electronic health records, revenue cycle management, and patient engagement solutions that help healthcare providers, administrators, and practices eliminate friction for patients while getting paid efficiently. athenahealth partners with practices with purpose-built software backed by expertise to produce the insights needed to drive better clinical and financial outcomes. We’re inspired by our vision to create a thriving ecosystem that delivers accessible, high-quality, and sustainable healthcare for all. \n\nOur vibrant and talented employees spark the innovation and passion needed to accomplish our goals. We continue to expand our workforce with amazing people who bring diverse backgrounds, experiences, and perspectives at every level, and foster an environment where we each feel comfortable bringing their best selves to work. \n\nOur dedication to creating an exceptional workplace has been recognized with several prestigious awards. We've been honored as a 2024 Top Workplaces USA, named a Forbes 2024 America's Best Mid-Size employers, and celebrated as one of 2023 Glassdoor Best Large Companies to Work For. Additionally, we've been acknowledged as a 2023 Top Workplace in Austin, one of the 2023 Best Places to Work in Maine and a 2023 Top Workplace in MA by the Boston Globe. These accolades are a testament to our vibrant and diverse team that fuels innovation at athenahealth. ",
+				"description": "athenahealth strives to cure complexity and simplify the practice of healthcare. Our innovative technology includes electronic health records, revenue cycle management, and patient engagement solutions that help healthcare providers, administrators, and practices eliminate friction for patients while getting paid efficiently. athenahealth partners with practices with purpose-built software backed by expertise to produce the insights needed to drive better clinical and financial outcomes. We\u2019re inspired by our vision to create a thriving ecosystem that delivers accessible, high-quality, and sustainable healthcare for all. \n\nOur vibrant and talented employees spark the innovation and passion needed to accomplish our goals. We continue to expand our workforce with amazing people who bring diverse backgrounds, experiences, and perspectives at every level, and foster an environment where we each feel comfortable bringing their best selves to work. \n\nOur dedication to creating an exceptional workplace has been recognized with several prestigious awards. We've been honored as a 2024 Top Workplaces USA, named a Forbes 2024 America's Best Mid-Size employers, and celebrated as one of 2023 Glassdoor Best Large Companies to Work For. Additionally, we've been acknowledged as a 2023 Top Workplace in Austin, one of the 2023 Best Places to Work in Maine and a 2023 Top Workplace in MA by the Boston Globe. These accolades are a testament to our vibrant and diverse team that fuels innovation at athenahealth. ",
 				"workforceTotal": 6409,
 				"country": "United States",
 				"foundedYear": 1997,
@@ -92,13 +93,13 @@
 			}
 		},
 		"bet365.com": {
-			"label": null,
+			"label": "accept",
 			"name": "bet365",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Online gambling",
-				"description": "We’re one of the world’s leading online gambling companies, revolutionising the industry since 2000. Founded by Denise Coates CBE, we now employ over 10,000 people and serve over 120 million customers in 26 languages. \n \nWe empower our employees to push boundaries and explore new ideas, cultivating a culture that celebrates and rewards creativity. This offers employees a wealth of growth opportunities, giving them the opportunity to make a real impact in the world of online gambling. As a forward-thinking company, we’re breaking new ground in software innovation too, redefining what’s possible for our global worldwide.\n \nOur focus on In-Play betting has solidified our market-leading position, featuring more than 1.38 million In-Play sporting events a year. With over 750 concurrent sporting fixtures at peak and more live sports streamed than anyone else in Europe (750,000), we handle over 6 million HTTP requests daily and process more than 1.5 million bets per hour at peak.",
+				"description": "We\u2019re one of the world\u2019s leading online gambling companies, revolutionising the industry since 2000. Founded by Denise Coates CBE, we now employ over 10,000 people and serve over 120 million customers in 26 languages. \n \nWe empower our employees to push boundaries and explore new ideas, cultivating a culture that celebrates and rewards creativity. This offers employees a wealth of growth opportunities, giving them the opportunity to make a real impact in the world of online gambling. As a forward-thinking company, we\u2019re breaking new ground in software innovation too, redefining what\u2019s possible for our global worldwide.\n \nOur focus on In-Play betting has solidified our market-leading position, featuring more than 1.38 million In-Play sporting events a year. With over 750 concurrent sporting fixtures at peak and more live sports streamed than anyone else in Europe (750,000), we handle over 6 million HTTP requests daily and process more than 1.5 million bets per hour at peak.",
 				"workforceTotal": 5136,
 				"country": "United Kingdom",
 				"foundedYear": 2000,
@@ -106,7 +107,8 @@
 				"citedDate": "2025-12-03",
 				"quote": "The core services are written in Go and run in containerised environments managed through Kubernetes (via GKE).",
 				"fitReason": "UK online gambling operator, ~5136 staff, runs Go core services on Kubernetes/GKE; no PKI detail found."
-			}
+			},
+			"note": "5,136 staff, UK, online gambling; a trade-press article quotes bet365's own core services running in Kubernetes via GKE, dated 2025-12-03 within the window"
 		},
 		"blog.gov.uk": {
 			"label": "reject:no-such-event",
@@ -116,7 +118,7 @@
 			"note": "the only cited Kubernetes evidence, GDS's own Istio routing post, is dated 2020-07-30, far outside the 730-day window ending 2026-09-03",
 			"record": {
 				"industry": null,
-				"description": "The Government Digital Service (GDS) is the digital centre of government — we are responsible for setting, leading and delivering the vision for a modern digital government.\n\nOur priorities are to drive a modern digital government, by:\n\n1. joining up public sector services\n2. harnessing the power of AI for the public good\n3. strengthening and extending our digital and data public infrastructure\n4. elevating leadership and investing in talent\n5. funding for outcomes and procuring for growth and innovation\n6. committing to transparency and driving accountability\n\nWe are home to the Incubator for Artificial Intelligence (I.AI), the world-leading GOV.UK and at the forefront of coordinating the UK’s geospatial strategy and activity. \n\nWe lead the Government Digital and Data function and champion the work of digital teams across government.\n\nWe’re part of the Department for Science, Innovation and Technology (DSIT) and employ more than 1,000 people all over the UK, with hubs in Manchester, London and Bristol. \n\nThe Government Digital Service is where talent translates into impact. From your first day, you’ll be working with some of the world’s most highly-skilled digital professionals, all contributing their knowledge to make change on a national scale. \n\nJoin us for rewarding work that makes a difference across the UK. You'll solve some of the nation’s highest-priority digital challenges, helping millions of people access services they need.\n\nLearn more about a rewarding career in digital government: https://www.civil-service-careers.gov.uk/professions/working-in-digital-data-and-technology/\n\nDownload the GOV.UK App: https://www.gov.uk/guidance/download-the-govuk-app",
+				"description": "The Government Digital Service (GDS) is the digital centre of government \u2014 we are responsible for setting, leading and delivering the vision for a modern digital government.\n\nOur priorities are to drive a modern digital government, by:\n\n1. joining up public sector services\n2. harnessing the power of AI for the public good\n3. strengthening and extending our digital and data public infrastructure\n4. elevating leadership and investing in talent\n5. funding for outcomes and procuring for growth and innovation\n6. committing to transparency and driving accountability\n\nWe are home to the Incubator for Artificial Intelligence (I.AI), the world-leading GOV.UK and at the forefront of coordinating the UK\u2019s geospatial strategy and activity. \n\nWe lead the Government Digital and Data function and champion the work of digital teams across government.\n\nWe\u2019re part of the Department for Science, Innovation and Technology (DSIT) and employ more than 1,000 people all over the UK, with hubs in Manchester, London and Bristol. \n\nThe Government Digital Service is where talent translates into impact. From your first day, you\u2019ll be working with some of the world\u2019s most highly-skilled digital professionals, all contributing their knowledge to make change on a national scale. \n\nJoin us for rewarding work that makes a difference across the UK. You'll solve some of the nation\u2019s highest-priority digital challenges, helping millions of people access services they need.\n\nLearn more about a rewarding career in digital government: https://www.civil-service-careers.gov.uk/professions/working-in-digital-data-and-technology/\n\nDownload the GOV.UK App: https://www.gov.uk/guidance/download-the-govuk-app",
 				"workforceTotal": 743,
 				"country": "United Kingdom",
 				"foundedYear": 2011,
@@ -134,7 +136,7 @@
 			"note": "BMW Group employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Automotive manufacturing",
-				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world’s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was € 10.2 billion on revenues amounting to € 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group’s corporate strategy and covers all products – from the supply chain through production to the end of their useful life. ",
+				"description": "With its four brands, BMW, MINI, Rolls-Royce and BMW Motorrad, the BMW Group is the world\u2019s leading premium manufacturer of automobiles and motorcycles and also provides premium financial services. The BMW Group production network comprises over 30 production sites worldwide; the company has a global sales network in more than 140 countries.\n\nIn 2025, the BMW Group sold 2.46 million passenger vehicles and more than 202,500 motorcycles worldwide. The profit before tax in the financial year 2025 was \u20ac 10.2 billion on revenues amounting to \u20ac 133,5 billion. As of 31 December 2025, the BMW Group had a workforce of 154,540 employees.\n\nThe economic success of the BMW Group has always been based on long-term thinking and respon-sible action. Sustainability is a key element of the BMW Group\u2019s corporate strategy and covers all products \u2013 from the supply chain through production to the end of their useful life. ",
 				"workforceTotal": 33715,
 				"country": "Germany",
 				"foundedYear": 1916,
@@ -152,13 +154,13 @@
 			"note": "BT Group employs roughly 80,000 to 100,000 people worldwide, far past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Telecommunications",
-				"description": "We’re one of the world’s leading communications services companies. At BT Group, the solutions we sell are integral to modern life. Our purpose is as simple as it is ambitious: we connect for good. \n\nThere are no limits to what people can do when they connect. And as technology changes our world, connections are becoming even more important to everyday life.\n\nToday, that’s truer than ever. The connections we make are helping solve the world’s biggest challenges such as the global pandemic, climate change and cyber security. Through the power of technology, we’re supporting customers to live, work and play together better.\n",
+				"description": "We\u2019re one of the world\u2019s leading communications services companies. At BT Group, the solutions we sell are integral to modern life. Our purpose is as simple as it is ambitious: we connect for good. \n\nThere are no limits to what people can do when they connect. And as technology changes our world, connections are becoming even more important to everyday life.\n\nToday, that\u2019s truer than ever. The connections we make are helping solve the world\u2019s biggest challenges such as the global pandemic, climate change and cyber security. Through the power of technology, we\u2019re supporting customers to live, work and play together better.\n",
 				"workforceTotal": 30657,
 				"country": "United Kingdom",
 				"foundedYear": 1969,
 				"citedPage": "https://colocatedeventsna2025.sched.com/event/2AotI/scaling-flux-at-bt-a-multi-cluster-telco-migration-journey-chris-morandi-bt",
 				"citedDate": "2025-11-10",
-				"quote": "This talk presents BT’s real-world journey migrating from traditional GitLab and Terraform-driven deployments to a fully GitOps-based workflow using Flux, rolled out across more than 30 Kubernetes clusters at telco scale.",
+				"quote": "This talk presents BT\u2019s real-world journey migrating from traditional GitLab and Terraform-driven deployments to a fully GitOps-based workflow using Flux, rolled out across more than 30 Kubernetes clusters at telco scale.",
 				"fitReason": "BT Group is a UK telecom with in-house GitOps team running 30+ Kubernetes clusters at telco scale."
 			}
 		},
@@ -170,7 +172,7 @@
 			"note": "1,453 staff, US, consumer payments; AWS blog quotes Cash App's own cloud platform team running a shared EKS platform with hundreds of services and 10,000+ pods, dated 2025-05-29 within the window",
 			"record": {
 				"industry": "Consumer payments",
-				"description": "It all started with an idea at Block in 2013. Initially built to take the pain out of peer-to-peer payments, Cash App has gone from a simple product with a single purpose to a dynamic ecosystem, developing unique financial products, including Afterpay, to provide a better way to send, spend, invest, borrow and save to our 50+ million monthly active customers. We want to redefine the world’s relationship with money to make it more relatable, instantly available, and universally accessible. This is our mission, and it’s why working at Cash App means so much more than a job.\n\n\nToday, Cash App has thousands of employees working globally across office and remote locations, with a culture geared toward innovation, collaboration and impact. We’ve been a distributed team since day one, and many of our roles can be done remotely from the countries where Cash App operates. No matter the location, we tailor our experience to ensure our employees are creative, productive, and happy.",
+				"description": "It all started with an idea at Block in 2013. Initially built to take the pain out of peer-to-peer payments, Cash App has gone from a simple product with a single purpose to a dynamic ecosystem, developing unique financial products, including Afterpay, to provide a better way to send, spend, invest, borrow and save to our 50+ million monthly active customers. We want to redefine the world\u2019s relationship with money to make it more relatable, instantly available, and universally accessible. This is our mission, and it\u2019s why working at Cash App means so much more than a job.\n\n\nToday, Cash App has thousands of employees working globally across office and remote locations, with a culture geared toward innovation, collaboration and impact. We\u2019ve been a distributed team since day one, and many of our roles can be done remotely from the countries where Cash App operates. No matter the location, we tailor our experience to ensure our employees are creative, productive, and happy.",
 				"workforceTotal": 1453,
 				"country": "United States",
 				"foundedYear": 2013,
@@ -188,7 +190,7 @@
 			"note": "552 staff, UK, regulated banking-infrastructure provider; cited case study shows over 25% of infrastructure on AKS Kubernetes processing 20 million payments a month",
 			"record": {
 				"industry": null,
-				"description": "Leading brands – from fintechs and banks to digital asset platforms and large-scale corporates – use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
+				"description": "Leading brands \u2013 from fintechs and banks to digital asset platforms and large-scale corporates \u2013 use our API to benefit from our fully regulated banking infrastructure and real-time payments access.",
 				"workforceTotal": 552,
 				"country": "United Kingdom",
 				"foundedYear": 2015,
@@ -224,7 +226,7 @@
 			"note": "5,024 staff, US, medical-device maker with a cited case study quoting Dexcom Cloud Engineering running a platform on GKE for hundreds of developers; treated as fitting the downtime-critical vertical given FDA-regulated real-time patient monitoring, though the record itself flags no explicit downtime-reporting citation",
 			"record": {
 				"industry": "Medical devices",
-				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people’s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
+				"description": "Empowering People to Take Control of Health\n\nDexcom Corporation (NASDAQ DXCM) has been a pioneer in glucose sensing for more than 25 years. Since 1999, we have developed innovative technologies that transformed how people manage diabetes. Our products are part of people\u2019s daily lives, empowering them to live confidently and feel more in control, free to pursue their dreams. \n\nHeadquartered in San Diego, California, with operations around the world, Dexcom leads by listening to the needs of users, caregivers, and providers, to simplify and improve glucose management.",
 				"workforceTotal": 5024,
 				"country": "United States",
 				"foundedYear": 1999,
@@ -242,7 +244,7 @@
 			"note": "4,387 staff, US, online gambling; DraftKings' own engineering blog quotes thousands of microservice instances hosted mostly on Kubernetes, dated 2024-09-16, within the 730-day window",
 			"record": {
 				"industry": "Online gambling",
-				"description": "It's simple, we believe life is more fun when you're in on the action. For that reason, we’re committed to responsibly creating the world’s favorite games and betting experiences.\n\nAt DraftKings, The Crown Is Yours. \n\nWe are driven by the thrill of the future and the pull of possibility. As an original, continuous gamechanger, we’re shaping the present and future of sports entertainment and digital experiences, leading the way into new markets with new products, and providing the ultimate experience to our customers. \n\nHere, we believe in the power and impact that comes from innovation, collaboration, and a winning culture. We’re a strong and dedicated global team of 4,000+ teammates driven to achieve great things. From your very first day, you’ll be part of an amazing culture that welcomes your ideas, champions your growth, and values you for you. \n\nReady to own what’s next?",
+				"description": "It's simple, we believe life is more fun when you're in on the action. For that reason, we\u2019re committed to responsibly creating the world\u2019s favorite games and betting experiences.\n\nAt DraftKings, The Crown Is Yours. \n\nWe are driven by the thrill of the future and the pull of possibility. As an original, continuous gamechanger, we\u2019re shaping the present and future of sports entertainment and digital experiences, leading the way into new markets with new products, and providing the ultimate experience to our customers. \n\nHere, we believe in the power and impact that comes from innovation, collaboration, and a winning culture. We\u2019re a strong and dedicated global team of 4,000+ teammates driven to achieve great things. From your very first day, you\u2019ll be part of an amazing culture that welcomes your ideas, champions your growth, and values you for you. \n\nReady to own what\u2019s next?",
 				"workforceTotal": 4387,
 				"country": "United States",
 				"foundedYear": 2012,
@@ -253,13 +255,13 @@
 			}
 		},
 		"edreamsodigeo.com": {
-			"label": null,
+			"label": "accept",
 			"name": "eDreams ODIGEO",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Online travel",
-				"description": "eDreams ODIGEO is the world’s leading travel subscription platform. It pioneered Prime, the first and largest travel subscription programme, which has topped over 8 million members since launching in 2017. Prime members are subscribed to global travel, gaining access to a comprehensive multi-product offering for all their travel needs including hotels, rail, flights, dynamic packages, and car rental, among others compounded by industry-leading flexibility features and exclusive, member-only benefits. This entire Prime experience is powered by a proprietary, industry-leading AI platform that delivers a hyper-personalised service to its members. Listed on the Spanish Stock Market, the Company operates in 44 markets through its renowned brands eDreams, GO Voyages, Opodo, Travellink, and the metasearch engine Liligo to deliver a smarter, hyper-personalised, and comprehensive travel experience globally.",
+				"description": "eDreams ODIGEO is the world\u2019s leading travel subscription platform. It pioneered Prime, the first and largest travel subscription programme, which has topped over 8 million members since launching in 2017. Prime members are subscribed to global travel, gaining access to a comprehensive multi-product offering for all their travel needs including hotels, rail, flights, dynamic packages, and car rental, among others compounded by industry-leading flexibility features and exclusive, member-only benefits. This entire Prime experience is powered by a proprietary, industry-leading AI platform that delivers a hyper-personalised service to its members. Listed on the Spanish Stock Market, the Company operates in 44 markets through its renowned brands eDreams, GO Voyages, Opodo, Travellink, and the metasearch engine Liligo to deliver a smarter, hyper-personalised, and comprehensive travel experience globally.",
 				"workforceTotal": 1724,
 				"country": "Spain",
 				"foundedYear": 2000,
@@ -267,16 +269,17 @@
 				"citedDate": "2026-05-20",
 				"quote": "Contribute to the evolution of our Kubernetes based platforms, including multi cluster and multi region setups",
 				"fitReason": "Travel subscription platform, 1724 employees in Barcelona, multi-cluster Kubernetes per careers page; no cert-mgmt data."
-			}
+			},
+			"note": "1,724 staff, Spain, online travel subscription platform; the company's own careers page quotes evolving its multi-cluster, multi-region Kubernetes platforms, dated 2026-05-20 within the window"
 		},
 		"elisa.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Elisa",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Telecommunications",
-				"description": "Tehtävämme on tehdä digitaalisesta elämästä sujuvampaa. Vähentää kitkaa, karsia hälinää ja lisätä luottamusta. Jotta jokaiselle vapautuu enemmän tilaa onnellisuudelle. Yhtä lailla töissä kuin vapaa-ajalla.​\n​\nTervetuloa tutustumaan tekoihimme, ideoihimme ja ihmisiimme.​\n​\n---​\n​\nWe're here to make digital life better. To reduce friction, cut through clutter, and build trust. So that everyone has more freedom to shape their own happiness. Both at work and outside it.​\n​\nFollow us to explore our ideas, meet our experts, and see our work in action.​",
+				"description": "Teht\u00e4v\u00e4mme on tehd\u00e4 digitaalisesta el\u00e4m\u00e4st\u00e4 sujuvampaa. V\u00e4hent\u00e4\u00e4 kitkaa, karsia h\u00e4lin\u00e4\u00e4 ja lis\u00e4t\u00e4 luottamusta. Jotta jokaiselle vapautuu enemm\u00e4n tilaa onnellisuudelle. Yht\u00e4 lailla t\u00f6iss\u00e4 kuin vapaa-ajalla.\u200b\n\u200b\nTervetuloa tutustumaan tekoihimme, ideoihimme ja ihmisiimme.\u200b\n\u200b\n---\u200b\n\u200b\nWe're here to make digital life better. To reduce friction, cut through clutter, and build trust. So that everyone has more freedom to shape their own happiness. Both at work and outside it.\u200b\n\u200b\nFollow us to explore our ideas, meet our experts, and see our work in action.\u200b",
 				"workforceTotal": 2159,
 				"country": "Finland",
 				"foundedYear": 1882,
@@ -284,7 +287,8 @@
 				"citedDate": "2025-08-14",
 				"quote": "Earlier this year, the Radiator team was approached by one of our long-time Tier 1 operator customers, Elisa, to transform their existing fixed-line authentication Radiator AAA setup into a containerised solution running in Kubernetes environment.",
 				"fitReason": "Finnish telecom, 2159 employees; case study shows containerised Kubernetes AAA system for Tier 1 operator."
-			}
+			},
+			"note": "2,159 staff, Finland, telecom operator; a vendor case study quotes transforming Elisa's fixed-line authentication system into a containerised Kubernetes solution, dated 2025-08-14 within the window"
 		},
 		"eonenergy.com": {
 			"label": null,
@@ -294,13 +298,13 @@
 			"note": "undecidable: the only citation is a personal LinkedIn post about attending KubeCon, not a company engineering source, and gives no concrete detail on production Kubernetes use or in-house ownership, which the record's own fitReason flags as unstated",
 			"record": {
 				"industry": "Energy utilities",
-				"description": "It's on us to make new energy work.\n\nWe’re E.ON UK, leading the energy transition for a more sustainable future. As part of the E.ON group, we’re also one of Europe’s largest operators of energy networks and energy infrastructure, and a provider of innovative customer solutions.\n\nThrough E.ON Next, E.ON and Npower Business Solutions, our mission is to help make energy more affordable and sustainable across homes, businesses, cities and communities.\n\nWe're committed to making energy greener, smarter, and more sustainable for a better tomorrow.",
+				"description": "It's on us to make new energy work.\n\nWe\u2019re E.ON UK, leading the energy transition for a more sustainable future. As part of the E.ON group, we\u2019re also one of Europe\u2019s largest operators of energy networks and energy infrastructure, and a provider of innovative customer solutions.\n\nThrough E.ON Next, E.ON and Npower Business Solutions, our mission is to help make energy more affordable and sustainable across homes, businesses, cities and communities.\n\nWe're committed to making energy greener, smarter, and more sustainable for a better tomorrow.",
 				"workforceTotal": 1489,
 				"country": "United Kingdom",
 				"foundedYear": 1989,
 				"citedPage": "https://www.linkedin.com/posts/sam-julian-228b5325_eon-at-kubecon-london-lets-talk-about-activity-7312774495742685185-h_5o",
 				"citedDate": "2025-04-01",
-				"quote": "E.ON at KubeCon London! Let’s talk about the technology foundation of the new Energy Operating Model.",
+				"quote": "E.ON at KubeCon London! Let\u2019s talk about the technology foundation of the new Energy Operating Model.",
 				"fitReason": "E.ON UK is an energy utility of qualifying size presenting at KubeCon about its tech foundation, but ownership details unstated."
 			}
 		},
@@ -312,13 +316,13 @@
 			"note": "Expedia Group employs well over 15,000 people worldwide, past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Travel booking",
-				"description": "Expedia Group, Inc. (NASDAQ: EXPE) is the global travel marketplace with one purpose: to help travelers explore the world, one journey at a time. Expedia Group™ connects travelers, partners, and advertisers through its trusted brands, leading technology, and rich first-party data, delivering predictive, personalized experiences that shape the future of travel.\n\nExpedia Group’s ecosystem includes three flagship consumer brands – Expedia®, Hotels.com®, and Vrbo® – the largest B2B travel business, and a premier advertising network. Guided by an experienced and passionate global team, Expedia Group helps millions of travelers in more than 70 countries explore the world with confidence and ease.\n\nWe’re committed to providing an inclusive and accessible recruiting experience for candidates with disabilities, or other physical or mental health conditions. If you require an accommodation or adjustment for any part of the application or recruitment process, please let us know by completing our Accommodation Request Form or contacting your recruiter.\n\nEmployment opportunities and job offers at Expedia Group will always come from Expedia Group’s Talent Acquisition and hiring teams. Never provide sensitive, personal information to someone unless you’re confident about who they are. We do not send job offers via email, or any other messaging tools, to individuals we have not had prior contact with. Our email domain is @expediagroup.com. Our official careers website, where you can to find and apply for job openings, is careers.expediagroup.com/jobs.\n\nIf you require customer service support to cancel, change or ask about a refund for your trip, you can connect with our 24/7 Virtual Agent through the following links:\nExpedia: https://www.expedia.com/helpcenter\nHotels.com: https://service.hotels.com/en-us/\nVrbo: https://help.vrbo.com/\nFor additional assistance, direct message us on Twitter @ExpediaHelp with your itinerary number and email address: https://twitter.com/ExpediaHelp",
+				"description": "Expedia Group, Inc. (NASDAQ: EXPE) is the global travel marketplace with one purpose: to help travelers explore the world, one journey at a time. Expedia Group\u2122 connects travelers, partners, and advertisers through its trusted brands, leading technology, and rich first-party data, delivering predictive, personalized experiences that shape the future of travel.\n\nExpedia Group\u2019s ecosystem includes three flagship consumer brands \u2013 Expedia\u00ae, Hotels.com\u00ae, and Vrbo\u00ae \u2013 the largest B2B travel business, and a premier advertising network. Guided by an experienced and passionate global team, Expedia Group helps millions of travelers in more than 70 countries explore the world with confidence and ease.\n\nWe\u2019re committed to providing an inclusive and accessible recruiting experience for candidates with disabilities, or other physical or mental health conditions. If you require an accommodation or adjustment for any part of the application or recruitment process, please let us know by completing our Accommodation Request Form or contacting your recruiter.\n\nEmployment opportunities and job offers at Expedia Group will always come from Expedia Group\u2019s Talent Acquisition and hiring teams. Never provide sensitive, personal information to someone unless you\u2019re confident about who they are. We do not send job offers via email, or any other messaging tools, to individuals we have not had prior contact with. Our email domain is @expediagroup.com. Our official careers website, where you can to find and apply for job openings, is careers.expediagroup.com/jobs.\n\nIf you require customer service support to cancel, change or ask about a refund for your trip, you can connect with our 24/7 Virtual Agent through the following links:\nExpedia: https://www.expedia.com/helpcenter\nHotels.com: https://service.hotels.com/en-us/\nVrbo: https://help.vrbo.com/\nFor additional assistance, direct message us on Twitter @ExpediaHelp with your itinerary number and email address: https://twitter.com/ExpediaHelp",
 				"workforceTotal": 10447,
 				"country": "United States",
 				"foundedYear": 1996,
 				"citedPage": "https://careers.expediagroup.com/blog/reflections-from-the-kubecon-india-2025-conference/",
 				"citedDate": "2025-08-20",
-				"quote": "Highlights included two keynote speakers presenting “Pushing the Limits: Scaling ArgoCD’s Repo-Server to Handle 30K Applications,” showcasing our engineering innovation at scale.",
+				"quote": "Highlights included two keynote speakers presenting \u201cPushing the Limits: Scaling ArgoCD\u2019s Repo-Server to Handle 30K Applications,\u201d showcasing our engineering innovation at scale.",
 				"fitReason": "Expedia is a US travel marketplace with in-house engineering scaling Kubernetes/ArgoCD, matching size and region criteria."
 			}
 		},
@@ -336,7 +340,7 @@
 				"foundedYear": 2009,
 				"citedPage": "https://mindera.com/blog/fanduel-modernises-systems-to-fuel-growth",
 				"citedDate": "2025-12-15",
-				"quote": "The chosen strategy was to migrate all FanDuel’s services to AWS Kubernetes.",
+				"quote": "The chosen strategy was to migrate all FanDuel\u2019s services to AWS Kubernetes.",
 				"fitReason": "Online gambling operator, 3284 staff in US; vendor blog confirms AWS Kubernetes migration but no ownership or PKI detail."
 			}
 		},
@@ -354,18 +358,18 @@
 				"foundedYear": 2000,
 				"citedPage": "https://www.geotab.com/blog/people-at-geotab-bryan-karp/",
 				"citedDate": "2025-08-14",
-				"quote": "Since then, Bryan helped modernize parts of Geotab’s technology stack, supporting and guiding the team on early implementations of Kubernetes and Istio.",
+				"quote": "Since then, Bryan helped modernize parts of Geotab\u2019s technology stack, supporting and guiding the team on early implementations of Kubernetes and Istio.",
 				"fitReason": "Automotive fleet company, North American mid-size firm, blog shows in-house Kubernetes/Istio use; no cert evidence."
 			}
 		},
 		"gitlab.com": {
-			"label": null,
+			"label": "accept",
 			"name": "GitLab",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "DevOps software",
-				"description": "GitLab is the Intelligent Orchestration Platform where software teams and their AI agents stay in flow to amplify their capacity for innovation. Together, they automate repetitive tasks to plan, build, secure, test, deploy and maintain software. With GitLab, software teams spend less time on coordination overhead and more time on the next big idea.\n\nGitLab Duo Agent Platform provides AI agents that automate tasks across the software lifecycle. Agents handle code generation, security analysis, code review, CI/CD troubleshooting, and custom workflows — while teams maintain control through enterprise governance.\n\nBuild what's next with us. Explore open roles and join our talent community: https://about.gitlab.com/jobs/",
+				"description": "GitLab is the Intelligent Orchestration Platform where software teams and their AI agents stay in flow to amplify their capacity for innovation. Together, they automate repetitive tasks to plan, build, secure, test, deploy and maintain software. With GitLab, software teams spend less time on coordination overhead and more time on the next big idea.\n\nGitLab Duo Agent Platform provides AI agents that automate tasks across the software lifecycle. Agents handle code generation, security analysis, code review, CI/CD troubleshooting, and custom workflows \u2014 while teams maintain control through enterprise governance.\n\nBuild what's next with us. Explore open roles and join our talent community: https://about.gitlab.com/jobs/",
 				"workforceTotal": 2335,
 				"country": "United States",
 				"foundedYear": 2014,
@@ -373,7 +377,8 @@
 				"citedDate": "2025-12-01",
 				"quote": "Kubernetes: Deploys containerized GitLab components via our Helm chart.",
 				"fitReason": "GitLab is a SaaS DevOps platform, 2335 staff in SF, runs Kubernetes-based infra for its own customers."
-			}
+			},
+			"note": "2,335 staff, US, DevOps SaaS platform; GitLab's own blog quotes deploying containerized GitLab components via Kubernetes and Helm, dated 2025-12-01 within the window"
 		},
 		"gocardless.com": {
 			"label": "reject:no-such-event",
@@ -383,7 +388,7 @@
 			"note": "the only cited Kubernetes evidence, GoCardless' own containers-in-production post, is dated 2019-07-08, far outside the 730-day window ending 2026-09-03",
 			"record": {
 				"industry": null,
-				"description": "Welcome to the new era of payments. Collect one-off, automated, or recurring payments – directly from your customer's bank account to yours. Putting an end to late payments, chasing customers, stress, and expensive fees. It's just cash, flowing from one account to another. Join 100,000 businesses of all sizes, worldwide, who trust us to power their payments.",
+				"description": "Welcome to the new era of payments. Collect one-off, automated, or recurring payments \u2013 directly from your customer's bank account to yours. Putting an end to late payments, chasing customers, stress, and expensive fees. It's just cash, flowing from one account to another. Join 100,000 businesses of all sizes, worldwide, who trust us to power their payments.",
 				"workforceTotal": 668,
 				"country": "United Kingdom",
 				"foundedYear": 2011,
@@ -394,7 +399,7 @@
 			}
 		},
 		"gomotive.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Motive",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
@@ -408,24 +413,26 @@
 				"citedDate": "2025-02-25",
 				"quote": "Building on the Triton framework with considerable optimizations and design choices, and running in a fully distributed and containerized fashion across Kubernetes, allows us to continually scale with the product and our customer base without a corresponding rise in operational costs.",
 				"fitReason": "Fleet SaaS platform, 6246 employees in US, in-house Kubernetes engineering evidenced by Medium blog; no cert-mgmt data."
-			}
+			},
+			"note": "6,246 staff, US, fleet-management SaaS (automotive vertical); Motive's own engineering blog quotes running fully distributed, containerized AI inference across Kubernetes, dated 2025-02-25 within the window"
 		},
 		"grammarly.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Grammarly",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Business software",
-				"description": "Grammarly stands with Ukraine. We invite you to do the same. Here are some ways you can help: gram.ly/WeStandWithUkraine \n---\nGrammarly is the world’s leading AI writing assistance company trusted by over 40 million people and 50,000 organizations every day. From instantly creating a first draft to perfecting every message, Grammarly helps people at 96% of the Fortune 500 get their point across—and get results—without compromising security or privacy. We believe that great writing gets work done. \n\nGrammarly’s product offerings—Grammarly Business, Grammarly Premium, Grammarly Free, and Grammarly for Education—work where you do, delivering contextually relevant writing support across over 500,000 apps and websites. \n\nFounded in 2009, Grammarly is No. 7 on the Forbes Cloud 100, one of TIME’s 100 Most Influential Companies, one of Fast Company’s Most Innovative Companies in AI, and one of Inc.’s Best Workplaces. Grammarly offers a dynamic hybrid working model. This approach helps foster trust, innovation, and a strong team culture, with the flexibility of working from home, whenever you need focus time.\n",
+				"description": "Grammarly stands with Ukraine. We invite you to do the same. Here are some ways you can help: gram.ly/WeStandWithUkraine \n---\nGrammarly is the world\u2019s leading AI writing assistance company trusted by over 40 million people and 50,000 organizations every day. From instantly creating a first draft to perfecting every message, Grammarly helps people at 96% of the Fortune 500 get their point across\u2014and get results\u2014without compromising security or privacy. We believe that great writing gets work done. \n\nGrammarly\u2019s product offerings\u2014Grammarly Business, Grammarly Premium, Grammarly Free, and Grammarly for Education\u2014work where you do, delivering contextually relevant writing support across over 500,000 apps and websites. \n\nFounded in 2009, Grammarly is No. 7 on the Forbes Cloud 100, one of TIME\u2019s 100 Most Influential Companies, one of Fast Company\u2019s Most Innovative Companies in AI, and one of Inc.\u2019s Best Workplaces. Grammarly offers a dynamic hybrid working model. This approach helps foster trust, innovation, and a strong team culture, with the flexibility of working from home, whenever you need focus time.\n",
 				"workforceTotal": 701,
 				"country": "United States",
 				"foundedYear": 2009,
 				"citedPage": "https://www.grammarly.com/blog/engineering/the-great-linkerd-mystery/",
 				"citedDate": "2025-07-24",
-				"quote": "When we completed the migration of our text processing platform (i.e., the core services that analyze and improve users’ writing, which we call the data plane) from a legacy container service to our new Kubernetes-based data plane on AWS, we expected the usual growing pains.",
+				"quote": "When we completed the migration of our text processing platform (i.e., the core services that analyze and improve users\u2019 writing, which we call the data plane) from a legacy container service to our new Kubernetes-based data plane on AWS, we expected the usual growing pains.",
 				"fitReason": "SaaS writing tool, 701 employees in San Francisco, in-house Kubernetes data plane per engineering blog; no cert-mgmt data."
-			}
+			},
+			"note": "701 staff, US, AI writing SaaS; Grammarly's own engineering blog quotes migrating its core text-processing platform to a Kubernetes-based data plane, dated 2025-07-24 within the window"
 		},
 		"guidewire.com": {
 			"label": "accept",
@@ -435,14 +442,14 @@
 			"note": "3,184 staff, US, a P&C insurance SaaS platform; Guidewire's own engineering blog quotes teams running EKS in production, dated 2025-04-07 within the window",
 			"record": {
 				"industry": "Property insurance",
-				"description": "Guidewire is the platform P&C insurers trust to engage, innovate, and grow efficiently. More than 570 insurers in 43 countries, from new ventures to the largest and most complex in the world, rely on Guidewire products. With core systems leveraging data and analytics, digital, and artificial intelligence, Guidewire defines cloud platform excellence for P&C insurers.\n\nWe are proud of our unparalleled implementation record, with 1,700+ successful projects supported by the industry’s largest R&D team and SI partner ecosystem. Our marketplace represents the largest partner community in P&C, where customers can access hundreds of applications to accelerate integration, localization, and innovation.\n\nFor more information, please visit https://www.guidewire.com/.",
+				"description": "Guidewire is the platform P&C insurers trust to engage, innovate, and grow efficiently. More than 570 insurers in 43 countries, from new ventures to the largest and most complex in the world, rely on Guidewire products. With core systems leveraging data and analytics, digital, and artificial intelligence, Guidewire defines cloud platform excellence for P&C insurers.\n\nWe are proud of our unparalleled implementation record, with 1,700+ successful projects supported by the industry\u2019s largest R&D team and SI partner ecosystem. Our marketplace represents the largest partner community in P&C, where customers can access hundreds of applications to accelerate integration, localization, and innovation.\n\nFor more information, please visit https://www.guidewire.com/.",
 				"workforceTotal": 3184,
 				"country": "United States",
 				"foundedYear": 2001,
 				"citedPage": "https://medium.com/guidewire-engineering-blog/policy-driven-multi-cluster-management-with-kubernetes-906ca96958c3",
 				"citedDate": "2025-04-07",
 				"quote": "This improvement enhances security and makes it easier for OCM to integrate with cloud-native environments, especially for teams running EKS in production.",
-				"fitReason": "Guidewire is a 3184‑employee SaaS insurance platform in the US running production EKS clusters for direct insurer customers."
+				"fitReason": "Guidewire is a 3184\u2011employee SaaS insurance platform in the US running production EKS clusters for direct insurer customers."
 			}
 		},
 		"home.saxo": {
@@ -471,13 +478,13 @@
 			"note": "HubSpot is a US SaaS company of roughly 7,000-8,000 employees whose engineering blog has publicly documented its move to Kubernetes and EKS",
 			"record": {
 				"industry": "Customer software",
-				"description": "HubSpot is a leading agentic customer platform that provides software and support to help businesses grow better. Our platform includes marketing, sales, service, and website management products that start free and scale to meet our customers’ needs at any stage of growth. Today, thousands of customers around the world use our powerful and easy-to-use tools and integrations to attract, engage, and delight customers.\n\nHubSpot's award-winning culture has been recognized by Glassdoor, Great Place to Work, Comparably, Fortune, Entrepreneur, Inc., and more. We build connections, careers, and employee growth by creating a workplace that values flexibility, autonomy, and transparency. You can learn more about our commitment to creating an inclusive and diverse workplace in the HubSpot Culture Code.\n\nHubSpot is a flexible company with employees working fully remotely, from an office, or a mix of the two. We are headquartered in Cambridge, MA with offices in Amsterdam, Berlin, Bogota, Dublin, Ghent, London, Madrid, Paris, San Francisco, Singapore, Sydney, Tokyo and Toronto. \n\nTo learn more about HubSpot, visit www.hubspot.com and to join our team, visit www.hubspot.com/careers",
+				"description": "HubSpot is a leading agentic customer platform that provides software and support to help businesses grow better. Our platform includes marketing, sales, service, and website management products that start free and scale to meet our customers\u2019 needs at any stage of growth. Today, thousands of customers around the world use our powerful and easy-to-use tools and integrations to attract, engage, and delight customers.\n\nHubSpot's award-winning culture has been recognized by Glassdoor, Great Place to Work, Comparably, Fortune, Entrepreneur, Inc., and more. We build connections, careers, and employee growth by creating a workplace that values flexibility, autonomy, and transparency. You can learn more about our commitment to creating an inclusive and diverse workplace in the HubSpot Culture Code.\n\nHubSpot is a flexible company with employees working fully remotely, from an office, or a mix of the two. We are headquartered in Cambridge, MA with offices in Amsterdam, Berlin, Bogota, Dublin, Ghent, London, Madrid, Paris, San Francisco, Singapore, Sydney, Tokyo and Toronto. \n\nTo learn more about HubSpot, visit www.hubspot.com and to join our team, visit www.hubspot.com/careers",
 				"workforceTotal": 8725,
 				"country": "United States",
 				"foundedYear": 2006,
 				"citedPage": "https://product.hubspot.com/blog/cloud-coding-agents-at-hubspot",
 				"citedDate": "2026-01-23",
-				"quote": "Luckily, HubSpot already has a strong culture of building internal infrastructure platforms from scratch – we already have an internal build and deploy system built on top of Kubernetes which runs over one million builds per day and hosts tens of thousands of microservices across approximately 3,000 EC2 instances.",
+				"quote": "Luckily, HubSpot already has a strong culture of building internal infrastructure platforms from scratch \u2013 we already have an internal build and deploy system built on top of Kubernetes which runs over one million builds per day and hosts tens of thousands of microservices across approximately 3,000 EC2 instances.",
 				"fitReason": "SaaS customer platform, US, 8725 employees, internal Kubernetes build system hosting thousands of microservices."
 			}
 		},
@@ -489,14 +496,14 @@
 			"note": "5,206 staff, Sweden, SaaS/ERP platform; IFS' own engineering blog quotes large SaaS deployments spanning multiple Kubernetes clusters across regions, dated 2025-09-20 within the window",
 			"record": {
 				"industry": "Enterprise software",
-				"description": "IFS is the world’s leading provider of Industrial AI software for hardcore businesses that service, power and protect our planet. Our technology enables businesses which manufacture goods, maintain complex assets, and manage service-focused operations to unlock the transformative power of Industrial AI™ to enhance productivity, efficiency, and sustainability. Industrial AI is IFS.ai\n\nIFS Cloud is a fully composable AI-powered platform, designed for ultimate flexibility and adaptability to our customers’ specific requirements and business evolution. It spans the needs of Enterprise Resource Planning (ERP), Enterprise Asset Management (EAM), Supply Chain Management (SCM), Information Technology Service Management (ITSM), and Field Service Management (FSM). IFS technology leverages AI, machine learning, real-time data and analytics to empower our customers to make informed strategic decisions and excel at their Moment of Service™.\n\nIFS was founded in 1983 by five university friends who pitched a tent outside our first customer's site to ensure they would be available 24/7 and the needs of the customer would come first. Since then, IFS has grown into a global leader with over 7,000 employees in 80 countries. Driven by those foundational values of agility, customer-centricity, and trust, IFS is recognized worldwide for delivering value and supporting strategic transformations. We are the most recommended supplier in our sector. Visit ifs.com to learn why.\n\nFollow us on Twitter: @ifs\nFacebook: www.facebook.com/ifsdotcom\nInstagram: www.instagram.com/ifs.ai\n\nVisit the IFS Blog on technology, innovation and creativity: https://blog.ifs.com/",
+				"description": "IFS is the world\u2019s leading provider of Industrial AI software for hardcore businesses that service, power and protect our planet. Our technology enables businesses which manufacture goods, maintain complex assets, and manage service-focused operations to unlock the transformative power of Industrial AI\u2122 to enhance productivity, efficiency, and sustainability. Industrial AI is IFS.ai\n\nIFS Cloud is a fully composable AI-powered platform, designed for ultimate flexibility and adaptability to our customers\u2019 specific requirements and business evolution. It spans the needs of Enterprise Resource Planning (ERP), Enterprise Asset Management (EAM), Supply Chain Management (SCM), Information Technology Service Management (ITSM), and Field Service Management (FSM). IFS technology leverages AI, machine learning, real-time data and analytics to empower our customers to make informed strategic decisions and excel at their Moment of Service\u2122.\n\nIFS was founded in 1983 by five university friends who pitched a tent outside our first customer's site to ensure they would be available 24/7 and the needs of the customer would come first. Since then, IFS has grown into a global leader with over 7,000 employees in 80 countries. Driven by those foundational values of agility, customer-centricity, and trust, IFS is recognized worldwide for delivering value and supporting strategic transformations. We are the most recommended supplier in our sector. Visit ifs.com to learn why.\n\nFollow us on Twitter: @ifs\nFacebook: www.facebook.com/ifsdotcom\nInstagram: www.instagram.com/ifs.ai\n\nVisit the IFS Blog on technology, innovation and creativity: https://blog.ifs.com/",
 				"workforceTotal": 5206,
 				"country": "Sweden",
 				"foundedYear": 1983,
 				"citedPage": "https://medium.com/ifs-tech/delivering-data-platform-artifacts-using-custom-k8s-operators-bfd874e55a25",
 				"citedDate": "2025-09-20",
 				"quote": "Large SaaS deployments often span multiple K8S clusters across different regions.",
-				"fitReason": "Nordics ERP/SaaS vendor, headcount fits; SaaS K8s evidence proven; customer‑ownership unclear, cert lifecycle unproven."
+				"fitReason": "Nordics ERP/SaaS vendor, headcount fits; SaaS K8s evidence proven; customer\u2011ownership unclear, cert lifecycle unproven."
 			}
 		},
 		"kraken.tech": {
@@ -514,11 +521,11 @@
 				"citedPage": "https://engineering.kraken.tech/news/2025/02/07/how-we-ship.html",
 				"citedDate": "2025-02-07",
 				"quote": "Kraken is deployed with Kubernetes (K8s).",
-				"fitReason": "Kraken is an energy‑tech platform sized 1616 in UK, K8s use proven; customer‑ownership and PKI unproven."
+				"fitReason": "Kraken is an energy\u2011tech platform sized 1616 in UK, K8s use proven; customer\u2011ownership and PKI unproven."
 			}
 		},
 		"lastminute.com": {
-			"label": null,
+			"label": "accept",
 			"name": "lastminute.com",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
@@ -532,7 +539,8 @@
 				"citedDate": "2025-11-17",
 				"quote": "For their Amazon Elastic Kubernetes Service (Amazon EKS) clusters, they identified stateless microservices that did not require long-running executions and moved them from on-demand to Amazon EC2 Spot Instance, leveraging Karpenter as an orchestrator to maximize savings and efficiency.",
 				"fitReason": "Swiss travel operator, 1158 employees, runs EKS microservices with Karpenter in-house; no PKI mention."
-			}
+			},
+			"note": "1,158 staff, Switzerland, online travel operator; an AWS case study quotes moving stateless microservices on their EKS clusters to Spot Instances with Karpenter, dated 2025-11-17 within the window"
 		},
 		"liveramp.com": {
 			"label": "accept",
@@ -542,7 +550,7 @@
 			"note": "1,158 staff, US, SaaS data-collaboration platform; LiveRamp's own engineering blog quotes production egress controls on its multi-tenant GKE clusters, dated 2025-12-29 within the window",
 			"record": {
 				"industry": "Advertising technology",
-				"description": "LiveRamp is the data collaboration platform for the world’s most innovative companies. A leader in consumer privacy, data ethics, and foundational identity, LiveRamp sets the new standard for building a connected customer view with unmatched clarity and context while protecting brand and consumer trust.\n\nLiveRamp provides the flexibility to collaborate wherever data lives to support various data collaboration use cases - within organizations, between brands, and across its global network. Hundreds of global innovators - from iconic consumer brands and tech giants to banks, retailers, and healthcare leaders - rely on LiveRamp to build enduring brand and business value by deepening customer engagement and loyalty, activating new partnerships, and maximizing the value of first-party data while staying on the forefront of evolving compliance and privacy requirements.\n\nLiveRamp is based in San Francisco, California, with offices worldwide. Learn more at LiveRamp.com.",
+				"description": "LiveRamp is the data collaboration platform for the world\u2019s most innovative companies. A leader in consumer privacy, data ethics, and foundational identity, LiveRamp sets the new standard for building a connected customer view with unmatched clarity and context while protecting brand and consumer trust.\n\nLiveRamp provides the flexibility to collaborate wherever data lives to support various data collaboration use cases - within organizations, between brands, and across its global network. Hundreds of global innovators - from iconic consumer brands and tech giants to banks, retailers, and healthcare leaders - rely on LiveRamp to build enduring brand and business value by deepening customer engagement and loyalty, activating new partnerships, and maximizing the value of first-party data while staying on the forefront of evolving compliance and privacy requirements.\n\nLiveRamp is based in San Francisco, California, with offices worldwide. Learn more at LiveRamp.com.",
 				"workforceTotal": 1158,
 				"country": "United States",
 				"foundedYear": 2011,
@@ -553,13 +561,13 @@
 			}
 		},
 		"lucidmotors.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Lucid Motors",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Automotive manufacturing",
-				"description": "We launched Lucid in 2016 to build the world’s best cars and accelerate the shift to clean energy. Our vehicles deliver best-in-class performance *and* efficiency. Equally important, we’re building a world-class team: From our state-of-the-art factory in Arizona to our global headquarters in California’s Silicon Valley, we’re recruiting high-performing people who want to help decarbonize Earth. Join us!",
+				"description": "We launched Lucid in 2016 to build the world\u2019s best cars and accelerate the shift to clean energy. Our vehicles deliver best-in-class performance *and* efficiency. Equally important, we\u2019re building a world-class team: From our state-of-the-art factory in Arizona to our global headquarters in California\u2019s Silicon Valley, we\u2019re recruiting high-performing people who want to help decarbonize Earth. Join us!",
 				"workforceTotal": 5449,
 				"country": "United States",
 				"foundedYear": 2016,
@@ -567,7 +575,8 @@
 				"citedDate": "2026-02-23",
 				"quote": "Since all workloads were Kubernetes-native, we used Argo CD with a central control plane to manage cluster and application deployments consistently across regions.",
 				"fitReason": "Lucid Motors is an automotive manufacturer, 5449 staff in US, runs Kubernetes-native connected-vehicle cloud infrastructure."
-			}
+			},
+			"note": "5,449 staff, US, automotive manufacturer; a cited article quotes Lucid's Kubernetes-native connected-vehicle cloud infrastructure with Argo CD, dated 2026-02-23 within the window"
 		},
 		"michelin.com": {
 			"label": "reject:unreachable",
@@ -583,7 +592,7 @@
 				"foundedYear": 1889,
 				"citedPage": "https://www.cncf.io/case-studies/michelin-2/",
 				"citedDate": "2026-07-14",
-				"quote": "The migration was executed within Michelin’s Kubernetes and GitOps-driven infrastructure, demonstrating how CNCF ecosystem projects can be combined to simplify large-scale infrastructure modernization initiatives.",
+				"quote": "The migration was executed within Michelin\u2019s Kubernetes and GitOps-driven infrastructure, demonstrating how CNCF ecosystem projects can be combined to simplify large-scale infrastructure modernization initiatives.",
 				"fitReason": "Automotive manufacturer, 27k staff in France, CNCF case study shows Kubernetes/GitOps at scale; no customer-ownership or PKI detail."
 			}
 		},
@@ -595,7 +604,7 @@
 			"note": "2,715 staff, Portugal, retail banking; a CNCF case study quotes over 1,000 Kubernetes-based applications across a regulated multi-cloud estate, dated 2025-09-16 within the window",
 			"record": {
 				"industry": "Retail banking",
-				"description": "Millennium bcp is Portugal's biggest private-owned bank, with a prominent position in the financial market in Portugal: it's the second Bank and the first private banking institution in terms of market share - both in loans to customers and in total customer funds.\nMillennium bcp provides a wide variety of banking services and financial activities in Portugal and abroad, where it is present in the following markets: Poland, Mozambique, Angola (through its associate BMA) and China. All its banking operations develop their activity under the Millennium brand.\nBanco Comercial Português, S.A.",
+				"description": "Millennium bcp is Portugal's biggest private-owned bank, with a prominent position in the financial market in Portugal: it's the second Bank and the first private banking institution in terms of market share - both in loans to customers and in total customer funds.\nMillennium bcp provides a wide variety of banking services and financial activities in Portugal and abroad, where it is present in the following markets: Poland, Mozambique, Angola (through its associate BMA) and China. All its banking operations develop their activity under the Millennium brand.\nBanco Comercial Portugu\u00eas, S.A.",
 				"workforceTotal": 2715,
 				"country": "Portugal",
 				"foundedYear": 1985,
@@ -631,7 +640,7 @@
 			"note": "2,138 staff, US, SaaS observability platform; a KubeCon EU 2025 talk quotes New Relic's own cell-based Kubernetes architecture scaling to 270+ clusters and 18,000+ nodes, dated 2025-04-04 within the window",
 			"record": {
 				"industry": "Observability software",
-				"description": "New Relic arms businesses with the trust and confidence required to thrive in the AI era. The New Relic Intelligent Observability Platform is the only open, AI-strengthened platform designed to unify telemetry and business outcomes, bringing intelligence and automated actions to the most complex digital environments. The platform shifts teams from reactive firefighting to intelligent orchestration, leveraging AI-driven automation to optimize technology spend and protect revenue in real-time. \n\nThat’s why global leaders—Adidas Runtastic, Domino’s, Ryanair, Swiggy, Topgolf, and William Hill—run on New Relic to drive innovation and deliver exceptional customer experiences.\n",
+				"description": "New Relic arms businesses with the trust and confidence required to thrive in the AI era. The New Relic Intelligent Observability Platform is the only open, AI-strengthened platform designed to unify telemetry and business outcomes, bringing intelligence and automated actions to the most complex digital environments. The platform shifts teams from reactive firefighting to intelligent orchestration, leveraging AI-driven automation to optimize technology spend and protect revenue in real-time. \n\nThat\u2019s why global leaders\u2014Adidas Runtastic, Domino\u2019s, Ryanair, Swiggy, Topgolf, and William Hill\u2014run on New Relic to drive innovation and deliver exceptional customer experiences.\n",
 				"workforceTotal": 2138,
 				"country": "United States",
 				"foundedYear": 2008,
@@ -649,7 +658,7 @@
 			"note": "5,328 staff, US, SaaS identity vendor; cited page is Okta's own document on how it builds and runs its scalable Kubernetes-based infrastructure",
 			"record": {
 				"industry": null,
-				"description": "Okta secures AI.\n\nOkta is The World’s Identity Company. Freeing everyone to safely use any technology—anywhere, on any device or app.",
+				"description": "Okta secures AI.\n\nOkta is The World\u2019s Identity Company. Freeing everyone to safely use any technology\u2014anywhere, on any device or app.",
 				"workforceTotal": 5328,
 				"country": "United States",
 				"foundedYear": 2009,
@@ -667,7 +676,7 @@
 			"note": "664 staff, US, document SaaS; the record's fitReason confirms a career page showing an in-house Kubernetes/Docker stack serving 67,000 organizations directly, dated 2026-06-18 within the window",
 			"record": {
 				"industry": null,
-				"description": "Stand out with the top‑rated solution for creating, managing, tracking, and esigning every important document you handle.",
+				"description": "Stand out with the top\u2011rated solution for creating, managing, tracking, and esigning every important document you handle.",
 				"workforceTotal": 664,
 				"country": "United States",
 				"foundedYear": 2014,
@@ -685,7 +694,7 @@
 			"note": "634 staff, France, HR/payroll SaaS; the record's fitReason confirms a security page showing Kubernetes with in-house managed network and access controls, dated 2026-07-30 within the window",
 			"record": {
 				"industry": null,
-				"description": "PayFit makes payroll and HR management simple for small businesses.\n\nWe’re an automated SaaS that helps HR teams and business owners save time and money on their payroll and HR tasks. That way, they can focus on what really matters: their employees. \n\nSince 2016, we’ve made it our mission to support digital HR transformation within companies across Europe with our ever-evolving range of product features and services. \n\nPayFit operates in France, Spain and the United Kingdom. 20,000+ businesses trust us to run their payroll every month, including Livestorm and EGYM Wellpass, and 700 people are part of the PayFit adventure. ",
+				"description": "PayFit makes payroll and HR management simple for small businesses.\n\nWe\u2019re an automated SaaS that helps HR teams and business owners save time and money on their payroll and HR tasks. That way, they can focus on what really matters: their employees. \n\nSince 2016, we\u2019ve made it our mission to support digital HR transformation within companies across Europe with our ever-evolving range of product features and services. \n\nPayFit operates in France, Spain and the United Kingdom. 20,000+ businesses trust us to run their payroll every month, including Livestorm and EGYM Wellpass, and 700 people are part of the PayFit adventure. ",
 				"workforceTotal": 634,
 				"country": "France",
 				"foundedYear": 2015,
@@ -703,7 +712,7 @@
 			"note": "the cited AWS case study of PCI Pharma's EKS-based pci|bridge platform is dated 2021-12-03, far outside the 730-day window ending 2026-09-03",
 			"record": {
 				"industry": null,
-				"description": "We are PCI Pharma Services. CDMO.\n\nToday’s Drug Development & Manufacturing, Advanced Drug Delivery & Drug Device Combination Products, Clinical Trial Services, and Commercial Packaging Technology. Inspired by tomorrow.\n\nWe provide world-class solutions through intelligence, ingenuity and innovation, together, delivering life-changing therapies. Across 38 global sites and supported by more than 8,000 dedicated employees, we bring together leading technology and continued investment to deliver seamless solutions from development to commercialization, supporting our clients to improve the lives of patients worldwide.\n",
+				"description": "We are PCI Pharma Services. CDMO.\n\nToday\u2019s Drug Development & Manufacturing, Advanced Drug Delivery & Drug Device Combination Products, Clinical Trial Services, and Commercial Packaging Technology. Inspired by tomorrow.\n\nWe provide world-class solutions through intelligence, ingenuity and innovation, together, delivering life-changing therapies. Across 38 global sites and supported by more than 8,000 dedicated employees, we bring together leading technology and continued investment to deliver seamless solutions from development to commercialization, supporting our clients to improve the lives of patients worldwide.\n",
 				"workforceTotal": 2802,
 				"country": "United States",
 				"foundedYear": null,
@@ -714,7 +723,7 @@
 			}
 		},
 		"peacocktv.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Peacock",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
@@ -728,7 +737,8 @@
 				"citedDate": "2025-12-05",
 				"quote": "Zero-Downtime at Scale: Migrating Peacock's Global Streaming to Amazon EKS.",
 				"fitReason": "US streaming media firm, 1346 employees, migrated global streaming to production EKS at scale; no PKI evidence."
-			}
+			},
+			"note": "1,346 staff, US, streaming media; a cited conference talk titled 'Zero-Downtime at Scale: Migrating Peacock's Global Streaming to Amazon EKS', dated 2025-12-05 within the window"
 		},
 		"postfinance.ch": {
 			"label": "accept",
@@ -738,7 +748,7 @@
 			"note": "2,152 staff, Switzerland, retail banking; a KubeCon EU 2026 talk quotes roughly 35 air-gapped Kubernetes clusters under strict regulation, dated 2026-03-26 within the window",
 			"record": {
 				"industry": "Retail banking",
-				"description": "PostFinance Ltd is one of Switzerland’s leading retail financial institutions. We are a diversified, innovation-driven financial service provider. At PostFinance, you’ll work on current and future ways of managing Switzerland’s money, helping to drive the digitization of the Swiss financial sector forward. We offer our customers fresh solutions and smart money-related innovations. We achieve this thanks to our unique culture, which enables us to work with a pioneering spirit every day. We treat each other as equals at all times, regardless of where we are on the company hierarchy. Because working in an agile environment is fun.\n\nPostFinance – Shaping progress.",
+				"description": "PostFinance Ltd is one of Switzerland\u2019s leading retail financial institutions. We are a diversified, innovation-driven financial service provider. At PostFinance, you\u2019ll work on current and future ways of managing Switzerland\u2019s money, helping to drive the digitization of the Swiss financial sector forward. We offer our customers fresh solutions and smart money-related innovations. We achieve this thanks to our unique culture, which enables us to work with a pioneering spirit every day. We treat each other as equals at all times, regardless of where we are on the company hierarchy. Because working in an agile environment is fun.\n\nPostFinance \u2013 Shaping progress.",
 				"workforceTotal": 2152,
 				"country": "Switzerland",
 				"foundedYear": 1906,
@@ -756,7 +766,7 @@
 			"note": "984 staff, US, API-development SaaS; Postman's own engineering blog quotes migrating its workloads to Kubernetes with ArgoCD, dated 2025-09-04 within the window",
 			"record": {
 				"industry": "API development software",
-				"description": "Postman is the world’s leading API platform. Postman's features simplify each step of building an API and streamline collaboration to help create better APIs—faster. More than 40 million developers and 500,000 organizations across the globe use Postman today.\n\nOur customers are doing more and more astounding things with the Postman product every day, and as a result, we are growing rapidly. Check out our open positions if you’d like to learn more: https://www.postman.com/careers/",
+				"description": "Postman is the world\u2019s leading API platform. Postman's features simplify each step of building an API and streamline collaboration to help create better APIs\u2014faster. More than 40 million developers and 500,000 organizations across the globe use Postman today.\n\nOur customers are doing more and more astounding things with the Postman product every day, and as a result, we are growing rapidly. Check out our open positions if you\u2019d like to learn more: https://www.postman.com/careers/",
 				"workforceTotal": 984,
 				"country": "United States",
 				"foundedYear": 2014,
@@ -767,21 +777,22 @@
 			}
 		},
 		"rapyd.net": {
-			"label": null,
+			"label": "accept",
 			"name": "Rapyd",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Financial services",
-				"description": "Build Bold.\n\nLiberate global commerce with all the tools your business needs to create payment, payout and fintech experiences everywhere.\n\nAround the world, customers want to pay in a thousand different ways. Businesses and consumers want to get paid faster. And developers want to build new products and possibilities. Rapyd makes it happen, giving you more ways than anyone to make fintech work for your business. With Rapyd, your business can accept and send payments to just about anyone—faster, cheaper and easier. And Rapyd clients see an average of 196% return on investment and spend 70% less time managing payments.\n\nWhether you’re building an app, selling a product, sending payments or doing a little of everything, Rapyd has solutions that let you boldly do what you do best.\n\n• Send and receive funds\n• Add hundreds of payment methods worldwide\n• Issue prepaid virtual and physical cards\n• Simplify money management and foreign exchange\n• Integrate fintech with APIs",
+				"description": "Build Bold.\n\nLiberate global commerce with all the tools your business needs to create payment, payout and fintech experiences everywhere.\n\nAround the world, customers want to pay in a thousand different ways. Businesses and consumers want to get paid faster. And developers want to build new products and possibilities. Rapyd makes it happen, giving you more ways than anyone to make fintech work for your business. With Rapyd, your business can accept and send payments to just about anyone\u2014faster, cheaper and easier. And Rapyd clients see an average of 196% return on investment and spend 70% less time managing payments.\n\nWhether you\u2019re building an app, selling a product, sending payments or doing a little of everything, Rapyd has solutions that let you boldly do what you do best.\n\n\u2022 Send and receive funds\n\u2022 Add hundreds of payment methods worldwide\n\u2022 Issue prepaid virtual and physical cards\n\u2022 Simplify money management and foreign exchange\n\u2022 Integrate fintech with APIs",
 				"workforceTotal": 673,
 				"country": "United Kingdom",
 				"foundedYear": 2015,
 				"citedPage": "https://www-staging.doit-intl.com/clients/rapyd/",
 				"citedDate": "2025-04-10",
-				"quote": "Kubernetes was already central to Rapyd’s infrastructure, supporting more than 15 clusters and enabling the speed and agility needed to innovate at scale.",
+				"quote": "Kubernetes was already central to Rapyd\u2019s infrastructure, supporting more than 15 clusters and enabling the speed and agility needed to innovate at scale.",
 				"fitReason": "Fintech-as-a-service platform, London, 673 staff, 15+ Kubernetes clusters central to its own infrastructure."
-			}
+			},
+			"note": "673 staff, UK, fintech-as-a-service; a vendor case study quotes Kubernetes as central to Rapyd's infrastructure, supporting more than 15 clusters, dated 2025-04-10 within the window"
 		},
 		"rbccm.com": {
 			"label": "accept",
@@ -809,18 +820,18 @@
 			"note": "Roche employs well over 100,000 people worldwide, far past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Biotechnology research",
-				"description": "Roche is a global pioneer in pharmaceuticals and diagnostics focused on advancing science to improve people’s lives. The combined strengths of pharmaceuticals and diagnostics under one roof have made Roche the leader in personalised healthcare – a strategy that aims to fit the right treatment to each patient in the best way possible.\n\nRoche is the world’s largest biotech company, with truly differentiated medicines in oncology, immunology, infectious diseases, ophthalmology and diseases of the central nervous system. Roche is also the world leader in in vitro diagnostics and tissue-based cancer diagnostics, and a frontrunner in diabetes management.\n\nFounded in 1896, Roche continues to search for better ways to prevent, diagnose and treat diseases and make a sustainable contribution to society. The company also aims to improve patient access to medical innovations by working with all relevant stakeholders. Thirty medicines developed by Roche are included in the World Health Organization Model Lists of Essential Medicines, among them life-saving antibiotics, antimalarials and cancer medicines. Roche has been recognised as the Group Leader in sustainability within the Pharmaceuticals, Biotechnology & Life Sciences Industry ten years in a row by the Dow Jones Sustainability Indices (DJSI).\n\nFor more information, please visit https://careers.roche.com\n\nRead our community guidelines here: \nhttps://www.roche.com/some-guidelines.htm\n\n#Roche #Biotechnology #Pharmaceuticals #Diagnostics #Healthcare #PersonalisedHealthcare #GreatPlaceToWork #Innovation",
+				"description": "Roche is a global pioneer in pharmaceuticals and diagnostics focused on advancing science to improve people\u2019s lives. The combined strengths of pharmaceuticals and diagnostics under one roof have made Roche the leader in personalised healthcare \u2013 a strategy that aims to fit the right treatment to each patient in the best way possible.\n\nRoche is the world\u2019s largest biotech company, with truly differentiated medicines in oncology, immunology, infectious diseases, ophthalmology and diseases of the central nervous system. Roche is also the world leader in in vitro diagnostics and tissue-based cancer diagnostics, and a frontrunner in diabetes management.\n\nFounded in 1896, Roche continues to search for better ways to prevent, diagnose and treat diseases and make a sustainable contribution to society. The company also aims to improve patient access to medical innovations by working with all relevant stakeholders. Thirty medicines developed by Roche are included in the World Health Organization Model Lists of Essential Medicines, among them life-saving antibiotics, antimalarials and cancer medicines. Roche has been recognised as the Group Leader in sustainability within the Pharmaceuticals, Biotechnology & Life Sciences Industry ten years in a row by the Dow Jones Sustainability Indices (DJSI).\n\nFor more information, please visit https://careers.roche.com\n\nRead our community guidelines here: \nhttps://www.roche.com/some-guidelines.htm\n\n#Roche #Biotechnology #Pharmaceuticals #Diagnostics #Healthcare #PersonalisedHealthcare #GreatPlaceToWork #Innovation",
 				"workforceTotal": 49128,
 				"country": "Switzerland",
 				"foundedYear": 1896,
 				"citedPage": "https://www.truefullstaq.com/en/blog/edgecase-roche-cloud-edge",
 				"citedDate": "2025-09-27",
-				"quote": "With hundreds of thousands of clusters, GitOps was a must—but they had to adapt it.",
+				"quote": "With hundreds of thousands of clusters, GitOps was a must\u2014but they had to adapt it.",
 				"fitReason": "Pharma/biotech, 49k staff in Switzerland; blog shows hundreds of thousands of clusters with GitOps; no PKI or ownership evidence."
 			}
 		},
 		"roku.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Roku",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
@@ -834,7 +845,8 @@
 				"citedDate": "2026-04-05",
 				"quote": "Roku operates over 110 Kubernetes clusters.",
 				"fitReason": "Streaming media firm, 4494 staff, US; case study confirms 110+ in-house Kubernetes clusters; no cert-management evidence."
-			}
+			},
+			"note": "4,494 staff, US, streaming media; a case study quotes Roku operating over 110 Kubernetes clusters, dated 2026-04-05 within the window"
 		},
 		"santander.com": {
 			"label": "reject:unreachable",
@@ -844,13 +856,13 @@
 			"note": "Santander Group employs well over 200,000 people worldwide, far past the 10,000-employee named-account boundary",
 			"record": {
 				"industry": "Commercial banking",
-				"description": "Banco Santander (SAN SM) is a leading commercial bank, founded in 1857 and headquartered in Spain and one of the largest banks in the world by market capitalization. The group’s activities are consolidated into five global businesses: Retail & Commercial Banking, Openbank, Corporate & Investment Banking (CIB), Wealth Management & Insurance and Payments. This operating model allows the bank to better leverage its unique combination of global scale and local leadership. Santander aims to be the best open financial services platform providing services to individuals, SMEs, corporates, financial institutions and governments. The bank’s purpose is to help people and businesses prosper in a simple, personal and fair way. In the first quarter of 2026, Banco Santander had €1.4 trillion in total funds, more than 176 million customers, 6,600 branches and 185,000 employees.",
+				"description": "Banco Santander (SAN SM) is a leading commercial bank, founded in 1857 and headquartered in Spain and one of the largest banks in the world by market capitalization. The group\u2019s activities are consolidated into five global businesses: Retail & Commercial Banking, Openbank, Corporate & Investment Banking (CIB), Wealth Management & Insurance and Payments. This operating model allows the bank to better leverage its unique combination of global scale and local leadership. Santander aims to be the best open financial services platform providing services to individuals, SMEs, corporates, financial institutions and governments. The bank\u2019s purpose is to help people and businesses prosper in a simple, personal and fair way. In the first quarter of 2026, Banco Santander had \u20ac1.4 trillion in total funds, more than 176 million customers, 6,600 branches and 185,000 employees.",
 				"workforceTotal": 30289,
 				"country": "Spain",
 				"foundedYear": 1857,
 				"citedPage": "https://aws.amazon.com/blogs/architecture/digital-transformation-at-santander-how-platform-engineering-is-revolutionizing-cloud-infrastructure/",
 				"citedDate": "2026-02-26",
-				"quote": "At the platform’s core is the control plane cluster, based on Amazon Elastic Kubernetes Service (Amazon EKS).",
+				"quote": "At the platform\u2019s core is the control plane cluster, based on Amazon Elastic Kubernetes Service (Amazon EKS).",
 				"fitReason": "Global bank, Spain, 30k+ employees, AWS case study shows in-house EKS control plane cluster."
 			}
 		},
@@ -862,7 +874,7 @@
 			"note": "Sectigo's own description says it is a certificate-lifecycle-management and PKI platform, exactly the third-party cert-management vendor category the profile excludes",
 			"record": {
 				"industry": null,
-				"description": "Expired certificates shouldn’t be the reason your business goes down. Sectigo is the industry’s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
+				"description": "Expired certificates shouldn\u2019t be the reason your business goes down. Sectigo is the industry\u2019s most trusted CA-agnostic Certificate Lifecycle Management platform automating discovery, policy, renewal, and governance across public and private PKI to secure human and machine identities with Simplicity at Scale.",
 				"workforceTotal": 508,
 				"country": "United States",
 				"foundedYear": null,
@@ -879,7 +891,7 @@
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Freight marketplace",
-				"description": "sennder – Europe’s #1 digital freight-forwarder for Full Truck Loads.\n\nsennder, a leading digital road freight forwarder in Europe, is offering shippers access to a connected fleet of thousands of trucks. In a traditional industry, we are moving fast and focus on the digitalization and automation of all road logistics processes. sennder deploys over 40,000 trucks across Europe, with access to more than 120,000 vehicles. By leveraging our proprietary technology and offering advanced green transport solutions, we are creating a transparent, flexible and efficient road freight network. \n\nsennder is backed by some of Europe’s leading investors including Baillie Gifford, Accel, HV Capital and Lakestar along with industry experts Poste Italiane and Scania to assure innovation and state of the art offerings.\n\nImprint: https://www.sennder.com/imprint\nPrivacy Policy: https://www.sennder.com/privacy-policy",
+				"description": "sennder \u2013 Europe\u2019s #1 digital freight-forwarder for Full Truck Loads.\n\nsennder, a leading digital road freight forwarder in Europe, is offering shippers access to a connected fleet of thousands of trucks. In a traditional industry, we are moving fast and focus on the digitalization and automation of all road logistics processes. sennder deploys over 40,000 trucks across Europe, with access to more than 120,000 vehicles. By leveraging our proprietary technology and offering advanced green transport solutions, we are creating a transparent, flexible and efficient road freight network. \n\nsennder is backed by some of Europe\u2019s leading investors including Baillie Gifford, Accel, HV Capital and Lakestar along with industry experts Poste Italiane and Scania to assure innovation and state of the art offerings.\n\nImprint: https://www.sennder.com/imprint\nPrivacy Policy: https://www.sennder.com/privacy-policy",
 				"workforceTotal": 827,
 				"country": "Germany",
 				"foundedYear": 2015,
@@ -887,16 +899,17 @@
 				"citedDate": "2025-12-26",
 				"quote": "Sennder runs 8 clusters and 150+ nodes on AWS EKS, using Karpenter and KEDA to enable highly dynamic scaling throughout the day.",
 				"fitReason": "sennder is a freight-forwarding marketplace, 827 staff in Berlin, runs its own EKS clusters; vertical not clearly listed."
-			}
+			},
+			"note": "undecidable: the record's own fitReason flags that sennder's freight-forwarding marketplace vertical is not clearly listed among the profile's downtime-sensitive verticals, despite strong Kubernetes evidence"
 		},
 		"skyscanner.net": {
-			"label": null,
+			"label": "accept",
 			"name": "Skyscanner",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Travel technology",
-				"description": "🌎 We're here to help every traveller explore the world effortlessly, with a vision to become the world's number one travel ally.\n",
+				"description": "\ud83c\udf0e We're here to help every traveller explore the world effortlessly, with a vision to become the world's number one travel ally.\n",
 				"workforceTotal": 1313,
 				"country": "United Kingdom",
 				"foundedYear": 2003,
@@ -904,7 +917,8 @@
 				"citedDate": "2026-03-24",
 				"quote": "At Skyscanner scale, every architecture choice carries cost and ops impact.",
 				"fitReason": "UK travel-tech firm, 1313 staff; KubeCon talk shows in-house Istio mesh at scale; no PKI delegation evidence."
-			}
+			},
+			"note": "1,313 staff, UK, travel technology; a KubeCon EU 2026 talk titled around Skyscanner's Istio mesh handling 60M requests per minute confirms in-house service-mesh infrastructure at scale, dated 2026-03-24 within the window"
 		},
 		"softwareag.com": {
 			"label": null,
@@ -921,7 +935,7 @@
 				"citedPage": "https://tech.forums.softwareag.com/t/building-an-integration-microservice-from-a-to-z-with-webmethods-and-kubernetes/267171",
 				"citedDate": "2025-02-11T00:00:00.000Z",
 				"quote": "Building an integration microservice from A to Z with webMethods and Kubernetes - Knowledge base - Software AG Adabas & Natural Tech Community & Forums",
-				"fitReason": "EU enterprise software firm, headcount fits; vertical and customer‑ownership unclear; K8s forum post shown."
+				"fitReason": "EU enterprise software firm, headcount fits; vertical and customer\u2011ownership unclear; K8s forum post shown."
 			}
 		},
 		"spotify.com": {
@@ -950,24 +964,24 @@
 			"note": "Stripe reports 10,338 staff, above the 10,000-employee named-account boundary; the cited Kubernetes blog post is also dated 2017-12-20, itself long outside the 730-day window",
 			"record": {
 				"industry": null,
-				"description": "Stripe builds programmable financial services. Millions of companies—from the world’s largest enterprises to the most ambitious startups—use Stripe to accept payments, grow their revenue, and accelerate new business opportunities. Headquartered in San Francisco and Dublin, the company aims to increase the GDP of the internet.",
+				"description": "Stripe builds programmable financial services. Millions of companies\u2014from the world\u2019s largest enterprises to the most ambitious startups\u2014use Stripe to accept payments, grow their revenue, and accelerate new business opportunities. Headquartered in San Francisco and Dublin, the company aims to increase the GDP of the internet.",
 				"workforceTotal": 10338,
 				"country": "United States",
 				"foundedYear": 2010,
 				"citedPage": "https://stripe.com/blog/operating-kubernetes",
 				"citedDate": "2017-12-20T08:00:00.000Z",
-				"quote": "We recently built a distributed cron job scheduling system on top of Kubernetes, an exciting new platform for container orchestration. Kubernetes is very popular right now and makes a lot of exciting promises: one of the most exciting is that engineers don’t need to know or care what machines their applications run on.\n...\nDistributed systems are really hard, and managing services on distributed systems is one of the hardest problems operations teams face. Breaking in new software in production and learning how to operate it reliably is something we take very seriously. As an example of why learning to operate Kubernetes is important (and why it's hard!), here's a fantastic postmortem of a one-hour outage caused by a bug in Kubernetes.\n...\nIn this post, we'll explain why we chose to build on top of Kubernetes. We’ll examine how we integrated Kubernetes into our existing infrastructure, our approach to building confidence in (and improving) our Kubernetes' cluster's reliability, and the abstractions we’ve built on top of Kubernetes.\n...\nEvery infrastructure project (hopefully!) starts with a business need, and our goal was to improve the reliability and security of an existing distributed cron job system we had. Our requirements were:\n...\n- We needed to be able to build and operate it with a relatively small team (only 2 people were working full time on the project.)\n- We needed to schedule about 500 different cron jobs across around 20 machines reliably.\n...\nHere are a few reasons we decided to build on top of Kubernetes:\n...\n- We wanted to build on top of an existing open-source project.\n- Kubernetes includes a distributed cron job scheduler, so we wouldn't have to write one ourselves.\n...\n- Kubernetes is a very active project and regularly accepts contributions. - Kubernetes is written in Go, which is easy to learn. Almost all of our Kubernetes bugfixes were made by inexperienced Go programmers on our team.\n...\n- If we could successfully operate Kubernetes, we could build on top of Kubernetes in the future (for example, we're currently working on a Kubernetes-based system to train machine learning models.)\n...\nwas no longer meeting our reliability requirements and it's mostly unmaintained(1 commit in\n...\nlast 9 months, and the last time a pull request was merged\n...\nMarch 2016)\n...\nOur basic approach to setting up our first Kubernetes cluster was to build the cluster from scratch instead of using a tool like kubeadm or kops(using Kubernetes The Hard Way as a reference). We provisioned our configuration with Puppet, our usual configuration management tool. Building from scratch was great for two reasons: we were able to deeply integrate Kubernetes in our architecture, and we developed a deep understanding of its internals.\n...\nBuilding from scratch let us integrate Kubernetes into our existing infrastructure. We wanted seamless integration with our existing systems for logging, certificate management, secrets, network security, monitoring, AWS instance management, deployment, database proxies, internal DNS servers, configuration management, and more. Integrating all those systems sometimes required a little creativity, but overall was easier than trying to shoehorn kubeadm/kops into doing what we wanted.\n...\nWe already trust and know how to operate all those existing systems, so we wanted to keep using them in our new Kubernetes cluster. For example, secure certificate management is a very hard problem, and we already have a way to issue and manage certificates. We were able to avoid creating a new CA just for Kubernetes with a proper integration.\n...\n, it's important\n...\n- Prioritize working on your etcd cluster's reliability (etcd is where all of your Kubernetes cluster's state is stored.)\n- Some Kubernetes features are more stable than others, so be cautious of alpha features. Some companies only use stable features after they’ve been stable for more than one release (e.g. if a feature became stable in 1.8, they'd wait for 1.9 or 1.10 before using it.)\n- Consider using a hosted Kubernetes system like GKE/ AKS/ EKS. Setting up a high-availability Kubernetes system yourself from scratch is a huge amount of work. AWS didn't have a managed Kubernetes service during this project so this wasn't an option for us.\n- Be careful about the additional network latency introduced by overlay networks / software defined networking.\n...\nBefore we started building the cluster in earnest, we did a little bit of load testing. We weren't worried about how many nodes the Kubernetes cluster could handle (we were planning to deploy around 20 nodes), but we did want to make certain Kubernetes could handle running as many cron jobs as we wanted to run (about 50 per minute).\n...\nnot handle 1,000\n...\nminute without issue. Since we\n...\nto run approximately 50\n...\njobs per minute, we decided these limits weren't a blocker (and that we\n...\nOne of the most important things to get right when setting up Kubernetes is running etcd. Etcd is the heart of your Kubernetes cluster---it's where all of the data about everything in your cluster is stored. Everything other than etcd is stateless. If etcd isn't running, you can't make any changes to your Kubernetes cluster (though existing services will continue running!).\n...\nthe etcd service is available (if et\n...\nis down, we\n...\nto know right away)\n...\nWrite some simple tooling so we could easily spin up new et\n...\nand join them to the\n...\nPatch etcd's Consul integration\n...\nwe could run more than 1 etcd cluster in our production environment\n...\nTest recovering from an etcd backup\n- Test that we could rebuild\n...\nwe did this testing\n...\non. One Friday\n...\nin our production\n...\n. Fantastic.\n...\nOne of our major goals was to migrate our jobs to Kubernetes without causing any outages. The secret to running a successful production migrations is not to avoid making any mistakes (that's impossible), but to design your migration to reduce the impact of mistakes.\n...\nOur original goal was to design a system for running cron jobs that our team was confident operating and maintaining. Once we had established our confidence in Kubernetes, we needed to make it easy for our fellow engineers to configure and add new cron jobs. We developed a simple YAML configuration format so that our users didn't need to understand anything about Kubernetes’ internals to use the system. Here's the format we developed:\n...\nOur simple format was easy to use, and since we automatically generated both Chronos and Kubernetes cron job definitions from the same format, moving a job between either system was really easy. This was a key part of making our incremental migration work well. Whenever moving a job to Kubernetes caused issues, we could move it back with a simple three-line configuration change and in less than ten minutes.\n...\nMonitoring our Kubernetes cluster’s internal state has proven to be very pleasant. We use the kube-state-metrics package for monitoring and a small Go program called veneur-prometheus to scrape the Prometheus metrics kube-state-metrics emits and publish them as statsd metrics to our monitoring system.\n...\nSetting up Kubernetes, getting to a place where we were comfortable running production code and migrating all our cron jobs to the new cluster took us five months with three engineers working full time. One big reason we invested in learning Kubernetes is we expect to be able to use Kubernetes more widely at Stripe.\n...\nBy staying focused on these principles, we've been able to use Kubernetes in production with confidence. We'll continue to grow and evolve how we use Kubernetes over time---for example, we're watching AWS's release of EKS with interest. We're finishing work on another system to train machine learning models and are also exploring moving some HTTP services to Kubernetes. As we continue operating Kubernetes in production, we plan to contribute to the open-source project along the way.",
+				"quote": "We recently built a distributed cron job scheduling system on top of Kubernetes, an exciting new platform for container orchestration. Kubernetes is very popular right now and makes a lot of exciting promises: one of the most exciting is that engineers don\u2019t need to know or care what machines their applications run on.\n...\nDistributed systems are really hard, and managing services on distributed systems is one of the hardest problems operations teams face. Breaking in new software in production and learning how to operate it reliably is something we take very seriously. As an example of why learning to operate Kubernetes is important (and why it's hard!), here's a fantastic postmortem of a one-hour outage caused by a bug in Kubernetes.\n...\nIn this post, we'll explain why we chose to build on top of Kubernetes. We\u2019ll examine how we integrated Kubernetes into our existing infrastructure, our approach to building confidence in (and improving) our Kubernetes' cluster's reliability, and the abstractions we\u2019ve built on top of Kubernetes.\n...\nEvery infrastructure project (hopefully!) starts with a business need, and our goal was to improve the reliability and security of an existing distributed cron job system we had. Our requirements were:\n...\n- We needed to be able to build and operate it with a relatively small team (only 2 people were working full time on the project.)\n- We needed to schedule about 500 different cron jobs across around 20 machines reliably.\n...\nHere are a few reasons we decided to build on top of Kubernetes:\n...\n- We wanted to build on top of an existing open-source project.\n- Kubernetes includes a distributed cron job scheduler, so we wouldn't have to write one ourselves.\n...\n- Kubernetes is a very active project and regularly accepts contributions. - Kubernetes is written in Go, which is easy to learn. Almost all of our Kubernetes bugfixes were made by inexperienced Go programmers on our team.\n...\n- If we could successfully operate Kubernetes, we could build on top of Kubernetes in the future (for example, we're currently working on a Kubernetes-based system to train machine learning models.)\n...\nwas no longer meeting our reliability requirements and it's mostly unmaintained(1 commit in\n...\nlast 9 months, and the last time a pull request was merged\n...\nMarch 2016)\n...\nOur basic approach to setting up our first Kubernetes cluster was to build the cluster from scratch instead of using a tool like kubeadm or kops(using Kubernetes The Hard Way as a reference). We provisioned our configuration with Puppet, our usual configuration management tool. Building from scratch was great for two reasons: we were able to deeply integrate Kubernetes in our architecture, and we developed a deep understanding of its internals.\n...\nBuilding from scratch let us integrate Kubernetes into our existing infrastructure. We wanted seamless integration with our existing systems for logging, certificate management, secrets, network security, monitoring, AWS instance management, deployment, database proxies, internal DNS servers, configuration management, and more. Integrating all those systems sometimes required a little creativity, but overall was easier than trying to shoehorn kubeadm/kops into doing what we wanted.\n...\nWe already trust and know how to operate all those existing systems, so we wanted to keep using them in our new Kubernetes cluster. For example, secure certificate management is a very hard problem, and we already have a way to issue and manage certificates. We were able to avoid creating a new CA just for Kubernetes with a proper integration.\n...\n, it's important\n...\n- Prioritize working on your etcd cluster's reliability (etcd is where all of your Kubernetes cluster's state is stored.)\n- Some Kubernetes features are more stable than others, so be cautious of alpha features. Some companies only use stable features after they\u2019ve been stable for more than one release (e.g. if a feature became stable in 1.8, they'd wait for 1.9 or 1.10 before using it.)\n- Consider using a hosted Kubernetes system like GKE/ AKS/ EKS. Setting up a high-availability Kubernetes system yourself from scratch is a huge amount of work. AWS didn't have a managed Kubernetes service during this project so this wasn't an option for us.\n- Be careful about the additional network latency introduced by overlay networks / software defined networking.\n...\nBefore we started building the cluster in earnest, we did a little bit of load testing. We weren't worried about how many nodes the Kubernetes cluster could handle (we were planning to deploy around 20 nodes), but we did want to make certain Kubernetes could handle running as many cron jobs as we wanted to run (about 50 per minute).\n...\nnot handle 1,000\n...\nminute without issue. Since we\n...\nto run approximately 50\n...\njobs per minute, we decided these limits weren't a blocker (and that we\n...\nOne of the most important things to get right when setting up Kubernetes is running etcd. Etcd is the heart of your Kubernetes cluster---it's where all of the data about everything in your cluster is stored. Everything other than etcd is stateless. If etcd isn't running, you can't make any changes to your Kubernetes cluster (though existing services will continue running!).\n...\nthe etcd service is available (if et\n...\nis down, we\n...\nto know right away)\n...\nWrite some simple tooling so we could easily spin up new et\n...\nand join them to the\n...\nPatch etcd's Consul integration\n...\nwe could run more than 1 etcd cluster in our production environment\n...\nTest recovering from an etcd backup\n- Test that we could rebuild\n...\nwe did this testing\n...\non. One Friday\n...\nin our production\n...\n. Fantastic.\n...\nOne of our major goals was to migrate our jobs to Kubernetes without causing any outages. The secret to running a successful production migrations is not to avoid making any mistakes (that's impossible), but to design your migration to reduce the impact of mistakes.\n...\nOur original goal was to design a system for running cron jobs that our team was confident operating and maintaining. Once we had established our confidence in Kubernetes, we needed to make it easy for our fellow engineers to configure and add new cron jobs. We developed a simple YAML configuration format so that our users didn't need to understand anything about Kubernetes\u2019 internals to use the system. Here's the format we developed:\n...\nOur simple format was easy to use, and since we automatically generated both Chronos and Kubernetes cron job definitions from the same format, moving a job between either system was really easy. This was a key part of making our incremental migration work well. Whenever moving a job to Kubernetes caused issues, we could move it back with a simple three-line configuration change and in less than ten minutes.\n...\nMonitoring our Kubernetes cluster\u2019s internal state has proven to be very pleasant. We use the kube-state-metrics package for monitoring and a small Go program called veneur-prometheus to scrape the Prometheus metrics kube-state-metrics emits and publish them as statsd metrics to our monitoring system.\n...\nSetting up Kubernetes, getting to a place where we were comfortable running production code and migrating all our cron jobs to the new cluster took us five months with three engineers working full time. One big reason we invested in learning Kubernetes is we expect to be able to use Kubernetes more widely at Stripe.\n...\nBy staying focused on these principles, we've been able to use Kubernetes in production with confidence. We'll continue to grow and evolve how we use Kubernetes over time---for example, we're watching AWS's release of EKS with interest. We're finishing work on another system to train machine learning models and are also exploring moving some HTTP services to Kubernetes. As we continue operating Kubernetes in production, we plan to contribute to the open-source project along the way.",
 				"fitReason": "Stripe's blog shows fintech vertical, headcount, in-house team running Kubernetes and managing its own certificate issuance in-house."
 			}
 		},
 		"tennet.eu": {
-			"label": null,
+			"label": "accept",
 			"name": "TenneT",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Electricity utilities",
-				"description": "TenneT is a leading European grid operator. We are committed to providing a secure and reliable supply of electricity 24 hours a day, 365 days a year, while helping to drive the energy transition in our pursuit of a brighter energy future – more sustainable, reliable and affordable than ever before. In our role as the first cross-border Transmission System Operator (TSO) we design, build, maintain and operate over 26,000 kilometres of high-voltage electricity grid in the Netherlands and large parts of Germany, and facilitate the European energy market through our 17 interconnectors to neighbouring countries. With a turnover of 9.1 billion euros and total assets of 55 billion euros, we are one of the largest investors in national and international electricity grids, both onshore and offshore. \n\nEvery day our 10.836 employees take ownership, show courage and make and maintain connections to ensure that the supply and demand of electricity is balanced for over 43 million people. \n\nLighting the way ahead together",
+				"description": "TenneT is a leading European grid operator. We are committed to providing a secure and reliable supply of electricity 24 hours a day, 365 days a year, while helping to drive the energy transition in our pursuit of a brighter energy future \u2013 more sustainable, reliable and affordable than ever before. In our role as the first cross-border Transmission System Operator (TSO) we design, build, maintain and operate over 26,000 kilometres of high-voltage electricity grid in the Netherlands and large parts of Germany, and facilitate the European energy market through our 17 interconnectors to neighbouring countries. With a turnover of 9.1 billion euros and total assets of 55 billion euros, we are one of the largest investors in national and international electricity grids, both onshore and offshore. \n\nEvery day our 10.836 employees take ownership, show courage and make and maintain connections to ensure that the supply and demand of electricity is balanced for over 43 million people. \n\nLighting the way ahead together",
 				"workforceTotal": 849,
 				"country": "Netherlands",
 				"foundedYear": 1998,
@@ -975,7 +989,8 @@
 				"citedDate": "2026-04-02",
 				"quote": "First, TenneT had access to a modern on-premises PaaS environment (Kubernetes, Kafka, S3-compatible storage) that allowed cloud-native design principles from day one.",
 				"fitReason": "European grid operator, Arnhem, 849 staff, in-house PaaS with Kubernetes/Kafka powering grid security tooling."
-			}
+			},
+			"note": "849 staff, Netherlands, electricity grid operator (energy vertical); a cited article quotes an on-premises PaaS environment built on Kubernetes and Kafka powering grid-security tooling, dated 2026-04-02 within the window"
 		},
 		"traderepublic.com": {
 			"label": "accept",
@@ -1003,7 +1018,7 @@
 			"note": "678 staff, US, video streaming; an AWS case study quotes Tubi's platform as built with Kubernetes on AWS, dated 2025-04-01 within the window",
 			"record": {
 				"industry": "Video streaming",
-				"description": "Tubi is the most watched free TV and movie streaming service in the U.S., dedicated to providing all people access to all the world's stories. As a leading ad-supported video-on-demand service, the company engages diverse audiences through a personalized experience and the world’s largest content library of over 275,000 movies and TV episodes, a growing collection of Tubi Originals, and nearly 250 FAST channels. Tubi is part of the Tubi Media Group, a division of Fox Corporation that oversees the company’s digital businesses",
+				"description": "Tubi is the most watched free TV and movie streaming service in the U.S., dedicated to providing all people access to all the world's stories. As a leading ad-supported video-on-demand service, the company engages diverse audiences through a personalized experience and the world\u2019s largest content library of over 275,000 movies and TV episodes, a growing collection of Tubi Originals, and nearly 250 FAST channels. Tubi is part of the Tubi Media Group, a division of Fox Corporation that oversees the company\u2019s digital businesses",
 				"workforceTotal": 678,
 				"country": "United States",
 				"foundedYear": 2014,
@@ -1021,32 +1036,33 @@
 			"note": "Uber employs well over 30,000 people worldwide, far past the 10,000-employee named-account boundary, regardless of its own well-known cloud-native infrastructure",
 			"record": {
 				"industry": "Ride-hailing and mobility",
-				"description": "We are Uber. The go-getters. The kind of people who are relentless about our mission to help people go anywhere and get anything and earn their way. Movement is what we power. It’s our lifeblood. It runs through our veins. It’s what gets us out of bed each morning. It pushes us to constantly reimagine how we can move better. For you. For all the places you want to go. For all the things you want to get. For all the ways you want to earn. Across the entire world. In real time. At the incredible speed of now.\n\nThe idea for Uber was born on a snowy night in Paris in 2008, and ever since then our DNA of reimagination and reinvention carries on. We’ve grown into a global platform powering flexible earnings and the movement of people and things in ever expanding ways. We’ve gone from connecting rides on 4 wheels to 2 wheels to 18-wheel freight deliveries. From takeout meals to daily essentials to prescription drugs to just about anything you need at any time and earning your way. From drivers with background checks to real-time verification, safety is a top priority every single day. At Uber, the pursuit of reimagination is never finished, never stops, and is always just beginning.",
+				"description": "We are Uber. The go-getters. The kind of people who are relentless about our mission to help people go anywhere and get anything and earn their way. Movement is what we power. It\u2019s our lifeblood. It runs through our veins. It\u2019s what gets us out of bed each morning. It pushes us to constantly reimagine how we can move better. For you. For all the places you want to go. For all the things you want to get. For all the ways you want to earn. Across the entire world. In real time. At the incredible speed of now.\n\nThe idea for Uber was born on a snowy night in Paris in 2008, and ever since then our DNA of reimagination and reinvention carries on. We\u2019ve grown into a global platform powering flexible earnings and the movement of people and things in ever expanding ways. We\u2019ve gone from connecting rides on 4 wheels to 2 wheels to 18-wheel freight deliveries. From takeout meals to daily essentials to prescription drugs to just about anything you need at any time and earning your way. From drivers with background checks to real-time verification, safety is a top priority every single day. At Uber, the pursuit of reimagination is never finished, never stops, and is always just beginning.",
 				"workforceTotal": 68165,
 				"country": "United States",
 				"foundedYear": 2009,
 				"citedPage": "https://www.uber.com/en-EG/blog/migrating-ubers-compute-platform-to-kubernetes-a-technical-journey/",
 				"citedDate": "2025-04-24",
-				"quote": "The Container Platform team manages more than 50 compute clusters across multiple regions/zones on both on-prem data centers and cloud providers like Oracle® Cloud and Google Cloud™.",
+				"quote": "The Container Platform team manages more than 50 compute clusters across multiple regions/zones on both on-prem data centers and cloud providers like Oracle\u00ae Cloud and Google Cloud\u2122.",
 				"fitReason": "Uber runs large-scale Kubernetes via in-house Container Platform team; mobility vertical not clearly matching listed regulated sectors."
 			}
 		},
 		"vestiairecollective.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Vestiaire Collective",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
 			"record": {
 				"industry": "Fashion marketplace",
-				"description": "We are the leading global platform for pre-loved luxury fashion. \n\nOur mission is to transform the fashion industry for a more sustainable future by empowering our community to shop more consciously.\n\nGuided by our philosophy “Think First, Buy Second,” we offer a trusted space for our members to extend the life of their most-loved fashion pieces.\nOur platform is unique thanks to a rare inventory of 5 million items, with over 30,000 new pieces added daily.\n\nOur global team of 600 employees represents more than 50 nationalities, united by our core values of community, activism, transparency, dedication, and greatness.\n\nVestiaire Collective was founded in 2009 and operates in 70 countries. The company is headquartered in Paris, with offices in New York, London, Berlin, Singapore, Ho Chi Minh City and Lisbon, and four authentication centers in France, the UK, the US, and Hong Kong.\n\nTo learn more, download our app, visit vestiairecollective.com, and follow @vestiaireco on Instagram.",
+				"description": "We are the leading global platform for pre-loved luxury fashion. \n\nOur mission is to transform the fashion industry for a more sustainable future by empowering our community to shop more consciously.\n\nGuided by our philosophy \u201cThink First, Buy Second,\u201d we offer a trusted space for our members to extend the life of their most-loved fashion pieces.\nOur platform is unique thanks to a rare inventory of 5 million items, with over 30,000 new pieces added daily.\n\nOur global team of 600 employees represents more than 50 nationalities, united by our core values of community, activism, transparency, dedication, and greatness.\n\nVestiaire Collective was founded in 2009 and operates in 70 countries. The company is headquartered in Paris, with offices in New York, London, Berlin, Singapore, Ho Chi Minh City and Lisbon, and four authentication centers in France, the UK, the US, and Hong Kong.\n\nTo learn more, download our app, visit vestiairecollective.com, and follow @vestiaireco on Instagram.",
 				"workforceTotal": 506,
 				"country": "France",
 				"foundedYear": 2009,
 				"citedPage": "https://medium.com/vestiaire-connected/speed-up-image-background-removal-service-with-fastapi-and-triton-inference-server-3d3e6e722ba9",
 				"citedDate": "2024-12-10",
-				"quote": "We have been running the service on Vestiaire Collective’s Kubernetes clusters without GPU support.",
+				"quote": "We have been running the service on Vestiaire Collective\u2019s Kubernetes clusters without GPU support.",
 				"fitReason": "Luxury resale marketplace, Paris, 506 staff, runs its own services on Vestiaire's Kubernetes clusters."
-			}
+			},
+			"note": "506 staff, France, luxury-resale e-commerce marketplace; the company's own engineering blog quotes running a service on Vestiaire Collective's own Kubernetes clusters, dated 2024-12-10 within the window"
 		},
 		"whatnot.com": {
 			"label": "accept",
@@ -1056,18 +1072,18 @@
 			"note": "1,242 staff, US, live-commerce online marketplace; Whatnot's own engineering blog quotes running over 50,000 MBE pods in production, dated 2026-02-24 within the window",
 			"record": {
 				"industry": "Online marketplace",
-				"description": "Whatnot is the largest livestream shopping platform in the US, UK, and Europe. Millions of people come to Whatnot every day to buy, sell, and connect over the things they love, from sneakers to sports cards, vintage fashion to fine jewelry, comics to Pokémon, beauty, electronics, and hundreds of other categories.\n\nIn 2025, live sales on Whatnot surpassed $8B, more than doubling the year before. Over 20 million accounts were created last year alone, and we have been the #1 shopping app in both the US and UK. \n\nWe've built a real business, but we're nowhere near done. Live commerce at this scale has never been done in the West, which means the people here now are shaping how an entirely new industry develops.\n\nThe pace here is fast and the expectations are high. We move quickly, prioritize ruthlessly, and trust people to own their work end-to-end. In return, careers grow faster, impact is real, and your colleagues will raise your standards. It's an environment built for people who want to do the best work of their careers alongside others doing the same.\n\nWe're a remote, co-located team with hubs in the US, UK, Ireland, Poland, and Germany, and we're hiring across every function.",
+				"description": "Whatnot is the largest livestream shopping platform in the US, UK, and Europe. Millions of people come to Whatnot every day to buy, sell, and connect over the things they love, from sneakers to sports cards, vintage fashion to fine jewelry, comics to Pok\u00e9mon, beauty, electronics, and hundreds of other categories.\n\nIn 2025, live sales on Whatnot surpassed $8B, more than doubling the year before. Over 20 million accounts were created last year alone, and we have been the #1 shopping app in both the US and UK. \n\nWe've built a real business, but we're nowhere near done. Live commerce at this scale has never been done in the West, which means the people here now are shaping how an entirely new industry develops.\n\nThe pace here is fast and the expectations are high. We move quickly, prioritize ruthlessly, and trust people to own their work end-to-end. In return, careers grow faster, impact is real, and your colleagues will raise your standards. It's an environment built for people who want to do the best work of their careers alongside others doing the same.\n\nWe're a remote, co-located team with hubs in the US, UK, Ireland, Poland, and Germany, and we're hiring across every function.",
 				"workforceTotal": 1242,
 				"country": "United States",
 				"foundedYear": 2019,
 				"citedPage": "https://medium.com/whatnot-engineering/scaling-whatnot-behind-the-largest-live-shopping-stream-in-us-history-040a458f538c",
 				"citedDate": "2026-02-24",
 				"quote": "The team built and shipped it in about a month, enabling us to run over 50,000 MBE pods in production.",
-				"fitReason": "US marketplace, headcount fits; owns customer transactions, runs own K8s at scale; cert‑lifecycle unproven."
+				"fitReason": "US marketplace, headcount fits; owns customer transactions, runs own K8s at scale; cert\u2011lifecycle unproven."
 			}
 		},
 		"whoop.com": {
-			"label": null,
+			"label": "accept",
 			"name": "WHOOP",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
@@ -1079,9 +1095,10 @@
 				"foundedYear": 2012,
 				"citedPage": "https://engineering.prod.whoop.com/pt-PT/kubernetes-networking-learning/",
 				"citedDate": "2025-09-11T00:00:00.000Z",
-				"quote": "How We Solved Intermittent Kubernetes Connectivity Issues | WHOOP Engineering\n...\nSoftware engineering is a continuous dialogue of learning, and today, we're contributing our chapter: a detailed breakdown of networking incidents that unfolded in our Kubernetes environment on AWS during June. While the timing of these overnight occurrences fortunately minimized impact to our WHOOP members, they revealed critical insights into the subtle ways system updates can destabilize distributed infrastructure. What follows is our journey of investigation: how we tracked down the root cause, the challenges we uncovered, and the improvements we've implemented.\n...\nThe culprit turned out to be an interaction between Ubuntu's automatic security updates and a tool called`needrestart`. When certain system services restarted during these automated updates, they cleared the kernel's connection-tracking state — essentially erasing the node's \"memory\" of which pods owned which network connections.\n...\nbehavior stemmed from a change in Ubuntu's update system that allowed\n...\nunattended application of\n...\npatches. This feature that had previously been disabled by default due to related issues in Ubuntu's parent distribution.\n...\nImmediate response: We deployed a solution to prevent the problematic automatic service restarts on our Kubernetes nodes. Since implementing this change, the overnight connectivity issues have completely stopped.\n...\nEnhanced monitoring: We added\n...\npacket capture tools and expanded our observability\n...\ncorrelate application timeouts with network-level events, giving us\n...\nvisibility into similar issues should they arise.\n...\nInfrastructure evolution: We're evaluating a transition from general-purpose Ubuntu to container-optimized operating systems like Flatcar. These platforms are designed specifically for cluster workloads and handle updates through coordinated, image-based approaches that drain nodes before applying changes rather than restarting services in place.\n...\nRather than simply blocking updates indefinitely, we've implemented a more controlled update strategy that maintains security while preventing the disruptive service restarts that caused this issue.\n...\nReliability remains our top priority. While member impact was minimal due to timing, we take any repeated system interruption seriously. The immediate fix has eliminated these specific incidents, and our ongoing infrastructure improvements will help prevent similar classes of issues.\n...\nWe're continuing to invest in tools and practices that make our platform more resilient, including better coordination between system updates and application workloads, enhanced monitoring capabilities, and infrastructure choices optimized for our distributed architecture.\n...\nThis incident reinforced that even routine system maintenance can have unexpected effects in complex distributed systems, and that the best defense is a combination of careful tooling choices, robust monitoring, and the ability to quickly reproduce and understand system behavior when issues arise.",
+				"quote": "How We Solved Intermittent Kubernetes Connectivity Issues | WHOOP Engineering\n...\nSoftware engineering is a continuous dialogue of learning, and today, we're contributing our chapter: a detailed breakdown of networking incidents that unfolded in our Kubernetes environment on AWS during June. While the timing of these overnight occurrences fortunately minimized impact to our WHOOP members, they revealed critical insights into the subtle ways system updates can destabilize distributed infrastructure. What follows is our journey of investigation: how we tracked down the root cause, the challenges we uncovered, and the improvements we've implemented.\n...\nThe culprit turned out to be an interaction between Ubuntu's automatic security updates and a tool called`needrestart`. When certain system services restarted during these automated updates, they cleared the kernel's connection-tracking state \u2014 essentially erasing the node's \"memory\" of which pods owned which network connections.\n...\nbehavior stemmed from a change in Ubuntu's update system that allowed\n...\nunattended application of\n...\npatches. This feature that had previously been disabled by default due to related issues in Ubuntu's parent distribution.\n...\nImmediate response: We deployed a solution to prevent the problematic automatic service restarts on our Kubernetes nodes. Since implementing this change, the overnight connectivity issues have completely stopped.\n...\nEnhanced monitoring: We added\n...\npacket capture tools and expanded our observability\n...\ncorrelate application timeouts with network-level events, giving us\n...\nvisibility into similar issues should they arise.\n...\nInfrastructure evolution: We're evaluating a transition from general-purpose Ubuntu to container-optimized operating systems like Flatcar. These platforms are designed specifically for cluster workloads and handle updates through coordinated, image-based approaches that drain nodes before applying changes rather than restarting services in place.\n...\nRather than simply blocking updates indefinitely, we've implemented a more controlled update strategy that maintains security while preventing the disruptive service restarts that caused this issue.\n...\nReliability remains our top priority. While member impact was minimal due to timing, we take any repeated system interruption seriously. The immediate fix has eliminated these specific incidents, and our ongoing infrastructure improvements will help prevent similar classes of issues.\n...\nWe're continuing to invest in tools and practices that make our platform more resilient, including better coordination between system updates and application workloads, enhanced monitoring capabilities, and infrastructure choices optimized for our distributed architecture.\n...\nThis incident reinforced that even routine system maintenance can have unexpected effects in complex distributed systems, and that the best defense is a combination of careful tooling choices, robust monitoring, and the ability to quickly reproduce and understand system behavior when issues arise.",
 				"fitReason": "WHOOP is a wellness wearable/app company, 974 staff in Boston, runs its own Kubernetes infra for members."
-			}
+			},
+			"note": "974 staff, US, health and wellness technology; WHOOP's own engineering blog gives a detailed account of production Kubernetes networking incidents on AWS, dated 2025-09-11 within the window"
 		},
 		"wise.com": {
 			"label": "accept",
@@ -1097,7 +1114,7 @@
 				"foundedYear": 2011,
 				"citedPage": "https://medium.com/wise-engineering/wise-tech-stack-2025-update-d0e63fe718c7",
 				"citedDate": "2025-02-12",
-				"quote": "As a result, we’ve grown from 6 Kubernetes clusters to more than 20 while keeping maintenance manageable and efficient.",
+				"quote": "As a result, we\u2019ve grown from 6 Kubernetes clusters to more than 20 while keeping maintenance manageable and efficient.",
 				"fitReason": "UK fintech, 6358 staff, engineering post shows growth to 20+ Kubernetes clusters managed in-house."
 			}
 		},
@@ -1109,7 +1126,7 @@
 			"note": "Zalando Group employs roughly 15,000-17,000 people including its fulfilment workforce, past the 10,000-employee named-account boundary, regardless of its own well-known Kubernetes open-source work",
 			"record": {
 				"industry": "Online fashion retail",
-				"description": "Welcome to Zalando. Here’s some key info about us:\n\nOur position and vision:\n- We’re Europe’s leading online platform for fashion and lifestyle.\n- Founded in Berlin in 2008, we bring head-to-toe fashion to more than 50 million active customers in 25 markets; offering clothes, footwear, accessories, and beauty. \n- We're building the ecosystem for fashion and lifestyle ecommerce.\n\nOur offering:\n- Our assortment of international brands ranges from world-famous names to local labels\n- Our platform is a one-stop fashion destination for inspiration, innovation, and interaction\n- As Europe’s most fashionable tech company, we work hard to find digital solutions for every aspect of the fashion journey: for our customers, partners, and friends of our brand.\n- Our logistics network with 12 centrally located fulfillment centers allows us to efficiently serve our customers throughout Europe, supported by warehouses in Italy, France, Poland, and Sweden with a focus on local customer needs. \n\nOur beliefs:\n- Our ambition is to combine our passion for self-expression through fashion with our unwavering commitments to sustainability and D&I\n- We promote an inclusive corporate culture that welcomes different perspectives and brings together people from diverse backgrounds. We want to ensure a non-discriminatory and supportive working environment for each of our employees to thrive. It’s a journey that all teams are on together, centered around the values we uphold.\n- We believe that our integration of fashion, operations, and online technology gives us the capability to deliver a compelling value proposition to both our customers and fashion brand partners. ",
+				"description": "Welcome to Zalando. Here\u2019s some key info about us:\n\nOur position and vision:\n- We\u2019re Europe\u2019s leading online platform for fashion and lifestyle.\n- Founded in Berlin in 2008, we bring head-to-toe fashion to more than 50 million active customers in 25 markets; offering clothes, footwear, accessories, and beauty. \n- We're building the ecosystem for fashion and lifestyle ecommerce.\n\nOur offering:\n- Our assortment of international brands ranges from world-famous names to local labels\n- Our platform is a one-stop fashion destination for inspiration, innovation, and interaction\n- As Europe\u2019s most fashionable tech company, we work hard to find digital solutions for every aspect of the fashion journey: for our customers, partners, and friends of our brand.\n- Our logistics network with 12 centrally located fulfillment centers allows us to efficiently serve our customers throughout Europe, supported by warehouses in Italy, France, Poland, and Sweden with a focus on local customer needs. \n\nOur beliefs:\n- Our ambition is to combine our passion for self-expression through fashion with our unwavering commitments to sustainability and D&I\n- We promote an inclusive corporate culture that welcomes different perspectives and brings together people from diverse backgrounds. We want to ensure a non-discriminatory and supportive working environment for each of our employees to thrive. It\u2019s a journey that all teams are on together, centered around the values we uphold.\n- We believe that our integration of fashion, operations, and online technology gives us the capability to deliver a compelling value proposition to both our customers and fashion brand partners. ",
 				"workforceTotal": 6856,
 				"country": "Germany",
 				"foundedYear": 2008,
@@ -1145,7 +1162,7 @@
 			"note": "1,076 staff, Germany, online pet-supply e-commerce; an Elastic customer case study quotes zooplus monitoring 2,500 microservices across 40 Kubernetes clusters, dated 2025-05-29 within the window",
 			"record": {
 				"industry": "Online pet retail",
-				"description": "We are zooplus. With over 25 years of exclusive focus on online retail in pet supplies, we are a trailblazer in the industry. Every day, we go the extra mile to meet the unique needs of pets, delivering exceptional value to our customers with an ever-expanding range of nutritional and lifestyle products, proprietary premium food and accessory brands, expert advice, convenient services, and loyalty programs.​\n\nOur commitment to innovation drives us as a team to lead the industry and set new standards for personalized, convenient shopping, consistently exceeding our customers' expectations. This dedication has made us the number one choice for over 11 million customers in 30 countries across Europe.​\n\nHeadquartered in Munich, Germany, zooplus employs over 1,200 people across Europe.",
+				"description": "We are zooplus. With over 25 years of exclusive focus on online retail in pet supplies, we are a trailblazer in the industry. Every day, we go the extra mile to meet the unique needs of pets, delivering exceptional value to our customers with an ever-expanding range of nutritional and lifestyle products, proprietary premium food and accessory brands, expert advice, convenient services, and loyalty programs.\u200b\n\nOur commitment to innovation drives us as a team to lead the industry and set new standards for personalized, convenient shopping, consistently exceeding our customers' expectations. This dedication has made us the number one choice for over 11 million customers in 30 countries across Europe.\u200b\n\nHeadquartered in Munich, Germany, zooplus employs over 1,200 people across Europe.",
 				"workforceTotal": 1076,
 				"country": "Germany",
 				"foundedYear": 1999,
@@ -1163,13 +1180,13 @@
 			"note": "1,765 staff, US, gaming; a CNCF case study quotes Zynga's own 12-person Kubernetes platform engineering team, dated 2026-03-02 within the window",
 			"record": {
 				"industry": "Computer games",
-				"description": "Zynga was founded in 2007 with the vision that play would become one of the core activities on the Internet. We pioneered social games with the belief that if we could make games simple, accessible and social the world would start playing. We are excited that games have grown to become the second most popular activity by time spent, even surpassing email. But we have a lot of hard work, innovation and growth ahead of us to create a future where social gaming is a daily habit for everyone. \n\nZynga is a global leader in interactive entertainment with a mission to connect the world through games and a wholly-owned label of Take-Two Interactive Software, Inc. \n\nWith a massive global reach in more than 175 countries and regions, the combined diverse portfolio of popular game franchises has been downloaded more than 5 billion times on mobile, including CSR Racing™, Dragon City™, Empires & Puzzles™, FarmVille™, Golf Rival™, Hair Challenge™, Harry Potter: Puzzles & Spells™, High Heels!™, Merge Dragons!™, Merge Magic!™, Monster Legends™, Toon Blast™, Top Eleven™, Toy Blast™, Two Dots™, Words With Friends™ and Zynga Poker™.",
+				"description": "Zynga was founded in 2007 with the vision that play would become one of the core activities on the Internet. We pioneered social games with the belief that if we could make games simple, accessible and social the world would start playing. We are excited that games have grown to become the second most popular activity by time spent, even surpassing email. But we have a lot of hard work, innovation and growth ahead of us to create a future where social gaming is a daily habit for everyone. \n\nZynga is a global leader in interactive entertainment with a mission to connect the world through games and a wholly-owned label of Take-Two Interactive Software, Inc. \n\nWith a massive global reach in more than 175 countries and regions, the combined diverse portfolio of popular game franchises has been downloaded more than 5 billion times on mobile, including CSR Racing\u2122, Dragon City\u2122, Empires & Puzzles\u2122, FarmVille\u2122, Golf Rival\u2122, Hair Challenge\u2122, Harry Potter: Puzzles & Spells\u2122, High Heels!\u2122, Merge Dragons!\u2122, Merge Magic!\u2122, Monster Legends\u2122, Toon Blast\u2122, Top Eleven\u2122, Toy Blast\u2122, Two Dots\u2122, Words With Friends\u2122 and Zynga Poker\u2122.",
 				"workforceTotal": 1765,
 				"country": "United States",
 				"foundedYear": 2007,
 				"citedPage": "https://www.cncf.io/case-studies/zynga/",
 				"citedDate": "2026-03-02",
-				"quote": "Zynga’s 12-person Kubernetes platform engineering team, spanning North America, Spain, and India, provides game developers with infrastructure to build games quickly and maintain high availability.",
+				"quote": "Zynga\u2019s 12-person Kubernetes platform engineering team, spanning North America, Spain, and India, provides game developers with infrastructure to build games quickly and maintain high availability.",
 				"fitReason": "Gaming company, 1765 staff in US, CNCF case study shows in-house Kubernetes team; no PKI evidence."
 			}
 		}
