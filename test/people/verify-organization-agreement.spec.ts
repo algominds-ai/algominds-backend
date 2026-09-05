@@ -78,6 +78,14 @@ function organizationIdOverrides(
 			`people-${domain}-verify-0-quote`,
 			{ found: true, reason: "found", costEntries: [] },
 		],
+		[
+			`people-${domain}-verify-0-profile`,
+			{
+				employment: "UNKNOWN",
+				reply: { employment: "UNKNOWN", title: null, since: null },
+				costEntries: [],
+			},
+		],
 	]);
 }
 

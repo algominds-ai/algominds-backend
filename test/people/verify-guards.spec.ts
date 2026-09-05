@@ -193,11 +193,19 @@ function wrongCompanyOverrides(domain: string): Map<string, unknown> {
 			`people-${domain}-verify-0-agree`,
 			{ label: "DIFFERENT", reply: { employer: "DIFFERENT" }, costEntries: [] },
 		],
+		[
+			`people-${domain}-verify-0-profile`,
+			{
+				employment: "UNKNOWN",
+				reply: { employment: "UNKNOWN", title: null, since: null },
+				costEntries: [],
+			},
+		],
 	]);
 }
 
 describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
-	it("does not verify a candidate the second opinion places at a different company", async () => {
+	it("does not verify a candidate the second opinion places at a different company and the profile rescue cannot confirm", async () => {
 		const domain = `wrong-company-${crypto.randomUUID()}.example`;
 		const seed = await seedPeopleRun("wrong-company");
 		try {
@@ -214,11 +222,19 @@ describe("FindPeopleWorkflow: a roster candidate who works elsewhere", () => {
 
 			const runCompanyRow = (await runCompanyRowsFor(seed.runId))[0];
 			if (!runCompanyRow) throw new Error("expected a run_company row");
-			const agreeRow = (await evidenceRowsFor(runCompanyRow.id)).find(
-				(row) => row.kind === "verify-agree",
-			);
+			const evidenceRows = await evidenceRowsFor(runCompanyRow.id);
+			const agreeRow = evidenceRows.find((row) => row.kind === "verify-agree");
 			if (!agreeRow) throw new Error("expected verify-agree evidence");
 			expect(JSON.parse(agreeRow.value)).toEqual({ employer: "DIFFERENT" });
+			const profileRow = evidenceRows.find(
+				(row) => row.kind === "verify-profile",
+			);
+			if (!profileRow) throw new Error("expected verify-profile evidence");
+			expect(JSON.parse(profileRow.value)).toEqual({
+				employment: "UNKNOWN",
+				title: null,
+				since: null,
+			});
 		} finally {
 			await cleanupPeopleRun(seed);
 		}

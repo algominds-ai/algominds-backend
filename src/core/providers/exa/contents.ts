@@ -60,6 +60,7 @@ export async function exaContents(
 	urls: readonly string[],
 	env: Env,
 	ledger: CostLedger,
+	maxCharacters: number = EXA_CONTENTS_MAX_CHARACTERS,
 ): Promise<ExaContentsResult> {
 	const apiKey = await env.EXA_API_KEY.get();
 	const body = await exaFetch(
@@ -69,7 +70,7 @@ export async function exaContents(
 			headers: { "x-api-key": apiKey, "content-type": "application/json" },
 			body: JSON.stringify({
 				urls,
-				text: { maxCharacters: EXA_CONTENTS_MAX_CHARACTERS },
+				text: { maxCharacters },
 			}),
 		},
 		"Exa contents",

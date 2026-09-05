@@ -15,11 +15,7 @@ import {
 } from "@/core/people/rows";
 import type { SelectedBuyer, SelectModelReply } from "@/core/people/select";
 import { selectBuyers } from "@/core/people/select";
-import {
-	classifyVerdict,
-	employerOpinion,
-	indexOpinion,
-} from "@/core/people/verify";
+import { classifyVerdict } from "@/core/people/verify";
 import type {
 	ExaAgentVerdict,
 	VerdictRunInput,
@@ -38,6 +34,7 @@ import type {
 	RosterStepResult,
 } from "@/workflows/find-people-company";
 import { recordCompanySpend } from "@/workflows/find-people-company";
+import { secondOpinion } from "@/workflows/find-people-second-opinion";
 
 async function runSelect(
 	ctx: CompanyLoopContext,
@@ -62,7 +59,7 @@ async function runSelect(
 	);
 }
 
-type PickEvidence = { kind: string; body: unknown };
+export type PickEvidence = { kind: string; body: unknown };
 
 type PickOutcome = {
 	verified: boolean;
@@ -70,7 +67,7 @@ type PickOutcome = {
 	costEntries: CostEntry[];
 };
 
-type PickContext = {
+export type PickContext = {
 	ctx: CompanyLoopContext;
 	progress: CompanyProgress;
 	name: string;
@@ -84,101 +81,6 @@ function verdictSubject(pick: PickContext): VerdictRunInput {
 		company: pick.candidate.company ?? pick.progress.companyName,
 		domain: pick.progress.domain,
 	};
-}
-
-type IndexStepResult = {
-	found: boolean;
-	employer: string | null;
-	employerCompanyId: string | null;
-	reply: string;
-	costEntries: CostEntry[];
-};
-
-type OrganizationAgreement = {
-	employer: "SAME" | "DIFFERENT";
-	byOrganizationId: true;
-};
-
-/** The deterministic agreement by Exa organization id, or null when either side's id is unknown and a model opinion is still needed. */
-function organizationAgreement(
-	organizationId: string | null,
-	employerCompanyId: string | null,
-): OrganizationAgreement | null {
-	if (organizationId === null || employerCompanyId === null) return null;
-	return {
-		employer: organizationId === employerCompanyId ? "SAME" : "DIFFERENT",
-		byOrganizationId: true,
-	};
-}
-
-async function secondOpinion(
-	pick: PickContext,
-	ledger: CostLedger,
-): Promise<{ verified: boolean; evidence: PickEvidence[] }> {
-	const indexResult = await pick.ctx.step.do(
-		`${pick.name}-index`,
-		config.stepConfig.paidCall,
-		async (): Promise<IndexStepResult> => {
-			const stepLedger = new CostLedger();
-			const result = await indexOpinion(
-				{
-					name: pick.candidate.name,
-					title: pick.candidate.title ?? "",
-					company: pick.candidate.company ?? pick.progress.companyName,
-					url: pick.candidate.url,
-				},
-				pick.ctx.env,
-				stepLedger,
-			);
-			return {
-				found: result.found,
-				employer: result.employer,
-				employerCompanyId: result.employerCompanyId,
-				reply: JSON.stringify(result.reply),
-				costEntries: stepLedger.toJSON().entries,
-			};
-		},
-	);
-	applyCostEntries(indexResult.costEntries, ledger);
-	const evidence: PickEvidence[] = [
-		{ kind: "verify-index", body: indexResult.reply },
-	];
-	if (!indexResult.found || indexResult.employer === null) {
-		return { verified: false, evidence };
-	}
-	const agreement = organizationAgreement(
-		pick.progress.exaOrganizationId,
-		indexResult.employerCompanyId,
-	);
-	if (agreement) {
-		evidence.push({ kind: "verify-agree", body: agreement });
-		return { verified: agreement.employer === "SAME", evidence };
-	}
-	const employer = indexResult.employer;
-	const agreeResult = await pick.ctx.step.do(
-		`${pick.name}-agree`,
-		config.stepConfig.paidCall,
-		async () => {
-			const stepLedger = new CostLedger();
-			const result = await employerOpinion(
-				{
-					employer,
-					company: pick.progress.companyName,
-					domain: pick.progress.domain,
-				},
-				pick.ctx.env,
-				stepLedger,
-			);
-			return {
-				label: result.label,
-				reply: result.reply,
-				costEntries: stepLedger.toJSON().entries,
-			};
-		},
-	);
-	applyCostEntries(agreeResult.costEntries, ledger);
-	evidence.push({ kind: "verify-agree", body: agreeResult.reply });
-	return { verified: agreeResult.label === "SAME", evidence };
 }
 
 type QuoteCheck = {
