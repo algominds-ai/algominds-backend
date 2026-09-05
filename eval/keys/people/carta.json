@@ -3,60 +3,67 @@
 	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
 	"people": {
 		"https://linkedin.com/in/akshay-agrawal-57a30aa6": {
-			"label": null,
+			"label": "accept",
 			"name": "Akshay Agrawal",
 			"title": "CEO, Founder",
 			"company": "onoshealth.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "CEO, Founder of Onos Health, a company of about 21 staff, well under the 50-person threshold where the founder/CEO exception applies"
 		},
 		"https://linkedin.com/in/cpeterson42": {
-			"label": null,
+			"label": "accept",
 			"name": "Carl Peterson",
 			"title": "Co-Founder & CEO",
 			"company": "thundercompute.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Co-Founder & CEO of Thunder Compute, a company of about 10 staff, well under the 50-person threshold"
 		},
 		"https://linkedin.com/in/dr-daniel-rifkin-md-mph-591946a": {
-			"label": null,
+			"label": "accept",
 			"name": "Dr. Daniel Rifkin, MD, MPH",
 			"title": "Founder/Chief Executive Officer",
 			"company": "ognomy.com",
 			"location": "Buffalo, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Founder/CEO of Ognomy, a company of about 20 staff, well under the 50-person threshold"
 		},
 		"https://linkedin.com/in/erinn-macaulay-51340711": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Erinn Macaulay",
 			"title": "Head of Accounts",
 			"company": "onoshealth.com",
 			"location": "United States, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Head of Accounts is not one of the rubric's named finance-function titles (CFO, VP Finance, Head of Finance, Controller), and could as easily be a client-accounts/sales role, a named hard negative"
 		},
 		"https://linkedin.com/in/rahul-shivkumar-04138252": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Rahul Shivkumar",
 			"title": "Co-Founder",
 			"company": "withassured.com",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Assured has about 88 staff, above the 50-person threshold where the founder/CEO exception applies, and Co-Founder alone is not a named finance-function title"
 		},
 		"https://linkedin.com/in/varunakrishnamurthy": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Varun Krishnamurthy",
 			"title": "Co-Founder & CEO",
 			"company": "withassured.com",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Assured has about 88 staff, above the 50-person threshold where the founder/CEO exception applies, and CEO alone is not one of the rubric's named finance-function titles once that exception no longer applies"
 		},
 		"https://linkedin.com/in/william-messina-032917175": {
-			"label": null,
+			"label": "accept",
 			"name": "Will Messina",
 			"title": "Co-Founder & CEO",
 			"company": "grailpay.com",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Co-Founder & CEO of GrailPay, a company of about 16 staff, well under the 50-person threshold"
 		}
 	}
 }

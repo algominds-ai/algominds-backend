@@ -21,12 +21,13 @@
 			"note": "Co-founder & CTO at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/andhei": {
-			"label": null,
+			"label": "accept",
 			"name": "Andreas Heidoetting",
 			"title": "Interim Head of Compute Platform",
 			"company": "cariad.technology",
 			"location": "Nuremberg, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Interim Head of Compute Platform at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/anushadharmalingam": {
 			"label": "accept",
@@ -56,20 +57,22 @@
 			"note": "Head of Engineering Tools & Services at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/balaji-raghavan-55865b3": {
-			"label": null,
+			"label": "accept",
 			"name": "Balaji Raghavan",
 			"title": "Head of Engineering",
 			"company": "postman.com",
 			"location": "Los Altos, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Engineering at postman, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/bjoern-mittag-16b973171": {
-			"label": null,
+			"label": "accept",
 			"name": "Bjoern Mittag",
 			"title": "VP of Engineering",
 			"company": "cariad.technology",
 			"location": "Munich, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "VP of Engineering at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/brian-harris-a4731018": {
 			"label": "accept",
@@ -108,20 +111,22 @@
 			"note": "Director, Customer Trust & Security Governance is a compliance/governance-adjacent role, not the Director of Platform or Infrastructure the rubric names"
 		},
 		"https://linkedin.com/in/charlie-maclean-70508657": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Charlie Maclean",
 			"title": "Director of Technology Operations",
 			"company": "monzo.com",
 			"location": "Bristol, United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Director of Technology Operations is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
 		"https://linkedin.com/in/christian-behrens-5a75511a8": {
-			"label": null,
+			"label": "accept",
 			"name": "Christian Behrens",
 			"title": "Head of IT Security Governance",
 			"company": "cariad.technology",
 			"location": "Oldenburg, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of IT Security Governance at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/christoph-springer-67822096": {
 			"label": "accept",
@@ -151,20 +156,22 @@
 			"note": "Vice President, Security Assurance at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/daniel-chatfield-01ab2127": {
-			"label": null,
+			"label": "accept",
 			"name": "Daniel Chatfield",
 			"title": "Chief Information Officer (EU)",
 			"company": "monzo.com",
 			"location": "United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Chief Information Officer (EU) at monzo, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/danielbear": {
-			"label": null,
+			"label": "accept",
 			"name": "Daniel Bear",
 			"title": "Head of Engineering",
 			"company": "whatnot.com",
 			"location": "Seattle, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Engineering at whatnot, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/dennisvanrooijen": {
 			"label": "accept",
@@ -203,12 +210,13 @@
 			"note": "Head of Engineering at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/eleni-fragkiadaki": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Eleni Fragkiadaki",
 			"title": "Director Of Engineering, Business banking",
 			"company": "monzo.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Director of Engineering, Business banking is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
 		"https://linkedin.com/in/emilioesc": {
 			"label": "accept",
@@ -229,28 +237,31 @@
 			"note": "Director Dedicated Infrastructure at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/floyd-fernandes-4507a41": {
-			"label": null,
+			"label": "accept",
 			"name": "Floyd Fernandes",
 			"title": "Chief Information Security Officer",
 			"company": "whatnot.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Chief Information Security Officer at whatnot, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/gerrit-lober-7380a0118": {
-			"label": null,
+			"label": "accept",
 			"name": "Gerrit Lober",
 			"title": "Head of Cloud Foundation & Technology",
 			"company": "cariad.technology",
-			"location": "Hannover-Braunschweig-Göttingen-Wolfsburg Region, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"location": "Hannover-Braunschweig-G\u00f6ttingen-Wolfsburg Region, Germany",
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Cloud Foundation & Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/grant-king-1422778": {
-			"label": null,
+			"label": "accept",
 			"name": "Grant King",
 			"title": "Head of Cloud Platform",
 			"company": "postman.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Cloud Platform at postman, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/gustavo-foncea": {
 			"label": "accept",
@@ -297,9 +308,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Senior Vice President of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/ian-kurtén-55456": {
+		"https://linkedin.com/in/ian-kurt\u00e9n-55456": {
 			"label": "accept",
-			"name": "Ian Kurtén",
+			"name": "Ian Kurt\u00e9n",
 			"title": "Head of High Security",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -308,7 +319,7 @@
 		},
 		"https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141": {
 			"label": "accept",
-			"name": "Ignacio Jiménez Pi",
+			"name": "Ignacio Jim\u00e9nez Pi",
 			"title": "SVP Platform Engineering",
 			"company": "adyen.com",
 			"location": "Amsterdam, Netherlands",
@@ -317,7 +328,7 @@
 		},
 		"https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12": {
 			"label": "accept",
-			"name": "Iván Lugo",
+			"name": "Iv\u00e1n Lugo",
 			"title": "Vice President of Global Engineering",
 			"company": "dexcom.com",
 			"location": "Irvine, United States",
@@ -397,12 +408,13 @@
 			"note": "Director of Engineering is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
 		"https://linkedin.com/in/julian-christopher-zeug-58237a98": {
-			"label": null,
+			"label": "accept",
 			"name": "Julian Christopher Zeug",
 			"title": "Head of IT Security Operations",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of IT Security Operations at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/julien-conan-450aa325": {
 			"label": "accept",
@@ -423,12 +435,13 @@
 			"note": "SVP Cloud Engineering and Operations at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/katharina-stark": {
-			"label": null,
+			"label": "accept",
 			"name": "Katharina Stark",
 			"title": "Head of Operations Cloud & Connect",
 			"company": "cariad.technology",
 			"location": "Ludwigsburg, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Operations Cloud & Connect at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/kimberly-wolk-50297a1": {
 			"label": "accept",
@@ -467,12 +480,13 @@
 			"note": "VP of Lottery Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/logan-head-b0866615": {
-			"label": null,
+			"label": "accept",
 			"name": "Logan Head",
 			"title": "Co-Founder - CTO",
 			"company": "whatnot.com",
 			"location": "Phoenix, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Co-Founder - CTO at whatnot, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/lopez1": {
 			"label": "accept",
@@ -529,12 +543,13 @@
 			"note": "Vice President of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/markus-b-aa3b36148": {
-			"label": null,
+			"label": "accept",
 			"name": "Markus B.",
 			"title": "Head of Compute Platform Technology",
 			"company": "cariad.technology",
 			"location": "Neutraubling, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Compute Platform Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/markus-kinnunen-3388b63": {
 			"label": "accept",
@@ -546,29 +561,31 @@
 			"note": "Vice President and CIO at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/michael-mayer-263692b6": {
-			"label": null,
+			"label": "accept",
 			"name": "Michael Mayer",
 			"title": "Head of Software Platform / SW Architecture",
 			"company": "cariad.technology",
 			"location": "Munich, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Software Platform / SW Architecture at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/michael-wildpaner-b9b8591": {
 			"label": "accept",
 			"name": "Michael Wildpaner",
-			"title": "VP of Engineering — Security",
+			"title": "VP of Engineering \u2014 Security",
 			"company": "gitlab.com",
 			"location": "Zurich, Switzerland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
-			"note": "VP of Engineering — Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+			"note": "VP of Engineering \u2014 Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/mpfajfar": {
-			"label": null,
+			"label": "accept",
 			"name": "Matej Pfajfar",
 			"title": "Chief Technology Officer (CTO)",
 			"company": "monzo.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Chief Technology Officer (CTO) at monzo, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/naveenaerrabotu": {
 			"label": "accept",
@@ -580,12 +597,13 @@
 			"note": "VP of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/nishma-shah-532aab5": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Nishma Shah",
 			"title": "Director of Engineering, EU Expansion & Product Integrity",
 			"company": "monzo.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Director of Engineering, EU Expansion & Product Integrity is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
 		"https://linkedin.com/in/nuno-antunes-7746a41": {
 			"label": "accept",
@@ -624,12 +642,13 @@
 			"note": "Chief Technology Officer at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/patricia-stich-a5046b27": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Patricia Stich",
-			"title": "Vorständin Volkswagen Group Info Services AG",
+			"title": "Vorst\u00e4ndin Volkswagen Group Info Services AG",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "title names a board role at a different Volkswagen Group entity (Group Info Services AG), not one of the rubric's named CTO/CIO/CISO/VP-Head technology titles at CARIAD itself"
 		},
 		"https://linkedin.com/in/paul-stapleton-a17b356": {
 			"label": "accept",
@@ -722,20 +741,22 @@
 			"note": "VP of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/saritha-auti-a307b01": {
-			"label": null,
+			"label": "accept",
 			"name": "Saritha Auti",
 			"title": "VP and Global CISO",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "VP and Global CISO at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/schehab": {
-			"label": null,
+			"label": "accept",
 			"name": "Sam Chehab",
 			"title": "Head of Security and IT",
 			"company": "postman.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Security and IT at postman, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/sean-flanagan-cspo-csm-40983a94": {
 			"label": "accept",
@@ -747,12 +768,13 @@
 			"note": "Head of Global Engineering Operations at DraftKings at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/sebastien-vincent-b4278b34": {
-			"label": null,
+			"label": "accept",
 			"name": "sebastien vincent",
 			"title": "Head of Development Infrastructure and Tooling",
 			"company": "cariad.technology",
 			"location": "Berlin, Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Development Infrastructure and Tooling at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/seshendranalla": {
 			"label": "accept",
@@ -773,20 +795,22 @@
 			"note": "Senior Vice President, Chief Information Officer, Dexcom at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/stephen-voorhees-0734674": {
-			"label": null,
+			"label": "accept",
 			"name": "Stephen Voorhees",
 			"title": "Vice President of Infrastructure",
 			"company": "whatnot.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Vice President of Infrastructure at whatnot, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/stevelmartin": {
-			"label": null,
+			"label": "accept",
 			"name": "Steven Martin",
 			"title": "VP Engineering",
 			"company": "monzo.com",
 			"location": "Cambridge, United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "VP Engineering at monzo, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/stijnvanesveld": {
 			"label": "accept",
@@ -798,12 +822,13 @@
 			"note": "Head of Platform Reliability at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/thomas-enders-43253611": {
-			"label": null,
+			"label": "accept",
 			"name": "Thomas Enders",
 			"title": "Head of Competence Centers Connect & Cloud",
 			"company": "cariad.technology",
 			"location": "Germany",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Head of Competence Centers Connect & Cloud at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/tim-zallmann-505b2b4b": {
 			"label": "accept",
@@ -814,9 +839,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/timo-hänninen-0b899071": {
+		"https://linkedin.com/in/timo-h\u00e4nninen-0b899071": {
 			"label": "accept",
-			"name": "Timo Hänninen",
+			"name": "Timo H\u00e4nninen",
 			"title": "Business Lead, Head of Cloud and Infrastructure services",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -833,12 +858,13 @@
 			"note": "Chief Technology Officer at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/tom-leitch": {
-			"label": null,
+			"label": "accept",
 			"name": "Thomas Leitch",
 			"title": "Vice President of Engineering",
 			"company": "monzo.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05"
+			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
+			"note": "Vice President of Engineering at monzo, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/tuan-kha-87910b2": {
 			"label": "accept",
@@ -878,7 +904,7 @@
 		},
 		"https://linkedin.com/in/whats": {
 			"label": "accept",
-			"name": "Albert Sellarès",
+			"name": "Albert Sellar\u00e8s",
 			"title": "CTO / Global VP of Engineering (entire Adevinta group)",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
@@ -894,9 +920,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Chief Technology Officer at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/àngel-puigventós-76a35147": {
+		"https://linkedin.com/in/\u00e0ngel-puigvent\u00f3s-76a35147": {
 			"label": "accept",
-			"name": "Àngel Puigventós",
+			"name": "\u00c0ngel Puigvent\u00f3s",
 			"title": "Head of Security Operations",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",

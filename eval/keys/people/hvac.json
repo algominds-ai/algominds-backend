@@ -3,44 +3,49 @@
 	"icpId": "bad48334-f775-4e9a-9032-9d51a16f2f1d",
 	"people": {
 		"https://linkedin.com/in/christopher-horan-24766b39": {
-			"label": null,
+			"label": "accept",
 			"name": "Christopher Horan",
 			"title": "CEO",
 			"company": "thermalconcepts.com",
 			"location": "Fort Lauderdale, United States",
-			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
+			"note": "CEO at thermalconcepts, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/david-goerke-18149741": {
-			"label": null,
+			"label": "accept",
 			"name": "David Goerke",
 			"title": "President",
 			"company": "msifla.com",
 			"location": "Orlando, United States",
-			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
+			"note": "President at msifla, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/drew-adams-85a7151b": {
-			"label": null,
+			"label": "accept",
 			"name": "Drew Adams",
 			"title": "President",
 			"company": "engcool.com",
 			"location": "Pensacola, United States",
-			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
+			"note": "President at engcool, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/raymond-perez-msi": {
-			"label": null,
+			"label": "accept",
 			"name": "Raymond Perez, MBA, LEED AP",
 			"title": "Chief Operating Officer",
 			"company": "msifla.com",
 			"location": "Jacksonville, United States",
-			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
+			"note": "Chief Operating Officer at msifla, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/wes-bailey-88721520": {
-			"label": null,
+			"label": "accept",
 			"name": "Wes Bailey",
 			"title": "General Manager",
 			"company": "engcool.com",
 			"location": "Orlando, United States",
-			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
+			"note": "General Manager at engcool, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		}
 	}
 }
