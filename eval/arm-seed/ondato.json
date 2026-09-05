@@ -1,7 +1,7 @@
 {
 	"buyer": {
 		"bands": ["founder", "c-suite", "vp", "director", "head"],
-		"rubric": "The buyer is the Chief Revenue Officer, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or the Founder or CEO at a company under about 50 people. Compliance officers, MLROs, heads of risk, general counsel and CISOs are never the buyer. Brand, marketing-communications, marketing-planning and commercial or revenue-operations titles below the CMO or CRO are never the buyer.",
+		"rubric": "The buyer is the Chief Revenue Officer, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or the Founder or CEO at a company under about 50 people. Compliance officers, MLROs, heads of risk, general counsel and CISOs are never the buyer.",
 		"keywordBands": []
 	},
 	"seller": {
