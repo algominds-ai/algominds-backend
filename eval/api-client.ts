@@ -48,6 +48,18 @@ export async function startCompaniesRun(
 	return StartedRunSchema.parse(started).runId;
 }
 
+export async function startPeopleRun(
+	client: ApiClient,
+	icpId: string,
+	domains: readonly string[],
+): Promise<string> {
+	const started = await request(client, "POST", "/people/find", {
+		icpId,
+		domains,
+	});
+	return StartedRunSchema.parse(started).runId;
+}
+
 const RunStatusSchema = z.object({ status: z.string() });
 
 const OPENING_GRACE_MS = 60_000;
