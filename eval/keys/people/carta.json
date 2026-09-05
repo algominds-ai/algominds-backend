@@ -2,6 +2,14 @@
 	"slug": "carta",
 	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
 	"people": {
+		"https://linkedin.com/in/aaron-ginn-6757ab1a": {
+			"label": null,
+			"name": "Aaron Ginn",
+			"title": "CEO & Co-Founder",
+			"company": "hydrahost.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+		},
 		"https://linkedin.com/in/akshay-agrawal-57a30aa6": {
 			"label": "accept",
 			"name": "Akshay Agrawal",
@@ -11,9 +19,25 @@
 			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
 			"note": "CEO, Founder of Onos Health, a company of about 21 staff, well under the 50-person threshold where the founder/CEO exception applies"
 		},
-		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
+		"https://linkedin.com/in/alan-lee-4150615": {
+			"label": null,
+			"name": "Alan Lee",
+			"title": "VP Finance",
+			"company": "primeintellect.ai",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+		},
+		"https://linkedin.com/in/alex-saroyan": {
+			"label": null,
+			"name": "Alex Saroyan",
+			"title": "CEO, Co-Founder",
+			"company": "netris.io",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+		},
+		"https://linkedin.com/in/clément-carrier-74009658": {
 			"label": "reject:not-buyer",
-			"name": "Cl\u00e9ment Carrier",
+			"name": "Clément Carrier",
 			"title": "Co-founder & CEO",
 			"company": "helloaria.eu",
 			"location": "Paris, France",
@@ -55,6 +79,14 @@
 			"location": "London, United Kingdom",
 			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
 			"note": "Founder & CEO at kord.com, a 21-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/jasonliao02": {
+			"label": null,
+			"name": "Jason Liao",
+			"title": "Co-Founder and CEO",
+			"company": "mundoai.world",
+			"location": "Canada, Canada",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
 		},
 		"https://linkedin.com/in/lindseyb": {
 			"label": "accept",

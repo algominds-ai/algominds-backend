@@ -182,6 +182,23 @@
 				"fitReason": "Apopka FL, 25 staff, mechanical/plumbing contractor specializing in commercial HVAC service and repair."
 			}
 		},
+		"jrhobbs.com": {
+			"label": null,
+			"name": "J.R. Hobbs Company",
+			"firstSeenRunId": "companies_9a934d39-7589-42fb-90b8-fc3dac2e69aa_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:52:00.530Z",
+			"record": {
+				"industry": null,
+				"description": "J.R. Hobbs is a leading mechanical contractor providing design, build, plan and install to specification HVAC systems in the multi-family residential new construction industry. With over 50 years in the industry, we have 100+ active new construction building projects in nine states throughout the Southeast. As a company, we believe strongly in developing our people and promoting from within. JR Hobbs is a Gladstone Investments Company (NASDAQ: GAIN). \n\nAt Hobbs, we look to hire for the long term, not just for a single project.\n\nWhat’s it like working at Hobbs? Let some of our fantastic employees tell you! ➡ https://youtu.be/xjoW23c8PpM \n\n",
+				"workforceTotal": 47,
+				"country": "United States",
+				"foundedYear": 1971,
+				"citedPage": "https://jrhobbs.com/",
+				"citedDate": "2026-06-23T00:00:00.000Z",
+				"quote": null,
+				"fitReason": ""
+			}
+		},
 		"krmechanicalsvcs.com": {
 			"label": "accept",
 			"name": "K&R Mechanical Services LLC",

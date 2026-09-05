@@ -74,6 +74,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Vice President of Engineering at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/arnoburggraaf": {
+			"label": null,
+			"name": "Arno Burggraaf",
+			"title": "CIO",
+			"company": "mendix.com",
+			"location": "Netherlands, Netherlands",
+			"firstSeenRunId": "people_dom-3cef6f6217d8_2026-09-05"
+		},
 		"https://linkedin.com/in/ashley-miller-1905757": {
 			"label": "accept",
 			"name": "Ashley Miller",
@@ -199,6 +207,14 @@
 			"location": "Bristol, United Kingdom",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Director of Technology Operations is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
+		},
+		"https://linkedin.com/in/cheechew": {
+			"label": null,
+			"name": "chee chew",
+			"title": "chief product and technology officer",
+			"company": "zapier.com",
+			"location": "Bellevue, United States",
+			"firstSeenRunId": "people_dom-3cef6f6217d8_2026-09-05"
 		},
 		"https://linkedin.com/in/christian-behrens-5a75511a8": {
 			"label": "accept",
@@ -337,7 +353,7 @@
 		},
 		"https://linkedin.com/in/emanuel-fl%c3%bcck-aa791a82": {
 			"label": "accept",
-			"name": "Emanuel Fl\u00fcck",
+			"name": "Emanuel Flück",
 			"title": "Head Cloud Center of Excellence PostFinance",
 			"company": "postfinance.ch",
 			"location": "Berne, Switzerland",
@@ -421,7 +437,7 @@
 			"name": "Gerrit Lober",
 			"title": "Head of Cloud Foundation & Technology",
 			"company": "cariad.technology",
-			"location": "Hannover-Braunschweig-G\u00f6ttingen-Wolfsburg Region, Germany",
+			"location": "Hannover-Braunschweig-Göttingen-Wolfsburg Region, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Cloud Foundation & Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
@@ -488,9 +504,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Senior Vice President of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/ian-kurt\u00e9n-55456": {
+		"https://linkedin.com/in/ian-kurtén-55456": {
 			"label": "accept",
-			"name": "Ian Kurt\u00e9n",
+			"name": "Ian Kurtén",
 			"title": "Head of High Security",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -499,7 +515,7 @@
 		},
 		"https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141": {
 			"label": "accept",
-			"name": "Ignacio Jim\u00e9nez Pi",
+			"name": "Ignacio Jiménez Pi",
 			"title": "SVP Platform Engineering",
 			"company": "adyen.com",
 			"location": "Amsterdam, Netherlands",
@@ -529,13 +545,13 @@
 			"name": "Ioannis Papadopoulos",
 			"title": "Chief Technology Officer",
 			"company": "trivago.com",
-			"location": "D\u00fcsseldorf, Germany",
+			"location": "Düsseldorf, Germany",
 			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05",
 			"note": "Chief Technology Officer at trivago.com, explicit c-suite technology executive"
 		},
 		"https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12": {
 			"label": "accept",
-			"name": "Iv\u00e1n Lugo",
+			"name": "Iván Lugo",
 			"title": "Vice President of Global Engineering",
 			"company": "dexcom.com",
 			"location": "Irvine, United States",
@@ -815,7 +831,7 @@
 		"https://linkedin.com/in/markus-fuhrer-422422a0": {
 			"label": "accept",
 			"name": "Markus Fuhrer",
-			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Gesch\u00e4ftsleitung",
+			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Geschäftsleitung",
 			"company": "postfinance.ch",
 			"location": "Bolligen, Switzerland",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
@@ -869,11 +885,11 @@
 		"https://linkedin.com/in/michael-wildpaner-b9b8591": {
 			"label": "accept",
 			"name": "Michael Wildpaner",
-			"title": "VP of Engineering \u2014 Security",
+			"title": "VP of Engineering — Security",
 			"company": "gitlab.com",
 			"location": "Zurich, Switzerland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
-			"note": "VP of Engineering \u2014 Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+			"note": "VP of Engineering — Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/mike-bidgoli-579b607": {
 			"label": "accept",
@@ -995,7 +1011,7 @@
 		"https://linkedin.com/in/patricia-stich-a5046b27": {
 			"label": "reject:not-buyer",
 			"name": "Patricia Stich",
-			"title": "Vorst\u00e4ndin Volkswagen Group Info Services AG",
+			"title": "Vorständin Volkswagen Group Info Services AG",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
@@ -1271,9 +1287,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/timo-h\u00e4nninen-0b899071": {
+		"https://linkedin.com/in/timo-hänninen-0b899071": {
 			"label": "accept",
-			"name": "Timo H\u00e4nninen",
+			"name": "Timo Hänninen",
 			"title": "Business Lead, Head of Cloud and Infrastructure services",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -1399,7 +1415,7 @@
 		},
 		"https://linkedin.com/in/whats": {
 			"label": "accept",
-			"name": "Albert Sellar\u00e8s",
+			"name": "Albert Sellarès",
 			"title": "CTO / Global VP of Engineering (entire Adevinta group)",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
@@ -1424,9 +1440,9 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "SVP, Engineering at tubitv.com, a VP Engineering role"
 		},
-		"https://linkedin.com/in/\u00e0ngel-puigvent\u00f3s-76a35147": {
+		"https://linkedin.com/in/àngel-puigventós-76a35147": {
 			"label": "accept",
-			"name": "\u00c0ngel Puigvent\u00f3s",
+			"name": "Àngel Puigventós",
 			"title": "Head of Security Operations",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
