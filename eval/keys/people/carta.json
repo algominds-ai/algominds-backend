@@ -39,16 +39,17 @@
 			"note": "CEO, Co-Founder at netris.io, a 37-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/clemens-wessendorff": {
-			"label": null,
+			"label": "accept",
 			"name": "Clemens Wessendorff",
 			"title": "Co-founder and CEO",
 			"company": "arcintelligence.com",
 			"location": "Berlin, Germany",
-			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05"
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "Co-founder and CEO at arcintelligence.com, an 11-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
-		"https://linkedin.com/in/clément-carrier-74009658": {
+		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
 			"label": "reject:not-buyer",
-			"name": "Clément Carrier",
+			"name": "Cl\u00e9ment Carrier",
 			"title": "Co-founder & CEO",
 			"company": "helloaria.eu",
 			"location": "Paris, France",
@@ -92,12 +93,13 @@
 			"note": "Head of Accounts is not one of the rubric's named finance-function titles (CFO, VP Finance, Head of Finance, Controller), and could as easily be a client-accounts/sales role, a named hard negative"
 		},
 		"https://linkedin.com/in/gabriel-james-safar-44789260": {
-			"label": null,
+			"label": "accept",
 			"name": "Gabriel-James Safar",
 			"title": "Co-founder and CEO",
 			"company": "tsuga.com",
 			"location": "Paris, France",
-			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05"
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "Co-founder and CEO at tsuga.com, a 41-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/james-owusu-b1453849": {
 			"label": "accept",
@@ -109,12 +111,13 @@
 			"note": "Founder & CEO at kord.com, a 21-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/jan-philipp-haas-82379677": {
-			"label": null,
+			"label": "accept",
 			"name": "Jan Philipp Haas",
 			"title": "Co-Founder & CEO",
 			"company": "conduct.ai",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05"
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "Co-Founder & CEO at conduct.ai, a 31-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/jasonliao02": {
 			"label": "accept",
@@ -145,20 +148,21 @@
 		},
 		"https://linkedin.com/in/marta-rodriguez-blanco-322a052a": {
 			"label": "accept",
-			"name": "Marta Rodríguez Blanco",
+			"name": "Marta Rodr\u00edguez Blanco",
 			"title": "Vice President Finance",
 			"company": "ipronics.com",
-			"location": "Valencia/València, Spain",
+			"location": "Valencia/Val\u00e8ncia, Spain",
 			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
 			"note": "Vice President Finance at ipronics.com, an explicit finance-owner buyer role"
 		},
 		"https://linkedin.com/in/mikeboydbrowne": {
-			"label": null,
+			"label": "accept",
 			"name": "Mike Browne",
 			"title": "VP of Finance",
 			"company": "flaglerhealth.io",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05"
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "VP of Finance at flaglerhealth.io, an explicit finance-owner buyer role"
 		},
 		"https://linkedin.com/in/nickknuppe": {
 			"label": "accept",

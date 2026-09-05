@@ -732,12 +732,13 @@
 			"note": "Vice President of Operations and Integration at prosmile, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/theresa-chudej-a8607430b": {
-			"label": null,
+			"label": "accept",
 			"name": "Theresa Chudej",
 			"title": "Regional Director",
 			"company": "peakdentalservices.com",
 			"location": "Katy, United States",
-			"firstSeenRunId": "people_dom-c1ad55d86df1_2026-09-05"
+			"firstSeenRunId": "people_dom-c1ad55d86df1_2026-09-05",
+			"note": "Regional Director at peakdentalservices.com, matching the established Regional Director/Regional Manager operations-leadership accept pattern"
 		},
 		"https://linkedin.com/in/tiffany-howerton-rdh-bsdh-7458b7204": {
 			"label": "accept",
