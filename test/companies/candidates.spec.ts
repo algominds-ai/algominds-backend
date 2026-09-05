@@ -162,6 +162,7 @@ function keptDeps(): FindCompaniesDeps {
 				statuses: requirements.map((r) => ({
 					id: r.id,
 					status: "proven" as const,
+					quote: "",
 				})),
 				reason: "fits icp",
 				sameOrganizationAs: null,

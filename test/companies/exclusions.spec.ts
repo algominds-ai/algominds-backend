@@ -133,8 +133,8 @@ function agentDeps(
 						verdict({
 							index,
 							statuses: [
-								{ id: "r1", status: "proven" },
-								{ id: "r2", status: "proven" },
+								{ id: "r1", status: "proven", quote: "" },
+								{ id: "r2", status: "proven", quote: "" },
 							],
 						}),
 					),
@@ -179,8 +179,8 @@ describe("a company this account already holds never comes back, on either route
 					verdict({
 						index,
 						statuses: [
-							{ id: "r1", status: "proven" },
-							{ id: "r2", status: "proven" },
+							{ id: "r1", status: "proven", quote: "" },
+							{ id: "r2", status: "proven", quote: "" },
 						],
 						sameOrganizationAs: candidate.domain === "jobs.barclays" ? 1 : null,
 					}),

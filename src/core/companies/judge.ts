@@ -60,11 +60,12 @@ const JUDGE_INSTRUCTIONS = [
 	"row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
 	"under another brand, country domain or subdomain, and to null otherwise.",
-	"A requirement marked `(quote required)` needs `quote` for a `proven` status: a passage",
-	"copied verbatim from this row's own evidence text that states the required fact itself,",
-	"not a paraphrase and not a fact about a related company. The quote must support the fact",
-	"when read in its own context, including any negation, attribution or qualification around",
-	"it. Without a matching quote, mark it unproven.",
+	"Every status carries a `quote`. A requirement marked `(quote required)` needs, for a",
+	"`proven` status, a passage copied verbatim from this row's own evidence text that states",
+	"the required fact itself, not a paraphrase and not a fact about a related company. The",
+	"quote must support the fact when read in its own context, including any negation,",
+	"attribution or qualification around it. Without a matching quote, mark it unproven. A",
+	"requirement not marked `(quote required)` gets an empty `quote`.",
 ].join(" ");
 
 function requirementPromptLine(
@@ -125,6 +126,7 @@ function unjudgedSlice(
 	const statuses = hardRequirements(requirements).map((req) => ({
 		id: req.id,
 		status: "unproven" as const,
+		quote: "",
 	}));
 	return slice.rows.map((_row, index) => ({
 		index: index + slice.offset,

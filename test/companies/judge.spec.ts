@@ -77,7 +77,9 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 			const keep = index !== 1;
 			return {
 				index,
-				statuses: [{ id: "r1", status: keep ? "proven" : "contradicted" }],
+				statuses: [
+					{ id: "r1", status: keep ? "proven" : "contradicted", quote: "" },
+				],
 				reason: keep ? "fits the profile" : "no qualifying signal",
 				sameOrganizationAs: null,
 			};
@@ -183,7 +185,7 @@ describe("judge: verdicts and retries", () => {
 					verdicts: [
 						{
 							index: 0,
-							statuses: [{ id: "r1", status: "proven" }],
+							statuses: [{ id: "r1", status: "proven", quote: "" }],
 							reason: "",
 							sameOrganizationAs: null,
 						},
@@ -227,7 +229,9 @@ describe("judge: verdicts and retries", () => {
 		expect(result.verdicts).toHaveLength(rows.length);
 		expect(result.verdicts.every(kept)).toBe(false);
 		for (const verdict of result.verdicts) {
-			expect(verdict.statuses).toEqual([{ id: "r1", status: "unproven" }]);
+			expect(verdict.statuses).toEqual([
+				{ id: "r1", status: "unproven", quote: "" },
+			]);
 		}
 	});
 });
@@ -254,7 +258,7 @@ describe("the judge is told which requirements need a status", () => {
 		);
 	});
 
-	it("tells the model an acquired, merged or shut-down record contradicts every hard requirement", async () => {
+	it("tells the model an acquired record contradicts every hard requirement, and a listed-category record is contradicted by another category", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
@@ -263,14 +267,6 @@ describe("the judge is told which requirements need a status", () => {
 		await judge(requirements, rows, fakeGatewayEnv());
 
 		expect(userMessage(gateway.calls[0])).toContain("acquired");
-	});
-
-	it("tells the model a listed-category requirement is contradicted by an affirmative other category", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(verdictsFor(rows))),
-		]);
-		globalThis.fetch = gateway.fetch;
-		await judge(requirements, rows, fakeGatewayEnv());
 		expect(userMessage(gateway.calls[0])).toContain("does not include");
 	});
 });
@@ -330,7 +326,7 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
-				statuses: [{ id: "r1", status: "proven" }],
+				statuses: [{ id: "r1", status: "proven", quote: "" }],
 				reason: "fits the profile",
 				sameOrganizationAs: null,
 			}));

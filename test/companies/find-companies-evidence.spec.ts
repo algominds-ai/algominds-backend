@@ -132,7 +132,7 @@ const noopJudge: FindCompaniesDeps["judge"] = async (requirements, rows) => ({
 		index,
 		statuses: requirements
 			.filter((r) => r.kind === "hard")
-			.map((r) => ({ id: r.id, status: "proven" as const })),
+			.map((r) => ({ id: r.id, status: "proven" as const, quote: "" })),
 		reason: "fits icp",
 		sameOrganizationAs: null,
 	})),

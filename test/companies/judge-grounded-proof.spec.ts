@@ -135,9 +135,9 @@ describe("a strict requirement is proven only by a quoted passage from the row's
 		expect(result.verdicts[0]?.statuses[0]?.status).toBe("unproven");
 	});
 
-	it("leaves a non-strict, non-page requirement's proven status untouched with no quote", async () => {
+	it("leaves a non-strict, non-page requirement's proven status untouched with an empty quote", async () => {
 		const gateway = fakeGateway([
-			verdictReply([{ id: "r2", status: "proven" }]),
+			verdictReply([{ id: "r2", status: "proven", quote: "" }]),
 		]);
 		globalThis.fetch = gateway.fetch;
 
@@ -148,7 +148,7 @@ describe("a strict requirement is proven only by a quoted passage from the row's
 		);
 
 		expect(result.verdicts[0]?.statuses).toEqual([
-			{ id: "r2", status: "proven" },
+			{ id: "r2", status: "proven", quote: "" },
 		]);
 	});
 });
@@ -158,7 +158,7 @@ describe("the prompt marks which requirements need a quote", () => {
 		const gateway = fakeGateway([
 			verdictReply([
 				{ id: "r1", status: "proven", quote: "consumers sign up" },
-				{ id: "r2", status: "proven" },
+				{ id: "r2", status: "proven", quote: "" },
 			]),
 		]);
 		globalThis.fetch = gateway.fetch;

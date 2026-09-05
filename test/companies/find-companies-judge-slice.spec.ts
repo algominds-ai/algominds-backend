@@ -155,6 +155,7 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 				.map((req) => ({
 					id: req.id,
 					status: rejects.includes(index) ? "contradicted" : "proven",
+					quote: "",
 				})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
 			sameOrganizationAs: null,

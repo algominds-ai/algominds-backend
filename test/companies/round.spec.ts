@@ -171,6 +171,7 @@ function spyingDeps(script: RoundScript): RoundSpy {
 									(req) => ({
 										id: req.id,
 										status: "proven",
+										quote: "",
 									}),
 								),
 							}),

@@ -162,6 +162,7 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 				.map((req) => ({
 					id: req.id,
 					status: rejects.includes(index) ? "contradicted" : "proven",
+					quote: "",
 				})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
 			sameOrganizationAs: null,
@@ -231,7 +232,7 @@ describe("collapsing numeric reject reasons for the synthesizer's feedback", () 
 			domain: "wrong.com",
 			reason: "contradicts r1: does not fit icp",
 			stage: "judge",
-			statuses: [{ id: "r1", status: "contradicted" }],
+			statuses: [{ id: "r1", status: "contradicted", quote: "" }],
 		});
 	});
 });

@@ -17,7 +17,7 @@ export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number];
 const StatusSchema = z.object({
 	id: z.string(),
 	status: z.enum(REQUIREMENT_STATUSES),
-	quote: z.string().optional(),
+	quote: z.string(),
 });
 
 const VerdictSchema = z.object({
@@ -84,11 +84,8 @@ function normalizedWhitespace(text: string): string {
 }
 
 /** Whether the quote occurs verbatim inside one single evidence passage, so a quote cannot be assembled by joining two of them. */
-function quoteFoundIn(
-	quote: string | undefined,
-	passages: readonly string[],
-): boolean {
-	if (quote === undefined || quote.trim().length === 0) return false;
+function quoteFoundIn(quote: string, passages: readonly string[]): boolean {
+	if (quote.trim().length === 0) return false;
 	const normalizedQuote = normalizedWhitespace(quote);
 	return passages.some((passage) =>
 		normalizedWhitespace(passage).includes(normalizedQuote),
