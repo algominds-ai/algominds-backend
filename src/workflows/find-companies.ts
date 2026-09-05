@@ -151,7 +151,7 @@ async function runOneRound(
 	const remaining = payload.count - state.companies.length;
 	const stepResult = await step.do(
 		`round_${round}`,
-		config.stepConfig.paidCall,
+		config.stepConfig.roundCall,
 		() => findCompanies(icp, remaining, opts, deps),
 	);
 	state.companies = state.companies.concat(stepResult.companies);

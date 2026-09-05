@@ -197,3 +197,13 @@ stepConfig:
       limit: 0
       delay: 10 seconds
     timeout: 5 minutes
+  # The one step wrapping a whole round: synthesize, the search or agent
+  # fan-out, backfill, prove, homepages and judge all run as nested steps
+  # inside it. A retry here re-runs every one of those nested steps from
+  # the start, including the paid synthesize call and every search, so a
+  # round that fails after its own nested steps gave up is not retried.
+  roundCall:
+    retries:
+      limit: 0
+      delay: 10 seconds
+    timeout: 5 minutes

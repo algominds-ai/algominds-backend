@@ -85,5 +85,12 @@ export const config = {
 			},
 			timeout: "5 minutes",
 		},
+		roundCall: {
+			retries: {
+				limit: 0,
+				delay: "10 seconds",
+			},
+			timeout: "5 minutes",
+		},
 	},
 } as const;

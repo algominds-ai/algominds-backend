@@ -278,3 +278,9 @@ describe("the judge step's own retry budget", () => {
 		expect(config.stepConfig.judgeCall.retries.limit).toBe(0);
 	});
 });
+
+describe("a round's own retry budget", () => {
+	it("never retries a failed round, since a retry reruns every nested step including synthesize and search", () => {
+		expect(config.stepConfig.roundCall.retries.limit).toBe(0);
+	});
+});
