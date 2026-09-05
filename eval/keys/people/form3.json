@@ -81,6 +81,14 @@
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Engineering at postman, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/bela-labovitch-333a7b": {
+			"label": null,
+			"name": "Bela Labovitch",
+			"title": "Vice President, Engineering",
+			"company": "athenahealth.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/bjoern-mittag-16b973171": {
 			"label": "accept",
 			"name": "Bjoern Mittag",
@@ -124,6 +132,14 @@
 			"location": "Palo Alto, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "SVP of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/chad-chen-b3704044": {
+			"label": null,
+			"name": "Chad Chen",
+			"title": "Director of Engineering",
+			"company": "dexcom.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/chadyancey": {
 			"label": "reject:not-buyer",
@@ -206,6 +222,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Director Data Platform at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/derek-watson-b60622102": {
+			"label": null,
+			"name": "Derek Watson",
+			"title": "Senior Vice President of Engineering",
+			"company": "tubitv.com",
+			"location": "Toronto, Canada",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/dino-dai-zovi-2043932": {
 			"label": "accept",
 			"name": "Dino Dai Zovi",
@@ -233,6 +257,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Head of Engineering at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/dr-karan-bhatia-3901b81": {
+			"label": null,
+			"name": "Dr. Karan Bhatia",
+			"title": "Senior Director of Engineering",
+			"company": "dexcom.com",
+			"location": "Summit, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/eleni-fragkiadaki": {
 			"label": "reject:not-buyer",
 			"name": "Eleni Fragkiadaki",
@@ -242,6 +274,14 @@
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Director of Engineering, Business banking is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
 		},
+		"https://linkedin.com/in/emanuel-fl%c3%bcck-aa791a82": {
+			"label": null,
+			"name": "Emanuel Flück",
+			"title": "Head Cloud Center of Excellence PostFinance",
+			"company": "postfinance.ch",
+			"location": "Berne, Switzerland",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/emilioesc": {
 			"label": "accept",
 			"name": "Emilio E.",
@@ -250,6 +290,22 @@
 			"location": "Los Angeles, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Chief Information Security Officer at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/evan-wu-6327072b0": {
+			"label": null,
+			"name": "Evan Wu",
+			"title": "Director of Engineering",
+			"company": "dexcom.com",
+			"location": "United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
+		"https://linkedin.com/in/fadi-beyrouti-896558": {
+			"label": null,
+			"name": "Fadi Beyrouti",
+			"title": "Vice President Of Technology",
+			"company": "bhvr.com",
+			"location": "Montreal, Canada",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/florbela-viegas": {
 			"label": "accept",
@@ -473,6 +529,22 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Head of Infrastructure and Data Platform at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/julien-derveeuw-414554": {
+			"label": null,
+			"name": "Julien Derveeuw",
+			"title": "Head of Technology",
+			"company": "bhvr.com",
+			"location": "Montreal, Canada",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
+		"https://linkedin.com/in/justin-seger-b703404": {
+			"label": null,
+			"name": "Justin Seger",
+			"title": "VP, Software Engineering, Clinicals",
+			"company": "athenahealth.com",
+			"location": "Lexington, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/karl-salnoske-96286": {
 			"label": "accept",
 			"name": "Karl Salnoske",
@@ -607,6 +679,14 @@
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Compute Platform Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/markus-fuhrer-422422a0": {
+			"label": null,
+			"name": "Markus Fuhrer",
+			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Geschäftsleitung",
+			"company": "postfinance.ch",
+			"location": "Bolligen, Switzerland",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/markus-kinnunen-3388b63": {
 			"label": "accept",
 			"name": "Markus Kinnunen",
@@ -615,6 +695,22 @@
 			"location": "Helsinki, Finland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Vice President and CIO at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/martin-hofer-17b590213": {
+			"label": null,
+			"name": "Martin Hofer",
+			"title": "Chief Information Security Officer",
+			"company": "postfinance.ch",
+			"location": "Bern, Switzerland",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
+		"https://linkedin.com/in/martin-poirier-0678b32": {
+			"label": null,
+			"name": "Martin Poirier",
+			"title": "Head of Technology",
+			"company": "bhvr.com",
+			"location": "Montreal, Canada",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/michael-mayer-263692b6": {
 			"label": "accept",
@@ -633,6 +729,14 @@
 			"location": "Zurich, Switzerland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering — Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/mike-bidgoli-579b607": {
+			"label": null,
+			"name": "Mike Bidgoli",
+			"title": "Chief Product & Technology Officer",
+			"company": "tubitv.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/mpfajfar": {
 			"label": "accept",
@@ -784,6 +888,22 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Vice President of Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/roman-kupcik-spahr-661852170": {
+			"label": null,
+			"name": "Roman Kupcik Spahr",
+			"title": "Head of IT Platform Services",
+			"company": "postfinance.ch",
+			"location": "Bern, Switzerland",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
+		"https://linkedin.com/in/ryan-hyde-b894a556": {
+			"label": null,
+			"name": "Ryan Hyde",
+			"title": "Head of IT",
+			"company": "tubitv.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/sam-bulder-5a971aa": {
 			"label": "accept",
 			"name": "Sam Bulder",
@@ -890,6 +1010,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Senior Vice President, Chief Information Officer, Dexcom at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/stephen-mulrooney-59a1659": {
+			"label": null,
+			"name": "Stephen Mulrooney",
+			"title": "Chief Product Officer, CTO",
+			"company": "bhvr.com",
+			"location": "Montreal, Canada",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/stephen-voorhees-0734674": {
 			"label": "accept",
 			"name": "Stephen Voorhees",
@@ -916,6 +1044,22 @@
 			"location": "Netherlands",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Head of Platform Reliability at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/swerenfl": {
+			"label": null,
+			"name": "Richard Staehler III, CISM",
+			"title": "Director, Information Security",
+			"company": "dexcom.com",
+			"location": "Chicago, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
+		"https://linkedin.com/in/thayyil": {
+			"label": null,
+			"name": "Ranjit Thayyil",
+			"title": "Director of Software Engineering",
+			"company": "dexcom.com",
+			"location": "San Diego, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/thomas-enders-43253611": {
 			"label": "accept",
@@ -971,6 +1115,22 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Group Chief Information Officer (CIO) at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/tyrchen": {
+			"label": null,
+			"name": "Tyr C.",
+			"title": "Senior Vice President of Engineering",
+			"company": "tubitv.com",
+			"location": "Issaquah, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
+		"https://linkedin.com/in/urs-bernhard-balsiger-242a12153": {
+			"label": null,
+			"name": "Urs Bernhard Balsiger",
+			"title": "Head of IT Operations",
+			"company": "postfinance.ch",
+			"location": "Switzerland",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
+		},
 		"https://linkedin.com/in/veiko-koort-405737a4": {
 			"label": "reject:wrong-country",
 			"name": "Veiko Koort",
@@ -996,6 +1156,14 @@
 			"company": "rippling.com",
 			"location": "Los Gatos, United States",
 			"firstSeenRunId": "people_dom-3e7b4d79e430_2026-09-05"
+		},
+		"https://linkedin.com/in/vvilleneuve": {
+			"label": null,
+			"name": "Vincent Villeneuve",
+			"title": "Vice President of Technology",
+			"company": "bhvr.com",
+			"location": "Montreal, Canada",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/wangxity": {
 			"label": "accept",
@@ -1023,6 +1191,14 @@
 			"location": "Boston, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Chief Technology Officer at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/zhiye-li-60544819": {
+			"label": null,
+			"name": "Zhiye Li",
+			"title": "SVP, Engineering",
+			"company": "tubitv.com",
+			"location": "Dallas, United States",
+			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05"
 		},
 		"https://linkedin.com/in/àngel-puigventós-76a35147": {
 			"label": "accept",
