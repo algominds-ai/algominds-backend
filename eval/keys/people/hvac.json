@@ -38,6 +38,30 @@
 			"firstSeenRunId": "people_dom-ac7ee130d00f_2026-09-05",
 			"note": "Chief Operating Officer at aircond.com, a c-suite operations leader owning the budget, matching the rubric's operations-leader buyer band"
 		},
+		"https://linkedin.com/in/gus-garza-3311a634": {
+			"label": null,
+			"name": "Gus Garza",
+			"title": "Area Manager",
+			"company": "amsco-ac.com",
+			"location": "Spring Hill, Florida, United States",
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+		},
+		"https://linkedin.com/in/kevin-self-27458371": {
+			"label": null,
+			"name": "Kevin Self",
+			"title": "Founder/Executive Chairman",
+			"company": "acisinc.com",
+			"location": "McKinney, United States",
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+		},
+		"https://linkedin.com/in/mark-castellano-68b0a554": {
+			"label": null,
+			"name": "Mark Castellano",
+			"title": "Branch Manager",
+			"company": "amsco-ac.com",
+			"location": "Englewood, Florida, United States",
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+		},
 		"https://linkedin.com/in/raymond-perez-msi": {
 			"label": "accept",
 			"name": "Raymond Perez, MBA, LEED AP",
@@ -47,6 +71,14 @@
 			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
 			"note": "Chief Operating Officer at msifla, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
+		"https://linkedin.com/in/sean-jones-35011363": {
+			"label": null,
+			"name": "Sean Jones",
+			"title": "General Manager",
+			"company": "pagemech.com",
+			"location": "Fort Myers, United States",
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
+		},
 		"https://linkedin.com/in/wes-bailey-88721520": {
 			"label": "accept",
 			"name": "Wes Bailey",
@@ -55,6 +87,14 @@
 			"location": "Orlando, United States",
 			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05",
 			"note": "General Manager at engcool, an owner/operations-leadership title owning the budget for the business; based in Florida"
+		},
+		"https://linkedin.com/in/zak-keller-669895112": {
+			"label": null,
+			"name": "Zak Keller",
+			"title": "Vice President Operations - DFW",
+			"company": "acisinc.com",
+			"location": "Sherman, United States",
+			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05"
 		}
 	}
 }

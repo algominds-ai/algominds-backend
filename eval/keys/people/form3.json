@@ -2,6 +2,14 @@
 	"slug": "form3",
 	"icpId": "cf9f5feb-bdb7-43ab-8899-09f1e1fa468b",
 	"people": {
+		"https://linkedin.com/in/aaroncote": {
+			"label": null,
+			"name": "Aaron Cote",
+			"title": "Vice President of Software Engineering",
+			"company": "appfolio.com",
+			"location": "Santa Maria, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/adrianludwig": {
 			"label": "accept",
 			"name": "Adrian Ludwig",
@@ -10,6 +18,14 @@
 			"location": "San Francisco, United States",
 			"firstSeenRunId": "people_dom-3e7b4d79e430_2026-09-05",
 			"note": "Chief Security Officer at rippling.com, a c-suite security executive owning the Kubernetes estate's risk posture"
+		},
+		"https://linkedin.com/in/adrianmcdermott": {
+			"label": null,
+			"name": "Adrian McDermott",
+			"title": "Chief Technology Officer",
+			"company": "zdsk.co",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/albert-strasheim-8818b985": {
 			"label": "accept",
@@ -92,6 +108,14 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "Vice President, Engineering at athenahealth.com, a VP Engineering role"
 		},
+		"https://linkedin.com/in/bherrington": {
+			"label": null,
+			"name": "Blake Herrington",
+			"title": "Vice President of Software Engineering",
+			"company": "appfolio.com",
+			"location": "San Diego, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/bjoern-mittag-16b973171": {
 			"label": "accept",
 			"name": "Bjoern Mittag",
@@ -118,6 +142,14 @@
 			"location": "Wildwood, United States",
 			"firstSeenRunId": "people_dom-3e7b4d79e430_2026-09-05",
 			"note": "CTO and co-founder of zapier.com, explicit c-suite technology executive"
+		},
+		"https://linkedin.com/in/captaincheeseburger": {
+			"label": null,
+			"name": "Jason Maynard",
+			"title": "CTO, North America & Asia / Pacific",
+			"company": "zdsk.co",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/carsten-bernhard-4261293": {
 			"label": "accept",
@@ -281,6 +313,14 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "influencer by the frozen Director rule"
 		},
+		"https://linkedin.com/in/dshawdotnet": {
+			"label": null,
+			"name": "David Shaw",
+			"title": "SVP, Trust | Chief Risk & Security Officer",
+			"company": "appfolio.com",
+			"location": "Santa Barbara, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/eleni-fragkiadaki": {
 			"label": "reject:not-buyer",
 			"name": "Eleni Fragkiadaki",
@@ -292,7 +332,7 @@
 		},
 		"https://linkedin.com/in/emanuel-fl%c3%bcck-aa791a82": {
 			"label": "accept",
-			"name": "Emanuel Fl\u00fcck",
+			"name": "Emanuel Flück",
 			"title": "Head Cloud Center of Excellence PostFinance",
 			"company": "postfinance.ch",
 			"location": "Berne, Switzerland",
@@ -307,6 +347,14 @@
 			"location": "Los Angeles, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Chief Information Security Officer at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/erinmichelle-p-543472170": {
+			"label": null,
+			"name": "Erinmichelle P.",
+			"title": "VP, Engineering and Chief Information Security Officer",
+			"company": "lifeatspotify.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/evan-wu-6327072b0": {
 			"label": "reject:not-buyer",
@@ -344,6 +392,14 @@
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Chief Information Security Officer at whatnot, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/francesco-nerieri-5a85621": {
+			"label": null,
+			"name": "Francesco Nerieri",
+			"title": "Senior Vice President of Engineering @ Zendesk",
+			"company": "zdsk.co",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/gerhard-esterhuizen-8272761": {
 			"label": "accept",
 			"name": "Gerhard Esterhuizen",
@@ -358,7 +414,7 @@
 			"name": "Gerrit Lober",
 			"title": "Head of Cloud Foundation & Technology",
 			"company": "cariad.technology",
-			"location": "Hannover-Braunschweig-G\u00f6ttingen-Wolfsburg Region, Germany",
+			"location": "Hannover-Braunschweig-Göttingen-Wolfsburg Region, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Cloud Foundation & Technology at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
@@ -379,6 +435,14 @@
 			"location": "Berlin, Germany",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Head Of Technology at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/harishpratapani": {
+			"label": null,
+			"name": "Harish Pratapani",
+			"title": "Vice President of Engineering, AI Infrastructure and Platform",
+			"company": "zdsk.co",
+			"location": "Mountain View, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/hazrac": {
 			"label": "accept",
@@ -416,9 +480,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Senior Vice President of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/ian-kurt\u00e9n-55456": {
+		"https://linkedin.com/in/ian-kurtén-55456": {
 			"label": "accept",
-			"name": "Ian Kurt\u00e9n",
+			"name": "Ian Kurtén",
 			"title": "Head of High Security",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -427,7 +491,7 @@
 		},
 		"https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141": {
 			"label": "accept",
-			"name": "Ignacio Jim\u00e9nez Pi",
+			"name": "Ignacio Jiménez Pi",
 			"title": "SVP Platform Engineering",
 			"company": "adyen.com",
 			"location": "Amsterdam, Netherlands",
@@ -452,14 +516,30 @@
 			"firstSeenRunId": "people_dom-3e7b4d79e430_2026-09-05",
 			"note": "Vice President of Engineering at pandadoc.com, a VP Engineering role"
 		},
+		"https://linkedin.com/in/ioannis-papadopoulos-22081822": {
+			"label": null,
+			"name": "Ioannis Papadopoulos",
+			"title": "Chief Technology Officer",
+			"company": "trivago.com",
+			"location": "Düsseldorf, Germany",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12": {
 			"label": "accept",
-			"name": "Iv\u00e1n Lugo",
+			"name": "Iván Lugo",
 			"title": "Vice President of Global Engineering",
 			"company": "dexcom.com",
 			"location": "Irvine, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "Vice President of Global Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jacopobarachetti": {
+			"label": null,
+			"name": "Jacopo Barachetti",
+			"title": "Chief Technology Officer, Metasearch",
+			"company": "lastminute.com",
+			"location": "Milan, Italy",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/jarno-vainio-32a46243": {
 			"label": "accept",
@@ -641,6 +721,14 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Lottery Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/libocannici": {
+			"label": null,
+			"name": "Liborio Francesco Cannici",
+			"title": "VP of Engineering Al Agents & Knowledge",
+			"company": "zdsk.co",
+			"location": "Copenhagen, Denmark",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/logan-head-b0866615": {
 			"label": "accept",
 			"name": "Logan Head",
@@ -716,7 +804,7 @@
 		"https://linkedin.com/in/markus-fuhrer-422422a0": {
 			"label": "accept",
 			"name": "Markus Fuhrer",
-			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Gesch\u00e4ftsleitung",
+			"title": "Head of IT (CIO) & Operations(COO) - Mitglied der Geschäftsleitung",
 			"company": "postfinance.ch",
 			"location": "Bolligen, Switzerland",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
@@ -749,6 +837,14 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "Head of Technology at bhvr.com, a Head-level technology executive equivalent to Head of Engineering"
 		},
+		"https://linkedin.com/in/mattbaird": {
+			"label": null,
+			"name": "Matthew Baird",
+			"title": "Chief Technology Officer",
+			"company": "appfolio.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/michael-mayer-263692b6": {
 			"label": "accept",
 			"name": "Michael Mayer",
@@ -761,11 +857,11 @@
 		"https://linkedin.com/in/michael-wildpaner-b9b8591": {
 			"label": "accept",
 			"name": "Michael Wildpaner",
-			"title": "VP of Engineering \u2014 Security",
+			"title": "VP of Engineering — Security",
 			"company": "gitlab.com",
 			"location": "Zurich, Switzerland",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
-			"note": "VP of Engineering \u2014 Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+			"note": "VP of Engineering — Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/mike-bidgoli-579b607": {
 			"label": "accept",
@@ -775,6 +871,22 @@
 			"location": "San Francisco, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "Chief Product & Technology Officer at tubitv.com, a c-suite role that includes the CTO scope"
+		},
+		"https://linkedin.com/in/miladinp": {
+			"label": null,
+			"name": "Miladin Pavlicic",
+			"title": "VP of Engineering",
+			"company": "lifeatspotify.com",
+			"location": "Seattle, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
+		"https://linkedin.com/in/mircopatroncini": {
+			"label": null,
+			"name": "Mirco Patroncini",
+			"title": "Chief Technology Officer",
+			"company": "lastminute.com",
+			"location": "Greater Modena Metropolitan Area, Italy",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/mpfajfar": {
 			"label": "accept",
@@ -802,6 +914,14 @@
 			"location": "San Francisco, United States",
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/niklas-gustavsson-a062213": {
+			"label": null,
+			"name": "Niklas Gustavsson",
+			"title": "Chief Architect, VP of Engineering",
+			"company": "lifeatspotify.com",
+			"location": "Gothenburg, Sweden",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/nishma-shah-532aab5": {
 			"label": "reject:not-buyer",
@@ -860,7 +980,7 @@
 		"https://linkedin.com/in/patricia-stich-a5046b27": {
 			"label": "reject:not-buyer",
 			"name": "Patricia Stich",
-			"title": "Vorst\u00e4ndin Volkswagen Group Info Services AG",
+			"title": "Vorständin Volkswagen Group Info Services AG",
 			"company": "cariad.technology",
 			"location": "Germany, Germany",
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
@@ -1118,6 +1238,14 @@
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Head of Competence Centers Connect & Cloud at cariad, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/thomas-khalil": {
+			"label": null,
+			"name": "Thomas Khalil",
+			"title": "Head of Hybrid Platform & Developer Experience",
+			"company": "trivago.com",
+			"location": "Cologne, Germany",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/tim-zallmann-505b2b4b": {
 			"label": "accept",
 			"name": "Tim Zallmann",
@@ -1127,9 +1255,9 @@
 			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
 			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
-		"https://linkedin.com/in/timo-h\u00e4nninen-0b899071": {
+		"https://linkedin.com/in/timo-hänninen-0b899071": {
 			"label": "accept",
-			"name": "Timo H\u00e4nninen",
+			"name": "Timo Hänninen",
 			"title": "Business Lead, Head of Cloud and Infrastructure services",
 			"company": "elisa.com",
 			"location": "Helsinki, Finland",
@@ -1154,6 +1282,22 @@
 			"firstSeenRunId": "people_dom-8566afb18b75_2026-09-05",
 			"note": "Vice President of Engineering at monzo, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
+		"https://linkedin.com/in/tomekkrzyzak": {
+			"label": null,
+			"name": "Tomek Krzyzak",
+			"title": "VP Software Engineering/Site Leader",
+			"company": "zdsk.co",
+			"location": "Cracow, Poland",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
+		"https://linkedin.com/in/tony-jebara-27019": {
+			"label": null,
+			"name": "Tony Jebara",
+			"title": "VP of Engineering, Head of ML",
+			"company": "lifeatspotify.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
+		},
 		"https://linkedin.com/in/tuan-kha-87910b2": {
 			"label": "accept",
 			"name": "Tuan Kha",
@@ -1171,6 +1315,14 @@
 			"location": "Issaquah, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "Senior Vice President of Engineering at tubitv.com, a VP Engineering role"
+		},
+		"https://linkedin.com/in/tyson-singer-9a032b4": {
+			"label": null,
+			"name": "Tyson Singer",
+			"title": "Head of Technology & Platforms, SVP",
+			"company": "lifeatspotify.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-a881b0e8f200_2026-09-05"
 		},
 		"https://linkedin.com/in/urs-bernhard-balsiger-242a12153": {
 			"label": "reject:not-buyer",
@@ -1228,7 +1380,7 @@
 		},
 		"https://linkedin.com/in/whats": {
 			"label": "accept",
-			"name": "Albert Sellar\u00e8s",
+			"name": "Albert Sellarès",
 			"title": "CTO / Global VP of Engineering (entire Adevinta group)",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
@@ -1253,9 +1405,9 @@
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
 			"note": "SVP, Engineering at tubitv.com, a VP Engineering role"
 		},
-		"https://linkedin.com/in/\u00e0ngel-puigvent\u00f3s-76a35147": {
+		"https://linkedin.com/in/àngel-puigventós-76a35147": {
 			"label": "accept",
-			"name": "\u00c0ngel Puigvent\u00f3s",
+			"name": "Àngel Puigventós",
 			"title": "Head of Security Operations",
 			"company": "adevinta.com",
 			"location": "Barcelona, Spain",
