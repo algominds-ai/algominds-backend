@@ -31,7 +31,7 @@ export const config = {
 		provingConcurrency: 5,
 		provingResults: 3,
 		contentsMaxCharacters: 10000,
-		judgeBatchSize: 1,
+		judgeBatchSize: 4,
 		exaRetryAfterMaxMs: 5000,
 		exaPollBudgetPerSecond: 2,
 		homepageMaxCharacters: 4000,
