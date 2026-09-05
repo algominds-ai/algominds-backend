@@ -56,6 +56,23 @@
 				"fitReason": "DentalOne Partners has 173 staff, US based, dental service management organization."
 			}
 		},
+		"greenbergdental.com": {
+			"label": null,
+			"name": "Greenberg Dental & Orthodontics",
+			"firstSeenRunId": "companies_198462ca-f034-49c4-b6e1-c360d43be30a_2026-09-05",
+			"lastSeenAt": "2026-09-05T17:49:26.012Z",
+			"record": {
+				"industry": null,
+				"description": "Greenberg Dental & Orthodontics Group is the place to be for skilled practitioners looking to take their dental career to the next level. With over 45 years of experience providing excellent patient care in Florida, we have established ourselves as a multi-specialty group practice that keeps you busy and productive with enough flexibility for family and a balanced lifestyle. Our 75+ offices across Central Florida, Tampa, and Jacksonville offer a chairside mentorship program providing guidance and expertise from our partners, while our experienced professionals will help you learn new skills. Join our team-oriented staff and take the next step in your career!",
+				"workforceTotal": 166,
+				"country": "United States",
+				"foundedYear": 1977,
+				"citedPage": "https://greenbergdental.com/",
+				"citedDate": "2026-06-28T00:00:00.000Z",
+				"quote": null,
+				"fitReason": ""
+			}
+		},
 		"lonepeakdentalgroup.com": {
 			"label": "accept",
 			"name": "Lone Peak Dental Group",
@@ -72,6 +89,23 @@
 				"citedDate": "2026-06-23T00:00:00.000Z",
 				"quote": null,
 				"fitReason": "71 staff, Denver US, a Dental Service Organization supporting specialty offices."
+			}
+		},
+		"marqueedentalpartners.com": {
+			"label": null,
+			"name": "Marquee Dental Partners",
+			"firstSeenRunId": "companies_198462ca-f034-49c4-b6e1-c360d43be30a_2026-09-05",
+			"lastSeenAt": "2026-09-05T17:49:26.012Z",
+			"record": {
+				"industry": null,
+				"description": "\nMarquee Dental Partners is a Dental Service Organization with nearly 30 brands in over 50 office locations. Our focus is on partnering with premier dental offices and clinicians in the Southeastern United States. Headquartered in Nashville, TN with dental practices in Kentucky, Tennessee, Arkansas, Alabama, and Florida, Marquee offers its patients a broad range of services through their general dentistry and multi-specialty practices. It offers its team members a career they can be proud of. \n\nIf you are looking to join a rapidly growing organization with a team dedicated to excellence, apply today at www.marqueedentalpartners.com/careers.",
+				"workforceTotal": 82,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://marqueedentalpartners.com/",
+				"citedDate": "2026-06-24T00:00:00.000Z",
+				"quote": null,
+				"fitReason": ""
 			}
 		},
 		"mortensondentalpartners.com": {
