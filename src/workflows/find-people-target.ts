@@ -10,6 +10,7 @@ export type TargetCompany = {
 	name: string | null;
 	linkedinUrl: string | null;
 	icpId: string | null;
+	workforceTotal: number | null;
 };
 
 export type TargetCompanies = {
@@ -35,6 +36,7 @@ async function targetByRun(
 			name: row.name,
 			linkedinUrl: row.linkedinUrl,
 			icpId: row.icpId,
+			workforceTotal: row.workforceTotal,
 		})),
 		icpId: runRow.icpId,
 		unknownDomains: [],
@@ -82,6 +84,7 @@ function toTargetCompany(
 			name: null,
 			linkedinUrl: null,
 			icpId: profileId,
+			workforceTotal: null,
 		};
 	}
 	return {
@@ -90,6 +93,7 @@ function toTargetCompany(
 		name: row.name,
 		linkedinUrl: row.linkedinUrl,
 		icpId: profileId,
+		workforceTotal: row.workforceTotal,
 	};
 }
 

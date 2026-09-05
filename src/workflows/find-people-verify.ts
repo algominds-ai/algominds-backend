@@ -55,7 +55,15 @@ async function runSelect(
 		() => {
 			const description = ctx.profile?.description ?? null;
 			return selectBuyers(
-				{ description, buyer: ctx.buyer, candidates },
+				{
+					description,
+					buyer: ctx.buyer,
+					candidates,
+					company: {
+						name: progress.companyName,
+						workforceTotal: progress.workforceTotal,
+					},
+				},
 				ctx.env,
 			);
 		},

@@ -98,6 +98,7 @@ export function exaCompanySearchResponse(
 	id: string | null,
 	url = "https://example.com",
 	costTotal = 0.005,
+	workforceTotal: number | null = null,
 ): Response {
 	return jsonResponse({
 		requestId: "req-company",
@@ -110,7 +111,17 @@ export function exaCompanySearchResponse(
 							id,
 							url,
 							title: "Example",
-							entities: [{ type: "company", properties: { name: "Example" } }],
+							entities: [
+								{
+									type: "company",
+									properties: {
+										name: "Example",
+										...(workforceTotal === null
+											? {}
+											: { workforce: { total: workforceTotal } }),
+									},
+								},
+							],
 						},
 					],
 	});

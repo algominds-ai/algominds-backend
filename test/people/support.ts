@@ -10,7 +10,14 @@ import { company, evidence, person, run, runCompany } from "@/core/db/schema";
 import type { TargetCompany } from "@/workflows/find-people-target";
 
 export function bareCompany(domain: string): TargetCompany {
-	return { id: null, domain, name: null, linkedinUrl: null, icpId: null };
+	return {
+		id: null,
+		domain,
+		name: null,
+		linkedinUrl: null,
+		icpId: null,
+		workforceTotal: null,
+	};
 }
 
 export type SeededPeopleRun = { org: Organization; runId: string };

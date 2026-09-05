@@ -221,7 +221,7 @@ describe("one company's failure never ends the run", () => {
 				],
 				[
 					`people-${domain}-organization`,
-					{ organizationId: null, costEntries: [] },
+					{ organizationId: null, workforceTotal: null, costEntries: [] },
 				],
 				[`people-${domain}-roster`, new Error("roster step blew up")],
 			]);

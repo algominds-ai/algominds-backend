@@ -82,7 +82,14 @@ describe("loadTargetCompanies: domain resolution with no icpId given", () => {
 
 		expect(target.icpId).toBeNull();
 		expect(target.companies).toEqual([
-			{ id: null, domain, name: null, linkedinUrl: null, icpId: null },
+			{
+				id: null,
+				domain,
+				name: null,
+				linkedinUrl: null,
+				icpId: null,
+				workforceTotal: null,
+			},
 		]);
 	});
 
@@ -98,7 +105,14 @@ describe("loadTargetCompanies: domain resolution with no icpId given", () => {
 
 		expect(target.icpId).toBeNull();
 		expect(target.companies).toEqual([
-			{ id: null, domain, name: null, linkedinUrl: null, icpId: null },
+			{
+				id: null,
+				domain,
+				name: null,
+				linkedinUrl: null,
+				icpId: null,
+				workforceTotal: null,
+			},
 		]);
 	});
 });

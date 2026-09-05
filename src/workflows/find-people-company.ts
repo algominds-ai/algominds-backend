@@ -45,6 +45,7 @@ export type CompanyProgress = {
 	clayRecords: number;
 	ledger: CostLedger;
 	exaOrganizationId: string | null;
+	workforceTotal: number | null;
 };
 
 export type CompanyOutcome = {
@@ -162,25 +163,27 @@ async function markUnresolved(
 	);
 }
 
-/** The Exa organization id for `domain`, resolved once per company so both the roster fallback and the verify second opinion can compare against it by id rather than by name. A miss, or any non-retryable failure, is `null`. */
+/** The Exa organization id and headcount for `domain`, resolved once per company so both the roster fallback and the verify second opinion can compare against the id by id rather than by name, and the buyer selector can read the headcount. A miss, or any non-retryable failure, is `null` for both fields. */
 async function runOrganizationStep(
 	ctx: CompanyLoopContext,
 	domain: string,
-): Promise<{ organizationId: string | null; costEntries: CostEntry[] }> {
+): Promise<{
+	organizationId: string | null;
+	workforceTotal: number | null;
+	costEntries: CostEntry[];
+}> {
 	return ctx.step.do(
 		`people-${domain}-organization`,
 		config.stepConfig.paidCall,
 		async () => {
 			const ledger = new CostLedger();
-			const organizationId = await exaOrganizationId(
-				ctx.env,
-				domain,
-				ledger,
-			).catch((error: unknown) => {
-				if (error instanceof RetryableProviderError) throw error;
-				return null;
-			});
-			return { organizationId, costEntries: ledger.toJSON().entries };
+			const lookup = await exaOrganizationId(ctx.env, domain, ledger).catch(
+				(error: unknown) => {
+					if (error instanceof RetryableProviderError) throw error;
+					return { organizationId: null, workforceTotal: null };
+				},
+			);
+			return { ...lookup, costEntries: ledger.toJSON().entries };
 		},
 	);
 }
@@ -217,6 +220,14 @@ async function ensureCompanyRow(
 
 function rescuedEmpty(rescued: RosterStepResult | null): boolean {
 	return rescued === null || rescued.candidates.length === 0;
+}
+
+/** The company's headcount for the buyer selector: the stored company row's own record, else the Exa organization lookup run for the same company. */
+function resolvedWorkforceTotal(
+	company: TargetCompany,
+	organization: { workforceTotal: number | null },
+): number | null {
+	return company.workforceTotal ?? organization.workforceTotal;
 }
 
 type UnresolvedOutcome = {
@@ -321,6 +332,7 @@ export async function runOneCompany(
 			clayRecords: identity.clayRecords + roster.clayRecords,
 			ledger,
 			exaOrganizationId: organization.organizationId,
+			workforceTotal: resolvedWorkforceTotal(company, organization),
 		};
 		if (ctx.buyer.mode === "roster") {
 			return await finishRosterMode(ctx, progress, roster);
