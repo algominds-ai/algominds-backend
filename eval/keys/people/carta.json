@@ -1,0 +1,62 @@
+{
+	"slug": "carta",
+	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
+	"people": {
+		"https://linkedin.com/in/akshay-agrawal-57a30aa6": {
+			"label": null,
+			"name": "Akshay Agrawal",
+			"title": "CEO, Founder",
+			"company": "onoshealth.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		},
+		"https://linkedin.com/in/cpeterson42": {
+			"label": null,
+			"name": "Carl Peterson",
+			"title": "Co-Founder & CEO",
+			"company": "thundercompute.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		},
+		"https://linkedin.com/in/dr-daniel-rifkin-md-mph-591946a": {
+			"label": null,
+			"name": "Dr. Daniel Rifkin, MD, MPH",
+			"title": "Founder/Chief Executive Officer",
+			"company": "ognomy.com",
+			"location": "Buffalo, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		},
+		"https://linkedin.com/in/erinn-macaulay-51340711": {
+			"label": null,
+			"name": "Erinn Macaulay",
+			"title": "Head of Accounts",
+			"company": "onoshealth.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		},
+		"https://linkedin.com/in/rahul-shivkumar-04138252": {
+			"label": null,
+			"name": "Rahul Shivkumar",
+			"title": "Co-Founder",
+			"company": "withassured.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		},
+		"https://linkedin.com/in/varunakrishnamurthy": {
+			"label": null,
+			"name": "Varun Krishnamurthy",
+			"title": "Co-Founder & CEO",
+			"company": "withassured.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		},
+		"https://linkedin.com/in/william-messina-032917175": {
+			"label": null,
+			"name": "Will Messina",
+			"title": "Co-Founder & CEO",
+			"company": "grailpay.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05"
+		}
+	}
+}

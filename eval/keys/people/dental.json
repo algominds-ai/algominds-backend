@@ -1,0 +1,294 @@
+{
+	"slug": "dental",
+	"icpId": "4213915c-0b0c-43f0-bd4a-5379e3a0a594",
+	"people": {
+		"https://linkedin.com/in/amanda-gushura-307504166": {
+			"label": null,
+			"name": "Amanda Gushura",
+			"title": "Director of Regional Operations",
+			"company": "nadentalgroup.com",
+			"location": "Youngstown, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/amanda-morgan-39683783": {
+			"label": null,
+			"name": "Amanda Morgan",
+			"title": "Operations Leader, Office Leader",
+			"company": "dentalonepartners.com",
+			"location": "Peoria Metropolitan Area",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/armanda-lester-4a72b996": {
+			"label": null,
+			"name": "Armanda Lester",
+			"title": "Senior Vice President Operations",
+			"company": "nadentalgroup.com",
+			"location": "Pittsburgh, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/cassandra-scotti-24421b2a6": {
+			"label": null,
+			"name": "Cassandra Scotti",
+			"title": "Practice Manager",
+			"company": "nadentalgroup.com",
+			"location": "Melbourne, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/cheyenne-rhodes-28411bb5": {
+			"label": null,
+			"name": "Cheyenne Rhodes",
+			"title": "Regional Director Of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Salem, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/cliff-mcdonald-4693a012": {
+			"label": null,
+			"name": "Cliff McDonald",
+			"title": "Regional Director Of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Columbus, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/dana-ventura-059851209": {
+			"label": null,
+			"name": "Dana Ventura",
+			"title": "Regional Vice President of Operations",
+			"company": "prosmile.com",
+			"location": "Bayville, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/deborah-worth-071695100": {
+			"label": null,
+			"name": "Deborah Worth",
+			"title": "Regional Director Of Operations",
+			"company": "prosmile.com",
+			"location": "Parlin, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/eduardo-laventman-0428444": {
+			"label": null,
+			"name": "Eduardo Laventman",
+			"title": "Chief Operating Officer",
+			"company": "lonepeakdentalgroup.com",
+			"location": "Miami, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/elvis-bara-8ba63a238": {
+			"label": null,
+			"name": "Elvis Bara",
+			"title": "General Manager",
+			"company": "nadentalgroup.com",
+			"location": "Manhattan, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/franci-raines-a424a451": {
+			"label": null,
+			"name": "Franci Raines",
+			"title": "Senior Regional Director of Operations, Tennessee",
+			"company": "nadentalgroup.com",
+			"location": "Chattanooga, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/haseena-saheem-9754b1184": {
+			"label": null,
+			"name": "Haseena Saheem",
+			"title": "Senior Dental Operations Manager | Practice Growth & Team Leadership",
+			"company": "nadentalgroup.com",
+			"location": "Cincinnati, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/jessica-hunter-1a99b016a": {
+			"label": null,
+			"name": "Jessica Hunter",
+			"title": "Operations Leader",
+			"company": "dentalonepartners.com",
+			"location": "Charlotte Metro",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/john-solooki-dds-98a85240": {
+			"label": null,
+			"name": "John Solooki",
+			"title": "Doctor Partner & Regional Clinical Vice President, Midwest Region",
+			"company": "dentalonepartners.com",
+			"location": "Greater Cleveland",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/kelsey-williams-590678159": {
+			"label": null,
+			"name": "Kelsey Williams",
+			"title": "Senior Regional Director of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Titusville, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/kim-hough-0470351a1": {
+			"label": null,
+			"name": "Kim Hough",
+			"title": "Director Of Operations",
+			"company": "dentalonepartners.com",
+			"location": "Greater Pittsburgh Region",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/kim-humlick-39a1a48b": {
+			"label": null,
+			"name": "Kim Humlick",
+			"title": "Senior Leader of Operations",
+			"company": "dentalonepartners.com",
+			"location": "Greater Houston",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/kimberly-shelton-46143718a": {
+			"label": null,
+			"name": "Kimberly Shelton",
+			"title": "Regional Director of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Atlanta, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/kirstenodell": {
+			"label": null,
+			"name": "Kirsten O'Dell",
+			"title": "Regional Director of Operations, Columbus, OH",
+			"company": "nadentalgroup.com",
+			"location": "Columbus, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/mark-cornwell": {
+			"label": null,
+			"name": "Mark R. Cornwell",
+			"title": "Regional Director of Operations",
+			"company": "nadentalgroup.com",
+			"location": "East Amherst, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/michael-s-lynch-dds-552b41126": {
+			"label": null,
+			"name": "Michael S. Lynch, DDS",
+			"title": "General Dentist, Manager",
+			"company": "nadentalgroup.com",
+			"location": "Westlake, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/michele-neubert-ab7ab325": {
+			"label": null,
+			"name": "Michele Neubert",
+			"title": "Regional Director of Operations",
+			"company": "lonepeakdentalgroup.com",
+			"location": "Youngstown-Warren, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/michellemtempleton": {
+			"label": null,
+			"name": "Michelle Templeton",
+			"title": "Regional Director of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Canton, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/morgan-eanes-a6a114351": {
+			"label": null,
+			"name": "Morgan Eanes",
+			"title": "Practice Manager",
+			"company": "nadentalgroup.com",
+			"location": "Palm Bay, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/nick-deninno053179": {
+			"label": null,
+			"name": "Nick DeNinno",
+			"title": "Regional Director of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Mars, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/paulmorash": {
+			"label": null,
+			"name": "Paul Morash",
+			"title": "Regional Director of Operations",
+			"company": "lonepeakdentalgroup.com",
+			"location": "Seneca, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/renae-mansor-8404a4204": {
+			"label": null,
+			"name": "Renae Mansor",
+			"title": "Regional Director Of Operations",
+			"company": "nadentalgroup.com",
+			"location": "Warren, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/ryantorresan": {
+			"label": null,
+			"name": "Ryan Torresan",
+			"title": "Chief Operations and Marketing Officer",
+			"company": "peakdentalservices.com",
+			"location": "Jacksonville, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/sarah-damico-19585220a": {
+			"label": null,
+			"name": "Sarah Damico",
+			"title": "Director of Operations",
+			"company": "prosmile.com",
+			"location": "Sicklerville, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/stephencwolf": {
+			"label": null,
+			"name": "Stephen C. Wolf",
+			"title": "Operations Leader",
+			"company": "dentalonepartners.com",
+			"location": "Lake in the Hills, Illinois, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/sulma-guevara-8421ba66": {
+			"label": null,
+			"name": "Sulma Balmos",
+			"title": "Vice President of Operations and Integration",
+			"company": "prosmile.com",
+			"location": "New York City, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/tiffany-howerton-rdh-bsdh-7458b7204": {
+			"label": null,
+			"name": "Tiffany Howerton RDH, BSDH",
+			"title": "Vice President Operations",
+			"company": "peakdentalservices.com",
+			"location": "Enid, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/tiffany-masse-3610a1375": {
+			"label": null,
+			"name": "Tiffany Masse",
+			"title": "Regional Operations Manager",
+			"company": "peakdentalservices.com",
+			"location": "Colorado Springs, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/tiffany-masse-968691358": {
+			"label": null,
+			"name": "Tiffany Masse",
+			"title": "Regional Operations Manager",
+			"company": "peakdentalservices.com",
+			"location": "Colorado Springs, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/tiffany-masse-96b17036": {
+			"label": null,
+			"name": "Tiffany Masse",
+			"title": "Regional Operations Manager",
+			"company": "peakdentalservices.com",
+			"location": "Colorado Springs, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		},
+		"https://linkedin.com/in/wendy-pineda-964a1834": {
+			"label": null,
+			"name": "Wendy Pineda",
+			"title": "Practice Manager",
+			"company": "prosmile.com",
+			"location": "Lansdale, United States",
+			"firstSeenRunId": "people_dom-059decc05894_2026-09-05"
+		}
+	}
+}

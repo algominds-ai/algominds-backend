@@ -1,0 +1,54 @@
+{
+	"slug": "aris",
+	"icpId": "5e8ca999-8a24-442a-853b-23c11bfd5d05",
+	"people": {
+		"https://linkedin.com/in/adam-kaplan-93b999": {
+			"label": null,
+			"name": "Adam Kaplan",
+			"title": "President, Managing Partner and Cofounder",
+			"company": "wheelhouseit.com",
+			"location": "Wantagh, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05"
+		},
+		"https://linkedin.com/in/frank-w-vitetta-704b8980": {
+			"label": null,
+			"name": "Frank W. Vitetta",
+			"title": "Director of Service Delivery",
+			"company": "wheelhouseit.com",
+			"location": "Fort Lauderdale, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05"
+		},
+		"https://linkedin.com/in/gani-zebersky-847b784": {
+			"label": null,
+			"name": "Gani Zebersky",
+			"title": "Chief Executive Officer",
+			"company": "wheelhouseit.com",
+			"location": "Hollywood, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05"
+		},
+		"https://linkedin.com/in/jess-wolfe": {
+			"label": null,
+			"name": "Jess Wolfe, PMP",
+			"title": "Director of Operations",
+			"company": "valortech.io",
+			"location": "Milwaukee, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05"
+		},
+		"https://linkedin.com/in/rick-sherman-111a2b4": {
+			"label": null,
+			"name": "Rick Sherman",
+			"title": "VP of Operations",
+			"company": "ferrumit.com",
+			"location": "Elgin, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05"
+		},
+		"https://linkedin.com/in/robert-schuster-7ba38210": {
+			"label": null,
+			"name": "Robert Schuster",
+			"title": "Director of IT Operations Manager",
+			"company": "netopsconsulting.com",
+			"location": "Wooster, Ohio, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05"
+		}
+	}
+}

@@ -1,0 +1,46 @@
+{
+	"slug": "hvac",
+	"icpId": "bad48334-f775-4e9a-9032-9d51a16f2f1d",
+	"people": {
+		"https://linkedin.com/in/christopher-horan-24766b39": {
+			"label": null,
+			"name": "Christopher Horan",
+			"title": "CEO",
+			"company": "thermalconcepts.com",
+			"location": "Fort Lauderdale, United States",
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+		},
+		"https://linkedin.com/in/david-goerke-18149741": {
+			"label": null,
+			"name": "David Goerke",
+			"title": "President",
+			"company": "msifla.com",
+			"location": "Orlando, United States",
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+		},
+		"https://linkedin.com/in/drew-adams-85a7151b": {
+			"label": null,
+			"name": "Drew Adams",
+			"title": "President",
+			"company": "engcool.com",
+			"location": "Pensacola, United States",
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+		},
+		"https://linkedin.com/in/raymond-perez-msi": {
+			"label": null,
+			"name": "Raymond Perez, MBA, LEED AP",
+			"title": "Chief Operating Officer",
+			"company": "msifla.com",
+			"location": "Jacksonville, United States",
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+		},
+		"https://linkedin.com/in/wes-bailey-88721520": {
+			"label": null,
+			"name": "Wes Bailey",
+			"title": "General Manager",
+			"company": "engcool.com",
+			"location": "Orlando, United States",
+			"firstSeenRunId": "people_dom-ef27d60bb289_2026-09-05"
+		}
+	}
+}

@@ -128,6 +128,23 @@
 				"fitReason": "Headcount 323, Minneapolis US, dental group practice with 50+ locations satisfies all three requirements."
 			}
 		},
+		"peakdentalservices.com": {
+			"label": null,
+			"name": "Peak Dental Services",
+			"firstSeenRunId": "companies_b5b9f964-6118-46ba-bf85-381e5799998e_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:31:39.261Z",
+			"record": {
+				"industry": null,
+				"description": "We support owner dentists with a work life balance that is rare for solo dentists. Our model is based on providing business support expertise to enable dentists to pursue clinical excellence while enjoying more time, income, and resources. Each of our practices allows our dentists the benefits of having autonomy to make decisions while having access to proven systems and support infrastructure. We aspire to help our dentists reap the rewards of ownership without the headaches of going it alone. \r\n\r\nOur 6 core values...\r\n\r\n1.\tPuts Patient & Doctors experience first\r\n2.\tDemonstrates ownership for results\r\n3.\tFosters compassion, optimism, & celebration \r\n4.\tPractices fanatical attention to consistency and detail\r\n5.\tCommits to continuous improvement\r\n6.\tContributes to it being a great place to work",
+				"workforceTotal": 87,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://peakdentalservices.com/",
+				"citedDate": "2026-06-25T00:00:00.000Z",
+				"quote": null,
+				"fitReason": "Peak Dental Services has 87 staff, is US-based, and operates as a DSO supporting dental practices."
+			}
+		},
 		"prosmile.com": {
 			"label": "accept",
 			"name": "ProSmile",
