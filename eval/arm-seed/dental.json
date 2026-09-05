@@ -2,7 +2,7 @@
 	"description": "A mid-market vertical SaaS company sells practice management software to dental practices in the United States. The qualifying account is a dental practice or a small dental service organisation with 50 to 500 staff across its locations, operating in the United States. Excluded are solo practices below the size floor, dental supply and equipment distributors, insurance payers, and dental schools or teaching hospitals, none of which buy practice management software the way an operating practice does.",
 	"seller": null,
 	"buyer": {
-		"rubric": "Accept the owner or the administrative or operations leader responsible for practice-management software purchasing: owner, CEO, COO, Director or VP of Operations, Regional Operations Manager, Practice Administrator. Clinical leadership, including VP Clinical, Chief Clinical Officer, Clinical Director and Doctor Partner, does not qualify through seniority alone; it needs explicit administrative software-budget responsibility.",
+		"rubric": "The positive buyer is the owner-dentist, practice administrator, or operations leader who owns the software budget for the practice or group: Owner, Practice Owner, Practice Administrator, Director of Operations, VP of Operations, or Dental Service Organisation COO. Influencers who shape but do not own the purchase include office managers and IT coordinators, who surface the need but route the decision upward. Hard negatives are clinical-only roles with no software budget authority, such as a staff dentist, hygienist or dental assistant with no administrative title.",
 		"bands": ["owner", "c-suite", "vp", "director", "manager"],
 		"keywordBands": []
 	},
