@@ -84,12 +84,13 @@
 			"note": "Head of Technology Resilience and Compliance at seek, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/angelica-jackson-": {
-			"label": null,
+			"label": "accept",
 			"name": "Angelica J.",
 			"title": "Director Of Information Technology",
 			"company": "suncorpgroup.com.au",
 			"location": "Brisbane City, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Director Of Information Technology at suncorpgroup.com.au, an explicit IT Director buyer title"
 		},
 		"https://linkedin.com/in/anthony-carnovale-b045b287": {
 			"label": "accept",
@@ -146,12 +147,13 @@
 			"note": "Head of Technology, AI and Data Engineering at colescareers, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/brett-ashhurst-22920718": {
-			"label": null,
+			"label": "accept",
 			"name": "Brett Ashhurst",
 			"title": "Technology Director - Transition & Integration and Head of Architecture",
 			"company": "suncorpgroup.com.au",
 			"location": "Sydney, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Technology Director - Transition & Integration and Head of Architecture at suncorpgroup.com.au, an explicit Director of Technology buyer title"
 		},
 		"https://linkedin.com/in/brian-townshend-4350034": {
 			"label": "accept",
@@ -208,12 +210,13 @@
 			"note": "Group Head of Core Retail Technology (General Manager) at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/corne-grotius": {
-			"label": null,
+			"label": "accept",
 			"name": "Corne Grotius",
 			"title": "Head Of Information Technology",
 			"company": "suncorpgroup.com.au",
 			"location": "Brisbane, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Head Of Information Technology at suncorpgroup.com.au, an explicit Head of IT buyer title"
 		},
 		"https://linkedin.com/in/dafina-zdravkovski-23b9b9a": {
 			"label": "accept",
@@ -245,11 +248,11 @@
 		"https://linkedin.com/in/david-grozdan-1355b03b": {
 			"label": "accept",
 			"name": "David Grozdan",
-			"title": "Head of IT ‐ Manufacturing",
+			"title": "Head of IT \u2010 Manufacturing",
 			"company": "blackmores.com.au",
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
-			"note": "Head of IT ‐ Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
+			"note": "Head of IT \u2010 Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/elzanne-van-der-westhuizen-0ba53933": {
 			"label": "accept",
@@ -288,12 +291,13 @@
 			"note": "Chief Information Officer at cuscal, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/gary-chant-24658265": {
-			"label": null,
+			"label": "accept",
 			"name": "Gary Chant",
 			"title": "Head of Wireless Engineering",
 			"company": "tpgtelecom.com.au",
 			"location": "Brisbane, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Head of Wireless Engineering at tpgtelecom.com.au, an explicit Head of Engineering buyer title"
 		},
 		"https://linkedin.com/in/genevieve-elliott": {
 			"label": "accept",
@@ -584,12 +588,13 @@
 			"note": "Group Head of Cloud and Technology Services at nib.com.au, an explicit Head of Cloud/Technology match"
 		},
 		"https://linkedin.com/in/mike-wood-gaicd-3a559a": {
-			"label": null,
+			"label": "accept",
 			"name": "Mike Wood  (GAICD)",
 			"title": "CIO, Insurance",
 			"company": "suncorpgroup.com.au",
 			"location": "Sydney, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "CIO, Insurance at suncorpgroup.com.au, an explicit c-suite CIO buyer title"
 		},
 		"https://linkedin.com/in/morleym": {
 			"label": "accept",
@@ -736,12 +741,13 @@
 			"note": "Head of Engineering - Engineering Platforms at seek, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/priyankaparanagama": {
-			"label": null,
+			"label": "accept",
 			"name": "Priyanka Paranagama",
 			"title": "Chief Technology Officer",
 			"company": "suncorpgroup.com.au",
 			"location": "Melbourne, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Chief Technology Officer at suncorpgroup.com.au, an explicit c-suite CTO buyer title"
 		},
 		"https://linkedin.com/in/reyner-stephens-3b14bb11b": {
 			"label": "accept",
@@ -816,12 +822,13 @@
 			"note": "Data Services Director at carsales.com.au, a technology-domain director role"
 		},
 		"https://linkedin.com/in/russell-hodey-7212a51": {
-			"label": null,
+			"label": "accept",
 			"name": "Russell Hodey",
 			"title": "Technology Director - Pre-Delivery",
 			"company": "suncorpgroup.com.au",
 			"location": "Collaroy Plateau, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Technology Director - Pre-Delivery at suncorpgroup.com.au, an explicit Director of Technology buyer title"
 		},
 		"https://linkedin.com/in/ryan-jones-721896144": {
 			"label": "accept",
@@ -959,12 +966,13 @@
 			"note": "Head of Technology Delivery and Transformation at harrisfarm, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/tom-richardson-577451182": {
-			"label": null,
+			"label": "accept",
 			"name": "Tom Richardson",
 			"title": "EGM Insurance Technology",
 			"company": "suncorpgroup.com.au",
 			"location": "Sydney, Australia",
-			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05"
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "EGM Insurance Technology at suncorpgroup.com.au, an Executive General Manager role matching the rubric's General Manager Technology buyer title"
 		},
 		"https://linkedin.com/in/tony-latella-20231516": {
 			"label": "accept",

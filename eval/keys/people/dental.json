@@ -12,12 +12,13 @@
 			"note": "Chief Executive Officer at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/alexis-fair-53192a259": {
-			"label": null,
+			"label": "accept",
 			"name": "Alexis Fair",
 			"title": "Director of Operations",
 			"company": "marqueedentalpartners.com",
 			"location": "New Port Richey, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director of Operations at marqueedentalpartners.com, matching the established Director of Operations accept pattern"
 		},
 		"https://linkedin.com/in/alexis-stickovitch-781228131": {
 			"label": "accept",
@@ -47,12 +48,13 @@
 			"note": "Operations Leader, Office Leader at dentalonepartners, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/amber-inglis-726ab7168": {
-			"label": null,
+			"label": "accept",
 			"name": "Amber Inglis",
 			"title": "Director of Operations",
 			"company": "decadental.com",
 			"location": "Dallas, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director of Operations at decadental.com, matching the established Director of Operations accept pattern"
 		},
 		"https://linkedin.com/in/andrea-morales-90a29a250": {
 			"label": "accept",
@@ -82,12 +84,13 @@
 			"note": "Practice Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/anne-renn-796a4ab": {
-			"label": null,
+			"label": "accept",
 			"name": "Anne Renn",
 			"title": "Director Of Operations",
 			"company": "decadental.com",
 			"location": "Lexington, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director Of Operations at decadental.com, matching the established Director of Operations accept pattern"
 		},
 		"https://linkedin.com/in/annette-young-4978459a": {
 			"label": "accept",
@@ -108,12 +111,13 @@
 			"note": "Senior Vice President Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/breannaclark7018": {
-			"label": null,
+			"label": "accept",
 			"name": "Breanna Clark",
 			"title": "Director of Market Operations",
 			"company": "marqueedentalpartners.com",
 			"location": "Madison, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director of Market Operations at marqueedentalpartners.com, a regional/market-level Director of Operations role"
 		},
 		"https://linkedin.com/in/cassandra-scotti-24421b2a6": {
 			"label": "accept",
@@ -152,12 +156,13 @@
 			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/christopher-tyler-mcmurtry-5089a41b2": {
-			"label": null,
+			"label": "accept",
 			"name": "Christopher Tyler McMurtry",
 			"title": "Senior Operations Leader",
 			"company": "marqueedentalpartners.com",
 			"location": "Nashville, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Senior Operations Leader at marqueedentalpartners.com, matching the established Operations Leader accept pattern"
 		},
 		"https://linkedin.com/in/cliff-mcdonald-4693a012": {
 			"label": "accept",
@@ -196,12 +201,13 @@
 			"note": "Regional Director Of Operations at prosmile, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/denise-yousuf-98554922": {
-			"label": null,
+			"label": "accept",
 			"name": "Denise Yousuf",
 			"title": "Sr. Director of Operations East Coast",
 			"company": "decadental.com",
 			"location": "Dallas, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Sr. Director of Operations East Coast at decadental.com, a senior director-of-operations role"
 		},
 		"https://linkedin.com/in/diana-burton-5392575a": {
 			"label": "accept",
@@ -213,12 +219,13 @@
 			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/don-jones-33079b34": {
-			"label": null,
+			"label": "accept",
 			"name": "Don Jones",
 			"title": "Vice President Operations East USOSM",
 			"company": "decadental.com",
 			"location": "Tampa, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Vice President Operations East USOSM at decadental.com, an explicit VP of Operations buyer role"
 		},
 		"https://linkedin.com/in/donna-long-4bb75a15": {
 			"label": "accept",
@@ -293,12 +300,13 @@
 			"note": "Senior Regional Director of Operations, Tennessee at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/fward1": {
-			"label": null,
+			"label": "accept",
 			"name": "Fred Ward",
 			"title": "Chief Executive Officer",
 			"company": "marqueedentalpartners.com",
 			"location": "Nashville, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Chief Executive Officer at marqueedentalpartners.com, explicit c-suite buyer role"
 		},
 		"https://linkedin.com/in/geralyn-burton-61750a17b": {
 			"label": "accept",
@@ -418,12 +426,13 @@
 			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/keri-crosby-92845797": {
-			"label": null,
+			"label": "accept",
 			"name": "Keri Crosby",
 			"title": "Director of Operations",
 			"company": "decadental.com",
 			"location": "Katy, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director of Operations at decadental.com, matching the established Director of Operations accept pattern"
 		},
 		"https://linkedin.com/in/kim-craig-b253b26a": {
 			"label": "accept",
@@ -453,12 +462,13 @@
 			"note": "Senior Leader of Operations at dentalonepartners, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/kim-seiling-08270884": {
-			"label": null,
+			"label": "accept",
 			"name": "Kim Seiling",
 			"title": "Director of Market Operations",
 			"company": "marqueedentalpartners.com",
 			"location": "Nashville, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director of Market Operations at marqueedentalpartners.com, a regional/market-level Director of Operations role"
 		},
 		"https://linkedin.com/in/kimberly-orapello-69170982": {
 			"label": "reject:not-buyer",
@@ -488,12 +498,13 @@
 			"note": "Regional Director of Operations, Columbus, OH at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/kyle-jepsen-92541313": {
-			"label": null,
+			"label": "accept",
 			"name": "Kyle Jepsen",
 			"title": "Owner Doctor/Clical Advisory Board",
 			"company": "decadental.com",
 			"location": "Dallas, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Owner Doctor at decadental.com, an explicit owner-dentist buyer role regardless of the clinical title"
 		},
 		"https://linkedin.com/in/lauren-kissick-b5344a100": {
 			"label": "reject:not-buyer",
@@ -568,12 +579,13 @@
 			"note": "Co-Founder and COO at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/melissa-price-25bb91215": {
-			"label": null,
+			"label": "accept",
 			"name": "Melissa Price",
 			"title": "Vice President Operations",
 			"company": "marqueedentalpartners.com",
 			"location": "Louisville, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Vice President Operations at marqueedentalpartners.com, an explicit VP of Operations buyer role"
 		},
 		"https://linkedin.com/in/michael-chmelar-562720230": {
 			"label": "accept",
@@ -639,12 +651,13 @@
 			"note": "Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/monicastepniowski": {
-			"label": null,
+			"label": "accept",
 			"name": "Monica Stepniowski-Spencer",
 			"title": "Vice President Operations",
 			"company": "greenbergdental.com",
 			"location": "Orlando, Florida, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Vice President Operations at greenbergdental.com, an explicit VP of Operations buyer role"
 		},
 		"https://linkedin.com/in/morgan-eanes-a6a114351": {
 			"label": "accept",
@@ -917,20 +930,22 @@
 			"note": "Practice Manager at prosmile, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/zach-ciszon-90293511": {
-			"label": null,
+			"label": "accept",
 			"name": "Zach Ciszon",
 			"title": "President",
 			"company": "marqueedentalpartners.com",
 			"location": "Charlotte Metro, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "President at marqueedentalpartners.com, an explicit owner-level buyer role"
 		},
 		"https://linkedin.com/in/zarie-cabamalan-7368a5125": {
-			"label": null,
+			"label": "accept",
 			"name": "Zarie Cabamalan",
 			"title": "Director of Operations",
 			"company": "decadental.com",
 			"location": "Dallas, United States",
-			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05"
+			"firstSeenRunId": "people_dom-326abf65a829_2026-09-05",
+			"note": "Director of Operations at decadental.com, matching the established Director of Operations accept pattern"
 		}
 	}
 }

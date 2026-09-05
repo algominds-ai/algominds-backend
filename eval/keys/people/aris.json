@@ -71,7 +71,8 @@
 			"title": "Vice President",
 			"company": "sharedit.com",
 			"location": "Quad Cities Metropolitan Area, United States",
-			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05"
+			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
+			"note": "undecidable: the title is a bare 'Vice President' with no functional qualifier, so it cannot be confirmed as owning service delivery/operations/managed services versus a sales or marketing VP function, which the rubric treats as a hard negative"
 		},
 		"https://linkedin.com/in/jess-wolfe": {
 			"label": "accept",
@@ -101,12 +102,13 @@
 			"note": "Chief Operating Officer at csu-it.com, an explicit COO buyer role"
 		},
 		"https://linkedin.com/in/kevin-stutting-7992aaa": {
-			"label": null,
+			"label": "accept",
 			"name": "Kevin Stutting",
 			"title": "President",
 			"company": "sharedit.com",
 			"location": "Bettendorf, United States",
-			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05"
+			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
+			"note": "President at sharedit.com, an 18-staff MSP well under the roughly-150 threshold where the owner/president personally decides hiring spend"
 		},
 		"https://linkedin.com/in/max-minkov": {
 			"label": "accept",
@@ -172,12 +174,13 @@
 			"note": "President at onwardtek.com, a 17-staff MSP well under the roughly-150 threshold where the owner/president personally decides hiring spend"
 		},
 		"https://linkedin.com/in/tony-drews-a969284": {
-			"label": null,
+			"label": "accept",
 			"name": "Tony Drews",
 			"title": "Vice President, Software Support Services",
 			"company": "sharedit.com",
 			"location": "Bettendorf, United States",
-			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05"
+			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
+			"note": "Vice President, Software Support Services at sharedit.com, a VP-of-service-delivery-equivalent buyer role"
 		}
 	}
 }

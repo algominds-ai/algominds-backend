@@ -39,12 +39,13 @@
 			"note": "CEO, Co-Founder at netris.io, a 37-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/amolsinghal": {
-			"label": null,
+			"label": "accept",
 			"name": "Amol Singhal",
 			"title": "Head of Finance & Operations",
 			"company": "civilgrid.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05"
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "Head of Finance & Operations at civilgrid.com, an explicit Head of Finance buyer role"
 		},
 		"https://linkedin.com/in/clemens-wessendorff": {
 			"label": "accept",
@@ -55,9 +56,9 @@
 			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
 			"note": "Co-founder and CEO at arcintelligence.com, an 11-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
-		"https://linkedin.com/in/clément-carrier-74009658": {
+		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
 			"label": "reject:not-buyer",
-			"name": "Clément Carrier",
+			"name": "Cl\u00e9ment Carrier",
 			"title": "Co-founder & CEO",
 			"company": "helloaria.eu",
 			"location": "Paris, France",
@@ -74,12 +75,13 @@
 			"note": "Co-Founder & CEO of Thunder Compute, a company of about 10 staff, well under the 50-person threshold"
 		},
 		"https://linkedin.com/in/david-lighton-b027a917": {
-			"label": null,
+			"label": "accept",
 			"name": "David Lighton",
 			"title": "Founder & CEO",
 			"company": "diameterpay.com",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05"
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "Founder & CEO at diameterpay.com, a 20-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/dr-daniel-rifkin-md-mph-591946a": {
 			"label": "accept",
@@ -154,12 +156,13 @@
 			"note": "CEO & Co-founder at natural.com, a 17-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/kstoyanov": {
-			"label": null,
+			"label": "accept",
 			"name": "Konstantin Stoyanov, CFA",
 			"title": "Fractional Chief Financial Officer",
 			"company": "gritt.ai",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05"
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "Fractional Chief Financial Officer at gritt.ai, functioning as the company's finance-owner despite the fractional/part-time arrangement"
 		},
 		"https://linkedin.com/in/lindseyb": {
 			"label": "accept",
@@ -172,10 +175,10 @@
 		},
 		"https://linkedin.com/in/marta-rodriguez-blanco-322a052a": {
 			"label": "accept",
-			"name": "Marta Rodríguez Blanco",
+			"name": "Marta Rodr\u00edguez Blanco",
 			"title": "Vice President Finance",
 			"company": "ipronics.com",
-			"location": "Valencia/València, Spain",
+			"location": "Valencia/Val\u00e8ncia, Spain",
 			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
 			"note": "Vice President Finance at ipronics.com, an explicit finance-owner buyer role"
 		},
@@ -216,12 +219,13 @@
 			"note": "Chief Financial Officer at qureight.com, an explicit CFO buyer role"
 		},
 		"https://linkedin.com/in/patrick-nelli-02b544a": {
-			"label": null,
+			"label": "accept",
 			"name": "Patrick Nelli",
 			"title": "CEO and Co-Founder",
 			"company": "alignedmarketplace.com",
 			"location": "New York City, United States",
-			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05"
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "CEO and Co-Founder at alignedmarketplace.com, a 22-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/rahul-shivkumar-04138252": {
 			"label": "reject:not-buyer",
