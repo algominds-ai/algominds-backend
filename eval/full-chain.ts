@@ -22,6 +22,7 @@ import {
 	MAX_PROFILE_SPEND_DOLLARS,
 	MAX_SPEND_DOLLARS,
 	profileBySlug,
+	stageCeilingSeconds,
 } from "@eval/profiles";
 import {
 	readRequiresProvingPass,
@@ -180,7 +181,11 @@ async function runCompaniesStage(
 	const { client, sql } = stage.context;
 	const { trial, profile } = stage;
 	const companiesRunId = await startCompaniesRun(client, trial.icpId, count);
-	await waitForRunTerminal(client, companiesRunId);
+	await waitForRunTerminal(
+		client,
+		companiesRunId,
+		stageCeilingSeconds(profile),
+	);
 	const companiesRun = await readRunReport(sql, companiesRunId);
 	const companiesStatus = await readRunStatus(sql, companiesRunId);
 	const storedCompanies = await readStoredCompanies(sql, companiesRunId);
@@ -243,7 +248,7 @@ async function runPeopleStage(
 	const peopleKey = readPeopleKeyFile(profile.slug, profile.icpId);
 	if (domains.length === 0) return emptyPeopleStage(peopleKey);
 	const peopleRunId = await startPeopleRun(client, trial.icpId, domains);
-	await waitForRunTerminal(client, peopleRunId);
+	await waitForRunTerminal(client, peopleRunId, stageCeilingSeconds(profile));
 	const peopleRun = await readRunReport(sql, peopleRunId);
 	const peopleStatus = await readRunStatus(sql, peopleRunId);
 	const runCompanies = await fetchRunCompanies(sql, peopleRunId);

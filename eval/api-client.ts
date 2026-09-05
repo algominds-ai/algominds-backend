@@ -81,12 +81,13 @@ async function readStatus(
 	return RunStatusSchema.parse(json).status;
 }
 
-/** Polls `/runs/:runId` until its status is terminal, or throws past `RUN_TIMEOUT_MS`. */
+/** Polls `/runs/:runId` until its status is terminal, or throws once `ceilingSeconds` (default `RUN_TIMEOUT_MS`) has passed. */
 export async function waitForRunTerminal(
 	client: ApiClient,
 	runId: string,
+	ceilingSeconds: number = RUN_TIMEOUT_MS / 1000,
 ): Promise<void> {
-	const deadline = Date.now() + RUN_TIMEOUT_MS;
+	const deadline = Date.now() + ceilingSeconds * 1000;
 	const openingUntil = Date.now() + OPENING_GRACE_MS;
 	while (Date.now() < deadline) {
 		const status = await readStatus(client, runId, Date.now() < openingUntil);
@@ -94,6 +95,6 @@ export async function waitForRunTerminal(
 		await new Promise((resolve) => setTimeout(resolve, POLL_MS));
 	}
 	throw new Error(
-		`eval: run ${runId} did not finish within ${RUN_TIMEOUT_MS}ms`,
+		`eval: harness ceiling ${ceilingSeconds}s exceeded for run ${runId}`,
 	);
 }
