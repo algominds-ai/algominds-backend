@@ -11,6 +11,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "CEO of Fanatics Latin America, a regional subsidiary chief outside the qualifying countries"
 		},
+		"https://linkedin.com/in/alextokarev": {
+			"label": null,
+			"name": "Alex Tokarev",
+			"title": "VP of Product",
+			"company": "keebo.com",
+			"location": "Washington DC-Baltimore Area",
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
 		"https://linkedin.com/in/aman-gupta-aa79424": {
 			"label": "accept",
 			"name": "Aman Gupta",
@@ -83,6 +91,14 @@
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "CEO of PAYMIQ, a company of about 2 staff, well under the 50-person exception threshold"
 		},
+		"https://linkedin.com/in/blessing-bazuaye-1bb780145": {
+			"label": null,
+			"name": "Blessing Bazuaye",
+			"title": "Founder",
+			"company": "koyoloans.com",
+			"location": "United States",
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
+		},
 		"https://linkedin.com/in/bprafulkumar": {
 			"label": "reject:left-company",
 			"name": "Baiju Bhatt",
@@ -91,6 +107,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Baiju Bhatt stepped down from Robinhood's active CEO role years ago, remaining a co-founder rather than the acting CEO this title claims"
+		},
+		"https://linkedin.com/in/camboal": {
+			"label": null,
+			"name": "Cameron Boal",
+			"title": "Chief Marketing Officer",
+			"company": "bethog.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/catherine-ferdon-1b93b422": {
 			"label": "accept",
@@ -101,6 +125,22 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Marketing Officer at Coinbase, an explicit buyer title"
 		},
+		"https://linkedin.com/in/charlotte-forsberg-86239312": {
+			"label": null,
+			"name": "Charlotte Forsberg",
+			"title": "Head of Marketing / CMO",
+			"company": "swoopfunding.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
+		"https://linkedin.com/in/coryklippsten": {
+			"label": null,
+			"name": "Cory Klippsten",
+			"title": "CEO",
+			"company": "swan.com",
+			"location": "Calabasas, United States",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
 		"https://linkedin.com/in/coyneaj": {
 			"label": "accept",
 			"name": "AJ Coyne",
@@ -109,6 +149,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Marketing Officer at Monzo, an explicit buyer title"
+		},
+		"https://linkedin.com/in/danielq": {
+			"label": null,
+			"name": "Daniel Qu",
+			"title": "Founder",
+			"company": "midnite.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/diana-layfield-a677a0": {
 			"label": "reject:not-buyer",
@@ -130,12 +178,20 @@
 		},
 		"https://linkedin.com/in/drmohamadsawwaf": {
 			"label": "accept",
-			"name": "Dr. Mohamad Sawwaf \u062f. \u0645\u062d\u0645\u062f \u0635\u0648\u0627\u0641",
+			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
 			"title": "Founder & Group Chief Executive Officer",
 			"company": "manzil.co",
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Founder & Group CEO of Manzil, a company of about 24 staff, well under the 50-person exception threshold"
+		},
+		"https://linkedin.com/in/ericshoemaker": {
+			"label": null,
+			"name": "Eric Shoemaker",
+			"title": "Chief Executive Officer",
+			"company": "keebo.com",
+			"location": "Greater Boston",
+			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04"
 		},
 		"https://linkedin.com/in/fernando-fanton-43641413": {
 			"label": "reject:not-buyer",
@@ -154,6 +210,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "Co-Founder & President of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
+		},
+		"https://linkedin.com/in/hayden-todd-a52194113": {
+			"label": null,
+			"name": "Hayden Todd",
+			"title": "Head of Product & Design",
+			"company": "emberfund.io",
+			"location": "Los Angeles, United States",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/hazel-chi": {
 			"label": "accept",
@@ -191,6 +255,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Revenue Officer at Fanatics, an explicit buyer title"
 		},
+		"https://linkedin.com/in/jeremy-showalter-272424": {
+			"label": null,
+			"name": "Jeremy Showalter",
+			"title": "Co-Founder",
+			"company": "swan.com",
+			"location": "Redmond, United States",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
 		"https://linkedin.com/in/jesus-castillo-81a58b186": {
 			"label": "accept",
 			"name": "Jesus Castillo",
@@ -200,6 +272,14 @@
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "CEO & Co-Founder of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
 		},
+		"https://linkedin.com/in/johnroneill": {
+			"label": null,
+			"name": "John O'Neill",
+			"title": "CEO and Co-founder",
+			"company": "linkedfinance.com",
+			"location": "Ireland",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
 		"https://linkedin.com/in/jonathan-edson-ab63382": {
 			"label": "accept",
 			"name": "Jonathan Edson",
@@ -208,6 +288,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Senior Vice President Business Development at FanDuel, a senior business-development ownership title matching the buyer rubric"
+		},
+		"https://linkedin.com/in/jonathan-shaw-26120118": {
+			"label": null,
+			"name": "Jonathan Shaw",
+			"title": "VP, Growth",
+			"company": "midnite.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/justin-tsai-b637011": {
 			"label": "accept",
@@ -263,6 +351,14 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Executive Officer - Fanatics Italy, a regional subsidiary chief outside the qualifying countries"
 		},
+		"https://linkedin.com/in/mario-l-52603783": {
+			"label": null,
+			"name": "Mario L.",
+			"title": "Co-Founder",
+			"company": "emberfund.io",
+			"location": "Los Angeles County, United States",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
 		"https://linkedin.com/in/masaki-yamashita-95200555": {
 			"label": "accept",
 			"name": "Masaki Yamashita",
@@ -299,6 +395,22 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "CEO, IG US Holdings, a subsidiary at a company that already has a CMO and a Head of Product listed"
 		},
+		"https://linkedin.com/in/mike-laryea-96852025": {
+			"label": null,
+			"name": "Mike Laryea",
+			"title": "Head of Product",
+			"company": "midnite.com",
+			"location": "United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
+		"https://linkedin.com/in/neil-kadagathur-30316767": {
+			"label": null,
+			"name": "Neil Kadagathur",
+			"title": "Co-Founder and CEO",
+			"company": "creditspring.co.uk",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
 		"https://linkedin.com/in/nickbelluk": {
 			"label": "reject:not-buyer",
 			"name": "Nick Bell",
@@ -317,6 +429,14 @@
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "CEO of BlocPal, a company of about 10 staff, well under the 50-person exception threshold"
 		},
+		"https://linkedin.com/in/npearsonwright": {
+			"label": null,
+			"name": "Nick Wright",
+			"title": "Founder",
+			"company": "midnite.com",
+			"location": "United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
 		"https://linkedin.com/in/nstoronsky": {
 			"label": "reject:not-buyer",
 			"name": "Nik Storonsky",
@@ -325,6 +445,14 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Founder & CEO of Revolut, a company well over 50 people that already has a Global Chief Growth and Marketing Officer listed"
+		},
+		"https://linkedin.com/in/obirije-john-a2403310a": {
+			"label": null,
+			"name": "Obirije John",
+			"title": "Co-Founder/CTO",
+			"company": "afriex.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/patrickrausch": {
 			"label": "reject:wrong-country",
@@ -343,6 +471,30 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Head of Product, US at Monzo, an explicit buyer title in a qualifying country"
+		},
+		"https://linkedin.com/in/puja-rohra-75687963": {
+			"label": null,
+			"name": "Puja Rohra",
+			"title": "Head of Marketing",
+			"company": "creditspring.co.uk",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
+		"https://linkedin.com/in/sabrinaloi": {
+			"label": null,
+			"name": "Sabrina Loi",
+			"title": "Chief Product Officer",
+			"company": "creditspring.co.uk",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
+		"https://linkedin.com/in/sam-talbot-766a5530": {
+			"label": null,
+			"name": "Sam Talbot",
+			"title": "VP Product",
+			"company": "midnite.com",
+			"location": "Leeds, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/scott-meadows-cfa-94a9b248": {
 			"label": "accept",
@@ -424,6 +576,22 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "CEO of Peymo, a company of about 1 staff, well under the 50-person exception threshold"
+		},
+		"https://linkedin.com/in/topealabi": {
+			"label": null,
+			"name": "Tope Alabi",
+			"title": "Co-Founder",
+			"company": "afriex.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
+		},
+		"https://linkedin.com/in/trishul-patel-61b0a68": {
+			"label": null,
+			"name": "Trishul Patel",
+			"title": "Chief Product Officer",
+			"company": "emberfund.io",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05"
 		},
 		"https://linkedin.com/in/tucker-kain-6ab5222": {
 			"label": "accept",
