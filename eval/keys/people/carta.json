@@ -38,9 +38,9 @@
 			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
 			"note": "CEO, Co-Founder at netris.io, a 37-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
-		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
+		"https://linkedin.com/in/clément-carrier-74009658": {
 			"label": "reject:not-buyer",
-			"name": "Cl\u00e9ment Carrier",
+			"name": "Clément Carrier",
 			"title": "Co-founder & CEO",
 			"company": "helloaria.eu",
 			"location": "Paris, France",
@@ -64,6 +64,14 @@
 			"location": "Buffalo, United States",
 			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
 			"note": "Founder/CEO of Ognomy, a company of about 20 staff, well under the 50-person threshold"
+		},
+		"https://linkedin.com/in/eladio-crego-gil-42b4603": {
+			"label": null,
+			"name": "Eladio Crego Gil",
+			"title": "CFO",
+			"company": "ipronics.com",
+			"location": "Brussels, Belgium",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05"
 		},
 		"https://linkedin.com/in/erinn-macaulay-51340711": {
 			"label": "reject:not-buyer",
@@ -92,6 +100,14 @@
 			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
 			"note": "Co-Founder and CEO at mundoai.world, an 18-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
+		"https://linkedin.com/in/kahlil-lalji-76a30b138": {
+			"label": null,
+			"name": "Kahlil Lalji",
+			"title": "CEO & Co-founder",
+			"company": "natural.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05"
+		},
 		"https://linkedin.com/in/lindseyb": {
 			"label": "accept",
 			"name": "Lindsey B.",
@@ -100,6 +116,14 @@
 			"location": "United States, United States",
 			"firstSeenRunId": "people_dom-c7784ab4c45a_2026-09-05",
 			"note": "VP, Strategy & Finance at karoohealth.com, an explicit VP-of-Finance buyer role owning the company's finance function"
+		},
+		"https://linkedin.com/in/marta-rodriguez-blanco-322a052a": {
+			"label": null,
+			"name": "Marta Rodríguez Blanco",
+			"title": "Vice President Finance",
+			"company": "ipronics.com",
+			"location": "Valencia/València, Spain",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05"
 		},
 		"https://linkedin.com/in/nickknuppe": {
 			"label": "accept",
