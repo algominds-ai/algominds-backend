@@ -21,9 +21,10 @@ import {
 	newBudget,
 	sanitizedInputFor,
 } from "@eval/full-chain";
-import { readKeyFile } from "@eval/keys-io";
+import { readKeyFile, readPeopleKeyFile } from "@eval/keys-io";
 import { seedKeyFileFromArm } from "@eval/label";
-import { buildManifest } from "@eval/manifest";
+import type { KeyFileVersion, ScoredTrialRow } from "@eval/manifest";
+import { buildManifest, sha256Hex } from "@eval/manifest";
 import {
 	COMPANIES_PER_RUN,
 	MIN_TRIALS,
@@ -55,8 +56,8 @@ export function parseArgs(argv: readonly string[]): RunArgs {
 	const arm = flagValue(argv, "--arm") ?? "baseline";
 	const trialsArg = flagValue(argv, "--trials");
 	const trials = trialsArg ? Number.parseInt(trialsArg, 10) : MIN_TRIALS;
-	if (!Number.isInteger(trials) || trials < MIN_TRIALS) {
-		throw new Error(`eval: --trials must be an integer at least ${MIN_TRIALS}`);
+	if (!Number.isInteger(trials) || trials < 1) {
+		throw new Error("eval: --trials must be a positive integer");
 	}
 	const count = Number.parseInt(
 		flagValue(argv, "--count") ?? String(COMPANIES_PER_RUN),
@@ -99,8 +100,24 @@ async function syncDatasetsFor(
 	return snapshotIds;
 }
 
+async function keyFileVersionsFor(
+	profiles: typeof PROFILES,
+): Promise<Record<string, KeyFileVersion>> {
+	const versions: Record<string, KeyFileVersion> = {};
+	for (const profile of profiles) {
+		const key = readKeyFile(profile.slug, profile.icpId);
+		const peopleKey = readPeopleKeyFile(profile.slug, profile.icpId);
+		versions[profile.slug] = {
+			companyKeyHash: await sha256Hex(JSON.stringify(key)),
+			peopleKeyHash: await sha256Hex(JSON.stringify(peopleKey)),
+		};
+	}
+	return versions;
+}
+
 type ArmSetup = { seeded: SeededTrial[]; apiUrl: string; stop: () => void };
 
+/** Bootstraps and seeds `eval_<arm>` exactly once for the whole invocation, with every profile's trials, so running with no `--profile` never drops or reseeds what an earlier profile in the same run already wrote. */
 async function setUpArm(
 	arm: string,
 	trials: number,
@@ -144,6 +161,28 @@ function meanEngineScore(rows: readonly ResultRow[]): number {
 	return scores.reduce((total, score) => total + score, 0) / scores.length;
 }
 
+function profileFullyScored(rows: readonly ResultRow[], slug: string): boolean {
+	const profileRows = rows.filter((row) => row.input.slug === slug);
+	return (
+		profileRows.length > 0 &&
+		profileRows.every((row) => row.output.engine !== null)
+	);
+}
+
+/** The mean engine score across ten as `rating <n>`, or `rating incomplete (<n> of <m> profiles)` the moment any selected profile has a skipped or thrown trial, so a partial run is never mistaken for a clean one. */
+export function ratingLine(
+	rows: readonly ResultRow[],
+	profiles: readonly { slug: string }[],
+): string {
+	const complete = profiles.filter((profile) =>
+		profileFullyScored(rows, profile.slug),
+	).length;
+	if (complete < profiles.length) {
+		return `rating incomplete (${complete} of ${profiles.length} profiles)`;
+	}
+	return `rating ${(10 * meanEngineScore(rows)).toFixed(2)}`;
+}
+
 async function seedKeyFiles(
 	sql: postgres.Sql,
 	profiles: typeof PROFILES,
@@ -170,6 +209,15 @@ export function runIdsByProfile(
 	return byProfile;
 }
 
+export function scoredRowsFrom(rows: readonly ResultRow[]): ScoredTrialRow[] {
+	return rows.map((row) => ({
+		slug: row.input.slug,
+		trialIndex: row.input.trialIndex,
+		companies: row.output.scoredCompanies,
+		people: row.output.scoredPeople,
+	}));
+}
+
 type ManifestContext = {
 	experiment: string;
 	commit: string;
@@ -178,6 +226,7 @@ type ManifestContext = {
 	budget: Budget;
 	rows: readonly ResultRow[];
 	datasetSnapshotIds: Record<string, string | null>;
+	keyFileVersions: Record<string, KeyFileVersion>;
 };
 
 async function writeExperimentManifest(
@@ -196,6 +245,8 @@ async function writeExperimentManifest(
 		finishedAt: new Date().toISOString(),
 		totalSpendDollars: context.budget.spent,
 		perProfileSpendDollars: context.budget.perProfile,
+		scoredRows: scoredRowsFrom(context.rows),
+		keyFileVersions: context.keyFileVersions,
 	});
 	mkdirSync("eval/runs", { recursive: true });
 	writeFileSync(
@@ -276,6 +327,7 @@ async function main(): Promise<void> {
 			commit,
 			arm: args.arm,
 		});
+		const keyFileVersions = await keyFileVersionsFor(profiles);
 		await writeExperimentManifest({
 			experiment,
 			commit,
@@ -284,10 +336,11 @@ async function main(): Promise<void> {
 			budget,
 			rows: results,
 			datasetSnapshotIds,
+			keyFileVersions,
 		});
 		await seedKeyFiles(sql, profiles);
 		printTrialLines(results);
-		console.log(`rating ${(10 * meanEngineScore(results)).toFixed(2)}`);
+		console.log(ratingLine(results, profiles));
 		console.log(`eval: total spend $${budget.spent.toFixed(4)}`);
 		console.log(`eval: experiment ${experimentUrl ?? experiment}`);
 	} finally {

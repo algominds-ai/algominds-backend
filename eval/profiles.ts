@@ -11,7 +11,11 @@ export const COMPANIES_PER_RUN = 3;
  * companies run over budget or over time did not answer the question the
  * eval asks. Set with headroom above the highest cost measured on the runs
  * already stored (`docs/solutions/eval.md`); recalibrate once the
- * coordinator authorizes the first paid arm.
+ * coordinator authorizes the first paid arm. A profile's `fullChainBars`
+ * shares this shape but is frozen at a `--count 5` full chain — the bars
+ * scaled by `5/3` once for the companies stage and once more for the
+ * people stage, then added together — so the engine-score gate never
+ * moves with `--count`.
  */
 export const ProfileBarsSchema = z.object({
 	maxCostDollars: z.number().positive(),
@@ -26,6 +30,7 @@ export const ProfileSchema = z.object({
 	name: z.string(),
 	keyVar: z.string(),
 	bars: ProfileBarsSchema,
+	fullChainBars: ProfileBarsSchema,
 	countries: z.array(z.string()),
 });
 
@@ -48,6 +53,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Mstone Group",
 		keyVar: "EVAL_API_KEY_MSTONE",
 		bars: { maxCostDollars: 1, maxSeconds: 120 },
+		fullChainBars: { maxCostDollars: 3.33, maxSeconds: 400 },
 		countries: ["Australia"],
 	},
 	{
@@ -56,6 +62,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Aris",
 		keyVar: "EVAL_API_KEY_ARIS",
 		bars: { maxCostDollars: 1, maxSeconds: 120 },
+		fullChainBars: { maxCostDollars: 3.33, maxSeconds: 400 },
 		countries: ["United States"],
 	},
 	{
@@ -64,6 +71,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Form3 Trust Fabric",
 		keyVar: "EVAL_API_KEY_FORM3",
 		bars: { maxCostDollars: 2, maxSeconds: 180 },
+		fullChainBars: { maxCostDollars: 6.67, maxSeconds: 600 },
 		countries: [
 			"United Kingdom",
 			"Ireland",
@@ -92,6 +100,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Carta",
 		keyVar: "EVAL_API_KEY_CARTA",
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
+		fullChainBars: { maxCostDollars: 5, maxSeconds: 500 },
 		countries: [
 			"United States",
 			"Canada",
@@ -111,6 +120,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Ondato",
 		keyVar: "EVAL_API_KEY_ONDATO",
 		bars: { maxCostDollars: 2, maxSeconds: 240 },
+		fullChainBars: { maxCostDollars: 6.67, maxSeconds: 800 },
 		countries: ["United Kingdom", "Ireland", "United States", "Canada"],
 	},
 	{
@@ -119,6 +129,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Dental practice management (mid-market vertical SaaS shape)",
 		keyVar: "EVAL_API_KEY_DENTAL",
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
+		fullChainBars: { maxCostDollars: 5, maxSeconds: 500 },
 		countries: ["United States"],
 	},
 	{
@@ -127,6 +138,7 @@ export const PROFILES: readonly Profile[] = [
 		name: "Commercial HVAC contractors (local services shape)",
 		keyVar: "EVAL_API_KEY_HVAC",
 		bars: { maxCostDollars: 1.5, maxSeconds: 150 },
+		fullChainBars: { maxCostDollars: 5, maxSeconds: 500 },
 		countries: ["United States"],
 	},
 ] as const;
