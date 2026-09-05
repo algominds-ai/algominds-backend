@@ -128,6 +128,40 @@
 				"fitReason": null
 			}
 		},
+		"arnotts.com": {
+			"label": null,
+			"name": "The Arnott's Group",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "The Arnott’s Group is proud of its delicious and iconic portfolio of brands that continue the legacy begun by the Arnott family in 1865. Created locally, we provide quality, great-tasting food to delight consumers around the world. The Arnott’s Group is headquartered in Sydney and employs approximately 4,000 people in markets across the Asia Pacific region. This includes manufacturing sites in NSW, QLD, VIC and SA as well as New Zealand, Malaysia and Indonesia. The Arnott’s Group portfolio includes the iconic Arnott’s brands along with Campbell’s products in Australia, Malaysia, Hong Kong and Japan, a cereal and snacks division called Good Food Partners and the 180 degrees luxury biscuit brand.",
+				"workforceTotal": 882,
+				"country": "Australia",
+				"foundedYear": null,
+				"citedPage": "https://arnotts.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Food manufacturer, 882 employees, $766M revenue, HQ in Sydney; no tech contracting evidence."
+			}
+		},
+		"asahibeverages.com": {
+			"label": null,
+			"name": "Asahi Beverages",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "Asahi Beverages is one of the leading beverage companies in Australia and New Zealand, producing an extensive range of alcohol and non-alcohol beverages. \n\nOur non-alcohol portfolio extends across soft drinks, mixers, mineral water, water, juice, tea, energy and sports drinks, with iconic and well-loved brands such as Schweppes, Cool Ridge and Pepsi.\n\nOur alcohol portfolio includes both local craft and international beers such as Asahi Super Dry and Peroni, as well as cider, ready-to-drink and spirits brands.\n \nAsahi Beverages formed in 2014 through the integration of the Schweppes Australia and Asahi Premium Beverages businesses in Australia and Independent Liquor in New Zealand. Our Group also includes The Better Drinks Co, a NZ based juice and organic soft drink business and craft brewer, Mountain Goat. \n\nWe work in a category with rapidly changing consumer wants and needs, which fuels our entrepreneurial spirit and our thirst for category-growing innovation. Our company has grown enormously over the past decade, and as we continue to evolve, we’re looking for people who thrive on collaborating, connection and building high performing teams and who are agile, adventurous and always willing to jump in and give it their all. \n\nIt’s an exciting time to join our company. We believe that with us, you’ll get the experiences you need to develop to the next stage of your career as together we build the Asahi Beverages and the beverages category of the future.\n\nKeen to explore our current vacant positions? Visit our Careers Page:\n\n https://www.asahi.com.au/careers/careers\n\n",
+				"workforceTotal": 1739,
+				"country": "Australia",
+				"foundedYear": null,
+				"citedPage": "https://asahibeverages.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Beverage maker in Southbank (Melbourne); no revenue figure given so scale unproven; no in-house tech hiring evidence."
+			}
+		},
 		"aurecongroup.com": {
 			"label": "accept",
 			"name": "Aurecon",
@@ -306,6 +340,40 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "Beyond Bank has 495 headcount and $107.97M revenue, clears both size thresholds as a bank."
+			}
+		},
+		"bigw.com.au": {
+			"label": null,
+			"name": "BIG W",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "About BIG W\n\nFor over 50 years BIG W has been the trusted backstop of Australian households. We have clothed Australian families, furnished Australian homes and filled Australian toy boxes. We opened our first store on the outskirts of Newcastle in New South Wales in 1964 and have more than 177 stores operating across Australia today.\n\nBIG W is proud to provide Australian shoppers with a broad range of quality general merchandise products at low prices. From women's, men's and children's clothing and shoes to homewares, electronics, pet food, cleaning items, party goods, toys and books, BIG W is a popular one-stop-shop for customers seeking great design, brands and value across the country.\n\n\nWhat we're like\n\nBIG W's best and most valued asset is its team of 22,000 passionate people in Australia and Asia. We believe the most vital ingredient to driving our business success is our people and we aim to empower every individual to make a positive contribution, extend career skills and ultimately maximise their potential.",
+				"workforceTotal": 2241,
+				"country": "Australia",
+				"foundedYear": 1964,
+				"citedPage": "https://bigw.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Sydney retailer, 2241 staff, $3.1B revenue; homepage is retail e-commerce, no evidence of in-house tech contracting."
+			}
+		},
+		"blackmores.com.au": {
+			"label": null,
+			"name": "Blackmores Group",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "Since 1932, Blackmores Group has been championing innovative natural health solutions to bring wellness to people everywhere, every day.  Founded by visionary naturopath, Maurice Blackmore, our vision is to connect every person on earth to the healing power of nature by combining our knowledge of nature and science to deliver quality health solutions.\n \nOur portfolio includes:\n \n• Blackmores, consistently voted No.1 health brand in Australia;\n• BioCeuticals, Australia’s leading practitioner range; \n• Blackmores Institute, our academic and research centre of excellence\n \nRenowned for high quality products, Blackmores Group has a strong commitment to embedding corporate social responsibility and sustainability across our business and giving back to the communities in which we operate. \n \nBlackmores Group operates in 12 markets, with headquarters and a state-of-the-art manufacturing facility in Australia, and offices across South-East Asia and Greater China.\n \nBlackmores Group is a wholly owned subsidiary of Kirin Holdings and the cornerstone brand of the Kirin Health Science business.",
+				"workforceTotal": 626,
+				"country": "Australia",
+				"foundedYear": 1932,
+				"citedPage": "https://blackmores.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Australian wellness company, 626 staff, $649M revenue; no evidence of in-house tech contracting authority."
 			}
 		},
 		"boq.com.au": {
@@ -776,6 +844,23 @@
 				"fitReason": "Elders is a large ASX-listed Adelaide agribusiness with 1044 staff and $3.2B revenue, fitting the ASX-listed enterprise category."
 			}
 		},
+		"endeavourgroup.com.au": {
+			"label": null,
+			"name": "Endeavour Group",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "At Endeavour Group we exist to bring people together in better, more enjoyable, and more meaningful ways. Because we believe that social communities are thriving communities, built through great experiences and positive, memorable moments. \n\nUnited behind a common purpose of ‘Creating a more sociable future together’, we are a 28,000+ strong team with more than 1600 stores and 330 hotels nationally, including leading brands such as Dan Murphy’s, BWS and ALH Hotels. \n\nOur portfolio of complementary brands and businesses allows us to curate our brand propositions to meet customer needs. Each of our businesses has its own distinct value proposition, built through shared capabilities in format, range, digital, data and analytics that form the foundations of Endeavour Group’s market leadership in retail drinks and hospitality.\n\nFor more information, including to access our social media guidelines, visit https://www.endeavourgroup.com.au/social-media-community-guidelines",
+				"workforceTotal": 1375,
+				"country": "Australia",
+				"foundedYear": null,
+				"citedPage": "https://endeavourgroup.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Retail and hospitality group, 1375 employees, $12B revenue, HQ in Sydney; no tech contracting evidence."
+			}
+		},
 		"energyq.com.au": {
 			"label": "accept",
 			"name": "Energy Queensland",
@@ -884,6 +969,23 @@
 				"fitReason": "Mining firm, Sydney HQ, 1958 staff but revenue figure not stated, so scale unproven."
 			}
 		},
+		"globalretailbrands.net": {
+			"label": null,
+			"name": "Global Retail Brands Australia",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "Global Retail Brands is proud to be the home of some of Australia’s most loved and iconic homewares and kitchenware brands: House, Robins Kitchen, MyHouse. As the largest privately-owned and fastest-growing homewares and kitchenware retailer in Australia, we’re passionate about helping Australians create homes they love.\n\nWith a network of over 300 stores across all States and Territories, we bring style, functionality and innovation to households nationwide. Our brands collectively offer a wide range of products, catering to every need and preference!\n\nHouse: A trusted name in kitchenware, tableware, and cookware, House has become synonymous with quality and innovation. Our range is designed for food enthusiasts and home chefs, delivering everything from the latest gadgets to timeless essentials.\n\nRobins Kitchen: Known for its exceptional value and variety, Robins Kitchen is the go-to destination for everyday kitchen solutions. Whether you’re upgrading your cookware or searching for the perfect gift, Robins Kitchen is all about making life in the kitchen more enjoyable.\n\nMyHouse: For over six decades, MyHouse has been Australia’s leading brand for luxurious bed linen, soft furnishings, and home décor. Combining timeless designs with contemporary trends, MyHouse helps you create spaces that reflect your personal style.\n\nAt Global Retail Brands, we pride ourselves on being more than just a retailer. We’re a team of passionate individuals dedicated to providing exceptional service, expert advice, and high-quality products. From kitchens to bedrooms, we’re committed to helping our customers elevate their homes with practical solutions and beautiful designs.\n\nLet us inspire you - one room at a time!",
+				"workforceTotal": 213,
+				"country": "Australia",
+				"foundedYear": null,
+				"citedPage": "https://globalretailbrands.net/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Melbourne-headquartered homewares retailer, 213 staff, $135M revenue; no in-house contractor-authority evidence."
+			}
+		},
 		"greatsouthernbank.com.au": {
 			"label": "accept",
 			"name": "Great Southern Bank",
@@ -900,6 +1002,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "Australian bank with 720 headcount, Brisbane HQ, fits banking vertical and size floor."
+			}
+		},
+		"hanesaustralasia.com": {
+			"label": null,
+			"name": "Hanes Brands Australasia",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "Creating the fabric of a better life for people and planet.\n\nHanes Australasia is home to some of Australia’s most loved – and market leading - everyday apparel and premium homewares brands including Bonds, Bras n Things, Berlei and Sheridan. \n\nOur brands are sold throughout Australia and beyond via our wholesale partners and our network of approximately 500 physical and online stores. \n\nWe have two main support centres in Kew, Melbourne and Pyrmont, Sydney; a smaller support centre in Auckland; and a distribution centre in Truganina, Melbourne. \n\nHanes Australasia employs a team of approximately 4,500 people who work across our support centres, our manufacturing facilities, our distribution centre and our network of retail stores. The majority of our team are based in Australia, but we also have team members working in New Zealand, South Africa, China, India, Indonesia, Pakistan, Thailand and the United Kingdom. \n\nWhile we work across many locations, we are united in our shared vision to create a more comfortable world for every body – for our customers, our partners, our suppliers, our team members and our communities. ",
+				"workforceTotal": 605,
+				"country": "Australia",
+				"foundedYear": null,
+				"citedPage": "https://hanesaustralasia.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Hanes Australasia has 605 staff in Kew, Melbourne, but no revenue figure to confirm $100M threshold."
 			}
 		},
 		"hansenyuncken.com.au": {
@@ -1064,6 +1183,40 @@
 				"fitReason": "660 staff, $959M revenue, Sydney HQ; a marketing company, not IT staffing or reseller."
 			}
 		},
+		"jbhifi.com.au": {
+			"label": null,
+			"name": "JB Hi-Fi",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "The business was established in 1974 by Mr. John Barbuto (JB), trading from a single store in East Keilor, Victoria. He had one simple philosophy: to deliver a specialist range of Hi-Fi and recorded music at Australia's lowest prices.\r\n\r\nThe business was sold in 1983 and by 1999 another nine stores were opened.\r\n\r\nIn July 2000 JB Hi-Fi was purchased by private equity bankers and senior management with the aim of taking the successful model nationally.\r\n\r\nIn October 2003, JB Hi-Fi was floated on the Australian Stock Exchange.\r\n\r\nNow, maintaining Barbuto's original philosophy, JB is one of Australasia's fastest growing and largest retailer of home entertainment.\r\n\r\nIn July 2004, JB bought the Queensland Clive Anthony chain of stores which sell consumer electronics, white goods, cooking appliances and air-conditioning.\r\n\r\nJB stores offer the world's leading brands of Hi-Fi, Speakers, Televisions, DVD's, VCR's, Cameras, Car Sound, Home Theatre, Computers and Portable Audio and continues to stock an exclusive range of specialist Hi-Fi products.\r\n\r\nJB Hi-Fi also offers the largest range of video games, recorded music, DVD music and DVD movies with over 50,000 CDs and most major studio DVD releases, all at cheap prices! Customers are able to buy online from our huge range of CDs, DVDs, and games (see home page).\r\n\r\nJB Hi-Fi has it all - best brands, huge range, cheapest prices, convenient locations, but most importantly genuine personal service from our experienced specialist staff.",
+				"workforceTotal": 2985,
+				"country": "Australia",
+				"foundedYear": 1974,
+				"citedPage": "https://jbhifi.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Large Australian retailer with 2985 staff and $10.5B revenue; no evidence of in-house tech contracting authority."
+			}
+		},
+		"justgroup.com.au": {
+			"label": null,
+			"name": "Just Group",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "The Just Group is one of the leading fashion and apparel retailers, with five well known brands, over 700 retail outlets across Australia and New Zealand, and over 5000 employees.\n \nOur iconic range of brands comprises Just Jeans, Jay Jays, Jacqui E, Portmans and Dotti. \n\nThe company was founded in 1970 when Just Jeans opened its first store in Chapel Street, Melbourne. The business has grown dramatically over the years, through both acquisition and the successful growth of brands across Australia and New Zealand. \n\nOur Head Office is located on St Kilda Road, Victoria. Our Distribution Centres are located in Melbourne and Auckland. \n\nWe value and reward great results and like to have fun along the way. \n\nIf you are interested in joining The Just Group, visit us at careers.justgroup.com.au",
+				"workforceTotal": 600,
+				"country": "Australia",
+				"foundedYear": 1970,
+				"citedPage": "https://justgroup.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Fashion retailer with 5000+ employees, $800M revenue, HQ in Melbourne; no tech contracting evidence."
+			}
+		},
 		"kmart.com.au": {
 			"label": "accept",
 			"name": "Kmart Australia Limited",
@@ -1152,6 +1305,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "249 staff and $2.77B revenue meet size; Sydney HQ; no contractor-engagement detail; residential developer, not excluded type."
+			}
+		},
+		"metcashcareers.com": {
+			"label": null,
+			"name": "Metcash",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "At Metcash, we’re the power behind an independent Australia & New Zealand. From the humble origins of our first family-owned corner store in 1927, we’ve been backing independents and strengthening the communities they operate in for almost 100 years. With a national network of more than 10,000 independent retailers and a further 90,000 wholesalers, we’re the driving force behind local, family-owned businesses – sticking up for the little guys and helping them become the best stores in town. And while we may be large in size, we’ll always be locals at heart.\n\nToday we’re Australia and New Zealand’s leading independent retail partner and wholesaler in food, liquor and hardware. We have over 80 years of experience supporting and championing the interests of independent grocery, liquor and hardware sectors. Headquartered in Sydney, our world class distribution facilities across the country allow us to operate on a huge scale to unite Australia's independent grocers, delivering products to more than 10,000 retail premises and a further 90,000 wholesale customers across the food, grocery, liquor and hardware markets. Our network of Successful Independents includes a large portfolio of brands such as IGA, Foodland, Mitre 10, Home Timber & Hardware, Cellarbrations and the Bottle-O. \n\nAt Metcash we have a single purpose - Successful Independents - it is at the heart of everything we do. Success starts with our people. Employing over 6,000 people, Metcash champions the interests of the independent retail industry. We are a team of people who are resilient and empowered, who take initiative and pride in their work and above all operate with integrity. Our core operations are key to providing our customers and retailers with merchandising, operations and marketing support through our strong retail brands. \n\nWhilst we operate on a huge scale, we think big but we act local. We believe that independence is worth fighting for and this is at the core of our business divisions. ",
+				"workforceTotal": 1461,
+				"country": "Australia",
+				"foundedYear": 1927,
+				"citedPage": "https://metcashcareers.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Australian wholesaler with 1461 staff and $17.3B revenue; job listings are non-tech roles, no contractor-authority evidence."
 			}
 		},
 		"middys.com.au": {
@@ -1496,6 +1666,23 @@
 				"fitReason": "Rabobank Australia is a specialist agribusiness bank with 636 headcount, fits banking vertical."
 			}
 		},
+		"reece.com": {
+			"label": null,
+			"name": "Reece Group",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "Reece Group is a leading distributor of plumbing, waterworks and HVAC-R products to commercial and residential customers through over 800 branches in Australia, New Zealand and the United States.\n\nEstablished in 1920 and listed on the Australian Securities Exchange (ASX: REH), Reece Group has approximately 9,000 employees committed to improving the lives of its customers by striving for greatness every day.\n\nFor further information on Reece Group and its portfolio of businesses please visit https://group.reece.com. ",
+				"workforceTotal": 1342,
+				"country": "Australia",
+				"foundedYear": null,
+				"citedPage": "https://group.reece.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Cremorne (Melbourne) HQ distributor, 1342 staff, $8.9B revenue; no evidence of in-house tech hiring function."
+			}
+		},
 		"safetyculture.com": {
 			"label": "accept",
 			"name": "SafetyCulture",
@@ -1512,6 +1699,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "686 staff, $132M revenue, Sydney-based SaaS platform; contractor engagement not mentioned."
+			}
+		},
+		"sanitarium.com": {
+			"label": null,
+			"name": "Sanitarium",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "At Sanitarium, we believe access to healthier choices underpins the potential for a long and healthy life. That’s why we’ve been creating affordable nutritious products, promoting healthy active lifestyles, advocating for plant-based diets, and giving our foods to people in need since 1898. \n\nSanitarium’s founders set out with a purpose to improve the health of our nation. Today, Sanitarium is one of the Australia’s most trusted food companies and our iconic products, such as Weet-Bix™, UP&GO™ and So Good™, are found in two out of three homes. With 1200 people across six Australian sites, we’re still 100% Australian owned and we remain passionate about helping everyone live well. \n\nProudly serving goodness for 125 years. Learn more at www.sanitarium.com ",
+				"workforceTotal": 478,
+				"country": "Australia",
+				"foundedYear": 1898,
+				"citedPage": "https://sanitarium.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Berkeley Vale, Australia food company, 478 staff, $450M revenue; no evidence of in-house tech contractor engagement."
 			}
 		},
 		"seek.com": {
@@ -1712,6 +1916,23 @@
 				"fitReason": "1,087 employees and $4.07B revenue meet size; Australian HQ; retail group, not a staffing or government body."
 			}
 		},
+		"swisse.com.au": {
+			"label": null,
+			"name": "Swisse Wellness (part of H&H Group)",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "Swisse Wellness is a global Australian brand dedicated to making people healthier and happier through natural health products and education. \n\nSince our acquisition in 2015 by Hong Kong listed Health & Happiness Group, we have become an integral part of the global H&H Group house of wellness brands. H&H Group is a global health and nutrition company. Dynamic, courageous and ambitious in its mission to make people healthier and happier, the Group strives to inspire wellness while contributing positively to the needs of society and the planet. The Group has three business segments – Baby, Adult and Pet Nutrition and Care – supporting whole-family health and happiness, with premium brands providing nutrition and wellness solutions backed by science. Consumer brands include Swisse, Biostime, Zesty Paws, Solid Gold Pet, Dodie, Good Goût and Aurelia London.\n\nThe Group is globally headquartered in Hong Kong SAR and listed on the Hong Kong Stock Exchange (\"H&H INTL HLDG\" stock code 1112), with more than 3,400 team members operating across 16 countries. \n\nWe delight in being able to bring premium quality, naturally based, scientifically validated products to our customers through leading online and offline retailers across the globe.\n\nToday, the Swisse product range stretches from top selling men’s and women’s multivitamins and dietary supplements, to sports nutrition, skincare and functional foods. \n\nOur diversity and inclusion strategy supports the following pillars: gender balance; culture and religion; life stage; ability; and identity and orientation. We offer Cultural Awareness Training as a part of our commitment to be a truly inclusive organisation that values diversity!\n\nAs an Equal Opportunity Employer, we encourage applications from people of all ages, nationalities, abilities and cultures – including Aboriginal and Torres Strait Islander peoples, the LGBTQI+ community and people living with disability. \n\n",
+				"workforceTotal": 259,
+				"country": "Australia",
+				"foundedYear": 1974,
+				"citedPage": "https://swisse.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Swisse is a Melbourne-based wellness brand meeting size thresholds; acquisition by H&H doesn't indicate closure."
+			}
+		},
 		"tabcorp.com.au": {
 			"label": "accept",
 			"name": "Tabcorp",
@@ -1728,6 +1949,23 @@
 				"citedDate": null,
 				"quote": null,
 				"fitReason": "1131 staff, $2.6B revenue, Melbourne HQ; betting/entertainment company, not staffing or reseller."
+			}
+		},
+		"terrywhitechemmart.com.au": {
+			"label": null,
+			"name": "TerryWhite Chemmart",
+			"firstSeenRunId": "companies_6812d040-51ba-4eae-8ca1-5ff820f3dde0_2026-09-05",
+			"lastSeenAt": "2026-09-05T03:31:19.429Z",
+			"record": {
+				"industry": null,
+				"description": "TerryWhite Chemmart is one of Australia’s leading retail pharmacy networks delivering frontline healthcare.\n\nWith more than 600 community pharmacies across Australia, we are committed to ensuring every Australian has easier access to pharmacists and expert health advice every day.\n\nTerryWhite Chemmart provides high-quality, accessible and cost-effective community-based healthcare services and programs.",
+				"workforceTotal": 1075,
+				"country": "Australia",
+				"foundedYear": 1959,
+				"citedPage": "https://terrywhitechemmart.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "TerryWhite Chemmart is a Brisbane-area pharmacy chain meeting size thresholds; no in-house tech evidence found."
 			}
 		},
 		"thiess.com": {
