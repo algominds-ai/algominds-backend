@@ -323,15 +323,8 @@ function entryPage(
 }
 
 /**
- * Confirms every gated row's evidence page really exists, for a round whose
- * plan demanded proof from the agent. A row with no quote at all is
- * missing-required. Every row that does carry a quote to check is fetched
- * over the deduplicated url list (two rows can cite one page), in concurrent
- * `exaContents` batches. A row whose page truly does not exist or cannot be
- * fetched at all — `CRAWL_NOT_FOUND` or `UNSUPPORTED_URL` — is
- * evidence-not-on-page; every other outcome (missing, a timeout, a source the
- * crawler was refused) keeps the row, records the check for the judge to
- * see, and keeps the crawled page as evidence when the crawl returned one.
+ * Confirms every gated row's evidence page really exists.
+ * Returns kept rows, rejects with reasons, checks performed, and retrieved pages.
  */
 export async function verifyEvidenceRows(
 	rows: readonly CompanyRow[],

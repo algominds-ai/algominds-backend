@@ -189,12 +189,8 @@ function shapeMismatchDetail(body: unknown, error: z.ZodError): string {
 }
 
 /**
- * Fetches one agent run's current state, parsing `output.structured`
- * against `structuredSchema`. A run still working reports partial text with
- * no structured payload, which reads as running rather than as a bad shape.
- * Reports its cost into `ledger` the moment it completes. Throws when the run
- * failed, errored, or was canceled, and when a body does not match the
- * expected shape.
+ * Fetches one agent run's current state, parsing `output.structured` against `structuredSchema`.
+ * Returns the run output or throws if the run failed, errored, or was canceled.
  */
 export async function getAgentRunOutput<T>(
 	id: string,

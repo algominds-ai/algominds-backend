@@ -288,13 +288,8 @@ function unprovenRequirement(
 }
 
 /**
- * Whether one judged row is stored. A hard requirement the row contradicts
- * refuses it. A hard requirement that only a page can settle must be `proven`
- * from a cited page, and every row reaches the judge with its evidence already
- * attached, so `unproven` there means no page proved it and the row is
- * refused. A hard requirement the record settles is judged on the record, so
- * `unproven` keeps the row: a record that states nothing is silence, not a
- * contradiction. Soft requirements never gate.
+ * Whether one judged row is stored.
+ * Returns true if no hard requirement is contradicted and no page-gated requirement is unproven.
  */
 function keepsRow(
 	requirements: readonly Requirement[],
