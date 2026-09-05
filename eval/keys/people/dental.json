@@ -93,12 +93,13 @@
 			"note": "Practice Manager at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/chasity-huston-95a631283": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Chasity Huston",
 			"title": "Senior Office Manager",
 			"company": "nadentalgroup.com",
 			"location": "Galloway, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Senior Office Manager at nadentalgroup.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/cheyenne-rhodes-28411bb5": {
 			"label": "accept",
@@ -173,12 +174,13 @@
 			"note": "Regional Manager at nadentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/drbridgetduffy": {
-			"label": null,
+			"label": "accept",
 			"name": "Bridget Duffy, MD",
 			"title": "CEO and Executive Board Chair",
 			"company": "peakdentalservices.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "CEO and Executive Board Chair at peakdentalservices.com, an executive title carrying explicit administrative budget authority despite the MD credential"
 		},
 		"https://linkedin.com/in/drucila-clark-04288477": {
 			"label": "accept",
@@ -271,12 +273,13 @@
 			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/jennifer-mckinnon-74196a2a": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Jennifer McKinnon",
 			"title": "Senior Office Manager",
 			"company": "nadentalgroup.com",
 			"location": "Maumee, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Senior Office Manager at nadentalgroup.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/jessica-hunter-1a99b016a": {
 			"label": "accept",
@@ -288,12 +291,13 @@
 			"note": "Operations Leader at dentalonepartners, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/jewelullrich": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Jewel Ullrich",
 			"title": "Practice Support Manager",
 			"company": "nadentalgroup.com",
 			"location": "Pittsburgh, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Practice Support Manager at nadentalgroup.com; a support-function role rather than the practice's administrative budget owner, distinct from Practice Manager"
 		},
 		"https://linkedin.com/in/john-solooki-dds-98a85240": {
 			"label": "reject:not-buyer",
@@ -350,12 +354,13 @@
 			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/kim-craig-b253b26a": {
-			"label": null,
+			"label": "accept",
 			"name": "Kim Craig",
 			"title": "Office Leader",
 			"company": "dentalonepartners.com",
 			"location": "Columbus, Ohio Metropolitan Area",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Office Leader at dentalonepartners.com; this company already treats Office Leader as equivalent to the accepted Operations Leader role (see Amanda Morgan's combined Operations Leader, Office Leader title)"
 		},
 		"https://linkedin.com/in/kim-hough-0470351a1": {
 			"label": "accept",
@@ -376,12 +381,13 @@
 			"note": "Senior Leader of Operations at dentalonepartners, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/kimberly-orapello-69170982": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Kimberly Orapello",
 			"title": "Senior Office Manager",
 			"company": "nadentalgroup.com",
 			"location": "Pensacola, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Senior Office Manager at nadentalgroup.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/kimberly-shelton-46143718a": {
 			"label": "accept",
@@ -402,20 +408,22 @@
 			"note": "Regional Director of Operations, Columbus, OH at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/lauren-kissick-b5344a100": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Lauren Kissick",
 			"title": "Office Manager",
 			"company": "dentalonepartners.com",
 			"location": "Indianapolis, Indiana, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Office Manager at dentalonepartners.com, distinct from this company's Office Leader/Operations Leader naming for its accepted administrative role"
 		},
 		"https://linkedin.com/in/leslie-jackson-b8500824a": {
-			"label": null,
+			"label": "accept",
 			"name": "Leslie Jackson",
 			"title": "Operations Manager",
 			"company": "nadentalgroup.com",
 			"location": "Fairburn, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Operations Manager at nadentalgroup.com, matching the established Operations Manager accept pattern"
 		},
 		"https://linkedin.com/in/letaleja-fleshman-997027177": {
 			"label": "accept",
@@ -427,12 +435,13 @@
 			"note": "Practice Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/lisbeth-morales-bb332b249": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Lisbeth M.",
 			"title": "Business Office Manager",
 			"company": "nadentalgroup.com",
 			"location": "Peachtree City, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Business Office Manager at nadentalgroup.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/maria-landis-5235a79a": {
 			"label": "accept",
@@ -498,12 +507,13 @@
 			"note": "Regional Director of Operations at lonepeakdentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/michellemjobe": {
-			"label": null,
+			"label": "accept",
 			"name": "Michelle Jobe",
 			"title": "Operations Manager",
 			"company": "nadentalgroup.com",
 			"location": "Melbourne, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Operations Manager at nadentalgroup.com, matching the established Operations Manager accept pattern"
 		},
 		"https://linkedin.com/in/michellemtempleton": {
 			"label": "accept",
@@ -551,12 +561,13 @@
 			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/nathan-tanner-braun-781b6314b": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Nathan Tanner-Braun",
 			"title": "Senior Office Manager",
 			"company": "nadentalgroup.com",
 			"location": "Palm Beach Gardens, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Senior Office Manager at nadentalgroup.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/nick-deninno053179": {
 			"label": "accept",
@@ -667,12 +678,13 @@
 			"note": "Chief Operations and Marketing Officer at peakdentalservices, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/sara-j-b5a9651b3": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Sara J.",
 			"title": "Dental Office Manager",
 			"company": "nadentalgroup.com",
 			"location": "Dearborn Heights, United States",
-			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05"
+			"firstSeenRunId": "people_dom-9290113a6d2e_2026-09-05",
+			"note": "Dental Office Manager at nadentalgroup.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/sarah-damico-19585220a": {
 			"label": "accept",
