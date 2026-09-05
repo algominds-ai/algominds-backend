@@ -10,9 +10,11 @@ import type { CompanyRow } from "@/core/companies/gate";
 import {
 	evidenceRowsFor,
 	matchRow,
+	type RoundTiming,
 	rawResultEvidenceRow,
 	retrievedPageEvidenceRow,
 	roundRefusalsEvidenceRow,
+	roundTimingsEvidenceRow,
 	toNewCompany,
 } from "@/core/companies/rows";
 import {
@@ -84,6 +86,7 @@ type PersistRoundInput = {
 	costDollars: number;
 	result: FindCompaniesResult;
 	report: RoundReport;
+	timings: readonly RoundTiming[];
 };
 
 /** Banks what one round spent and what it did, in one durable step, so both land together or replay together: the round row, and a run-level evidence row naming every company the judge refused and why. */
@@ -102,12 +105,11 @@ export async function persistRound(input: PersistRoundInput): Promise<void> {
 				rejected: report.rejected,
 				rejects: input.result.rejects.slice(0, STORED_REJECTS_PER_ROUND),
 			});
-			const refusals = roundRefusalsEvidenceRow(
-				runId,
-				report.round,
-				input.result.rejects,
-			);
-			if (refusals) await appendEvidence(env, [refusals]);
+			const rows = [
+				roundRefusalsEvidenceRow(runId, report.round, input.result.rejects),
+				roundTimingsEvidenceRow(runId, report.round, input.timings),
+			].filter((row) => row !== null);
+			if (rows.length > 0) await appendEvidence(env, rows);
 		},
 	);
 }

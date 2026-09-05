@@ -10,6 +10,7 @@ import { fetchHomepages } from "@/core/companies/homepages";
 import { judge } from "@/core/companies/judge";
 import { proveRows } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
+import type { RoundTiming } from "@/core/companies/rows";
 import { CostLedger } from "@/core/cost";
 import { recentDomains } from "@/core/db/queries";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
@@ -291,13 +292,45 @@ export type RoundDepsInput = {
 	round: number;
 	today: string;
 	seller: IcpDoc["seller"];
+	timings: RoundTiming[];
 };
+
+function timed<A extends unknown[], R>(
+	dep: string,
+	fn: (...args: A) => Promise<R>,
+	timings: RoundTiming[],
+): (...args: A) => Promise<R> {
+	return async (...args) => {
+		const started = Date.now();
+		try {
+			return await fn(...args);
+		} finally {
+			timings.push({ dep, seconds: (Date.now() - started) / 1000 });
+		}
+	};
+}
+
+/** `deps` with every paid or model dependency wrapped to push how long each call took onto `timings`. */
+export function timedDeps(
+	deps: FindCompaniesDeps,
+	timings: RoundTiming[],
+): FindCompaniesDeps {
+	return {
+		...deps,
+		synthesize: timed("synthesize", deps.synthesize, timings),
+		search: timed("search", deps.search, timings),
+		agentRound: timed("agent", deps.agentRound, timings),
+		backfill: timed("backfill", deps.backfill, timings),
+		prove: timed("prove", deps.prove, timings),
+		judge: timed("judge", deps.judge, timings),
+	};
+}
 
 export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 	const { accumulatedDomains, step, round, today } = input;
 	const seller = input.seller ?? null;
 	const lookupRecentDomains = agentRecentDomains(step, round);
-	return {
+	const deps: FindCompaniesDeps = {
 		recentDomains: async (env, organizationId, days) => {
 			const known = await lookupRecentDomains(env, organizationId, days);
 			return [...known, ...accumulatedDomains];
@@ -311,4 +344,5 @@ export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 		gate,
 		judge: steppedJudge(step, round),
 	};
+	return timedDeps(deps, input.timings);
 }

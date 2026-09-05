@@ -1,0 +1,107 @@
+{
+	"buyer": {
+		"bands": ["founder", "c-suite", "vp", "director", "head", "manager"],
+		"rubric": "The budget and decision for this purchase sit with the person who owns the company's finance function at the moment a priced round closes — typically the CFO, VP of Finance, Head of Finance, or Controller, since this is the person who must produce the 409A valuation, update the cap table, and report to new investors. At companies under fifty employees where no such role exists yet, the founder or CEO personally owns this decision and should be treated as the buyer. Legal counsel and outside law firms influence the process by helping issue equity and structure the round but do not own the purchase. Hard negatives are HR, People Ops, sales, marketing, and engineering leaders — even senior ones — since they have no ownership of cap table, 409A, or investor reporting responsibilities regardless of title seniority; a VP of Engineering or Head of People is never the buyer here. The exception is company size: below fifty employees, the founder/CEO band replaces the finance-leader band as the primary buyer.",
+		"keywordBands": []
+	},
+	"seller": {
+		"domain": "carta.com",
+		"customers": [
+			"Airtable",
+			"Notion",
+			"Brex",
+			"CaptivateIQ",
+			"Betterment",
+			"Demostack",
+			"iSpot.tv",
+			"Perkville",
+			"RADAR",
+			"Veerum",
+			"Double A Labs",
+			"Guide",
+			"ButterflyMX",
+			"Uplight"
+		],
+		"competitorTest": "A competitor in this category sells cap table and equity plan software primarily to companies that are already public, serving corporate stock administration or HR benefits teams managing employee stock plans rather than the finance function of a private, venture-backed company reacting to a freshly priced round."
+	},
+	"description": "The buyers here are individual venture-backed operating companies — startups across software, fintech, consumer, biotech, and other sectors that have just priced and closed an institutional funding round. These are not investment firms or advisors; they are the companies raising the capital, the ones whose shareholder register just changed. The qualifying question is never whether a company touches cap table or equity software in the abstract, but whether it owns the direct relationship with its own shareholders, new investors, and equity-holding employees at the exact moment a priced round closes and a fresh valuation becomes due.\n\nQualifying shape is an operating company headquartered in the United States, Canada, the United Kingdom, or Continental Europe, with ten or more employees, that announced a Seed, Series A, Series B, or Series C round within the last ninety days. Company size beyond the ten-employee floor and beyond having a dated, priced round does not matter — a $2M seed and a $150M Series C both qualify equally. There is a cold zone on both edges of this motion: pre-seed companies with fewer than ten employees and no priced round are too early, since there is no cap table event or 409A trigger yet, and companies beyond Series C moving into growth, pre-IPO, or public status sit outside this event-driven window entirely.\n\nAny vertical fits as long as the company is venture-backed and privately held — SaaS, fintech, consumer, deep tech, biotech, marketplaces, and hardware companies all qualify equally once they have a priced round on record. Excluded categories are investment firms, venture funds, private equity firms, accelerators, and service providers that sell into startups (law firms, auditors, fund admins) rather than being startups themselves, along with any company that has already gone public. Also excluded is the customer base of a rival cap table product: those tools are typically sold to companies already public and managing employee stock plans through a corporate stock administration or HR benefits team, not to a private company's finance function reacting to a fresh priced round.\n\nA dated press release, TechCrunch or industry article, or the company's own blog post announcing the close of a Seed, Series A, Series B, or Series C round is the core signal and should be no older than ninety days. A careers or LinkedIn page showing ten or more employees, dated within the last six months, confirms the size threshold. A funding announcement that names a lead investor and round size, dated within the last ninety days, corroborates the event. A new CFO, VP Finance, Head of Finance, or Controller hire announced within the last ninety days signals the finance seat this purchase runs through has just been filled or is active. A careers page with open finance or accounting roles, dated within the last ninety days, signals the finance function is scaling post-raise. A company blog or investor update mentioning a move off spreadsheets for cap table or equity management, dated within the last six months, signals active pain. A mention of an upcoming or recently completed 409A valuation tied to the new round, dated within the last ninety days, is a direct trigger signal. A founder or CEO LinkedIn post celebrating the round close, dated within the last ninety days, is a softer but usable confirmation of timing.",
+	"requirements": [
+		{
+			"id": "r1",
+			"kind": "hard",
+			"text": "The company is itself a startup operating company, not an investment firm, venture fund, private equity firm, accelerator, startup-focused service provider, or an already-public company.",
+			"proof": "record",
+			"windowDays": null
+		},
+		{
+			"id": "r2",
+			"kind": "hard",
+			"text": "The company is headquartered in the United States, Canada, the United Kingdom, or Continental Europe.",
+			"proof": "record",
+			"windowDays": null
+		},
+		{
+			"id": "r3",
+			"kind": "hard",
+			"text": "The company has ten or more employees.",
+			"proof": "record",
+			"windowDays": null
+		},
+		{
+			"id": "r4",
+			"kind": "hard",
+			"text": "The company announced the close of a priced Seed, Series A, Series B, or Series C round within the last ninety days.",
+			"proof": "page",
+			"windowDays": 90
+		},
+		{
+			"id": "r5",
+			"kind": "hard",
+			"text": "The company is venture-backed and privately held rather than public.",
+			"proof": "record",
+			"windowDays": null
+		},
+		{
+			"id": "r6",
+			"kind": "soft",
+			"text": "The company announced a new CFO, VP Finance, Head of Finance, or Controller hire within the last ninety days.",
+			"proof": "record",
+			"windowDays": 90
+		},
+		{
+			"id": "r7",
+			"kind": "soft",
+			"text": "The company's careers page lists open finance or accounting roles dated within the last ninety days.",
+			"proof": "page",
+			"windowDays": 90
+		},
+		{
+			"id": "r8",
+			"kind": "soft",
+			"text": "The company published a blog post or investor update mentioning a move off spreadsheets for cap table or equity management within the last six months.",
+			"proof": "page",
+			"windowDays": 180
+		},
+		{
+			"id": "r9",
+			"kind": "soft",
+			"text": "The company mentioned an upcoming or recently completed 409A valuation tied to the new round within the last ninety days.",
+			"proof": "page",
+			"windowDays": 90
+		},
+		{
+			"id": "r10",
+			"kind": "soft",
+			"text": "The founder or CEO posted on LinkedIn celebrating the round close within the last ninety days.",
+			"proof": "page",
+			"windowDays": 90
+		},
+		{
+			"id": "r11",
+			"kind": "soft",
+			"text": "A funding announcement names a lead investor and round size dated within the last ninety days.",
+			"proof": "page",
+			"windowDays": 90
+		}
+	]
+}

@@ -1,0 +1,1500 @@
+{
+	"slug": "aris",
+	"icpId": "5e8ca999-8a24-442a-853b-23c11bfd5d05",
+	"companies": {
+		"align.com": {
+			"label": "reject:excluded-type",
+			"name": "Align",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "align.com is Align Technology, the Invisalign maker, a large enterprise with its own internal IT and talent-acquisition function, not an MSP",
+			"record": {
+				"industry": null,
+				"description": "Align is a leading global provider of technology infrastructure solutions, managed IT services and data center deployment. For more than 30 years, our team has worked tirelessly to ensure our clients’ technologies are leading-edge, secure and sized to their business requirements.\n\nWith offices in New York, London, Chicago, San Francisco, Arizona, New Jersey, Texas and Virginia, Align supports clients of any size, location or marketplace. Combining project management skills, expert knowledge of technology systems, and a true team spirit, Align has successfully managed some of the most challenging IT projects. ",
+				"workforceTotal": 233,
+				"country": "United States",
+				"foundedYear": 1986,
+				"citedPage": "https://align.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Managed IT and data center provider with 233 employees serving clients across US."
+			}
+		},
+		"allitsupported.com": {
+			"label": "accept",
+			"name": "ALL I.T.",
+			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:46:26.095Z",
+			"note": "16 staff, US; the record describes ALL I.T. coordinating field-technician dispatch across MSP client sites",
+			"record": {
+				"industry": null,
+				"description": "52% of MSP owners say they can't find qualified field technicians anymore. The harder problem starts after that — coordinating dispatch across 8, 20, 200 client locations without burning out the service desk.\nALL I.T. is the layer that handles that work.\nWe're a white-label field IT and Smart Hands operation for MSPs and multi-site IT teams. We cover 200+ U.S. markets with a vetted technician network, and we operate inside ConnectWise — partners either log tickets into our instance or route from their own PSA via a dedicated integrated board.\nA ticket comes in. We validate scope before dispatch. We assign a technician from our network. If something changes on-site, escalation follows a defined approval path before more work proceeds. Closeout documentation flows back into the partner's system.\nThe MSP or IT team keeps the client relationship, scope authority, and technical direction. ALL I.T. handles dispatch, on-site execution, and escalation. For MSP partners: channel-only, white-label, contractually non-compete.\nNot a marketplace. Not a vendor network. One execution layer with one accountable owner.\nPricing is structured by channel — different models for MSP partners and direct enterprise engagements. For most MSPs running 25+ dispatches a month, the all-in cost lands below self-managing once coordinator time, technician churn, and ramp-up callbacks are factored in.\nRecent execution: a 1,000-server data center migration completed on schedule over six months. A 300-location nationwide network deployment coordinated across multiple states inside two weeks. Multi-year partnerships with enterprise clients across retail, property management, and healthcare verticals.\n\nFounded 2009 in Boston. Led by Ilya Elbert (linkedin.com/in/ilyaelbert).\nIf on-site coordination is becoming an operational drag, we'll walk through the math. allitsupported.com or DM us.",
+				"workforceTotal": 16,
+				"country": "United States",
+				"foundedYear": 2009,
+				"citedPage": "https://allitsupported.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"americanitsolutions.com": {
+			"label": "accept",
+			"name": "American IT Solutions, Inc",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "42 staff, US; the record's fitReason confirms an MSP serving external clients nationwide",
+			"record": {
+				"industry": null,
+				"description": "American IT Solutions, Inc. provides \"World Class Technology Services to Small Businesses and fortune 500 companies nationwide.\" Founded in 2003, American IT Solutions, Inc. (AIT) combines award winning hardware solutions with customer focused managed sourcing services. This unique solutions suite provides our clients with state of the art computing hardware and decreased staff costs while optimizing organizational performance. AIT's managed sourcing model emphasizes scalability, providing customers with flexible resource staffing in today's ever-changing economic climate. Initially, AIT began as a computer hardware fulfillment and break fix organization. AIT's client base has evolved from small business/professional customers to large multinational organizations with services that encompass hardware infrastructure and managed staffing support, designed to support thousands of our client's employees throughout their enterprise. \r\n\r\n\"AITmade the 2010 Inc. Magazine 500/5000 list for fastest-growing private companies in America. Our ranking was 622 of the 5000 top companies, and ranked as the #1 IT Service company in the state of CT.\" AIT made the INC 5000 list again in 2012 as well as receiving the Tech 200 award in 2012 by Lead411 as one of the Top 200 Technology companies in the USA. \r\n\r\nAIT's employee roster is currently 112 strong. AIT's employees are its strongest asset as they provide core services to several fortune 500 companies. AIT recognizes the need to be flexible in fluid economic times and has embraced a scalable work model which adjusts operations to business needs and trends. Currently, AIT is working with its largest clients to staff a \"workplace of the future\" that promotes workforce virtualization which takes advantage of the inherent benefits of a virtualized workforce model.",
+				"workforceTotal": 42,
+				"country": "United States",
+				"foundedYear": 2003,
+				"citedPage": "https://americanitsolutions.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 42 employees serving external clients across US, matching required profile and size."
+			}
+		},
+		"apex-its.com": {
+			"label": null,
+			"name": "Apex IT Services",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: the record's own fitReason flags that Apex also offers 'specialized IT staffing', leaving MSP-vs-staffing-firm culture fit unclear",
+			"record": {
+				"industry": null,
+				"description": "Apex IT Services, LLC (www.apex-its.com) is a CMMI Level 3 SBA 8(A) certified IT services firm delivering quality IT services in System Integration [SI], Electronic Data Interchange [EDI], Business Intelligence [BI]-Data Warehousing [DWH] Technologies - Extract Transform Load, [ETL] e-Business Technologies, Web Services and many others plus Specialized IT staffing for our clients. \r\n\r\nApex IT Services is equipped to meet your needs at your location or from our offices supported by our fully trained and staffed Technology Center. Our impressive client list is the result of a keen insight into expectations and exceeding them. Our expertise and resources can impact every stage of an Information Technology development or implementation project. \r\n\r\nWant to know more? Contact us to find out how we can enable IT for you ... Please email us at info@apex-its.com or call 443-445-2212 for immediate sales and other consulting related information.",
+				"workforceTotal": 33,
+				"country": "United States",
+				"foundedYear": 2005,
+				"citedPage": "https://apex-its.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT services firm also offering 'specialized IT staffing,' making MSP vs staffing-firm culture fit unclear."
+			}
+		},
+		"ascentient.com": {
+			"label": "accept",
+			"name": "Ascentient IT Support & Managed IT Services",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "21 staff, US; managed IT support and services provider since 1999",
+			"record": {
+				"industry": null,
+				"description": "Discover the Ascentient advantage — your trusted partner in managed IT services since 1999. Located in Schaumburg, Illinois, we specialize in personalized IT solutions that elevate your business. Transforming Businesses with Smart, Simple, & Secure Technology Solutions. Ignite business growth and innovation with custom-tailored, high-performance IT and cloud solutions that streamline your operations, fortify your security, and deliver the Ultimate User Experience.\n\nWe're more than just a service provider; we're a long-term partner invested in your success. Put your trust in Ascentient and focus on what you do best: growing your business. \n\nReach out today and Experience Ultimate!",
+				"workforceTotal": 21,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://ascentient.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"asgct.com": {
+			"label": "accept",
+			"name": "ASG Information Technologies",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "20 staff, US; industry field says managed IT services, offering IT support and network security",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Managed service provider offering IT support and network security services.",
+				"workforceTotal": 20,
+				"country": "United States",
+				"foundedYear": 1997,
+				"citedPage": "https://www.einpresswire.com/article/902934647/asg-information-technologies-announces-frank-callanan-as-chief-operating-officer",
+				"citedDate": "2026-04-03",
+				"quote": "ASG Information Technologies announced the appointment of Frank Callanan as Chief Operating Officer.",
+				"fitReason": null
+			}
+		},
+		"boxit.net": {
+			"label": "accept",
+			"name": "boxIT, LLC",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "11 staff, US; the record's fitReason confirms an MSP providing IT services to businesses",
+			"record": {
+				"industry": null,
+				"description": "boxIT has been providing reliable and cost-effective IT services to businesses through automation, 24/7 management, and a data-driven yet human approach since 2001. What started as an onsite physical management appliance called “box” has evolved into a blended model of technology + human support for businesses needing a cost-effective and dependable partner. Fast forward to present-day: boxIT leverages the most widely used & adopted technologies to ensure we provide long-term value for our clients and partners for years to come.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2001,
+				"citedPage": "https://boxit.net/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "US MSP with 11 employees providing IT services to businesses, not internal IT or staffing buyer."
+			}
+		},
+		"brite.com": {
+			"label": null,
+			"name": "Brite",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "undecidable: the record confirms a US managed-IT services business but gives no headcount to check against the 10-person floor",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Managed IT, cybersecurity, cloud, and technology solutions provider serving organizations across the United States.",
+				"workforceTotal": null,
+				"country": "United States",
+				"foundedYear": 1983,
+				"citedPage": "https://www.linkedin.com/posts/thebriteteam_were-excited-to-welcome-ryan-johnston-to-activity-7475202572413353986-325k",
+				"citedDate": "2026-06-23",
+				"quote": "We’re excited to welcome Ryan Johnston to Brite as our newest Cloud Engineer!",
+				"fitReason": null
+			}
+		},
+		"bytesmanagedit.com": {
+			"label": "accept",
+			"name": "Bytes Managed IT & Cybersecurity",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "11 staff, US; managed IT, network and computer solutions for businesses",
+			"record": {
+				"industry": null,
+				"description": "We help businesses create dependable technology environments that reduce disruption, improve communication, and support long-term success. Bytes Managed IT Network, and Computer Solutions is here to support your business with over 25 years of IT expertise. Gain a trusted partner in technology with Bytes Managed IT.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2005,
+				"citedPage": "https://bytesmanagedit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"capstoneitservices.com": {
+			"label": "accept",
+			"name": "Capstone IT Services",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "11 staff, US; the record's fitReason confirms an MSP acting as an outsourced IT department with client-facing focus",
+			"record": {
+				"industry": null,
+				"description": "We are your outsourced IT department with solutions for all types of technology needs for small-medium businesses on the Treasure Coast and the Palm Beaches. We have experience serving all industries and train our engineers in the highest levels of customer service. The top industries we serve are legal, non-profits, manufacturing, engineering, architecture, construction, financial institutions, Services include helpdesk support, Microsoft365, Apple support, VoIP Phones, technology consulting, network security, managed services, data backup. ",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2017,
+				"citedPage": "https://capstoneitservices.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 11 employees in Florida serving multiple industries via outsourced IT with client-facing focus."
+			}
+		},
+		"ccsinet.com": {
+			"label": "same-as:sourcepass.com",
+			"name": "CCSI - A Sourcepass Company",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "the company's own name, 'CCSI - A Sourcepass Company', states it was acquired by Sourcepass",
+			"record": {
+				"industry": null,
+				"description": "CCSI is a dynamic managed services provider that provides the finest quality discovery, planning, design, implementation, & operational support services for our customers. Our primary objective is to deliver business solutions that ensure clients achieve and maintain a competitive edge.\r\n\r\nCCSI provides the highest quality of service in the industry for the full spectrum of technologies—from mainframes to PCs, network infrastructure, managed services, IP security, IP telephony and storage solutions. \r\n\r\nFor more than 40 years, CCSI has remained on the forefront of technological innovation, navigating clients through a complete IT revolution with a focus on helping firms understand the practical business implications of emerging technologies. Our focus is to improve our client’s performance through technology solutions, thus reducing IT expenditure while maintaining the highest levels of network up-time, hardware reliability, data integrity and application stability.\r\n\r\nJoin our team. At CCSI, we are always looking for engaging and motivated candidates. Check out the available job opportunities and apply today: http://www.ccsinet.com/contact-us/careers/",
+				"workforceTotal": 14,
+				"country": "United States",
+				"foundedYear": 1974,
+				"citedPage": "https://ccsinet.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "US managed services provider with 14 staff delivering IT services to external customers, not internal IT."
+			}
+		},
+		"centerlogic.com": {
+			"label": "accept",
+			"name": "Centerlogic IT Services",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "Centerlogic's own description says it acts as an outsourced IT department for clients (an MSP model), 32 staff, US",
+			"record": {
+				"industry": null,
+				"description": "Centerlogic, Inc. (formerly Evosus Solutions, Inc.) acts as an outsourced IT (information technology) department which reports to an administrative or technical contact within your company. We support infrastructures as simple as a single computer, to those as complex as multiple-site, multiple-server networks. We design, implement and support a wide variety of hardware, software, and services and will assist you in making IT decisions that best benefit your organization.\n\nWe provide the following services:\n\nManaged Services, Virtualization, IT Projects and Support, IT Support Desk, Cloud Computing, Cybersecurity, Disaster Recovery, Virus Protection, Windows 365, Microsoft Update Management, Virus/Spyware Removal & Remediation, and Wireless Solutions. ",
+				"workforceTotal": 32,
+				"country": "United States",
+				"foundedYear": 2001,
+				"citedPage": "https://centerlogic.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"circlemsp.com": {
+			"label": "accept",
+			"name": "Circle MSP",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "54 staff, US; managed technology services for businesses across Southern California",
+			"record": {
+				"industry": null,
+				"description": "Managed Technology Services is your steadfast technology partner serving businesses throughout Southern California. We offer a comprehensive suite of solutions tailored to optimize and streamline your office technology infrastructure.\n\nOur expertise spans IT Services, VoIP systems, Cloud computing, Computer and Server management, Workflow automation, and comprehensive Print Management. With our team of certified professionals, we provide proactive support, ensuring your technology operates seamlessly and securely.\n\nManaged Technology Services takes pride in delivering customized strategies that drive efficiency, productivity, and cost-savings for your organization. Our client-centric approach ensures we understand your unique requirements and tailor solutions to meet your specific needs.\n\nLeverage our extensive industry experience and robust capabilities to gain a competitive edge. Engage with Managed Technology Services today and experience the difference a dedicated technology partner can make for your business success.",
+				"workforceTotal": 54,
+				"country": "United States",
+				"foundedYear": 1989,
+				"citedPage": "https://circlemsp.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"completetechnology.com": {
+			"label": "accept",
+			"name": "Complete Technology Services, LLC",
+			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
+			"lastSeenAt": "2026-09-03T04:45:52.758Z",
+			"note": "37 staff, US; an IT company serving small and medium-sized businesses",
+			"record": {
+				"industry": null,
+				"description": "Complete Technology Services is an IT company specializing in helping small and medium-sized businesses in St. Louis, Des Moines, Omaha, and Kansas City. We have developed a set of best practices to ensure our clients achieve their goals through powerful and reliable technology. Our philosophies are rooted in providing the highest levels of service and satisfaction to our clients with a ‘Complete’ offering of hardware, software, and IT service.\n\nWe are dedicated., experienced, and local. \n\nCTS is an Equal Opportunity Employer",
+				"workforceTotal": 37,
+				"country": "United States",
+				"foundedYear": 2015,
+				"citedPage": "https://completetechnology.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"compunet.biz": {
+			"label": "accept",
+			"name": "CompuNet, Inc.",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "314 staff, US; the record's fitReason confirms a VAR/MSP serving external IT clients",
+			"record": {
+				"industry": null,
+				"description": "CompuNet is a leading value-added reseller and managed service provider for information technology solutions, with offices in the Western US and headquartered in Meridian, Idaho.  Our approach is to understand our clients’ business needs, engineer IT solutions that precisely fit those needs, and deploy those solutions on time and on budget. We strive to create technology solutions that are a perfect fit with what you want to accomplish today and tomorrow.  We call this engineering customer success.",
+				"workforceTotal": 314,
+				"country": "United States",
+				"foundedYear": 1998,
+				"citedPage": "https://compunet.biz/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "VAR/MSP with 314 employees serving external IT clients across Western US."
+			}
+		},
+		"comsolutionsusa.com": {
+			"label": "accept",
+			"name": "ComSolutions-Technical Services",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "12 staff, US; the record's fitReason confirms a small MSP providing managed IT to external clients",
+			"record": {
+				"industry": null,
+				"description": "ComSolutions-Technical Services division, delivers proactive systems and networking support and development services through our fixed-rate IT Support Service. Designed to reduce your costs, increase your profits and mitigate your business risks, we partner with you as your Virtual CIO and IT Department, allowing you to focus on running your business, not your technology. We become an extension of your business, and true Partner. Because our Service Plan is based on a flat monthly fee allowing you the ability to budget your IT costs annually, we assume both the financial and technical risks in our relationship, fueling our commitment to continuously identify and deliver solutions that improve your efficiency and reduce downtime – as a true Partner should.",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 1997,
+				"citedPage": "https://comsolutionsusa.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Small MSP (12 employees) providing managed IT to external clients in US."
+			}
+		},
+		"coretechs.it": {
+			"label": null,
+			"name": "Coretechs",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "undecidable: the record's own fitReason flags headcount as exactly 10, not clearly above the 'more than roughly 10' floor",
+			"record": {
+				"industry": null,
+				"description": "Coretechs specializes in managed IT services, cybersecurity, virtual CIO, and physical security for businesses who need faster response times and want friendly, knowledgeable professionals who listen and have their best interests in mind.",
+				"workforceTotal": 10,
+				"country": "United States",
+				"foundedYear": 2018,
+				"citedPage": "https://coretechs.it/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Managed IT/cybersecurity firm in Baton Rouge, but headcount exactly 10, not clearly above threshold."
+			}
+		},
+		"cortavo.com": {
+			"label": "accept",
+			"name": "Cortavo, Inc.",
+			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:41:21.709Z",
+			"note": "43 staff, US; industry field says IT services, acting as a full-service IT department for small and midsize organizations",
+			"record": {
+				"industry": "IT services",
+				"description": "Managed IT services provider acting as a full-service IT department for small and midsize organizations, including help desk, cybersecurity, cloud, hardware, and connectivity support.",
+				"workforceTotal": 43,
+				"country": "United States",
+				"foundedYear": 2019,
+				"citedPage": "https://www.linkedin.com/posts/cortavo-inc_hiring-activity-7496167670162317312-1pPZ",
+				"citedDate": "2026-08-20",
+				"quote": "We're #hiring a new Service Desk Analyst II in Atlanta, Georgia.",
+				"fitReason": null
+			}
+		},
+		"csu-it.com": {
+			"label": "accept",
+			"name": "Computer Services Unlimited (CSU)",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "Computer Services Unlimited is a US managed-IT, cybersecurity and cloud provider for small and mid-sized businesses, 14 staff",
+			"record": {
+				"industry": null,
+				"description": "Computer Services Unlimited (CSU) is a technology solutions provider specializing in Managed IT, Cybersecurity, IT Consulting, Data Backup & Disaster Recovery, Cloud Services and more. The company was founded in 2004 to fill an ever-growing demand for cost effective solutions that enable small and mid-sized businesses to operate at the level of a large corporation with a dedicated IT department.\n\nThe biggest difference between what other companies offer and what CSU provides to our clients is Customer Service! Everything that we do revolves around Customer Service and a proactive custom approach to every clients’ unique needs. We do not sell cookie cutter solutions with an emphasis on quantity to make money. Our emphasis is on Quality! We want our customers to think of CSU as an extension of their full-time staff but at a fraction of the cost.\n",
+				"workforceTotal": 14,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://csu-it.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"dartmsp.com": {
+			"label": null,
+			"name": "DART Tech",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "undecidable: the record's description talks about 'full-service interactive media solutions' rather than managed IT, which does not match the company's own MSP branding, and there is no fitReason to resolve the mismatch",
+			"record": {
+				"industry": null,
+				"description": "At DART Tech, nothing is more important to us than your success. We provide full-service interactive media solutions that are customized to achieve measurable results. We offer a unique combination of solutions and technical proficiency to make sure you get the maximum return on your technology investment.\n\nDART Tech has supported the Tampabay and surrounding areas Since 1982. Our strive for putting the client FIRST is the foundation of our company.",
+				"workforceTotal": 25,
+				"country": "United States",
+				"foundedYear": 1982,
+				"citedPage": "https://dartmsp.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"datastrike.com": {
+			"label": "accept",
+			"name": "DataStrike",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "55 staff, US; industry field says managed IT services, a managed services provider for database, cloud, BI and application services",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Managed services provider for onshore database, cloud, business intelligence, and application services.",
+				"workforceTotal": 55,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://www.morningstar.com/news/pr-newswire/20260414ph33151/datastrike-promotes-corey-beck-to-vice-president-of-service-delivery",
+				"citedDate": "2026-04-14",
+				"quote": "DataStrike, a leader in 100 percent onshore database, cloud, and business intelligence managed services, today announced the promotion of Corey Beck to Vice President of Service Delivery.",
+				"fitReason": null
+			}
+		},
+		"dcsny.com": {
+			"label": "accept",
+			"name": "Delaney Computer Services, Inc.",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "11 staff, US; a dependable IT service provider for businesses and organizations for 25 years",
+			"record": {
+				"industry": null,
+				"description": "For the past 25 years, Delaney Computer Services has honed its craft, earning a reputation as a dependable IT service provider for businesses and organizations in the region. From its humble beginnings at the founder's kitchen table in 1994, DCS has evolved into one of the most well-known MSPs in the area. Throughout our journey, we have consistently strived to provide top-notch IT support and guidance to our clients, which has been the cornerstone of our success.\n\nDCS is known for providing IT as a Service or ITAAS. ITAAS provides equipment, IT solutions, a helpdesk, and cybersecurity for one fixed price per workforce user with no up-front costs.\n\nAs experts in Nist 800 cybersecurity framework compliance standards, DCS is well-positioned to provide complete cybersecurity services, included with our full range of IT management and helpdesk support capabilities.\n\nDCS services businesses from about 15 employees to about 250 employees. Our clients typically pay one fixed, flat, all-inclusive monthly fee in return for unlimited IT support and secure and adequately running technology. Our business goals are always aligned with yours. DCS wants your business to thrive and be more productive and efficient, with as few interruptions as possible. The better we do our jobs, the more profitable we are, so in turn, rewarded for taking preventative measures, ensuring your IT is always working as effectively as possible.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 1995,
+				"citedPage": "https://dcsny.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"dssitservices.com": {
+			"label": "accept",
+			"name": "DSS - IT & Cyber Security Management",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "27 staff, US; the record's fitReason confirms an IT and cybersecurity managed services firm with client-focused delivery",
+			"record": {
+				"industry": null,
+				"description": "Is your technology slow and unreliable? Looking for help with the Cloud, Office 365, Network and Servers or cyber security? Or maybe your current IT provider takes ages to respond? Or slow to fix? Do they take the time to brief you on IT Strategy or they promised to, but they have not delivered?\n\nAre you looking for a more Professional IT solution that focuses on Customer Service and IT reliability while you concentrate on your business and not worrying about technology? Then look no further as DSS IT Managed Services is what you are looking for.\n\nWhen partnering with DSS, you get all the benefits of an IT department without the overheads. With over 21 years experience, our fixed fee, unlimited IT Managed Service means that we not only provide the day-to-day IT support skills that you require but also a dedicated IT Service Manager to work with you at a strategic level. This added level of management will ensure that your IT strategy is up to date and helping you drive your business, instead of slowing it down.",
+				"workforceTotal": 27,
+				"country": "United States",
+				"foundedYear": 2018,
+				"citedPage": "https://dssitservices.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT & cybersecurity managed services firm, headcount 27, Westbury NY, client-focused delivery."
+			}
+		},
+		"e3itservices.com": {
+			"label": "accept",
+			"name": "E3 IT Services, LLC",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "E3 IT Services is a US managed-IT partner with 10 staff; the requirement excludes only companies under 10, so 10 clears the floor",
+			"record": {
+				"industry": null,
+				"description": "E3 IT Services is an established technology partner helping organizations across Central and South Jersey, Philadelphia, and Delaware move from constant IT frustration to Technology Peace of Mind. \n\nFor more than 30 years, we have helped leadership teams eliminate disruptions, gain control over technology costs, and use IT as a reliable foundation for growth.\n\nWe achieve this by focusing on three things that most IT providers miss. First, we create clear business value by aligning every technology decision to measurable business outcomes. Second, we build predictable, secure technology environments that prevent problems instead of reacting to them. Third, we act as a true strategic partner, helping leaders plan, prioritize, and confidently use technology to support where the business is going next.\n\nOur clients rely on us not just to manage systems, but to remove risk, restore confidence, and make technology an asset instead of a daily concern.\n",
+				"workforceTotal": 10,
+				"country": "United States",
+				"foundedYear": 1987,
+				"citedPage": "https://e3itservices.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"elauwit.com": {
+			"label": "accept",
+			"name": "Elauwit Connection",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "32 staff, US; industry field says managed services, delivering broadband and Wi-Fi network operations to multifamily and student-housing communities as an outsourced technical service",
+			"record": {
+				"industry": "Managed services",
+				"description": "Managed services provider delivering broadband and property-wide Wi-Fi networks for multifamily, student-housing, and senior-living communities.",
+				"workforceTotal": 32,
+				"country": "United States",
+				"foundedYear": 2020,
+				"citedPage": "https://investor.wedbush.com/wedbush/article/newsfile-2026-6-17-elauwit-connection-appoints-nick-jones-as-chief-information-officer-and-chief-operating-officer",
+				"citedDate": "2026-06-17",
+				"quote": "Elauwit Connection, Inc. (NASDAQ: ELWT) (\"Elauwit\" or the \"Company\"), a national managed services provider of turnkey broadband and property-wide WiFi networks serving multifamily, student housing, and senior living communities, today announced the appointment of Nick Jones as Chief Information Officer and Chief Operating Officer.",
+				"fitReason": null
+			}
+		},
+		"elevancesystems.com": {
+			"label": "accept",
+			"name": "Elevance Systems, Inc.",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "246 staff, US; the record's fitReason confirms a healthcare-focused IT managed services firm serving healthcare clients directly",
+			"record": {
+				"industry": null,
+				"description": "Elevance Systems is a healthcare-focused IT managed services firm headquartered in Cupertino, California, with offices across North and Central America, the United Arab Emirates, and India. With a global footprint, the company provides transformative, AI-enabled business process management and information technology services tailored to the needs of healthcare organizations.\n\nIts services are designed to help clients modernize and upgrade their technology stack in support of the healthcare industry’s Quintuple Aim framework, which emphasizes enhancing patient experience, improving population health, reducing costs, supporting provider well-being, and advancing health equity. Elevance Systems focuses on maximizing client profitability while lowering operational costs and increasing staff productivity and satisfaction through automation, workflow optimization, and secure, scalable IT infrastructure.",
+				"workforceTotal": 246,
+				"country": "United States",
+				"foundedYear": 2025,
+				"citedPage": "https://elevancesystems.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Healthcare-focused IT managed services firm, 246 employees, Cupertino-based, serving healthcare clients directly."
+			}
+		},
+		"enitechsolutions.com": {
+			"label": "accept",
+			"name": "Enitech",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "12 staff, US; the record's fitReason confirms a technology solutions firm serving SMB clients",
+			"record": {
+				"industry": null,
+				"description": "Enitech provides technology solutions for a SMBs in healthcare, financial, education, government and retail. We are dedicated to the success of each and every one of our clients. Our goal is to provide our customers with affordable first class IT support and service. Visit us at www.enitechsolutions.com to learn more!",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 2013,
+				"citedPage": "https://enitechsolutions.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Tech solutions firm with 12 employees serving SMB clients across multiple sectors, US based."
+			}
+		},
+		"enkompas.com": {
+			"label": "accept",
+			"name": "enkompas Technology Solutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "58 staff, US; the record's fitReason confirms a SOC2-certified MSP delivering managed IT services",
+			"record": {
+				"industry": null,
+				"description": "enkompas is a SOC 2 Certified Technology Consultancy providing Managed IT Services to the Greater Pittsburgh area and beyond.\n\nFounded in 1997, enkompas provides strategically aligned business & technology services to SMBs. Since our inception, we have offered the widest, deepest spread of strategic planning and technology solutions & services for the market we serve.\n\nIn 2017, enkompas completed the MSPAlliance’s MSP/Cloud Verify Program (MSPCV) & SOC 2 Type 2 Certifications. Based on the 10 control objectives of the Unified Certification Standard, MSPCV is the oldest certification program for Cloud Computing & Managed Services Providers (MSPs).\n\nenkompas' Strategically Aligned Business & Technology Solutions derive from our \"Business First\" approach – focused on developing long-term, strategic relationships:\n\n*BUSINESS RESILIENCY SOLUTIONS (IaaS, UCaaS, & MS 365) – Options to support security, mobility, & efficiency.\n\n*BUSINESS INTELLIGENCE – Our BI Platform focuses exclusively on helping Human Service Agencies across Pennsylvania.\n\n*SHAREPOINT DESIGN & SUPPORT – With 20+ years of experience, our SharePoint Practice is applicable to all business types.\n\n*MANAGED IT SUPPORT – Everything you need to keep your network up-to-date, secure, & functional. We support 14K+ End-Users across the USA, 24/7.\n\n*CYBERSECURITY CONSULTING & SOLUTIONS – We keep clients safe & secure with Dark Web Scanning, End-User Education, Testing, SIEM, & more.\n\n*ELECTRONIC HEALTH RECORD (EHR) & ORGANIZATIONAL CHANGE MANAGEMENT (OCM) CONSULTING – enkompas helps Human Services Agencies fully implement & optimize their EHRs to become truly data-driven organizations.\n\n*STRATEGIC STAFFING RESOURCING – We help our clients find Top 5% IT personnel with hard-to-find skills for both short- & long-term projects.\n\nThe enkompas Enterprise IT Solutions model provides organizations with the technology guidance, & support that drives organizational efficiencies, resiliency, cost control, & revenue. ",
+				"workforceTotal": 58,
+				"country": "United States",
+				"foundedYear": 1997,
+				"citedPage": "https://enkompas.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "SOC2-certified MSP delivering Managed IT Services to Pittsburgh SMBs, 58 employees."
+			}
+		},
+		"entechus.com": {
+			"label": "accept",
+			"name": "Entech",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "69 staff, US; the record's fitReason confirms an MSP and cybersecurity partner serving mid-market clients directly",
+			"record": {
+				"industry": null,
+				"description": "Beyond Managed IT. Managed Outcomes.\n\nEntech is a strategy-led IT and cybersecurity partner for mid-market organizations. We align technology, security, and operations to business goals so companies can reduce risk, improve performance, and control costs.\n\nWe work with organizations that depend on uptime, face growing security and compliance pressure, and have outgrown reactive IT support.\n\nOur approach is simple: start with business priorities, not technology. Then design, secure, and manage environments that deliver measurable outcomes.\n\nWhat we deliver:\n\nReduced operational and security risk\nImproved system reliability and uptime\nStronger compliance and audit readiness\nPredictable IT and security spend\n\nHow we’re different:\n\nStrategy-led, not tool-led\nWe start with business goals, risk, and financial impact.\n\nBuilt for accountability\nClear ownership, reporting, and measurable outcomes.\n\nFast, effective, local support\nFlorida-based teams that respond quickly.\n\nPartnership mindset\nWe operate as an extension of your leadership team.\n\nCore services:\n\nManaged IT Services\nCybersecurity & Risk Management\nCompliance & Audit Readiness\nCloud & Infrastructure Modernization\nStrategic IT Advisory (vCIO)\nAI Governance & Risk Advisory\n\nHeadquartered in Florida, Entech supports organizations across South Florida and beyond.",
+				"workforceTotal": 69,
+				"country": "United States",
+				"foundedYear": 1998,
+				"citedPage": "https://entechus.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "69-employee US MSP/cybersecurity partner serving mid-market clients directly, not internal IT or staffing."
+			}
+		},
+		"epsilon-inc.com": {
+			"label": "reject:excluded-type",
+			"name": "Epsilon Inc., an AMERICAN SYSTEMS Company",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "Epsilon Inc. names itself 'an AMERICAN SYSTEMS Company', a federal systems-engineering contractor, not a commercial client-facing MSP",
+			"record": {
+				"industry": null,
+				"description": "Epsilon, an AMERICAN SYSTEMS company, began with a simple yet powerful mission: to make IT empower people—not frustrate them. Inspired by a 2009 climbing trip, we set out to create technology that is approachable, secure, and scalable for organizations of every size. \n\nOver the years, that vision has evolved into a trusted partnership with more than 60 businesses and 12 government agencies across 12 states and 4 countries. What hasn’t changed is our customer-first philosophy: every solution we deliver is designed to make IT work for you. \n\nNow, as part of AMERICAN SYSTEMS, Epsilon is building on that foundation to strengthen business resilience and security across industries. Together, we’re expanding our reach, advancing compliance capabilities, and helping clients thrive in a rapidly evolving digital landscape. \n\nWe serve as an extension of your team, delivering compliance-driven IT and cybersecurity services built for modern challenges: \n- Strategic IT Consulting: Developing intelligent, future-ready technology strategies. \n- Cloud & Hybrid Solutions: Managing and securing critical business applications—anywhere they run. \n- Responsive Support: Providing expert technical assistance to keep your teams productive. \n- Network Excellence: Designing and maintaining robust wired and wireless infrastructures. \n- Seamless Deployments: Rolling out devices and systems efficiently with minimal disruption. \n- Cybersecurity Leadership: Protecting your data through proactive, compliance-based defense. \n\nAt Epsilon, we’re not just IT providers—we’re trusted advisors committed to helping your organization grow confidently, securely, and resiliently into the future. \n\n",
+				"workforceTotal": 131,
+				"country": "United States",
+				"foundedYear": 2009,
+				"citedPage": "https://epsilon-inc.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT company with 131 employees serving businesses and government agencies, US based."
+			}
+		},
+		"everound.com": {
+			"label": "accept",
+			"name": "Everound",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "11 staff, US; managed information technology services for national organizations and small businesses",
+			"record": {
+				"industry": null,
+				"description": "Everound provides managed information technology services designed to help companies become more efficient, boost productivity, reduce risk, and promote digital security.\n\nWe support national organizations and small businesses by solving IT challenges with customized information technology solutions. Our team of network engineers and technology specialists has been helping clients for more than 30 years.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2019,
+				"citedPage": "https://everound.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"fastteks.com": {
+			"label": "accept",
+			"name": "Fast-teks On-Site Computer Services",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "31 staff, US; the record's fitReason confirms an on-site IT services company serving business clients",
+			"record": {
+				"industry": null,
+				"description": "In today's world of computer technology, individuals and companies depend on fast reliable services. Fast-teks offers a full range of IT solutions to meet your entire home and business needs. Our highly trained staff provides professional, high-quality service at affordable rates in the comfort and convenience of your business or residential location. \r\n\r\nFast-teks is a leading on site computer services company. Our technicians, trainers and website developers have helped thousands of small businesses and homeowners with their computer needs.\r\n\r\nFast-teks provides fast, affordable solutions to residential clients. \r\nOur certified technicians can provide service direct to your home on the same day you call, including weekends and evenings. Let us take care of all of your computer repair and service needs! Click on a link below to find out more about our specific residential service offerings.\r\n\r\nWhy Choose Fast-teks for Business Services?\r\nFast-teks business services are designed with small and mid size businesses in mind. Our certified technicians provide fast, affordable business computer service and technical computer help - offering same day, weekend and evening appointments. We work with all of our clients to ensure they have the right hardware and software to meet their company's needs. Let us be your IT department for a fraction of the cost!",
+				"workforceTotal": 31,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://fastteks.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "On-site IT services company with 31 employees serving business and residential clients in US."
+			}
+		},
+		"ferrumit.com": {
+			"label": "accept",
+			"name": "Ferrum Technology Services, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "Ferrum's own description calls it a Nationwide Managed Services Provider, 11 staff, US",
+			"record": {
+				"industry": null,
+				"description": "Ferrum is a fully managed IT partner serving clients nationwide from our offices in Elgin, IL and Palm Springs, CA. We specialize in helping organizations modernize operations and accelerate innovation through proactive IT services, intelligent automation, custom application development, Generative AI integration, and technology-driven process improvement.\n\nOur world-class service delivery team is at the center of everything we do—ensuring seamless onboarding, consistent execution, and a superior client experience at every step. By constantly evaluating and advancing our internal systems, we deliver solutions that meet today’s demands while preparing businesses for tomorrow’s opportunities.\n\nFerrum empowers clients to operate smarter, scale faster, and stay ahead in an ever-evolving digital landscape.\n\nFerrum is a Nationwide Managed Services Provider based in Elgin, IL. Services include Managed IT, Help Desk, Cybersecurity, Cloud & Hybrid Infrastructure, Customer Experience (CX), Unified Communications, Business Continuity, Application Development, Mobility and IoT.\n\nOur world-class customer service and unique partnership approach are a step above the rest, with proactive, personalized computer & network solutions that minimize downtime and maximize productivity. Ferrum is ready with the support and expertise to keep you focused on running your business.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2007,
+				"citedPage": "https://ferrumit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP headcount 11 in Chicago area, US, delivering managed IT to nationwide clients directly."
+			}
+		},
+		"fidelisnw.com": {
+			"label": "accept",
+			"name": "Fidelis",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "32 staff, US; the record's fitReason confirms an MSP offering network, desktop, help desk and cloud managed services",
+			"record": {
+				"industry": null,
+				"description": "Fidelis supports our clients with communications technologies that help run their business. \n\nWe provide solutions to IT needs from assessments to complete network analysis. We offer managed services for all or part of a business'​ IT infrastructure including:\n\n-- Network Management\n-- Desktop Management\n-- Server Management\n-- Security Management\n-- Data Back-Up and Business Continuity\n-- Help Desk Support\n-- Cloud Services\n-- VoIP Phone Systems (on premise, hosted or virtualized)\n\nWe believe in a proactive approach to maintenance and we offer our clients several plans tailored to their needs. Our goal is to prevent down time, create more efficiency on our clients'​ networks, and save them money.\n\nAdditionally, we have a dedicated low voltage team that focuses on cabling for voice and data infrastructure. \n\nFidelis is Latin for \"faithful\"​ and \"Loyal\"​ which reflects our core value of maintaining integrity and doing what we say we will do.",
+				"workforceTotal": 32,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://fidelisnw.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP offering network, desktop, help desk, and cloud managed services, 32 employees, Renton-based."
+			}
+		},
+		"fieldguide.it": {
+			"label": "accept",
+			"name": "FieldGuide IT",
+			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
+			"lastSeenAt": "2026-09-03T04:45:52.758Z",
+			"note": "19 staff, US (confirmed by the record despite the .it domain); a managed IT and compliance provider",
+			"record": {
+				"industry": null,
+				"description": "Most IT companies are great at one thing. The helpdesk that fixes your laptop but can't tell you how pursuing SOC 2 will change your offboarding process. Or the cybersecurity consultant who delivers their assessment and then says \"good luck\" as they collect their check.\n\nFieldGuide operates at every layer: device management, systems architecture, security, compliance. With one team, start to finish. We're in the weeds on the flickering conference room screen and in the same room for the strategy conversation about how to deploy AI tools to an eager team safely.\nWe work inside your tools, not ours. Slack, Teams, email, wherever your team already lives. No ticket portals, no \"have you tried turning it off and on again\" energy. Just people who know your business and treat your team like they're worth knowing.\n\nWhen IT actually covers all the layers, you stop finding out what fell through the cracks.\n\nCome say hi @ www.fieldguide.it \n",
+				"workforceTotal": 19,
+				"country": "United States",
+				"foundedYear": 2016,
+				"citedPage": "https://fieldguide.it/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"fusiontek.com": {
+			"label": "accept",
+			"name": "FusionTek",
+			"firstSeenRunId": "companies_dom-660e060555a5_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:41:21.709Z",
+			"note": "65 staff, US; industry field says IT services, a managed and co-managed IT and security provider for business clients",
+			"record": {
+				"industry": "IT services",
+				"description": "Managed and co-managed IT and security provider serving business clients with outsourced IT management, help desk, monitoring, security, projects, and strategy.",
+				"workforceTotal": 65,
+				"country": "United States",
+				"foundedYear": 2007,
+				"citedPage": "https://www.linkedin.com/posts/fusiontek_fusiontek-werehiring-careergrowth-activity-7493290432613728256-HvFa",
+				"citedDate": "2026-08-12",
+				"quote": "FusionTek is growing and we're looking for exceptional talent to grow with us!",
+				"fitReason": null
+			}
+		},
+		"goabacus.com": {
+			"label": "accept",
+			"name": "Abacus IT",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "12 staff, US; the record's fitReason confirms an MSP serving regulated industries with white-glove service",
+			"record": {
+				"industry": null,
+				"description": "Abacus IT is a trusted IT Managed Services Provider (MSP) specializing in secure, scalable technology solutions for highly regulated industries like banking, legal, and healthcare. With over 20 years of experience, we bring deep expertise in cybersecurity, compliance, cloud infrastructure, and IT strategy to organizations that require more than just basic tech support.\n\nOur team delivers white-glove service and strategic guidance to help businesses modernize their environments, protect critical data, and meet complex regulatory requirements such as SOC 2, HIPAA, and FFIEC. We believe in being more than a vendor — we’re your IT partner, delivering peace of mind through reliable systems, 24/7 security monitoring, and proactive support.\n\nLet Abacus IT help you streamline operations, reduce risk, and unlock your organization’s full potential through better technology.\n \n",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 2001,
+				"citedPage": "https://goabacus.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP serving regulated industries (banking, legal, healthcare) with white-glove service, 12 employees."
+			}
+		},
+		"goleadingit.com": {
+			"label": "accept",
+			"name": "LeadingIT",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "23 staff, US; the record's fitReason confirms an MSP providing cybersecurity and support to varied clients",
+			"record": {
+				"industry": null,
+				"description": "We cybersecure your organization. \n\nLeadingIT provides fast+friendly cybersecurity and technology (unlimited) support for nonprofits, manufacturers, schools, accounting firms, religious organizations, government, and law offices with 10-200 employees across the Chicagoland area.\n\nWe offer ALL three of the following that NO other IT provider will:\nUnlimited Support – our monthly fee INCLUDES projects, on-site support, after hours/emergency support.\nUnsolvable Solved –all day, every day LIVE answer phone, email, Help@app; fast + friendly support with a 98% POSITIVE feedback rating.\nUnbeatable Three – no long term contracts required, 14 day instant ONboarding, and our industry exclusive unbeatable GUARANTEE.\n\nWe also run on EOS.",
+				"workforceTotal": 23,
+				"country": "United States",
+				"foundedYear": 2010,
+				"citedPage": "https://goleadingit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 23 employees providing cybersecurity/support to varied clients in Chicagoland, US."
+			}
+		},
+		"guideit.com": {
+			"label": "accept",
+			"name": "GuideIT",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "98 staff, US; the record's fitReason confirms an IT services firm serving healthcare and commercial clients",
+			"record": {
+				"industry": null,
+				"description": "While technology is critical for every business, it’s also complex and ever changing, often making it difficult to manage. Because of this complexity, many business leaders find themselves in need of advisors they can trust...people who can guide them through getting the most out of technology, relative to their business priorities and the results they seek. That’s why people put their trust in GuideIT.\n\nWe serve businesses large and small, healthcare and commercial. We deliver tangible results that improve our customers’ businesses. Through a portfolio of solutions spanning consulting, managed services and data-centric digital transformation, we help healthcare organizations to improve the quality of care, while reducing cost. We help commercial organizations to better understand and serve their customers, address the changing competitive landscape, and manage a complex technology environment.\n\nGuideIT—helping you to get the most out of technology.",
+				"workforceTotal": 98,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://guideit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT services firm with 98 employees serving healthcare and commercial clients in US."
+			}
+		},
+		"i-techsupport.com": {
+			"label": "accept",
+			"name": "i-Tech Support, Inc.",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "57 staff, US; helping businesses, non-profits and schools with managed technology since 1999",
+			"record": {
+				"industry": null,
+				"description": "Since 1999, i-Tech Support has helped businesses, non-profits and schools achieve their goals by supporting them with technology that simply works. The team at i-Tech has only one objective, and that is to help your organization get to where you want it to be and ultimately leave you happy. We offer expert IT solutions and help business deploy Acumatica ERP.",
+				"workforceTotal": 57,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://i-techsupport.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"impacttg.com": {
+			"label": "accept",
+			"name": "IMPACT Technology Group",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "10 staff, US; a leading IT and technology services firm offering managed IT, cybersecurity and unified communications",
+			"record": {
+				"industry": null,
+				"description": "IMPACT Technology Group is the leading IT and technology services firm helping organizations across the Mid-Atlantic adopt AI and automation—supported by reliable Managed IT, Cybersecurity, and VoIP/Unified Communications.\n\nWe serve businesses, non-profits, municipalities, and internal IT departments with a practical approach that combines the right people, repeatable processes, and measurable results. From designing and implementing modern solutions to proactive monitoring and responsive support, our focus is maximum uptime, security, and performance—so your technology stays out of the way and helps you grow.\n\nWhether you need help evaluating AI use-cases, improving productivity with automation, strengthening cybersecurity, or fully outsourcing IT, we’re ready to Make IT Happen!\n\nContact Us:\n410-219-3090 | info@impacttg.com",
+				"workforceTotal": 10,
+				"country": "United States",
+				"foundedYear": 2006,
+				"citedPage": "https://impacttg.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"integrityts.com": {
+			"label": "accept",
+			"name": "Integrity Technology Solutions",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "43 staff, US; the record's fitReason confirms an MSP serving SMB clients",
+			"record": {
+				"industry": null,
+				"description": "Integrity Technology Solutions provides Managed IT Support, Managed IT Security, Cloud & Network Infrastructure Services, and Technology Planning & Consulting Solutions for small and medium sized businesses. \nWith services ranging from level one support to CIO/CTO level consulting, Integrity can act as your entire IT department, or provide supplemental help for your internal IT staff. We will assist you in coming up with the right technology solution for your business while eliminating wasteful spending and improving efficiency within your organization.\nIntegrity Technology Solutions has been providing IT support services since 1993. We specialize in IT security, compliance for financial & medical, disaster recovery, business continuity, and technology support.\n\n•\tHelp Desk Services\n•\tTechnology Planning\n•\tManaged IT Security\n•\tSecurity Awareness Program\n•\tSecurity Information & Events Management (SIEM)\n•\tCyber Security Triage\n•\tUnified Threat Management (UTM)\n•\tUnified Security Management (USM)\n•\tTechnology Training & Education\n•\tCloud Services\n•\tManaged Backup & Disaster Recovery\n•\tBusiness Continuity\n\nWe’re happy to see if there is a fit for us to work together. \n\nPlease contact Integrity today!\n",
+				"workforceTotal": 43,
+				"country": "United States",
+				"foundedYear": 1993,
+				"citedPage": "https://integrityts.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP serving SMB clients with 43 employees, US based, fits required profile."
+			}
+		},
+		"intrascloudservices.com": {
+			"label": "accept",
+			"name": "Intras Cloud Services",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "15 staff, US; the record's fitReason confirms a MSP cited as a TOP250 Global MSP serving regulated enterprise clients",
+			"record": {
+				"industry": null,
+				"description": "Transforming Business Through Secure Cloud Modernization. As a TOP250 Global MSP and Microsoft Silver Partner, Intras Cloud Services delivers strategic cloud transformation to regulated enterprises across healthcare, financial services, and hospitality. We bridge the gap between technology and business outcomes, enabling organizations to scale securely while maintaining compliance and operational excellence.",
+				"workforceTotal": 15,
+				"country": "United States",
+				"foundedYear": 2013,
+				"citedPage": "https://intrascloudservices.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 15 employees, cited as TOP250 Global MSP, serving regulated enterprise clients in US."
+			}
+		},
+		"intratem.com": {
+			"label": "accept",
+			"name": "IntraTEM",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "37 staff, US; industry field says managed IT services, a technology expense-management and managed-services provider for enterprise clients",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Technology expense-management and managed-services provider for enterprise clients.",
+				"workforceTotal": 37,
+				"country": "United States",
+				"foundedYear": 2005,
+				"citedPage": "https://newsroom.xpr.media/story/156081/intratem-appoints-tatiana-malinsky-as-its-first-ever-chief-operating-officer/",
+				"citedDate": "2026-06-03",
+				"quote": "IntraTEM, a leader in Technology Expense Management (TEM) solutions, is proud to announce the promotion of Tatiana Malinsky to Chief Operating Officer (COO), effective May 28, 2026.",
+				"fitReason": null
+			}
+		},
+		"ispn.net": {
+			"label": "accept",
+			"name": "ISPN",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "125 staff, US; industry field says managed services, a telecom and ISP managed-services provider offering NOC and technical support",
+			"record": {
+				"industry": "Managed services",
+				"description": "Telecom and ISP managed-services provider offering network monitoring, NOC services, and technical support.",
+				"workforceTotal": 125,
+				"country": "United States",
+				"foundedYear": 1994,
+				"citedPage": "https://www.linkedin.com/posts/ispn_executiveleadership-leadershipannouncement-activity-7457428915691896833-PlvG",
+				"citedDate": "2026-05-05",
+				"quote": "We're pleased to welcome Jason McGinnis as Chief Operating Officer of ISPN — a new role on our leadership team.",
+				"fitReason": null
+			}
+		},
+		"iterogroup.com": {
+			"label": "reject:excluded-type",
+			"name": "Itero Group, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "the record describes a delivery consultancy across AI, Agile, program management and process improvement for private and government clients, with no described managed-services book of business",
+			"record": {
+				"industry": null,
+				"description": "Itero Group is a Women-Owned Small Business that brings simplicity to complex transformations. Our comprehensive delivery solutions – Artificial Intelligence, Agile, Program and Project Management, Process Improvement, Testing, and Innovation as a Service – and innovative business consulting services simplify how work is defined, done, delivered, and measured for private and government sector clients. \n\nAs transformative delivery experts, we challenge the status quo and empower our clients to become digitally enabled and data-driven organizations. Our experienced thought leaders, dedicated team players, tenacious workers, and creative minds are the catalysts for change that drive our success. \n\nAt Itero Group, we foster a vibrant corporate culture built on six key pillars: leading with integrity, creating and innovating, inspiring excellence, respecting the team, driving results, and having fun. We prioritize diversity and inclusion, regularly engage with our growing hybrid team, and offer enhanced benefits to ensure an excellent, exciting, and empowering experience for every employee. \n\nFounded in 2017, Itero Group has become a leader in our field and a trusted partner to our clients. Connect with Itero Group today to learn more about our solutions and dynamic career opportunities to simplify complex transformations and drive positive change in the world around us. ",
+				"workforceTotal": 45,
+				"country": "United States",
+				"foundedYear": 2017,
+				"citedPage": "https://iterogroup.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Delivery-focused consultancy serving private and government clients, 45 employees, Harrisburg-based; not generalist staffing body-shop."
+			}
+		},
+		"itsolutions-inc.com": {
+			"label": "accept",
+			"name": "IT Solutions",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "336 staff, US; the record's fitReason confirms a large MSP cited as Top 10 on the MSP 501 list",
+			"record": {
+				"industry": null,
+				"description": "With 30 years of experience as a trusted managed services provider, we're your dedicated partner in navigating the complex world of technology, so you can focus on growing your business. Our customer-centric approach ensures your success, providing tailored support services that empower your business to thrive. From strategic guidance to comprehensive managed IT support, cybersecurity to cloud services, we're here to propel your growth while delivering innovative solutions that make a lasting impact.\n\nRecognized as a Top 10 MSP on the Channel Futures MSP 501 list, we’re proud to stand among the world’s leading managed service providers, delivering excellence, innovation, and results for our clients.\n\nTechnology changes constantly, but our commitment to you never does.",
+				"workforceTotal": 336,
+				"country": "United States",
+				"foundedYear": 1994,
+				"citedPage": "https://itsolutions-inc.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Large MSP (336 employees) serving clients, cited as Top 10 on MSP 501 list, US based."
+			}
+		},
+		"jkconsulting.com": {
+			"label": "accept",
+			"name": "JK Technology Solutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "17 staff, US; the record's fitReason confirms an MSP managing IT for 550+ companies across 27 states despite the consulting-sounding name",
+			"record": {
+				"industry": null,
+				"description": "JK specializes in providing Managed IT services, IT support, Cybersecurity, and Managed Data Compliance solutions that scale to the needs of small and medium-sized businesses, professional practices, the public sector, and nonprofit organizations. We deliver a fully-staffed and experienced IT department at a fraction of the cost of maintaining an in-house IT solution.\nWith offices in Lockport, IL, Hoffman Estates, IL, and Bonita Springs, FL, we manage IT systems for over 550 companies located across 27 states. Do what you do best and we’ll take care of the tech.",
+				"workforceTotal": 17,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://jkconsulting.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 17 employees managing IT for 550+ companies across 27 states in Illinois/Florida."
+			}
+		},
+		"kbisp.com": {
+			"label": "accept",
+			"name": "Kinetix Solutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "59 staff, US; the record's fitReason confirms an MSP owning client relationships for managed IT alongside marketing services",
+			"record": {
+				"industry": null,
+				"description": "Kinetix is a Louisiana-based Managed Service Provider (MSP) and full-service marketing agency helping businesses thrive through innovative technology and creative marketing solutions. With offices in Alexandria and Monroe, Kinetix offers managed IT services, cybersecurity, cloud solutions, VoIP, internet services, data backup, and video surveillance. Their marketing team delivers digital campaigns, SEO-friendly websites, creative services, social media management, event management, and strategic consulting. Kinetix transforms business challenges into opportunities, aligning technology and marketing to fuel growth.",
+				"workforceTotal": 59,
+				"country": "United States",
+				"foundedYear": 2002,
+				"citedPage": "https://kbisp.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with headcount 59 in Louisiana, owns client relationships for managed IT and marketing services."
+			}
+		},
+		"linkamericanearshore.com": {
+			"label": "reject:excluded-type",
+			"name": "LinkAmerica Nearshore",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "LinkAmerica Nearshore's own name signals a nearshore staffing and outsourcing delivery model rather than a direct client-facing MSP",
+			"record": {
+				"industry": null,
+				"description": "PRECISION & IMPACTFUL ITSM GLOBAL SOLUTIONS\nWe organize talent around exponential technologies and strive to deliver purpose driven\noutcomes for our customers. Our name, e2e, was born from the fact that we have the end-to-end scale, infrastructure and technical talent to help our clients execute on their digital transformation.\n \nWe’re able to make meaningful contributions in support of our clients’ digital transformation because we’re able to execute. We are able to execute because we see each solution, large scale or small, as one that’s co-created with our customers while leveraging our unique delivery centers model.\n \nOUR SOLUTIONS\n• Service Centers of Excellence\n• Managed Services\n• Internet of Things\n• Cybersecurity\n• Software-Defined Networking\n \nSERVICE CENTERS\n• USA\n• Costa Rica\n• Colombia (Bogota & Barranquilla)\n• Nicaragua\n• Peru\n \nWe live to create value for every individual, organization and community we come across!",
+				"workforceTotal": 24,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://linkamericanearshore.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "US-based ITSM firm with 24 staff delivering end-to-end IT solutions directly to clients, not internal IT or staffing."
+			}
+		},
+		"magna5.com": {
+			"label": "accept",
+			"name": "Magna5",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "Magna5 is a known US managed-IT, security and UCaaS provider headquartered in Pennsylvania, well past the 10-person floor",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Provider of cybersecurity, managed IT, cloud, compliance, and consulting services.",
+				"workforceTotal": 250,
+				"country": "United States",
+				"foundedYear": 2015,
+				"citedPage": "https://www.prnewswire.com/news-releases/richard-harter-is-promoted-to-chief-operating-officer-at-magna5-302786715.html",
+				"citedDate": "2026-06-01",
+				"quote": "Magna5, a trusted provider of cybersecurity, managed IT, and cloud services, is pleased to announce the promotion of Richard Harter from Senior Vice President of Service Delivery to Chief Operating Officer, effective June 1, 2026.",
+				"fitReason": null
+			}
+		},
+		"mybridgepoint.com": {
+			"label": "accept",
+			"name": "BridgePoint Technologies, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "20 staff, US; the record's fitReason confirms client-facing managed IT relationships despite the consulting-firm framing",
+			"record": {
+				"industry": null,
+				"description": "BridgePoint Technologies, LLC, established in 2004 and headquartered in Lombard, Illinois, is a leading IT consulting firm dedicated to providing innovative and scalable technology solutions. We specialize in serving law firms, non-profits, and senior care facilities, helping them reduce costs, enhance security, and gain a competitive edge.\n\nOur services include Managed IT Services, Cloud Solutions, Cybersecurity Services, VoIP Services, Network Security, Co-Managed IT Services, and Custom Application Development. With a proactive approach, we resolve IT challenges before they escalate, ensuring smooth operations and minimal downtime.\n\nWe take pride in our award-winning services, having been recognized as a 2024 MSP Titans of the Industry finalist and winning the ThreatLocker Cyber Hero Titan of the Industry award. These achievements highlight our expertise in cybersecurity and our commitment to protecting businesses from evolving threats.\n\nOur leadership team, led by Michael Millhouse (President & CEO), Laura Barker (Vice President, CFO & COO), and John Gavilan (CTO), ensures that businesses receive top-tier IT support with a guaranteed emergency response time of one hour or less. Our skilled technicians, each with 5-10 years of experience, provide proactive and reliable IT solutions tailored to each client’s needs.\n\nBy focusing on long-term partnerships, transparency, and exceptional service, BridgePoint Technologies remains a trusted name in IT consulting, helping businesses leverage technology for sustained success.",
+				"workforceTotal": 20,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://mybridgepoint.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT consulting firm, headcount 20, Illinois, serving client-facing managed IT relationships."
+			}
+		},
+		"ncs-online.com": {
+			"label": "accept",
+			"name": "Network Computer Solutions",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "13 staff, US; the record's fitReason confirms an IT solutions provider serving external business clients",
+			"record": {
+				"industry": null,
+				"description": "NCS empowers organizations by delivering only the latest IT solutions. Our approach to business is simple-keeping our customer satisfied and prepared to interact with the rapid evolution of information technology. Our expertise will help guide the success of your business by utilizing deep industry knowledge as well as our always-growing list of authorized vendors.",
+				"workforceTotal": 13,
+				"country": "United States",
+				"foundedYear": 1996,
+				"citedPage": "https://ncs-online.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT solutions provider with 13 employees serving external business clients, US based."
+			}
+		},
+		"netopsconsulting.com": {
+			"label": "accept",
+			"name": "NetOps Consulting",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "NetOps' own description says it provides managed services to businesses across many verticals despite the consulting name, 11 staff, US",
+			"record": {
+				"industry": null,
+				"description": "NetOps was founded from the ground up to provide managed services to businesses in many verticals.  Drawing upon its expertise in IT services and management, NetOps supports clients in the fulfillment of a wide range of discrete, mission critical projects and ongoing business requirements.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2007,
+				"citedPage": "https://netopsconsulting.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"nettech.net": {
+			"label": "accept",
+			"name": "NetTech",
+			"firstSeenRunId": "companies_dom-4886e3c6ebed_2026-09-03",
+			"lastSeenAt": "2026-09-03T04:45:52.758Z",
+			"note": "24 staff, US; an established information technology services company, part of the New Charter Technologies MSP group",
+			"record": {
+				"industry": null,
+				"description": "NetTech is a New Charter Technologies company. Established in 2004, NetTech represents the area's most established and experienced information technology services company. The NetTech approach focuses on remaining proactive across the networking environment, enabling us to offer you a true solution to your needs, not just a product. We are a technology company strengthened by business people. Providing clients with a complete and comprehensive technology solution enables NetTech to stay ahead of the always evolving business climate. We remain ever vigilant and permanently committed to meeting the needs of every customer, regardless of size, with that same approach.",
+				"workforceTotal": 24,
+				"country": "United States",
+				"foundedYear": 2004,
+				"citedPage": "https://nettech.net/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"newboldtech.com": {
+			"label": "accept",
+			"name": "NewBold Technologies",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "30 staff, US; industry field says technology managed services, a client-facing MSP for point-of-sale and enterprise equipment",
+			"record": {
+				"industry": "Technology managed services",
+				"description": "Client-facing technology managed services provider specializing in deployment, integration, repair, and maintenance for point-of-sale and related enterprise equipment.",
+				"workforceTotal": 30,
+				"country": "United States",
+				"foundedYear": 1994,
+				"citedPage": "https://newboldtech.com/newbold-acquires-spencertechnologies/",
+				"citedDate": "2026-08-24",
+				"quote": "For these accounts, the combination significantly deepens geographic coverage across North America, with an extensive W2 and Certified Contractor network of service technicians providing increased levels of support and response.",
+				"fitReason": null
+			}
+		},
+		"nsgllc.com": {
+			"label": "accept",
+			"name": "Network Solutions Group llc",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "18 staff, US; the record's fitReason confirms an IT infrastructure and support provider serving client businesses directly",
+			"record": {
+				"industry": null,
+				"description": "Network Solutions Group is a technology infrastructure and support provider located in Nashville, Tenn. with a high speed, client-focused approach to IT services. Through infrastructure customized for each client and technology designed to automate processes, NSG supports their clients’ businesses and proactively offers innovative solutions to increase customer productivity and revenue. NSG delivers on the commitment to the client for ongoing support by a multitude of expert technicians who work to secure data and execute resolutions immediately and efficiently. NSG’s cutting-edge IT solutions and attention to the customer are designed to keep clients’ businesses thriving. For more information about NSG, visit www.nsgllc.com. \n\nWhether you’re starting with 2 or 200 employees, NSG is the perfect partner to help your business grow efficiency and revenue.",
+				"workforceTotal": 18,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://nsgllc.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "18-employee US IT infrastructure/support provider serving client businesses directly, not staffing buyer."
+			}
+		},
+		"olstechnology.com": {
+			"label": "accept",
+			"name": "OLS Technology",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "17 staff, US; a technology partner for small and midsized businesses",
+			"record": {
+				"industry": null,
+				"description": "OLS Technology was founded on a simple belief: small and midsized businesses deserve technology partners who understand their world, from the urgency of jobsite communications, the realities of running lean teams, and the need for dependable systems when work simply cannot stop.\n\nFor more than 25 years, we’ve focused on helping Pacific Northwest organizations build technology environments that remove friction, strengthen security, and support long-term growth. We’re not just here to sell tools and devices. We’re here to build clarity, trust, and a scalable, secure foundation for growth.\n\nOLS is proud to offer managed IT support and cybersecurity solutions, AI consulting and workshops, and telecom consulting services purpose-built to power, strengthen, and scale SMBs in the PNW region.",
+				"workforceTotal": 17,
+				"country": "United States",
+				"foundedYear": 1998,
+				"citedPage": "https://olstechnology.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"omegasystemscorp.com": {
+			"label": "accept",
+			"name": "Omega Systems",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Omega Systems is a known US managed-security and IT services provider serving regulated industries, well past the 10-person floor",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Managed IT and cybersecurity services provider serving healthcare, financial services, and other regulated industries.",
+				"workforceTotal": 128,
+				"country": "United States",
+				"foundedYear": 2002,
+				"citedPage": "https://omegasystemscorp.com/insights/blog/omega-systems-expands-executive-leadership-team/",
+				"citedDate": "2026-07-30",
+				"quote": "Omega Systems, a leading provider of managed IT and cybersecurity services to the healthcare and financial services industries, today announced six senior leadership appointments.",
+				"fitReason": null
+			}
+		},
+		"onediversified.com": {
+			"label": "accept",
+			"name": "Diversified",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Diversified is a large US audio-visual and managed-technology integrator serving stadiums and corporate campuses, well past the 10-person floor",
+			"record": {
+				"industry": "Technology solutions",
+				"description": "Technology solutions provider delivering audiovisual, broadcast, digital-experience integration, and managed services.",
+				"workforceTotal": 1814,
+				"country": "United States",
+				"foundedYear": 1993,
+				"citedPage": "https://onediversified.com/insights/news-media/diversified-expands-global-services-strategy-with-new-managed-services-practice",
+				"citedDate": "2026-08-18",
+				"quote": "Rob Mello has joined Diversified as Vice President-Global Managed Services to lead the new practice.",
+				"fitReason": null
+			}
+		},
+		"onwardtek.com": {
+			"label": "accept",
+			"name": "Onward Technologies, Inc.",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "17 staff, US; a full-range Chicago-based IT service provider acting as clients' in-house IT department",
+			"record": {
+				"industry": null,
+				"description": "As a full-range Chicago-based IT service provider, Onward Technologies believes that IT problems should be the last thing on your mind. When we partner with clients, we assume the full responsibility of an in-house IT department. We provide proactive solutions, expert help, responsive service, and CIO caliber consulting at half the cost of a full-time IT staff person. Our team of local IT experts can customize a technology strategy that’s right for your business—not too big for your needs or too small to accommodate your future growth. Our IT professionals care about day-to-day client interactions and resolving customer issues quickly and efficiently, the first time.\n\nIn addition to offering a comprehensive set of cloud-based and on-premise IT solutions, our IT hardware procurement services can assist in recommending products that best suit your business needs. Whether you need help building an entire system or determining which product to add to your network, our IT professionals can help. Not only do clients find us to be friendly and personable, but we also listen to your needs so technology works for you rather than against you. With Onward Technologies as your trusted partner, you can focus on running your business rather than your network. \n\nOur new managed security services offering allows our customers to sleep at night when we don't. We provide 24/7 monitoring and cyber threat detection solutions that will keep your company safe. Our Security Operations Center (SOC) is state-of-the-art, constantly providing threat intelligence. \n\nWe really are a 'Managed Services Partner You Can Count On'. ",
+				"workforceTotal": 17,
+				"country": "United States",
+				"foundedYear": 1985,
+				"citedPage": "https://onwardtek.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"optric.com": {
+			"label": "accept",
+			"name": "OPTRIC",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "350 staff, US; industry field says managed services, a technology optimization firm providing managed IT and cybersecurity services",
+			"record": {
+				"industry": "Managed services",
+				"description": "Technology optimization firm providing connectivity, managed IT, expense management, cloud, and cybersecurity services.",
+				"workforceTotal": 350,
+				"country": "United States",
+				"foundedYear": 2026,
+				"citedPage": "https://www.newswire.com/news/daman-wood-named-president-and-coo-of-optric",
+				"citedDate": "2026-07-28",
+				"quote": "OPTRIC announced the promotion of Daman Wood to President and Chief Operating Officer, expanding his role atop the Total Technology Optimization platform as it scales its integrated model across connectivity, managed IT, expense management, cloud, and cybersecurity.",
+				"fitReason": null
+			}
+		},
+		"osgusa.com": {
+			"label": "reject:excluded-type",
+			"name": "Outsource Solutions Group",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "Outsource Solutions Group's own name signals a BPO/staffing outsourcing model rather than a direct client-facing MSP",
+			"record": {
+				"industry": null,
+				"description": "Outsource IT Solutions Group (OSG) is a full service IT development, networking, and IT maintenance company serving clients in Chicagoland area since 1998. Outsource entered the market at the leading edge of networking and complex technology systems – and we’ve been there ever since. OSG currently maintains a 20+ employee technical staff. As an organization Outsource is a Microsoft Gold Certified Partner, Microsoft Small Business Specialist and Cisco Select Certified partner. OSG’s team of trained and certified technicians, engineers and customer service representatives all work together to ensure that your business IT needs are met at every level, from design and implementation to training and maintenance. OSG provides the following services; Managed IT services, Hyper-V server virtualization, cloud-based business continuity, Network Design, LAN/WAN Troubleshooting, Remote Connectivity design and implementation, local and cloud-based e-mail hosting, cloud-based e-mail security, queuing, and archiving, Internet gateway design and security and competitive pricing on hardware/software.",
+				"workforceTotal": 33,
+				"country": "United States",
+				"foundedYear": 1998,
+				"citedPage": "https://osgusa.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Full-service IT firm with 33 staff serving Chicagoland clients since 1998, Microsoft Gold Certified partner."
+			}
+		},
+		"paragusit.com": {
+			"label": "accept",
+			"name": "Paragus IT",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "Paragus IT (Paragus Strategic IT) is a known regional US MSP based in Massachusetts, well past the 10-person floor",
+			"record": {
+				"industry": null,
+				"description": "We’ve been doing this work since 1999 under the names Vertical Horizons, Valley ComputerWorks and, now, as Paragus (we’re sticking with this one). Though our name has changed, our ownership has not. Company founder Delcie D. Bean IV continues to lead our ever-growing firm.\r\n\r\nIn every area — from outsourced information technology solutions to CMR-17 compliance to EMR implementation — we dedicate an individual account rep to each of our clients and back them up with a team of accomplished professionals. This approach is what gives our clients that small business feel with the big company resources we’re so proud of.\r\n\r\nOur work is informed by a belief that our services must be timely and efficient, our demeanor friendly, courteous and professional, and our outlook geared toward helping our clients plan for their success.\r\n\r\nCentered in the Pioneer Valley of Western Massachusetts, we provide business computer service, computer consulting, information technology support and other proactive services to companies from Brattleboro, Vermont to Windsor Locks, Connecticut. Our service area includes the knowledge corridor communities of Amherst, Northampton, Holyoke and Springfield, Massachusetts.",
+				"workforceTotal": 46,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://paragusit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 46 employees, dedicated account reps for clients, US based."
+			}
+		},
+		"readitech.com": {
+			"label": "accept",
+			"name": "ReadiTech",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "11 staff, US; industry field says managed IT services",
+			"record": {
+				"industry": "Managed IT services",
+				"description": "Technology solutions provider offering managed IT and cybersecurity services.",
+				"workforceTotal": 11,
+				"country": "United States",
+				"foundedYear": 2012,
+				"citedPage": "https://www.drn.coop/2026/04/28/kari-nishek-promoted-to-chief-operations-officer/",
+				"citedDate": "2026-04-28",
+				"quote": "Kari Nishek of Ellendale, ND, has recently been promoted to Chief Operating Officer at DRN ReadiTech.",
+				"fitReason": null
+			}
+		},
+		"resultant.com": {
+			"label": "reject:excluded-type",
+			"name": "Resultant",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Resultant is a project-based data and technology consultancy formed from Fusion Alliance and Bernard Health, not a managed-services delivery firm",
+			"record": {
+				"industry": "IT consulting",
+				"description": "Technology, data analytics, AI consulting, and IT managed-services firm.",
+				"workforceTotal": 279,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://resultant.com/blog/company-news/resultant-appoints-corey-dean-as-senior-vice-president-of-service-delivery/",
+				"citedDate": "2026-08-13",
+				"quote": "Resultant, a leading technology, data analytics, and AI consulting firm, today announced it has hired Corey Dean as Senior Vice President of Service Delivery for its IT managed services practice, which serves approximately 100 clients nationwide.",
+				"fitReason": null
+			}
+		},
+		"riministreet.com": {
+			"label": "accept",
+			"name": "Rimini Street",
+			"firstSeenRunId": "companies_dom-a0433ee39d29_2026-09-02",
+			"lastSeenAt": "2026-09-02T22:37:35.195Z",
+			"note": "Rimini Street is a NASDAQ-listed US third-party enterprise software support company serving external clients, well past the 10-person floor",
+			"record": {
+				"industry": "Enterprise software",
+				"description": "Enterprise software support, managed services, and AI-enabled ERP solutions provider.",
+				"workforceTotal": 1980,
+				"country": "United States",
+				"foundedYear": 2005,
+				"citedPage": "https://www.riministreet.com/press-releases/rimini-street-appoints-new-chief-operating-officer-and-chief-delivery-officer/",
+				"citedDate": "2026-08-12",
+				"quote": "Rimini Street, Inc.(Nasdaq: RMNI), the Software Support and Agentic AI ERP Company™ and the leading third-party support provider for Oracle, SAP and VMware software, today announced the appointment of Keith Costello as chief operating officer (COO) and Alexander Guasch as chief delivery officer (CDO).",
+				"fitReason": null
+			}
+		},
+		"rojoli.com": {
+			"label": "accept",
+			"name": "Rojoli Services, Inc.",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "12 staff, US; the record's fitReason confirms a Microsoft partner providing cloud and collaboration services to SMB clients",
+			"record": {
+				"industry": null,
+				"description": "Rojoli Services, Inc. is a leading Microsoft partner providing collaboration, cloud hosting and business continuity products and services to small and medium-sized businesses throughout North America. Based in Georgia, Rojoli has operations and data centers in Atlanta, New York, and Phoenix.",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 2008,
+				"citedPage": "https://rojoli.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Microsoft partner, headcount 12, Georgia-based, provides cloud/collaboration services to SMB clients."
+			}
+		},
+		"rpmit.com": {
+			"label": "accept",
+			"name": "RPM Technologies, LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "18 staff, US; the record's fitReason confirms an IT services company managing IT for client businesses directly",
+			"record": {
+				"industry": null,
+				"description": "RPM helps companies of all sizes in all industries leverage technology to maximize their potential. Our team of experts develops plans for successful use of technology as a business advantage.\n\nRPM Technologies develops, implements and manages highly available, secure and scalable IT. We achieve this by:\n ~ Bridging the gap between business goals and technology.\n ~ Expertise in IT, compliance and business process development.\n ~ Extending standards developed for large enterprises in highly regulated industries to clients of all sizes.\n ~ Bringing tools and NIST frameworks to the task of appropriately securing our clients data.\n",
+				"workforceTotal": 18,
+				"country": "United States",
+				"foundedYear": 2006,
+				"citedPage": "https://rpmit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT services company, headcount 18, Indianapolis, manages IT for client businesses directly."
+			}
+		},
+		"safepointit.com": {
+			"label": "accept",
+			"name": "SafePoint IT",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "15 staff, US; the record's fitReason confirms an MSP delivering help desk and managed services to SMB clients",
+			"record": {
+				"industry": null,
+				"description": "SafePoint IT is a Chicago-based Managed Service Provider (MSP) for small and mid-sized businesses. We deliver help desk and proactive monitoring; cybersecurity and compliance; Microsoft 365 and cloud management; backup and disaster recovery; and proactive advisory and planning. We streamline operations through automation and systems integration, leveraging software development expertise to reduce manual effort, standardize processes, and unify data across core platforms. With 20+ years in business and Inc. 5000 recognitions, we serve healthcare, manufacturing, and professional services across Illinois.",
+				"workforceTotal": 15,
+				"country": "United States",
+				"foundedYear": 2002,
+				"citedPage": "https://safepointit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP headcount 15, Palatine IL, delivers help desk and managed services to SMB clients."
+			}
+		},
+		"saw.it": {
+			"label": "accept",
+			"name": "Server At Work, LLC",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "Server At Work's own description calls it a SOC 2 audited IT MSP serving SMBs, 12 staff, US",
+			"record": {
+				"industry": null,
+				"description": "Server At Work is a SOC 2 audited IT MSP with offices in Austin, TX and Lake Charles, LA. We help SMBs grow their businesses through efficient IT operations while integrating compliance solutions to meet insurance, regulatory, and client requirements.\n\nOur services range from complete IT management to co-managed IT solutions for companies with internal IT resources.\n\nOur philosophy at Server At Work is to operate as an IT partner with our clients. At all levels of IT service we provide our clients with direct, personable resources to help co-manage technology environments and provide business-friendly solutions.",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 2012,
+				"citedPage": "https://saw.it/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"secur-serv.com": {
+			"label": "accept",
+			"name": "Secur-Serv",
+			"firstSeenRunId": "companies_dom-78980a66d4dd_2026-09-02",
+			"lastSeenAt": "2026-09-03T00:00:49.971Z",
+			"note": "158 staff, US; industry field says business IT services, a security-first managed services provider for business clients",
+			"record": {
+				"industry": "Business IT services",
+				"description": "Security-first managed services provider offering managed IT, managed print, managed device, cybersecurity, cloud modernization, and 24/7 support to business clients.",
+				"workforceTotal": 158,
+				"country": "United States",
+				"foundedYear": 1972,
+				"citedPage": "https://www.linkedin.com/posts/secur-serv_hiring-activity-7496895943200464896-Nmyo",
+				"citedDate": "2026-08-22",
+				"quote": "Apply today or share this post with your network.",
+				"fitReason": null
+			}
+		},
+		"sharedit.com": {
+			"label": "accept",
+			"name": "Shared IT Inc",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "18 staff, US; a Managed IT Service Provider serving clients locally and nationally for 25 years",
+			"record": {
+				"industry": null,
+				"description": "Shared IT is a Managed IT Service Provider that has been serving clients locally and nationally for over twenty-five years. Shared IT provides world-class service with Midwest values. Clients in business, healthcare, manufacturing, education, government, and the non-profit sectors receive both on-site and remote IT support 24/7. Consistently working to build strong relationships, Shared IT interacts with clients regularly, becoming a real part of the team. Focus on your business goals while Shared IT makes your IT needs its top priority.",
+				"workforceTotal": 18,
+				"country": "United States",
+				"foundedYear": 2000,
+				"citedPage": "https://sharedit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"sourcepass.com": {
+			"label": "accept",
+			"name": "Sourcepass",
+			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:46:26.095Z",
+			"note": "Sourcepass is a well-documented, private-equity-backed US MSP consolidation platform headquartered in New York, well past the 10-person floor",
+			"record": {
+				"industry": null,
+				"description": "Sourcepass was created to disrupt the stale IT services and security space. Businesses are often held back by lackluster technology vendors that leave them underserved and overcharged for IT services. An opportunity existed for innovation through leveraging Software-as-a-Service (SaaS) technologies such as Artificial Intelligence (AI) and Robotic Process Automation (RPA) married with premier managed services to provide a revolutionary client experience. As a result, Sourcepass was born with the vision to provide businesses of all sizes a technology experience that elevates their company.\n\nSourcepass puts you in control of your digital universe, so you have the power to transform your business. With Sourcepass, you have a team of guardians that maintains data networks, manages cloud and security monitoring, and guides productivity and digital transformation. The right blend of technologies work seamlessly and powerfully, backed and boosted by our tech smarts and business savvy.",
+				"workforceTotal": 268,
+				"country": "United States",
+				"foundedYear": 2021,
+				"citedPage": "https://sourcepass.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"soutec-group.com": {
+			"label": "accept",
+			"name": "Soutec US",
+			"firstSeenRunId": "companies_dom-ec212a3a8dd2_2026-09-04",
+			"lastSeenAt": "2026-09-04T01:47:49.445Z",
+			"note": "37 staff, US; the record's fitReason confirms Soutec is a Miami-based IT firm serving SMBs directly, not internal IT",
+			"record": {
+				"industry": null,
+				"description": "Soutec is a specialized IT firm that enhances productivity and cybersecurity for small to midsize businesses in Miami and South Florida. As your operations grow, so do the associated cybersecurity risks. We focus on minimizing downtime and strategically aligning your technology with your business goals, ensuring you operate securely and efficiently.",
+				"workforceTotal": 37,
+				"country": "United States",
+				"foundedYear": 2014,
+				"citedPage": "https://soutec-group.com/en/us",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "37-employee Miami IT firm serving SMBs directly, US-based, clearly an MSP not internal IT."
+			}
+		},
+		"spartaserv.com": {
+			"label": "accept",
+			"name": "Sparta Services LLC",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "18 staff, US; the record's fitReason confirms a Microsoft TSP delivering managed IT services and consulting to business clients",
+			"record": {
+				"industry": null,
+				"description": "Sparta Services is a next-generation Microsoft Technical Solution Provider (TSP) delivering strategic IT consulting/advisory, managed services, and advanced technology solutions to businesses of all sizes. Based in the Seattle area and supporting clients globally, we specialize in creating secure, scalable, and customized IT ecosystems that empower organizations to thrive in a data-driven world.\n\nOur approach combines local service with global expertise, leveraging deep Microsoft certifications and decades of experience to help businesses optimize technology investments, enhance productivity, and maintain robust cybersecurity.\n\nCore Services:\n- IT Consulting & Strategy – Roadmaps for infrastructure, modernization, and growth\n- Managed IT Services (MSP) – 24/7 support, proactive monitoring, SLA-based service\n- Cybersecurity & Compliance – Zero Trust Security methodology leveraging Microsoft 365\n- Cloud Solutions – Microsoft Azure, SharePoint, Power Platform\n- Business Intelligence – Power BI dashboards and analytics\n- Custom Development – Applications, automation, and integrations\n- Modern Workplace Solutions – Teams, Teams Voice, LMS365 deployment",
+				"workforceTotal": 18,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://spartaserv.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Microsoft TSP delivering managed IT services and consulting to clients, 18 employees, Seattle-area based."
+			}
+		},
+		"strong-tech.com": {
+			"label": "accept",
+			"name": "Strong Technical Services",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "53 staff, US; a 24x7x365 remote monitoring company running two NOCs and a nationwide field-services team, a strong match for the profile's target roles",
+			"record": {
+				"industry": null,
+				"description": "Strong Technical Services (STS) is a 24x7x365 remote monitoring company with two geographically dispersed state-of-the-art network operation centers (NOCs) and a nationwide field services team of over sixty service technicians. STS currently supports tens of thousands of customers across 16,000 sites and over 100,000 devices. \n \nOur Technical Services Include:\nOutsourced help desk & customer service support\nRedundant NOCs with real-time network, device and system monitoring and management\nA nationwide field services team able to perform on-site multi-vendor technical support \nCustom technology solutions to meet the specific needs of our diverse customers",
+				"workforceTotal": 53,
+				"country": "United States",
+				"foundedYear": 1932,
+				"citedPage": "https://strong-tech.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"tks.la": {
+			"label": "accept",
+			"name": "TurnKey Solutions, LLC",
+			"firstSeenRunId": "companies_7ffbbb23-b77e-4bdf-859b-d4c980c33248_2026-09-04",
+			"lastSeenAt": "2026-09-04T11:24:57.368Z",
+			"note": "12 staff, US; the record's fitReason confirms an MSP serving healthcare, industrial and financial clients directly",
+			"record": {
+				"industry": null,
+				"description": "Founded in Baton Rouge in 1999, Turn Key Solutions began with a simple but powerful idea: businesses deserve IT partners who take responsibility, not ones who point fingers when things go wrong.\n\nWhat started as conversations between friends and coworkers frustrated by unaccountable vendors quickly became a company built around ownership, integrity, and results. From day one, we’ve adopted a methodical, ethical approach to doing business, with a 100% commitment to our clients’ success.\nSince 2005, we’ve developed deep expertise in healthcare IT. Today, more than half of our clients are in the healthcare industry, supported by a team recognized for their knowledge of healthcare technology, security, and compliance.\n\nIn addition to healthcare, we proudly support organizations in industrial, manufacturing, and financial services industries where uptime, security, and reliability are critical. Across all sectors we serve, our focus remains the same: stable systems, strong security, and technology that support real business outcomes.\n\nBacked by strong expertise in PCI, HIPAA, and HITECH, we help organizations build secure, compliant IT environments that go beyond requirements and support confident, efficient operations.\n\nAt Turn Key Solutions, we don’t just manage technology; we stand behind IT.\nLearn more at www.TKS.LA or call 225 751 4444.",
+				"workforceTotal": 12,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://tks.la/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "MSP with 12 employees in Baton Rouge, US, client‑focused ownership language, not staffing‑type."
+			}
+		},
+		"valortech.io": {
+			"label": "accept",
+			"name": "ValorTech | Managed IT & Cybersecurity",
+			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:02:58.904Z",
+			"note": "14 staff, US; an award-winning MSP delivering modern IT solutions",
+			"record": {
+				"industry": null,
+				"description": "We’re not your average MSP experience. We’re an award-winning, veteran-owned, people-first company delivering modern IT solutions with an unapologetically bold approach.\n\nValorTech is a SOC 2 Type II, Jamf Certified, security-first Managed Services and Security Provider (MSSP) based in Wisconsin.\n\nWe offer Managed IT Services, Cybersecurity, Cloud Solutions, and IT Consulting—built for growing organizations that demand more than check-the-box IT. Whether you have 5 endpoints or 1,000+, we believe your tech stack should evolve with your business, not hold it back.\n\nHere’s what sets us apart:\n\n🎖️ Veteran-Owned. Mission-Led. Military-Grade.\nFounded by veterans and shaped by service, we approach IT with military-grade precision and real-world urgency. Our culture of discipline, accountability, and execution sets us apart. From day one, we’ve been wired to serve—with programs that support active-duty families, encourage employee volunteerism, and give back through ValorCares.\n\n🔒 Built on Security, Not Buzzwords\nWhile most MSPs “added” cybersecurity when it became trendy, we were built on it. From MDR/XDR and endpoint protection to compliance-as-a-service, we lead with security-first strategy—not sales gimmicks.\n\n🍏 Jamf Certified. Apple + Microsoft Experts.\nOne of only five Jamf Certified Techs in Wisconsin, we support Mac-based and Microsoft environments with seamless, secure solutions.\n\n🏆 Award-Winning & Recognized.\nNamed one of Milwaukee’s Best Places to Work four years running, we back up our culture and client success with results.\n\n📍 Local Roots. Scalable Model.\nWe serve organizations across Milwaukee, Madison, Appleton, and beyond—combining Midwest values with enterprise-grade delivery.\n\n🤝 Not Just a Vendor. A True Partner.\nWe help clients pass audits, modernize infrastructure, and stop chasing fires. ValorTech delivers with discipline, clarity, and commitment.",
+				"workforceTotal": 14,
+				"country": "United States",
+				"foundedYear": 2017,
+				"citedPage": "https://valortech.io/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"verito.com": {
+			"label": "accept",
+			"name": "Verito",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "31 staff, US; the record's fitReason confirms a managed IT and cloud hosting provider serving tax and accounting firm clients",
+			"record": {
+				"industry": null,
+				"description": "Private cloud hosting and managed IT for tax and accounting firms.\n\nIRS and FTC compliance built in. Dedicated private servers with enforced MFA, offline backups, and 24/7 monitoring. Host Drake, UltraTax, Lacerte, ProSeries, and QuickBooks from anywhere. Scale up for season, scale down after.\n\n100% uptime since 2016. Sub-60-second support. 1,000+ firms served. 4.9 on G2.\n\nIt just works. Securely.",
+				"workforceTotal": 31,
+				"country": "United States",
+				"foundedYear": 2016,
+				"citedPage": "https://verito.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "Managed IT/cloud hosting provider with 31 employees in Delaware serving tax and accounting firm clients."
+			}
+		},
+		"wheelhouseit.com": {
+			"label": "accept",
+			"name": "WheelHouse IT",
+			"firstSeenRunId": "companies_dom-9d029a8c5034_2026-09-03",
+			"lastSeenAt": "2026-09-03T00:52:48.886Z",
+			"note": "WheelHouse IT is a known US MSP based in Florida, well past the 10-person floor",
+			"record": {
+				"industry": null,
+				"description": "WheelHouse IT secures, manages, and advances businesses with innovative, cost-effective IT solutions. We have worked with clients in nearly every vertical, enabling us to truly understand your business operations, not just your technology, and customize solutions for success.\n\nAs a Managed IT Service Provider, WheelHouse IT delivers robust technology solutions to corporations, small and mid-size businesses, non-profits, and educational organizations.\n\nWe provide a wide range of support for client’s infrastructure, while proactively securing their workstations and networks against the ever-changing threats online, so they can focus on what they know; running their business.\n\nWe are headquartered in Fort Lauderdale, Florida with offices in Long Island, New York, New York City and Orlando. When businesses partner with us they are partnering with a team of over 60 passionate US based IT professionals. \n\nIn 2017 we ranked 281 for INC 500’s fastest growing companies and awarded the 2017 Microsoft Southeast Partner of the Year.\n\nAs of 2020 WheelHouse IT now holds four prestigious Microsoft Gold competencies, and is ranked #94 on the ChannelFutures MSP 501.\n\nVisit our website for a full list of services, solutions, pricing, and free resources.",
+				"workforceTotal": 46,
+				"country": "United States",
+				"foundedYear": 2002,
+				"citedPage": "https://wheelhouseit.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"xpertechs.com": {
+			"label": "accept",
+			"name": "XPERTECHS",
+			"firstSeenRunId": "companies_dom-f3e75693d890_2026-09-03",
+			"lastSeenAt": "2026-09-03T01:46:26.095Z",
+			"note": "XPERTECHS is a known US MSP based in the Baltimore, Maryland area, well past the 10-person floor",
+			"record": {
+				"industry": null,
+				"description": "Meet XPERTECHS — the Managed Intelligence Provider built for businesses that refuse to fall behind. We go beyond what traditional MSPs deliver, combining expert IT management with hands-on AI and automation strategy into a single partnership that moves your business forward. Our XperCARE framework brings proactive support, practical solutions for today, and the strategic guidance to turn technology into your competitive edge. Your team gets freed from the tech grind, you get top-tier talent backing you up, and your business gets set to level up. If you're ready to move beyond what a traditional MSP can offer, let's up your game. Visit: https://xpertechs.com/",
+				"workforceTotal": 41,
+				"country": "United States",
+				"foundedYear": 1988,
+				"citedPage": "https://xpertechs.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": null
+			}
+		},
+		"xsolutions.com": {
+			"label": "accept",
+			"name": "XSolutions",
+			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
+			"lastSeenAt": "2026-09-04T03:28:21.351Z",
+			"note": "16 staff, US; the record's fitReason confirms an IT services firm serving construction, legal and nonprofit clients directly",
+			"record": {
+				"industry": null,
+				"description": "WHAT WE DO: XSolutions has been helping Construction, Distribution, Legal, and Nonprofit business owners across NY/NJ/CT stop losing time and money to unreliable IT since 1999 — delivering the fast, strategic technology support their teams actually deserve.\n\nIf your last or current IT provider left you dealing with the same problems over and over, never called back within the hour, or sold you something you didn't need — you already know there's a better way. XSolutions is it.\n\nWHO WE WORK WITH: \n🏗️ Construction — HVAC, steel fabrication, environmental remediation, and construction-adjacent industries \n📦 Distribution — importers, exporters, lumber, food, electrical, and more\n⚖️ Law firms and legal offices \n🤝 Nonprofits and mission-driven organizations \n📍 20–40 workstation environments within NY/NJ/CT\n\nWHAT MAKES US DIFFERENT: \n⚡ 15-minute response guarantee — a real person answers every call, every time. No voicemail. No ticket queue. No waiting. \n🏆 1 of only 50 IT companies worldwide certified in World-Class Customer Experience by the DeJulius Organization — the same organization that has trained brands like Ritz-Carlton and Chick-fil-A \n⭐ 200+ five-star Google reviews — because our clients actually want to brag about their IT company \n📅 25+ years in business — founding clients still with us today \n💯 60-day money-back guarantee on MSP agreements\n\nWHAT CLIENTS SAY: \n🗣 \"Whenever my staff reaches out to XSolutions they are always available or get right back to us. You can TRUST XSolutions.\" — Anthony Fiore, President, Capri Cosmetology \n\n🗣 \"Having XSolutions take IT management off my responsibility list has given me peace of mind and freed up my focus for other business areas. They're a top choice in IT management.\" — Anthony Russo, President, Commerce and Industry Association of NJ\n\n📞 (877) 807-1332 | contactus@xsolutions.com | xsolutions.com",
+				"workforceTotal": 16,
+				"country": "United States",
+				"foundedYear": 1999,
+				"citedPage": "https://xsolutions.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "IT services firm with 16 employees in New York serving construction, legal, nonprofit clients directly."
+			}
+		}
+	}
+}

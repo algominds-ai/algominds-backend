@@ -1,0 +1,699 @@
+{
+	"slug": "form3",
+	"icpId": "cf9f5feb-bdb7-43ab-8899-09f1e1fa468b",
+	"people": {
+		"https://linkedin.com/in/alexeikrasner": {
+			"label": "accept",
+			"name": "Alexei Krasner",
+			"title": "SVP Engineering, Chief Architect",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP Engineering, Chief Architect at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/alexislequoc": {
+			"label": "accept",
+			"name": "Alexis L.",
+			"title": "Co-founder & CTO",
+			"company": "datadoghq.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Co-founder & CTO at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/anushadharmalingam": {
+			"label": "accept",
+			"name": "Anusha Dharmalingam",
+			"title": "Vice President of Engineering",
+			"company": "athenahealth.com",
+			"location": "Winchester, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/ashley-miller-1905757": {
+			"label": "accept",
+			"name": "Ashley Miller",
+			"title": "VP, Application Infrastructure",
+			"company": "datadoghq.com",
+			"location": "Brooklyn, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP, Application Infrastructure at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/babak-moghimi": {
+			"label": "accept",
+			"name": "Babak Moghimi",
+			"title": "Head of Engineering Tools & Services",
+			"company": "adevinta.com",
+			"location": "Barcelona, Spain",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Engineering Tools & Services at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/brian-harris-a4731018": {
+			"label": "accept",
+			"name": "Brian Harris",
+			"title": "CISO/SVP of Technical Operations",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "CISO/SVP of Technical Operations at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/carsten-bernhard-4261293": {
+			"label": "accept",
+			"name": "Carsten Bernhard",
+			"title": "Group CTO",
+			"company": "edreamsodigeo.com",
+			"location": "Barcelona, Spain",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Group CTO at edreamsodigeo, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/catherine-ye-651224b8": {
+			"label": "accept",
+			"name": "Catherine Ye",
+			"title": "SVP of Engineering",
+			"company": "adyen.com",
+			"location": "Palo Alto, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/chadyancey": {
+			"label": "reject:not-buyer",
+			"name": "Chad Yancey",
+			"title": "Director, Customer Trust & Security Governance",
+			"company": "gitlab.com",
+			"location": "Bothell, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Director, Customer Trust & Security Governance is a compliance/governance-adjacent role, not the Director of Platform or Infrastructure the rubric names"
+		},
+		"https://linkedin.com/in/christoph-springer-67822096": {
+			"label": "accept",
+			"name": "Christoph Springer",
+			"title": "Head of Platform",
+			"company": "adevinta.com",
+			"location": "Berlin, Germany",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Platform at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/cmazal": {
+			"label": "accept",
+			"name": "Chaim Mazal",
+			"title": "Chief Information Security Officer",
+			"company": "gitlab.com",
+			"location": "Chicago, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Information Security Officer at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/cynthia-miller-0a4b002": {
+			"label": "accept",
+			"name": "Cynthia Miller",
+			"title": "Vice President, Security Assurance",
+			"company": "gitlab.com",
+			"location": "Mountain View, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President, Security Assurance at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/dennisvanrooijen": {
+			"label": "accept",
+			"name": "Dennis van Rooijen",
+			"title": "Director Data Platform",
+			"company": "gitlab.com",
+			"location": "Veenendaal, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Director Data Platform at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/dino-dai-zovi-2043932": {
+			"label": "accept",
+			"name": "Dino Dai Zovi",
+			"title": "Senior Vice President, Head of Security",
+			"company": "adyen.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Senior Vice President, Head of Security at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/don-stearns-mba-pmp-4701b6a": {
+			"label": "accept",
+			"name": "Don Stearns, MBA, PMP",
+			"title": "Vice President & CIO",
+			"company": "athenahealth.com",
+			"location": "United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President & CIO at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/donato-emma-3753a77": {
+			"label": "accept",
+			"name": "Donato Emma",
+			"title": "Head of Engineering",
+			"company": "adevinta.com",
+			"location": "Kleinmachnow, Germany",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Engineering at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/emilioesc": {
+			"label": "accept",
+			"name": "Emilio E.",
+			"title": "Chief Information Security Officer",
+			"company": "datadoghq.com",
+			"location": "Los Angeles, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Information Security Officer at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/florbela-viegas": {
+			"label": "accept",
+			"name": "Florbela Viegas",
+			"title": "Director Dedicated Infrastructure",
+			"company": "gitlab.com",
+			"location": "Zurich, Switzerland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Director Dedicated Infrastructure at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/gustavo-foncea": {
+			"label": "accept",
+			"name": "Gustavo Foncea",
+			"title": "Head Of Technology",
+			"company": "adevinta.com",
+			"location": "Berlin, Germany",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head Of Technology at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/hazrac": {
+			"label": "accept",
+			"name": "David Mitchell",
+			"title": "SVP of Engineering",
+			"company": "datadoghq.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP of Engineering at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/hgarg81": {
+			"label": "accept",
+			"name": "Hemant Garg",
+			"title": "VP Engineering Frontend Platforms & Technology Transformation",
+			"company": "draftkings.com",
+			"location": "Sunnyvale, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP Engineering Frontend Platforms & Technology Transformation at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/hiljanen": {
+			"label": "accept",
+			"name": "Matti Hiljanen",
+			"title": "Head of SRE & Security",
+			"company": "elisa.com",
+			"location": "Helsinki, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of SRE & Security at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/ian-hanson-1085466": {
+			"label": "accept",
+			"name": "Ian Hanson",
+			"title": "Senior Vice President of Engineering",
+			"company": "dexcom.com",
+			"location": "San Diego, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Senior Vice President of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/ian-kurt\u00e9n-55456": {
+			"label": "accept",
+			"name": "Ian Kurt\u00e9n",
+			"title": "Head of High Security",
+			"company": "elisa.com",
+			"location": "Helsinki, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of High Security at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141": {
+			"label": "accept",
+			"name": "Ignacio Jim\u00e9nez Pi",
+			"title": "SVP Platform Engineering",
+			"company": "adyen.com",
+			"location": "Amsterdam, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP Platform Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12": {
+			"label": "accept",
+			"name": "Iv\u00e1n Lugo",
+			"title": "Vice President of Global Engineering",
+			"company": "dexcom.com",
+			"location": "Irvine, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Global Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jarno-vainio-32a46243": {
+			"label": "accept",
+			"name": "Jarno Vainio",
+			"title": "Head of Platform Services",
+			"company": "elisa.com",
+			"location": "Finland, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Platform Services at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jason-borinski-922a969b": {
+			"label": "accept",
+			"name": "Jason Borinski",
+			"title": "VP IT Infrastructure, Information Security, and Operations",
+			"company": "dexcom.com",
+			"location": "San Diego County, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP IT Infrastructure, Information Security, and Operations at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jeff-singer-b9a5b919": {
+			"label": "accept",
+			"name": "Jeff Singer",
+			"title": "Vice President of Engineering",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jesuscholiz": {
+			"label": "accept",
+			"name": "Jesus Choliz",
+			"title": "Global CISO",
+			"company": "adevinta.com",
+			"location": "Barcelona, Spain",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Global CISO at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/joe-nuts-974903223": {
+			"label": "accept",
+			"name": "joe nuts",
+			"title": "Head of Software Engineering",
+			"company": "gitlab.com",
+			"location": "Colorado Springs, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Software Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jonhope": {
+			"label": "reject:not-buyer",
+			"name": "John Hope",
+			"title": "Director of Engineering",
+			"company": "gitlab.com",
+			"location": "Ireland, Ireland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Director of Engineering is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
+		},
+		"https://linkedin.com/in/joni-oksanen-36640b127": {
+			"label": "accept",
+			"name": "Joni Oksanen",
+			"title": "Vice President, Networks & Security",
+			"company": "elisa.com",
+			"location": "Helsinki, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President, Networks & Security at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/jordipreixens": {
+			"label": "reject:not-buyer",
+			"name": "Jordi P.",
+			"title": "Director of Engineering",
+			"company": "edreamsodigeo.com",
+			"location": "Italy, Italy",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Director of Engineering is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
+		},
+		"https://linkedin.com/in/julien-conan-450aa325": {
+			"label": "accept",
+			"name": "Julien Conan",
+			"title": "Head of Infrastructure and Data Platform",
+			"company": "adevinta.com",
+			"location": "France, France",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Infrastructure and Data Platform at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/karl-salnoske-96286": {
+			"label": "accept",
+			"name": "Karl Salnoske",
+			"title": "SVP Cloud Engineering and Operations",
+			"company": "athenahealth.com",
+			"location": "McLean, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP Cloud Engineering and Operations at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/kimberly-wolk-50297a1": {
+			"label": "accept",
+			"name": "Kimberly Wolk",
+			"title": "Vice President of Engineering",
+			"company": "gitlab.com",
+			"location": "Sammamish, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/kimjtikkanen": {
+			"label": "accept",
+			"name": "Kim T.",
+			"title": "Chief Security Officer, VP Security",
+			"company": "elisa.com",
+			"location": "Finland, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Security Officer, VP Security at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/laurent-paris-a977b5": {
+			"label": "accept",
+			"name": "Laurent Paris",
+			"title": "SVP Engineering  / Core Engineering Team",
+			"company": "datadoghq.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP Engineering  / Core Engineering Team at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/leo-shemesh-6620a15": {
+			"label": "accept",
+			"name": "Leo Shemesh",
+			"title": "VP of Lottery Engineering",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Lottery Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/lopez1": {
+			"label": "accept",
+			"name": "Jorge G. Lopez",
+			"title": "VP, Security Operations, Trust, and Safety",
+			"company": "gitlab.com",
+			"location": "Alpharetta, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP, Security Operations, Trust, and Safety at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/lucacanducci": {
+			"label": "accept",
+			"name": "Luca Canducci",
+			"title": "Head of Engineering",
+			"company": "adyen.com",
+			"location": "Amsterdam, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/luke-hargrove-9849a1151": {
+			"label": "accept",
+			"name": "Luke Hargrove",
+			"title": "Vice President of Engineering",
+			"company": "athenahealth.com",
+			"location": "Travis County, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/manilinkedin": {
+			"label": "accept",
+			"name": "Mani Sundaram",
+			"title": "VP of Engineering",
+			"company": "gitlab.com",
+			"location": "Seattle, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/manunarayan": {
+			"label": "accept",
+			"name": "Manu Narayan",
+			"title": "Chief Information Officer",
+			"company": "gitlab.com",
+			"location": "Los Angeles, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Information Officer at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/marin-jankovski": {
+			"label": "accept",
+			"name": "Marin Jankovski",
+			"title": "Vice President of Engineering",
+			"company": "gitlab.com",
+			"location": "United Kingdom, United Kingdom",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/markus-kinnunen-3388b63": {
+			"label": "accept",
+			"name": "Markus Kinnunen",
+			"title": "Vice President and CIO",
+			"company": "elisa.com",
+			"location": "Helsinki, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President and CIO at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/michael-wildpaner-b9b8591": {
+			"label": "accept",
+			"name": "Michael Wildpaner",
+			"title": "VP of Engineering \u2014 Security",
+			"company": "gitlab.com",
+			"location": "Zurich, Switzerland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering \u2014 Security at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/naveenaerrabotu": {
+			"label": "accept",
+			"name": "Naveen Aerrabotu",
+			"title": "VP of Engineering",
+			"company": "dexcom.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/nuno-antunes-7746a41": {
+			"label": "accept",
+			"name": "Nuno Antunes",
+			"title": "Vice President of Engineering",
+			"company": "datadoghq.com",
+			"location": "Lisbon, Portugal",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/olegmezhvynskyi": {
+			"label": "accept",
+			"name": "Oleg Mezhvynskiy",
+			"title": "SVP Engineering, Sports",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP Engineering, Sports at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/olivier-bonnet-6593652": {
+			"label": "accept",
+			"name": "Olivier Bonnet",
+			"title": "VP of Engineering",
+			"company": "datadoghq.com",
+			"location": "Paris, France",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/padisetty": {
+			"label": "accept",
+			"name": "Siva Padisetty",
+			"title": "Chief Technology Officer",
+			"company": "gitlab.com",
+			"location": "Bellevue, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Technology Officer at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/paul-stapleton-a17b356": {
+			"label": "accept",
+			"name": "Paul Stapleton",
+			"title": "CPSO, Vice President Cyber Security Engineering",
+			"company": "dexcom.com",
+			"location": "Cincinnati, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "CPSO, Vice President Cyber Security Engineering at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/pedromsoliveira": {
+			"label": "accept",
+			"name": "Pedro M. S. Oliveira",
+			"title": "Vice President of Infrastructure",
+			"company": "adyen.com",
+			"location": "Amsterdam, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Infrastructure at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/pello-olaskoaga-9048288": {
+			"label": "reject:not-buyer",
+			"name": "Pello Olaskoaga",
+			"title": "IT operations & Security Office Director",
+			"company": "edreamsodigeo.com",
+			"location": "Barcelona, Spain",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "IT operations & Security Office Director is not Director of Platform or Infrastructure, the narrower Director-level buyer category the rubric names"
+		},
+		"https://linkedin.com/in/pieterhuibers": {
+			"label": "accept",
+			"name": "Pieter Huibers",
+			"title": "SVP of Engineering - Platforms and Financial Services",
+			"company": "adyen.com",
+			"location": "The Randstad, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "SVP of Engineering - Platforms and Financial Services at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/riley-white-6747958": {
+			"label": "accept",
+			"name": "Riley White",
+			"title": "Head of Engineering, epocrates",
+			"company": "athenahealth.com",
+			"location": "Charlton, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Engineering, epocrates at athenahealth, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/robin-mohseni-72375080": {
+			"label": "accept",
+			"name": "Robin Mohseni",
+			"title": "Vice President of Engineering",
+			"company": "draftkings.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Vice President of Engineering at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/sam-bulder-5a971aa": {
+			"label": "accept",
+			"name": "Sam Bulder",
+			"title": "VP of Engineering",
+			"company": "adyen.com",
+			"location": "The Randstad, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/sambisbee": {
+			"label": "accept",
+			"name": "Sam Bisbee",
+			"title": "VP, Information Security",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP, Information Security at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/sami-komulainen-7946273": {
+			"label": "reject:not-buyer",
+			"name": "Sami Komulainen",
+			"title": "Chief Operating Officer & EVP - Technology and Operations",
+			"company": "elisa.com",
+			"location": "Finland, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Operating Officer is a general business-operations executive, not one of the rubric's named technology or security chief titles"
+		},
+		"https://linkedin.com/in/sarahpimentel": {
+			"label": "accept",
+			"name": "Sarah Pimentel Abrantes",
+			"title": "VP of Engineering",
+			"company": "adyen.com",
+			"location": "Netherlands, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/sean-flanagan-cspo-csm-40983a94": {
+			"label": "accept",
+			"name": "Sean Flanagan",
+			"title": "Head of Global Engineering Operations at DraftKings",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Global Engineering Operations at DraftKings at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/seshendranalla": {
+			"label": "accept",
+			"name": "Sesh Nalla",
+			"title": "VP of Engineering",
+			"company": "datadoghq.com",
+			"location": "New York City, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/stacey-stewart-90495b4": {
+			"label": "accept",
+			"name": "Stacey Stewart",
+			"title": "Senior Vice President, Chief Information Officer, Dexcom",
+			"company": "dexcom.com",
+			"location": "San Diego, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Senior Vice President, Chief Information Officer, Dexcom at dexcom, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/stijnvanesveld": {
+			"label": "accept",
+			"name": "Stijn van Esveld",
+			"title": "Head of Platform Reliability",
+			"company": "adyen.com",
+			"location": "Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Platform Reliability at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/tim-zallmann-505b2b4b": {
+			"label": "accept",
+			"name": "Tim Zallmann",
+			"title": "VP of Engineering",
+			"company": "gitlab.com",
+			"location": "Austria, Austria",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "VP of Engineering at gitlab, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/timo-h\u00e4nninen-0b899071": {
+			"label": "accept",
+			"name": "Timo H\u00e4nninen",
+			"title": "Business Lead, Head of Cloud and Infrastructure services",
+			"company": "elisa.com",
+			"location": "Helsinki, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Business Lead, Head of Cloud and Infrastructure services at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/tom-adams-7b586a1": {
+			"label": "accept",
+			"name": "Tom Adams",
+			"title": "Chief Technology Officer",
+			"company": "adyen.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Technology Officer at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/tuan-kha-87910b2": {
+			"label": "accept",
+			"name": "Tuan Kha",
+			"title": "Group Chief Information Officer (CIO)",
+			"company": "adevinta.com",
+			"location": "Amsterdam, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Group Chief Information Officer (CIO) at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/veiko-koort-405737a4": {
+			"label": "reject:wrong-country",
+			"name": "Veiko Koort",
+			"title": "Head of Telco Cloud and Communication services",
+			"company": "elisa.com",
+			"location": "Estonia",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "based in Estonia, which is not on the profile's Continental Europe country list"
+		},
+		"https://linkedin.com/in/villerautio": {
+			"label": "accept",
+			"name": "Ville Rautio",
+			"title": "Chief Technology and AI Officer, Elisa Corporate Customers",
+			"company": "elisa.com",
+			"location": "Helsinki, Finland",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Technology and AI Officer, Elisa Corporate Customers at elisa, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/wangxity": {
+			"label": "accept",
+			"name": "Xi Wang",
+			"title": "Head of Engineering",
+			"company": "adevinta.com",
+			"location": "Netherlands, Netherlands",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Engineering at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/whats": {
+			"label": "accept",
+			"name": "Albert Sellar\u00e8s",
+			"title": "CTO / Global VP of Engineering (entire Adevinta group)",
+			"company": "adevinta.com",
+			"location": "Barcelona, Spain",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "CTO / Global VP of Engineering (entire Adevinta group) at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/zacharymaybury": {
+			"label": "accept",
+			"name": "Zach Maybury",
+			"title": "Chief Technology Officer",
+			"company": "draftkings.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Chief Technology Officer at draftkings, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		},
+		"https://linkedin.com/in/\u00e0ngel-puigvent\u00f3s-76a35147": {
+			"label": "accept",
+			"name": "\u00c0ngel Puigvent\u00f3s",
+			"title": "Head of Security Operations",
+			"company": "adevinta.com",
+			"location": "Barcelona, Spain",
+			"firstSeenRunId": "people_dom-19c3dd00ddb0_2026-09-05",
+			"note": "Head of Security Operations at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
+		}
+	}
+}

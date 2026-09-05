@@ -13,6 +13,7 @@ import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { seedExcludedDomains } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import type { RoundTiming } from "@/core/companies/rows";
 import {
 	assertUnderDailyCeiling,
 	closeErroredRun,
@@ -138,12 +139,14 @@ async function runOneRound(
 		history: { pastAngles: state.pastAngles, feedback: state.feedback },
 		requirements: target.requirements,
 	});
+	const timings: RoundTiming[] = [];
 	const deps = roundDeps({
 		accumulatedDomains: state.accumulatedDomains,
 		step,
 		round,
 		today,
 		seller: icp.seller,
+		timings,
 	});
 	const remaining = payload.count - state.companies.length;
 	const stepResult = await step.do(
@@ -174,6 +177,7 @@ async function runOneRound(
 		costDollars: state.costDollars,
 		result: stepResult,
 		report,
+		timings,
 	});
 	for (const domain of stepResult.seenDomains) {
 		state.accumulatedDomains.add(domain);

@@ -1,0 +1,54 @@
+{
+	"experiment": "1e19d8dc9bd6-baseline",
+	"commit": "1e19d8dc9bd66b73ffb68f2a9fe596781ef4134d",
+	"arm": "baseline",
+	"datasetSnapshotIds": {
+		"mstone": "1000197804543574692",
+		"aris": "1000197804543705243",
+		"form3": "1000197804543773209",
+		"carta": "1000197804543968167",
+		"dental": null,
+		"hvac": null
+	},
+	"configHash": "830c4ef1587b526a40ae637535db1f5ac1786ebca39e3ac3686e53217e985782",
+	"scorerPromptHashes": {},
+	"resolvedModelIds": {},
+	"runIds": {
+		"mstone": [
+			"companies_88efcc41-6b6e-4e1a-8343-240ca98a0d41_2026-09-04",
+			"companies_ebff8b20-d2e7-4458-b8d7-ca74995a50e4_2026-09-04"
+		],
+		"aris": [
+			"companies_70a702d5-65f4-4169-88b7-9543fa2af848_2026-09-04",
+			"companies_d28c6f47-1edc-4532-895a-dbb9986f1004_2026-09-04"
+		],
+		"form3": [
+			"companies_bc1d81ca-1bb2-4bd3-8448-40d2579b2813_2026-09-04",
+			"companies_5dca2eb5-7529-417a-aeb5-f03e26b2cf96_2026-09-04"
+		],
+		"carta": [
+			"companies_a840cd9b-3c9b-4be8-81ee-a13bf39a6857_2026-09-04",
+			"companies_32704e11-45fe-48e4-9d8d-803130cfd67a_2026-09-04"
+		],
+		"dental": [
+			"companies_4fffd4ed-2254-4910-90cf-f3c171595bea_2026-09-04",
+			"companies_9a6a5045-c875-4e2d-941d-a4bc913a9b97_2026-09-04"
+		],
+		"hvac": [
+			"companies_4cee7d2d-fbf6-4027-ad27-c50effb16e35_2026-09-04",
+			"companies_717bd4c7-ce3a-434b-9e81-d2724171de57_2026-09-04"
+		]
+	},
+	"startedAt": "2026-09-04T10:27:09.464Z",
+	"finishedAt": "2026-09-04T10:44:37.030Z",
+	"totalSpendDollars": 3.0862760000000002,
+	"perProfileSpendDollars": {
+		"mstone": 0.607002,
+		"aris": 0.277246,
+		"form3": 0.970432,
+		"carta": 0.7329559999999999,
+		"dental": 0.23720000000000002,
+		"hvac": 0.26144
+	},
+	"winnerRule": "An arm wins a profile when every correctness gate holds; among arms that clear the gates, lower cost per stored company, then fewer seconds per stored company. Declared before any arm runs; never chosen after seeing the numbers."
+}

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { FindCompaniesReject } from "@/core/companies/candidates";
-import { roundRefusalsEvidenceRow } from "@/core/companies/rows";
+import {
+	roundRefusalsEvidenceRow,
+	roundTimingsEvidenceRow,
+} from "@/core/companies/rows";
 
 function judgeReject(
 	overrides: Partial<FindCompaniesReject> = {},
@@ -13,6 +16,29 @@ function judgeReject(
 		...overrides,
 	};
 }
+
+describe("roundTimingsEvidenceRow", () => {
+	it("carries every dependency's seconds for the round as one run-level row", () => {
+		const row = roundTimingsEvidenceRow("run-1", 2, [
+			{ dep: "search", seconds: 1.5 },
+			{ dep: "judge", seconds: 20 },
+		]);
+		expect(row?.subjectType).toBe("run");
+		expect(row?.kind).toBe("round-timings");
+		expect(JSON.parse(row?.value ?? "")).toEqual({
+			runId: "run-1",
+			round: 2,
+			timings: [
+				{ dep: "search", seconds: 1.5 },
+				{ dep: "judge", seconds: 20 },
+			],
+		});
+	});
+
+	it("is null when nothing was timed", () => {
+		expect(roundTimingsEvidenceRow("run-1", 1, [])).toBeNull();
+	});
+});
 
 describe("roundRefusalsEvidenceRow", () => {
 	it("carries every refused row's domain, reason and the judge's statuses", () => {
