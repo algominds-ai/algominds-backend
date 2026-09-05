@@ -38,9 +38,9 @@
 			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
 			"note": "CEO, Co-Founder at netris.io, a 37-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
-		"https://linkedin.com/in/clément-carrier-74009658": {
+		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
 			"label": "reject:not-buyer",
-			"name": "Clément Carrier",
+			"name": "Cl\u00e9ment Carrier",
 			"title": "Co-founder & CEO",
 			"company": "helloaria.eu",
 			"location": "Paris, France",
@@ -66,12 +66,13 @@
 			"note": "Founder/CEO of Ognomy, a company of about 20 staff, well under the 50-person threshold"
 		},
 		"https://linkedin.com/in/eladio-crego-gil-42b4603": {
-			"label": null,
+			"label": "accept",
 			"name": "Eladio Crego Gil",
 			"title": "CFO",
 			"company": "ipronics.com",
 			"location": "Brussels, Belgium",
-			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05"
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
+			"note": "CFO at ipronics.com, an explicit finance-owner buyer role"
 		},
 		"https://linkedin.com/in/erinn-macaulay-51340711": {
 			"label": "reject:not-buyer",
@@ -101,12 +102,13 @@
 			"note": "Co-Founder and CEO at mundoai.world, an 18-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/kahlil-lalji-76a30b138": {
-			"label": null,
+			"label": "accept",
 			"name": "Kahlil Lalji",
 			"title": "CEO & Co-founder",
 			"company": "natural.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05"
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
+			"note": "CEO & Co-founder at natural.com, a 17-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/lindseyb": {
 			"label": "accept",
@@ -118,12 +120,13 @@
 			"note": "VP, Strategy & Finance at karoohealth.com, an explicit VP-of-Finance buyer role owning the company's finance function"
 		},
 		"https://linkedin.com/in/marta-rodriguez-blanco-322a052a": {
-			"label": null,
-			"name": "Marta Rodríguez Blanco",
+			"label": "accept",
+			"name": "Marta Rodr\u00edguez Blanco",
 			"title": "Vice President Finance",
 			"company": "ipronics.com",
-			"location": "Valencia/València, Spain",
-			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05"
+			"location": "Valencia/Val\u00e8ncia, Spain",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
+			"note": "Vice President Finance at ipronics.com, an explicit finance-owner buyer role"
 		},
 		"https://linkedin.com/in/nickknuppe": {
 			"label": "accept",
