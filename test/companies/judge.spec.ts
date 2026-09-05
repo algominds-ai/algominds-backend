@@ -264,6 +264,15 @@ describe("the judge is told which requirements need a status", () => {
 
 		expect(userMessage(gateway.calls[0])).toContain("acquired");
 	});
+
+	it("tells the model a listed-category requirement is contradicted by an affirmative other category", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+		await judge(requirements, rows, fakeGatewayEnv());
+		expect(userMessage(gateway.calls[0])).toContain("does not include");
+	});
 });
 
 describe("the kind of page a row came from is a label, not something the judge weighs", () => {
