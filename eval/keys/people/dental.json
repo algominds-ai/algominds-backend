@@ -417,12 +417,13 @@
 			"note": "Office Manager at dentalonepartners.com, distinct from this company's Office Leader/Operations Leader naming for its accepted administrative role"
 		},
 		"https://linkedin.com/in/ledean-williams-580967b3": {
-			"label": null,
+			"label": "accept",
 			"name": "Ledean Williams",
 			"title": "Organization Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Virginia Beach, United States",
-			"firstSeenRunId": "people_dom-67d75135a227_2026-09-05"
+			"firstSeenRunId": "people_dom-67d75135a227_2026-09-05",
+			"note": "Organization Manager at sharedpracticesgroup.com; matches this company's established broad acceptance of operations/administrative manager titles that do not contain 'Office' or 'Support'"
 		},
 		"https://linkedin.com/in/leslie-jackson-b8500824a": {
 			"label": "accept",

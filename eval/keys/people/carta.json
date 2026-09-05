@@ -3,12 +3,13 @@
 	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
 	"people": {
 		"https://linkedin.com/in/aaron-ginn-6757ab1a": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Aaron Ginn",
 			"title": "CEO & Co-Founder",
 			"company": "hydrahost.com",
 			"location": "United States, United States",
-			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "CEO & Co-Founder at hydrahost.com, a 65-staff company above the roughly-fifty-employee founder-exception threshold, matching the existing reject pattern on similarly-sized founders at helloaria.eu (53) and withassured.com (88)"
 		},
 		"https://linkedin.com/in/akshay-agrawal-57a30aa6": {
 			"label": "accept",
@@ -20,24 +21,26 @@
 			"note": "CEO, Founder of Onos Health, a company of about 21 staff, well under the 50-person threshold where the founder/CEO exception applies"
 		},
 		"https://linkedin.com/in/alan-lee-4150615": {
-			"label": null,
+			"label": "accept",
 			"name": "Alan Lee",
 			"title": "VP Finance",
 			"company": "primeintellect.ai",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "VP Finance at primeintellect.ai, an explicit finance-owner buyer role"
 		},
 		"https://linkedin.com/in/alex-saroyan": {
-			"label": null,
+			"label": "accept",
 			"name": "Alex Saroyan",
 			"title": "CEO, Co-Founder",
 			"company": "netris.io",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "CEO, Co-Founder at netris.io, a 37-staff company under the fifty-employee threshold with no finance-owner role in evidence"
 		},
-		"https://linkedin.com/in/clément-carrier-74009658": {
+		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
 			"label": "reject:not-buyer",
-			"name": "Clément Carrier",
+			"name": "Cl\u00e9ment Carrier",
 			"title": "Co-founder & CEO",
 			"company": "helloaria.eu",
 			"location": "Paris, France",
@@ -81,12 +84,13 @@
 			"note": "Founder & CEO at kord.com, a 21-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/jasonliao02": {
-			"label": null,
+			"label": "accept",
 			"name": "Jason Liao",
 			"title": "Co-Founder and CEO",
 			"company": "mundoai.world",
 			"location": "Canada, Canada",
-			"firstSeenRunId": "people_dom-e68977153720_2026-09-05"
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "Co-Founder and CEO at mundoai.world, an 18-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
 		},
 		"https://linkedin.com/in/lindseyb": {
 			"label": "accept",

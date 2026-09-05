@@ -102,20 +102,22 @@
 			"note": "Director of IT Operations Manager at netopsconsulting, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
 		},
 		"https://linkedin.com/in/ryan-sullender-3554b31ba": {
-			"label": null,
+			"label": "accept",
 			"name": "Ryan Sullender",
 			"title": "Managing Partner Operations Manager",
 			"company": "e3itservices.com",
 			"location": "Cherry Hill, New Jersey, United States",
-			"firstSeenRunId": "people_dom-13cd8103a466_2026-09-05"
+			"firstSeenRunId": "people_dom-13cd8103a466_2026-09-05",
+			"note": "Managing Partner Operations Manager at e3itservices.com, a 10-staff MSP where a managing partner personally decides hiring spend"
 		},
 		"https://linkedin.com/in/sawnicklincoln": {
-			"label": null,
+			"label": "accept",
 			"name": "Nick Lincoln",
 			"title": "Director of Operations",
 			"company": "saw.it",
 			"location": "Lake Charles, United States",
-			"firstSeenRunId": "people_dom-13cd8103a466_2026-09-05"
+			"firstSeenRunId": "people_dom-13cd8103a466_2026-09-05",
+			"note": "Director of Operations at saw.it, an explicit director-of-operations buyer title"
 		},
 		"https://linkedin.com/in/slava-ruderman-b016991": {
 			"label": "accept",
