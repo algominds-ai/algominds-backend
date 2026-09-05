@@ -164,6 +164,14 @@
 			"firstSeenRunId": "people_dom-8abd655a5b35_2026-09-05",
 			"note": "Founder at Midnite, a company of about 141 staff, which already has a VP Growth and a Head of Product listed in this same batch, so the founder exception does not apply"
 		},
+		"https://linkedin.com/in/dave-p-96694567": {
+			"label": null,
+			"name": "Dave P.",
+			"title": "Head of Product - Sportsbook Platforms",
+			"company": "midnite.com",
+			"location": "Harrogate, United Kingdom",
+			"firstSeenRunId": "people_dom-1b5a8ccde15a_2026-09-05"
+		},
 		"https://linkedin.com/in/diana-layfield-a677a0": {
 			"label": "reject:not-buyer",
 			"name": "Diana Layfield",
@@ -184,7 +192,7 @@
 		},
 		"https://linkedin.com/in/drmohamadsawwaf": {
 			"label": "accept",
-			"name": "Dr. Mohamad Sawwaf \u062f. \u0645\u062d\u0645\u062f \u0635\u0648\u0627\u0641",
+			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
 			"title": "Founder & Group Chief Executive Officer",
 			"company": "manzil.co",
 			"location": null,
