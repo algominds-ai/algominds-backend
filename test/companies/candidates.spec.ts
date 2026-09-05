@@ -42,7 +42,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -164,7 +163,6 @@ function keptDeps(): FindCompaniesDeps {
 					id: r.id,
 					status: "proven" as const,
 				})),
-				soft: [],
 				reason: "fits icp",
 				sameOrganizationAs: null,
 			})),

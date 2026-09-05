@@ -91,7 +91,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -163,7 +162,6 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 					id: req.id,
 					status: rejects.includes(index) ? "contradicted" : "proven",
 				})),
-			soft: [],
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
 			sameOrganizationAs: null,
 		}));

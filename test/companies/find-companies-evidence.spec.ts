@@ -81,7 +81,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "companies",
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -134,7 +133,6 @@ const noopJudge: FindCompaniesDeps["judge"] = async (requirements, rows) => ({
 		statuses: requirements
 			.filter((r) => r.kind === "hard")
 			.map((r) => ({ id: r.id, status: "proven" as const })),
-		soft: [],
 		reason: "fits icp",
 		sameOrganizationAs: null,
 	})),

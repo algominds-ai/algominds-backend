@@ -14,7 +14,6 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,

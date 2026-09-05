@@ -78,7 +78,6 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 			return {
 				index,
 				statuses: [{ id: "r1", status: keep ? "proven" : "contradicted" }],
-				soft: [],
 				reason: keep ? "fits the profile" : "no qualifying signal",
 				sameOrganizationAs: null,
 			};
@@ -177,6 +176,32 @@ describe("judge: verdicts and retries", () => {
 		expect(result.verdicts[1]?.reason).toBe("no qualifying signal");
 	});
 
+	it("accepts an empty reason for a row whose every hard requirement is proven", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				objectReply({
+					verdicts: [
+						{
+							index: 0,
+							statuses: [{ id: "r1", status: "proven" }],
+							reason: "",
+							sameOrganizationAs: null,
+						},
+					],
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await judge(
+			requirements,
+			rows.slice(0, 1),
+			fakeGatewayEnv(),
+		);
+
+		expect(result.verdicts[0]?.reason).toBe("");
+	});
+
 	it("retries once after a schema failure and returns the retry's result", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
@@ -214,7 +239,7 @@ describe("the judge is told which requirements need a status", () => {
 			.join("\n");
 	}
 
-	it("asks for a status on every hard requirement by id, and lists soft ones apart", async () => {
+	it("asks for a status on every hard requirement by id, and never mentions a soft one", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
@@ -224,20 +249,9 @@ describe("the judge is told which requirements need a status", () => {
 
 		const sent = userMessage(gateway.calls[0]);
 		expect(sent).toContain("r1 the company is a seed stage fintech");
-		expect(sent).toContain("r2 the company posted a founding engineer role");
-		expect(sent).toContain("give no status for these");
-	});
-
-	it("says nothing about preferences when the profile asks for none", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(verdictsFor(rows))),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const hardOnly = requirements.filter((req) => req.kind === "hard");
-		await judge(hardOnly, rows, fakeGatewayEnv());
-
-		expect(userMessage(gateway.calls[0])).not.toContain("Preferences.");
+		expect(sent).not.toContain(
+			"r2 the company posted a founding engineer role",
+		);
 	});
 
 	it("tells the model an acquired, merged or shut-down record contradicts every hard requirement", async () => {
@@ -308,7 +322,6 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
 				statuses: [{ id: "r1", status: "proven" }],
-				soft: [],
 				reason: "fits the profile",
 				sameOrganizationAs: null,
 			}));

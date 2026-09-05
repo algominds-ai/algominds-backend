@@ -33,7 +33,6 @@ const StatusSchema = z.object({
 const VerdictSchema = z.object({
 	index: z.number().int().nonnegative(),
 	statuses: z.array(StatusSchema),
-	soft: z.array(z.string()),
 	reason: z.string(),
 	sameOrganizationAs: z.number().int().nonnegative().nullable(),
 });
@@ -73,8 +72,10 @@ const JUDGE_INSTRUCTIONS = [
 	"A row's homepage text, keyed `homepage` in `pageEvidence`, is the company's own current",
 	"statement and establishes what it sells, to whom, through what signup, and whether it",
 	'still operates; a word like "partners" alone does not disqualify a row.',
-	"Give one reason of twenty-five words or fewer describing only what that row's own",
-	"fields show, and never invent a fact the row does not carry.",
+	"When every status for a row is `proven`, set its `reason` to an empty string. When any",
+	"status for a row is `contradicted` or `unproven`, give one reason of twenty-five words",
+	"or fewer describing only what that row's own fields show, and never invent a fact the",
+	"row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
 	"under another brand, country domain or subdomain, and to null otherwise.",
 ].join(" ");
@@ -115,17 +116,10 @@ function judgePrompt(
 	evidenceByRow: EvidenceByRow,
 ): string {
 	const hard = hardRequirements(requirements);
-	const soft = requirements.filter((req) => req.kind === "soft");
 	const lines = [
 		"Requirements needing a status:",
 		...hard.map(requirementLine),
 	];
-	if (soft.length > 0) {
-		lines.push(
-			"Preferences. List in `soft` the ids this row's own fields show, and give no status for these:",
-			...soft.map(requirementLine),
-		);
-	}
 	lines.push("Rows:");
 	for (const [index, row] of rows.entries()) {
 		const fields = judgedFields(row, evidenceByRow.get(offset + index));
@@ -167,7 +161,6 @@ function unjudgedSlice(
 	return slice.rows.map((_row, index) => ({
 		index: index + slice.offset,
 		statuses,
-		soft: [],
 		reason: FALLBACK_REASON,
 		sameOrganizationAs: null,
 	}));
@@ -305,7 +298,10 @@ function refusalReason(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): string {
-	const detail = verdict?.reason ?? "the judge gave no reason";
+	const detail =
+		verdict?.reason && verdict.reason.length > 0
+			? verdict.reason
+			: "the judge gave no reason";
 	const bad = contradictedRequirement(requirements, verdict);
 	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);

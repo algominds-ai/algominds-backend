@@ -86,7 +86,6 @@ function planFor(): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,

@@ -56,7 +56,6 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 		verdicts: rowSet.map((_row, index) => ({
 			index,
 			statuses: [{ id: "r1", status: "proven" }],
-			soft: [],
 			reason: "fits the profile",
 			sameOrganizationAs: null,
 		})),

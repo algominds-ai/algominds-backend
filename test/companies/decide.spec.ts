@@ -36,7 +36,6 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
 		index: 0,
 		statuses: [],
-		soft: [],
 		reason: "a reason",
 		sameOrganizationAs: null,
 		...overrides,
@@ -125,7 +124,7 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 		expect(kept.stored).toHaveLength(1);
 	});
 
-	it("refuses a row that contradicts a hard requirement, whatever its proof", () => {
+	it("refuses a row that contradicts a hard requirement, whatever its proof, and falls back to a stand-in detail when its reason came back empty", () => {
 		const decision = decideRows({
 			requirements: [recordRequirement],
 			rows: [row("a.com")],
@@ -135,6 +134,21 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 
 		expect(decision.stored).toHaveLength(0);
 		expect(decision.rejects[0]?.reason).toContain("contradicts r1");
+
+		const empty = decideRows({
+			requirements: [recordRequirement],
+			rows: [row("a.com")],
+			verdicts: [
+				verdict({
+					statuses: [{ id: "r1", status: "contradicted" }],
+					reason: "",
+				}),
+			],
+			excluded: new Set(),
+		});
+		expect(empty.rejects[0]?.reason).toBe(
+			"contradicts r1: the judge gave no reason",
+		);
 	});
 
 	it("keeps a row whose hard record requirement the record simply does not state", () => {
@@ -147,7 +161,9 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 
 		expect(decision.stored.map((kept) => kept.domain)).toEqual(["a.com"]);
 	});
+});
 
+describe("a hard page or soft requirement is judged on its own terms", () => {
 	it("refuses a row whose hard page requirement no page proved, and stores one a cited page did", () => {
 		const refused = decideRows({
 			requirements: [pageRequirement],

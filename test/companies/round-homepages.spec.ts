@@ -23,7 +23,6 @@ function plan(): SearchPlan {
 	return {
 		query: "banks",
 		angle: "banking",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -122,7 +121,6 @@ function testDeps(script: Script): Harness {
 				verdicts: rows.map((_row, index) => ({
 					index,
 					statuses: [{ id: recordRequirement.id, status: "proven" }],
-					soft: [],
 					reason: "a reason",
 					sameOrganizationAs: null,
 				})),

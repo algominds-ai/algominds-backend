@@ -34,7 +34,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "seed stage startups",
 		angle: "the profile as written",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,

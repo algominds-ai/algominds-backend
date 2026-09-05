@@ -57,7 +57,6 @@ export type IcpSeller = NonNullable<IcpDoc["seller"]>;
 export type SearchPlan = {
 	query: string;
 	angle: string;
-	pageQuery: string | null;
 	recency: string | null;
 	eventWindowDays: number | null;
 	recencyDays: number | null;
@@ -78,7 +77,6 @@ export type SearchPlan = {
 const RoundSchema = z.object({
 	angle: z.string(),
 	query: z.string(),
-	pageQuery: z.string().nullable(),
 });
 
 const SearchPlanModelSchema = z.object({
@@ -124,10 +122,6 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"numeric bounds and countries afterwards as their own sentences. Every angle must be",
 	"genuinely different from the others and from any angle already searched, and every",
 	"requirement stays true of all of them.",
-	"When a requirement is marked `page`, each entry also carries `pageQuery`: one sentence",
-	"describing that proving page itself, as its own author would title it, so a search of",
-	"the open web returns pages of that kind. It is null when no requirement is marked",
-	"`page`.",
 	"Put the profile's bounds in the filter fields: `minWorkforce` and `maxWorkforce` for",
 	"headcount, `minFoundedYear` and `maxFoundedYear`, `minRevenueAnnual` and",
 	"`maxRevenueAnnual` and `minFundingTotal` and `maxFundingTotal` in whole US dollars,",
@@ -184,7 +178,6 @@ function templatePlans(input: SynthesizeInput): SynthesizeResult {
 			{
 				query: input.icp.description,
 				angle: "the profile as written",
-				pageQuery: hardPageRequirements(input.requirements)[0]?.text ?? null,
 				...evidenceDemand(input.requirements, route),
 				agentEffort: "low",
 				userLocation: null,
@@ -220,7 +213,7 @@ function countryCode(value: string | null | undefined): string | null {
 	return value && value.length === 2 ? value.toUpperCase() : null;
 }
 
-type PlanBounds = Omit<SearchPlan, "query" | "angle" | "pageQuery">;
+type PlanBounds = Omit<SearchPlan, "query" | "angle">;
 
 /** Every limit the profile put on the records a round keeps, plus the evidence demand the requirements imply. An absent limit is null, never zero. */
 type EvidenceDemand = Pick<
@@ -318,7 +311,6 @@ export async function synthesize(
 		plans: output.rounds.map((round) => ({
 			query: round.query,
 			angle: round.angle,
-			pageQuery: round.pageQuery,
 			...bounds,
 		})),
 		ledger,

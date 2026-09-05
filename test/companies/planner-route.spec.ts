@@ -34,23 +34,21 @@ type PlanShape = {
 	route: string | null;
 	query: string;
 	angle: string;
-	pageQuery: string | null;
 	userLocation: string | null;
 };
 
 function planReply(overrides: Partial<PlanShape> = {}, cost?: number) {
-	const { route, query, angle, pageQuery, userLocation } = {
+	const { route, query, angle, userLocation } = {
 		route: null,
 		query: "small US software teams that sell without a sales team",
 		angle: "founder-led vertical software",
-		pageQuery: null,
 		userLocation: "US",
 		...overrides,
 	};
 	return objectReply(
 		{
 			route,
-			rounds: [{ angle, query, pageQuery }],
+			rounds: [{ angle, query }],
 			userLocation,
 			countries: ["United States"],
 			minWorkforce: null,
@@ -151,8 +149,8 @@ describe("the round runs on the route the requirements allow", () => {
 				objectReply({
 					route: "agent",
 					rounds: [
-						{ angle: "banking", query: "banks", pageQuery: "a bank blog" },
-						{ angle: "retail", query: "retailers", pageQuery: "a retail blog" },
+						{ angle: "banking", query: "banks" },
+						{ angle: "retail", query: "retailers" },
 					],
 					userLocation: "US",
 					countries: ["United States"],
@@ -176,7 +174,6 @@ describe("the round runs on the route the requirements allow", () => {
 			"retail",
 		]);
 		expect(result.plans.every((plan) => plan.minWorkforce === 500)).toBe(true);
-		expect(result.plans[1]?.pageQuery).toBe("a retail blog");
 	});
 
 	it("asks the model for as many angles as the round wants, and how many the last one proved", async () => {

@@ -12,7 +12,6 @@ function searchPlan() {
 	return {
 		query: "banks",
 		angle: "banking",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
