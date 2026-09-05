@@ -94,9 +94,10 @@ companies:
   # Characters of page text Exa returns per page. The vendor's documented maximum is 10000;
   # a larger number is clamped rather than refused.
   contentsMaxCharacters: 10000
-  # Rows sent to the judge in one model call. A batch of 8 rows still exceeded
-  # model.timeoutMs three times in one round; this size keeps each call inside it.
-  judgeBatchSize: 4
+  # Rows sent to the judge in one model call. A live Form3 round timed out twice
+  # at 4 rows per call with homepage passages of up to 4000 characters per row;
+  # this size keeps a slice under the 90s model timeout.
+  judgeBatchSize: 2
   # Cap on the single wait after an Exa 429, whether from Retry-After or the
   # one-second default used when Exa sends no header.
   exaRetryAfterMaxMs: 5000

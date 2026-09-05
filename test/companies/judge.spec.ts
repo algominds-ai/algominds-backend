@@ -47,7 +47,6 @@ function row(name: string, domain: string): CompanyRow {
 const rows: CompanyRow[] = [
 	row("Acme", "acme.com"),
 	row("Zenith", "zenith.com"),
-	row("Sable", "sable.com"),
 ];
 
 const RequestBodySchema = z.object({
@@ -308,7 +307,7 @@ function rowCountIn(call: { body: unknown } | undefined): number {
 }
 
 describe("judge: slicing a large batch into concurrent, ordered calls", () => {
-	it("sends 40 rows as ten concurrent calls of 4, and returns every index in row order however the calls resolve", async () => {
+	it("sends 40 rows as twenty concurrent calls of 2, and returns every index in row order however the calls resolve", async () => {
 		const bigRows: CompanyRow[] = Array.from({ length: 40 }, (_, i) =>
 			row(`Company ${i}`, `co${i}.com`),
 		);
@@ -318,11 +317,13 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		const pending = judge(requirements, bigRows, fakeGatewayEnv());
 
 		for (let i = 0; i < 200; i++) await Promise.resolve();
-		expect(gateway.calls).toHaveLength(10);
+		expect(gateway.calls).toHaveLength(20);
 		const sizes = gateway.calls.map((call) => rowCountIn(call));
-		expect(sizes).toEqual([4, 4, 4, 4, 4, 4, 4, 4, 4, 4]);
+		expect(sizes).toEqual(Array.from({ length: 20 }, () => 2));
 
-		for (const callIndex of [9, 4, 7, 2, 0, 6, 3, 8, 1, 5]) {
+		for (const callIndex of [
+			19, 4, 17, 2, 0, 16, 3, 18, 1, 5, 9, 14, 7, 12, 10, 6, 13, 8, 15, 11,
+		]) {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
