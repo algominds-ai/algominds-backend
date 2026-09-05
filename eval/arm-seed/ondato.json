@@ -1,7 +1,7 @@
 {
 	"buyer": {
 		"bands": ["founder", "c-suite", "vp", "director", "head"],
-		"rubric": "The buyer is the Chief Revenue Officer, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or the Founder or CEO at a company under about 50 people. Compliance officers, MLROs, heads of risk, general counsel and CISOs are never the buyer.",
+		"rubric": "The buyer is the person accountable for signup conversion: Chief Revenue Officer, Chief Growth Officer, Chief Marketing Officer, Chief Product Officer, Head of Growth, Head of Product, Head of Marketing or Head of Business Development. A Founder or CEO qualifies only when the roster holds no such growth, product or marketing owner, or when the founder explicitly holds that operating responsibility; company size is context, not a cutoff. Compliance officers, MLROs, heads of risk, general counsel, CISOs, CTOs and engineering leaders are never the buyer.",
 		"keywordBands": []
 	},
 	"seller": {

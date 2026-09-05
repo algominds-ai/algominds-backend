@@ -77,8 +77,9 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 			const keep = index !== 1;
 			return {
 				index,
-				statuses: [{ id: "r1", status: keep ? "proven" : "contradicted" }],
-				soft: [],
+				statuses: [
+					{ id: "r1", status: keep ? "proven" : "contradicted", quote: "" },
+				],
 				reason: keep ? "fits the profile" : "no qualifying signal",
 				sameOrganizationAs: null,
 			};
@@ -177,6 +178,32 @@ describe("judge: verdicts and retries", () => {
 		expect(result.verdicts[1]?.reason).toBe("no qualifying signal");
 	});
 
+	it("accepts an empty reason for a row whose every hard requirement is proven", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				objectReply({
+					verdicts: [
+						{
+							index: 0,
+							statuses: [{ id: "r1", status: "proven", quote: "" }],
+							reason: "",
+							sameOrganizationAs: null,
+						},
+					],
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await judge(
+			requirements,
+			rows.slice(0, 1),
+			fakeGatewayEnv(),
+		);
+
+		expect(result.verdicts[0]?.reason).toBe("");
+	});
+
 	it("retries once after a schema failure and returns the retry's result", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
@@ -214,7 +241,7 @@ describe("the judge is told which requirements need a status", () => {
 			.join("\n");
 	}
 
-	it("asks for a status on every hard requirement by id, and lists soft ones apart", async () => {
+	it("asks for a status on every hard requirement by id, and never mentions a soft one", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
@@ -224,23 +251,12 @@ describe("the judge is told which requirements need a status", () => {
 
 		const sent = userMessage(gateway.calls[0]);
 		expect(sent).toContain("r1 the company is a seed stage fintech");
-		expect(sent).toContain("r2 the company posted a founding engineer role");
-		expect(sent).toContain("give no status for these");
+		expect(sent).not.toContain(
+			"r2 the company posted a founding engineer role",
+		);
 	});
 
-	it("says nothing about preferences when the profile asks for none", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(verdictsFor(rows))),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const hardOnly = requirements.filter((req) => req.kind === "hard");
-		await judge(hardOnly, rows, fakeGatewayEnv());
-
-		expect(userMessage(gateway.calls[0])).not.toContain("Preferences.");
-	});
-
-	it("tells the model an acquired, merged or shut-down record contradicts every hard requirement", async () => {
+	it("tells the model an acquired record contradicts every hard requirement, and a listed-category record is contradicted by another category", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
@@ -249,6 +265,7 @@ describe("the judge is told which requirements need a status", () => {
 		await judge(requirements, rows, fakeGatewayEnv());
 
 		expect(userMessage(gateway.calls[0])).toContain("acquired");
+		expect(userMessage(gateway.calls[0])).toContain("does not include");
 	});
 });
 
@@ -289,7 +306,7 @@ function rowCountIn(call: { body: unknown } | undefined): number {
 }
 
 describe("judge: slicing a large batch into concurrent, ordered calls", () => {
-	it("sends 40 rows as five concurrent calls of 8, and returns every index in row order however the calls resolve", async () => {
+	it("sends 40 rows as ten concurrent calls of 4, and returns every index in row order however the calls resolve", async () => {
 		const bigRows: CompanyRow[] = Array.from({ length: 40 }, (_, i) =>
 			row(`Company ${i}`, `co${i}.com`),
 		);
@@ -299,16 +316,15 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		const pending = judge(requirements, bigRows, fakeGatewayEnv());
 
 		for (let i = 0; i < 200; i++) await Promise.resolve();
-		expect(gateway.calls).toHaveLength(5);
+		expect(gateway.calls).toHaveLength(10);
 		const sizes = gateway.calls.map((call) => rowCountIn(call));
-		expect(sizes).toEqual([8, 8, 8, 8, 8]);
+		expect(sizes).toEqual([4, 4, 4, 4, 4, 4, 4, 4, 4, 4]);
 
-		for (const callIndex of [4, 2, 0, 3, 1]) {
+		for (const callIndex of [9, 4, 7, 2, 0, 6, 3, 8, 1, 5]) {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
-				statuses: [{ id: "r1", status: "proven" }],
-				soft: [],
+				statuses: [{ id: "r1", status: "proven", quote: "" }],
 				reason: "fits the profile",
 				sameOrganizationAs: null,
 			}));

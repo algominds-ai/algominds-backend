@@ -5,18 +5,25 @@ import {
 	buildAgentRunRequest,
 	toExaSearchResult,
 } from "@/core/companies/agent-search";
+import type { CompanyRow } from "@/core/companies/gate";
 import { gate } from "@/core/companies/gate";
 import { fetchHomepages } from "@/core/companies/homepages";
 import { judge } from "@/core/companies/judge";
+import type { EvidenceByRow } from "@/core/companies/judge-evidence";
 import { proveRows } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
 import type { RoundTiming } from "@/core/companies/rows";
+import {
+	agentRunEvidenceRow,
+	judgeInputEvidenceRows,
+} from "@/core/companies/rows";
 import { CostLedger } from "@/core/cost";
-import { recentDomains } from "@/core/db/queries";
+import { appendEvidence, recentDomains } from "@/core/db/queries";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
 import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
 import type { ExaResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
+import type { Requirement } from "@/core/requirements";
 import type { IcpDoc, IcpSeller, SearchPlan } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
@@ -45,6 +52,7 @@ export type AgentSearchInput = {
 	round: number;
 	today: string;
 	seller: IcpSeller | null;
+	runId: string;
 };
 
 type AngleInput = {
@@ -68,7 +76,7 @@ async function runAngle(
 	ledger: CostLedger,
 ): Promise<ExaAgentCompany[]> {
 	const { input, plan, slot, anglesInFlight, excludeDomains } = angle;
-	const { step, round, today, seller } = input;
+	const { step, round, today, seller, runId } = input;
 	const name = `round_${round}-angle_${slot}`;
 	if (slot > 0) {
 		await step.sleep(
@@ -90,6 +98,15 @@ async function runAngle(
 				}),
 				env,
 			),
+	);
+	await step.do(`${name}-start-evidence`, config.stepConfig.databaseCall, () =>
+		appendEvidence(env, [
+			agentRunEvidenceRow(runId, {
+				id,
+				angle: plan.angle,
+				effort: plan.agentEffort,
+			}),
+		]),
 	);
 	return pollAgentRun(
 		{
@@ -262,15 +279,55 @@ export function agentRecentDomains(
 		);
 }
 
+type SaveJudgeInputInput = {
+	step: WorkflowStep;
+	round: number;
+	runId: string;
+	env: Env;
+	requirements: readonly Requirement[];
+	rows: readonly CompanyRow[];
+	evidenceByRow: EvidenceByRow;
+};
+
+/** Saves the exact rows, page evidence and requirement list the judge call is about to read, in its own durable step, so a later replay can reproduce that call byte for byte. */
+async function saveJudgeInput(input: SaveJudgeInputInput): Promise<void> {
+	const { step, round, runId, env, requirements, rows, evidenceByRow } = input;
+	await step.do(
+		`round_${round}-judge-input`,
+		config.stepConfig.databaseCall,
+		() =>
+			appendEvidence(
+				env,
+				judgeInputEvidenceRows({
+					runId,
+					round,
+					rows,
+					evidenceByRow,
+					requirements,
+				}),
+			),
+	);
+}
+
 /** Wraps the judge in its own durable step, for the same replay-safety reason as `agentSynthesize`. */
 function steppedJudge(
 	step: WorkflowStep,
 	round: number,
+	runId: string,
 ): FindCompaniesDeps["judge"] {
 	return async (requirements, rows, env, evidenceByRow) => {
+		await saveJudgeInput({
+			step,
+			round,
+			runId,
+			env,
+			requirements,
+			rows,
+			evidenceByRow: evidenceByRow ?? new Map(),
+		});
 		const cached = await step.do(
 			`round_${round}-judge`,
-			config.stepConfig.paidCall,
+			config.stepConfig.judgeCall,
 			async () => {
 				const result = await judge(requirements, rows, env, evidenceByRow);
 				return {
@@ -293,6 +350,7 @@ export type RoundDepsInput = {
 	today: string;
 	seller: IcpDoc["seller"];
 	timings: RoundTiming[];
+	runId: string;
 };
 
 function timed<A extends unknown[], R>(
@@ -327,7 +385,7 @@ export function timedDeps(
 }
 
 export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
-	const { accumulatedDomains, step, round, today } = input;
+	const { accumulatedDomains, step, round, today, runId } = input;
 	const seller = input.seller ?? null;
 	const lookupRecentDomains = agentRecentDomains(step, round);
 	const deps: FindCompaniesDeps = {
@@ -337,12 +395,12 @@ export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 		},
 		synthesize: agentSynthesize(step, round),
 		search: (_plan, req, env, ledger) => search(req, env, ledger),
-		agentRound: agentFanout({ step, round, today, seller }),
+		agentRound: agentFanout({ step, round, today, seller, runId: input.runId }),
 		backfill: steppedBackfill(step, round),
 		prove: steppedProve(step, round),
 		homepages: steppedHomepages(step, round),
 		gate,
-		judge: steppedJudge(step, round),
+		judge: steppedJudge(step, round, runId),
 	};
 	return timedDeps(deps, input.timings);
 }

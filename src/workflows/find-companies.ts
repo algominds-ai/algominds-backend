@@ -9,7 +9,6 @@ import type {
 	FindCompaniesResult,
 	FindCompaniesStatus,
 } from "@/core/companies";
-import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { seedExcludedDomains } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
@@ -31,6 +30,7 @@ import {
 	persistCompanies,
 	persistRound,
 	reportRound,
+	runRoundBody,
 } from "@/workflows/find-companies-persist";
 
 const MAX_ROUNDS = config.companies.maxRounds;
@@ -147,12 +147,24 @@ async function runOneRound(
 		today,
 		seller: icp.seller,
 		timings,
+		runId: target.runId,
 	});
 	const remaining = payload.count - state.companies.length;
 	const stepResult = await step.do(
 		`round_${round}`,
-		config.stepConfig.paidCall,
-		() => findCompanies(icp, remaining, opts, deps),
+		config.stepConfig.roundCall,
+		() =>
+			runRoundBody({
+				env,
+				step,
+				runId: target.runId,
+				round,
+				alreadySpent: state.costDollars,
+				icp,
+				remaining,
+				opts,
+				deps,
+			}),
 	);
 	state.companies = state.companies.concat(stepResult.companies);
 	state.rejects = state.rejects.concat(stepResult.rejects);

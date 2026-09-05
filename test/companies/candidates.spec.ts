@@ -42,7 +42,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -163,8 +162,8 @@ function keptDeps(): FindCompaniesDeps {
 				statuses: requirements.map((r) => ({
 					id: r.id,
 					status: "proven" as const,
+					quote: "",
 				})),
-				soft: [],
 				reason: "fits icp",
 				sameOrganizationAs: null,
 			})),

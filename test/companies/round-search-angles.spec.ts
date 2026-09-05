@@ -22,7 +22,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "banks",
 		angle: "banking",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -81,8 +80,7 @@ function acceptAll(): FindCompaniesDeps["judge"] {
 	return async (_requirements, rows) => ({
 		verdicts: rows.map((_row, index) => ({
 			index,
-			statuses: [{ id: recordRequirement.id, status: "proven" }],
-			soft: [],
+			statuses: [{ id: recordRequirement.id, status: "proven", quote: "" }],
 			reason: "fits",
 			sameOrganizationAs: null,
 		})),

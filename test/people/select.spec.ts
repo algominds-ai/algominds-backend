@@ -68,6 +68,7 @@ it("returns observed candidates by id", async () => {
 				keywordBands: [],
 			},
 			candidates,
+			company: { name: "Acme", workforceTotal: null },
 		},
 		env,
 	);
@@ -105,6 +106,7 @@ it("keeps every known pick, however many the rubric matches, and drops only unkn
 				keywordBands: [],
 			},
 			candidates,
+			company: { name: "Acme", workforceTotal: null },
 		},
 		env,
 	);
@@ -139,6 +141,7 @@ it("returns zero picks, a null reply, and the ledger's cost after two failures",
 				keywordBands: [],
 			},
 			candidates,
+			company: { name: "Acme", workforceTotal: null },
 		},
 		env,
 	);
@@ -170,6 +173,7 @@ it("sends the rubric and roster as delimited data, not as instructions", async (
 				keywordBands: [],
 			},
 			candidates,
+			company: { name: "Acme", workforceTotal: null },
 		},
 		env,
 	);
@@ -190,4 +194,64 @@ it("sends the rubric and roster as delimited data, not as instructions", async (
 	expect(user).toContain(sentinelRubric);
 	expect(system).toContain("exclude a candidate whose");
 	expect(user).toContain("| (no location)");
+});
+
+it("sends the company's headcount in the prompt data when the caller knows it", async () => {
+	const candidates = [candidate(1, "Founder")];
+	const gateway = fakeGateway([
+		chatCompletionResponse(objectReply({ picks: [] })),
+	]);
+	globalThis.fetch = gateway.fetch;
+
+	await selectBuyers(
+		{
+			description: null,
+			buyer: {
+				mode: "profile",
+				buyerSource: "captured",
+				rubric,
+				bands: ["c-suite"],
+				keywordBands: [],
+			},
+			candidates,
+			company: { name: "Acme", workforceTotal: 42 },
+		},
+		env,
+	);
+
+	const user = messagesFor(gateway.calls[0])
+		.filter((message) => message.role !== "system")
+		.map((message) => message.content)
+		.join("\n");
+	expect(user).toContain("company: Acme, 42 employees");
+});
+
+it("tells the model the company's headcount is unknown rather than guessing a number", async () => {
+	const candidates = [candidate(1, "Founder")];
+	const gateway = fakeGateway([
+		chatCompletionResponse(objectReply({ picks: [] })),
+	]);
+	globalThis.fetch = gateway.fetch;
+
+	await selectBuyers(
+		{
+			description: null,
+			buyer: {
+				mode: "profile",
+				buyerSource: "captured",
+				rubric,
+				bands: ["c-suite"],
+				keywordBands: [],
+			},
+			candidates,
+			company: { name: "Acme", workforceTotal: null },
+		},
+		env,
+	);
+
+	const user = messagesFor(gateway.calls[0])
+		.filter((message) => message.role !== "system")
+		.map((message) => message.content)
+		.join("\n");
+	expect(user).toContain("company: Acme, headcount unknown");
 });

@@ -14,7 +14,6 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -38,7 +37,13 @@ function fanoutFor(
 	step: ReturnType<typeof fakeWorkflowStep>["step"],
 	seller: Parameters<typeof agentFanout>[0]["seller"] = null,
 ) {
-	return agentFanout({ step, round: 1, today: "2026-08-30", seller });
+	return agentFanout({
+		step,
+		round: 1,
+		today: "2026-08-30",
+		seller,
+		runId: "test-run-1",
+	});
 }
 
 const AgentRunBodySchema = z.object({
@@ -271,5 +276,17 @@ describe("the request schema Exa's agent actually accepts", () => {
 		});
 		const schema = JSON.parse(JSON.stringify(request.outputSchema));
 		expect(schema.properties.companies.maxItems).toBe(15);
+	});
+});
+
+describe("the judge step's own retry budget", () => {
+	it("never retries a timed-out judge call, since a retry reruns every slice", () => {
+		expect(config.stepConfig.judgeCall.retries.limit).toBe(0);
+	});
+});
+
+describe("a round's own retry budget", () => {
+	it("never retries a failed round, since a retry reruns every nested step including synthesize and search", () => {
+		expect(config.stepConfig.roundCall.retries.limit).toBe(0);
 	});
 });

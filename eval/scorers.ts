@@ -1,26 +1,89 @@
-import type { Verdict } from "@eval/headline";
+import type { EngineScore } from "@eval/engine-score";
+import type { PeopleVerdict } from "@eval/people-headline";
+
+export type ScoredCompanyRow = { domain: string; label: string | null };
+
+export type ScoredPersonRow = {
+	linkedinUrl: string | null;
+	company: string;
+	label: string | null;
+};
 
 export type TrialOutput = {
-	verdict: Verdict | null;
-	runId: string | null;
+	engine: EngineScore | null;
+	companiesRunId: string | null;
+	peopleRunId: string | null;
+	peopleVerdict: PeopleVerdict | null;
+	totalCostDollars: number;
+	totalSeconds: number | null;
 	skipped: string | null;
+	scoredCompanies: readonly ScoredCompanyRow[];
+	scoredPeople: readonly ScoredPersonRow[];
 };
 
 export type Score = { name: string; score: number | null };
 
-/** 1 when every correctness gate held, 0 when any failed, null for a trial the budget skipped before it ran. */
-export function gatesPass({ output }: { output: TrialOutput }): Score | null {
-	if (!output.verdict) return null;
-	return { name: "gates_pass", score: output.verdict.allGatesPass ? 1 : 0 };
+type ScorerInput = { output: TrialOutput };
+
+function engineScoreOf({ output }: ScorerInput): EngineScore | null {
+	return output.engine;
 }
 
-/** The fraction of the key's accepted companies this trial's stored companies covered, null when the key has none accepted yet or the trial was skipped. */
-export function precision({ output }: { output: TrialOutput }): Score | null {
-	if (!output.verdict || output.verdict.precision === null) return null;
-	return {
-		name: "precision",
-		score: output.verdict.precision,
-	};
+/** 1 when every full-chain correctness gate held, 0 when any failed, null for a trial the budget skipped before it ran. */
+export function gatesPass(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "gates_pass", score: engine.gatesPass ? 1 : 0 };
 }
 
-export const CODE_SCORERS = [gatesPass, precision];
+/** The fraction of `requested` companies that were an accepted company, null for a skipped trial. */
+export function companyYield(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "company_yield", score: engine.companyYield };
+}
+
+/** Accepted companies over every company the run stored, null for a skipped trial. */
+export function companyPrecision(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "company_precision", score: engine.companyPrecision };
+}
+
+/** Distinct accepted people at accepted companies over every delivered person row, null for a skipped trial. */
+export function buyerPrecision(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "buyer_precision", score: engine.buyerPrecision };
+}
+
+/** The fraction of `requested` companies that landed an accepted buyer, null for a skipped trial. */
+export function buyerCoverage(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "buyer_coverage", score: engine.buyerCoverage };
+}
+
+/** Buyer coverage times buyer precision, null for a skipped trial. */
+export function engineQuality(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "engine_quality", score: engine.engineQuality };
+}
+
+/** Engine quality zeroed out by a failed gate, the one composite rating for the trial, null for a skipped trial. */
+export function engineScore(input: ScorerInput): Score | null {
+	const engine = engineScoreOf(input);
+	if (!engine) return null;
+	return { name: "engine_score", score: engine.engineScore };
+}
+
+export const CODE_SCORERS = [
+	gatesPass,
+	companyYield,
+	companyPrecision,
+	buyerPrecision,
+	buyerCoverage,
+	engineQuality,
+	engineScore,
+];

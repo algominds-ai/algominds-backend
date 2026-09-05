@@ -18,24 +18,30 @@ export type ExaPeopleRosterCompany = {
 	name: string | null;
 };
 
+export type ExaOrganizationLookup = {
+	organizationId: string | null;
+	workforceTotal: number | null;
+};
+
 export type ExaPeopleRosterResult = {
 	rows: DedupeRow[];
 	raw: string;
 };
 
 /**
- * The Exa organization id for `domain`, from a company search restricted to
- * it, kept only for the result whose own public domain equals `domain` —
- * `includeDomains` on the company category matches a hostname suffix, so a
- * request for `wise.com` also returns `gatewise.com`. Null when no returned
- * result is on the domain. Throws `RetryableProviderError` on 429 and 5xx,
- * `NonRetryableError` on a reply that does not match the expected shape.
+ * The Exa organization id and headcount for `domain`, from a company search
+ * restricted to it, kept only for the result whose own public domain equals
+ * `domain` — `includeDomains` on the company category matches a hostname
+ * suffix, so a request for `wise.com` also returns `gatewise.com`. Both
+ * fields are null when no returned result is on the domain. Throws
+ * `RetryableProviderError` on 429 and 5xx, `NonRetryableError` on a reply
+ * that does not match the expected shape.
  */
 export async function exaOrganizationId(
 	env: Env,
 	domain: string,
 	ledger: CostLedger,
-): Promise<string | null> {
+): Promise<ExaOrganizationLookup> {
 	const reply = await search(
 		{
 			query: domain,
@@ -51,7 +57,10 @@ export async function exaOrganizationId(
 	const match = reply.results.find(
 		(result) => publicDomain(result.url) === wanted,
 	);
-	return match?.id ?? null;
+	return {
+		organizationId: match?.id ?? null,
+		workforceTotal: match?.company?.workforceTotal ?? null,
+	};
 }
 
 function currentRole(result: ExaResult): {

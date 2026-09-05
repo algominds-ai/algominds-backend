@@ -33,7 +33,6 @@ function result(domain: string, company: CompanyEntity): ExaResult {
 const plan: SearchPlan = {
 	query: "dental groups",
 	angle: "the profile as written",
-	pageQuery: null,
 	recency: null,
 	eventWindowDays: null,
 	recencyDays: null,

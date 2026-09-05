@@ -1,7 +1,17 @@
-import { z } from "zod";
 import { config } from "@/config";
 import type { FindCompaniesReject } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import type {
+	EvidenceByRow,
+	RequirementEvidence,
+	RequirementStatus,
+	Verdict,
+} from "@/core/companies/judge-evidence";
+import {
+	JudgeModelSchema,
+	judgedFields,
+	REQUIREMENT_STATUSES,
+} from "@/core/companies/judge-evidence";
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import { generateStructured, reasoningModel } from "@/core/model";
@@ -13,49 +23,16 @@ import {
 	requirementLine,
 } from "@/core/requirements";
 
+export type { RequirementEvidence, RequirementStatus, Verdict };
+export { REQUIREMENT_STATUSES };
+
 const JUDGE_CACHE_TTL_SECONDS = config.judge.cacheTtlSeconds;
 const JUDGE_BATCH_SIZE = config.companies.judgeBatchSize;
-const JUDGE_DESCRIPTION_CHARS = config.companies.descriptionChars;
-
-export const REQUIREMENT_STATUSES = [
-	"proven",
-	"unproven",
-	"contradicted",
-] as const;
-
-export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number];
-
-const StatusSchema = z.object({
-	id: z.string(),
-	status: z.enum(REQUIREMENT_STATUSES),
-});
-
-const VerdictSchema = z.object({
-	index: z.number().int().nonnegative(),
-	statuses: z.array(StatusSchema),
-	soft: z.array(z.string()),
-	reason: z.string(),
-	sameOrganizationAs: z.number().int().nonnegative().nullable(),
-});
-
-export type Verdict = z.infer<typeof VerdictSchema>;
-
-const JudgeModelSchema = z.object({
-	verdicts: z.array(VerdictSchema),
-});
 
 export type JudgeResult = {
 	verdicts: Verdict[];
 	ledger: CostLedger;
 };
-
-/** One page a search proved for one requirement id, so the judge can weigh a second or third hard page requirement on its own evidence rather than only the first. */
-export type RequirementEvidence = { url: string; quote: string };
-
-type EvidenceByRow = ReadonlyMap<
-	number,
-	ReadonlyMap<string, RequirementEvidence>
->;
 
 const JUDGE_INSTRUCTIONS = [
 	"For every row, by index, return one status per id: `proven` when the row's record or",
@@ -63,6 +40,9 @@ const JUDGE_INSTRUCTIONS = [
 	"excludes or not what it requires, e.g. selling IT services contradicts an IT-services",
 	"exclusion; `unproven` when they say nothing either way, e.g. silence on hiring is",
 	"unproven, not contradicted, for hiring.",
+	"When a requirement lists the qualifying categories, a row whose record affirmatively",
+	"states a different category the list does not include is contradicted, not unproven;",
+	"silence or an unclear category stays unproven.",
 	"A row whose name or description says the company was acquired, merged, shut down, sunset",
 	"or no longer operates contradicts every hard requirement, so the row is refused.",
 	"A row's evidence page proves a requirement only when the quote is about the company the",
@@ -73,40 +53,13 @@ const JUDGE_INSTRUCTIONS = [
 	"A row's homepage text, keyed `homepage` in `pageEvidence`, is the company's own current",
 	"statement and establishes what it sells, to whom, through what signup, and whether it",
 	'still operates; a word like "partners" alone does not disqualify a row.',
-	"Give one reason of twenty-five words or fewer describing only what that row's own",
-	"fields show, and never invent a fact the row does not carry.",
+	"When every status for a row is `proven`, set its `reason` to an empty string. When any",
+	"status for a row is `contradicted` or `unproven`, give one reason of twenty-five words",
+	"or fewer describing only what that row's own fields show, and never invent a fact the",
+	"row does not carry.",
 	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
 	"under another brand, country domain or subdomain, and to null otherwise.",
 ].join(" ");
-
-type JudgedFields = {
-	name: string | null;
-	domain: string | null;
-	description: string | null;
-	evidenceUrl?: string;
-	evidenceQuote?: string;
-	pageEvidence?: Record<string, RequirementEvidence>;
-};
-
-/** The row cut to only the fields the judge instructions read: its own record, and the page it cites when it cites one. Everything else — signal, dates, publisher, the kind label — never changes a verdict. */
-function judgedFields(
-	row: CompanyRow,
-	extra: ReadonlyMap<string, RequirementEvidence> | undefined,
-): JudgedFields {
-	return {
-		name: row.name,
-		domain: row.domain,
-		description:
-			row.description === null
-				? null
-				: row.description.slice(0, JUDGE_DESCRIPTION_CHARS),
-		...(row.evidenceUrl !== null ? { evidenceUrl: row.evidenceUrl } : {}),
-		...(row.evidenceQuote !== null ? { evidenceQuote: row.evidenceQuote } : {}),
-		...(extra && extra.size > 0
-			? { pageEvidence: Object.fromEntries(extra) }
-			: {}),
-	};
-}
 
 function judgePrompt(
 	requirements: readonly Requirement[],
@@ -115,17 +68,10 @@ function judgePrompt(
 	evidenceByRow: EvidenceByRow,
 ): string {
 	const hard = hardRequirements(requirements);
-	const soft = requirements.filter((req) => req.kind === "soft");
 	const lines = [
 		"Requirements needing a status:",
 		...hard.map(requirementLine),
 	];
-	if (soft.length > 0) {
-		lines.push(
-			"Preferences. List in `soft` the ids this row's own fields show, and give no status for these:",
-			...soft.map(requirementLine),
-		);
-	}
 	lines.push("Rows:");
 	for (const [index, row] of rows.entries()) {
 		const fields = judgedFields(row, evidenceByRow.get(offset + index));
@@ -167,7 +113,6 @@ function unjudgedSlice(
 	return slice.rows.map((_row, index) => ({
 		index: index + slice.offset,
 		statuses,
-		soft: [],
 		reason: FALLBACK_REASON,
 		sameOrganizationAs: null,
 	}));
@@ -289,13 +234,14 @@ function unprovenRequirement(
 
 /**
  * Whether one judged row is stored.
- * Returns true if no hard requirement is contradicted and no page-gated requirement is unproven.
+ * Returns true if the judge produced a verdict for the row, no hard requirement is contradicted, and no page-gated requirement is unproven.
  */
 function keepsRow(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): boolean {
 	return (
+		verdict !== undefined &&
 		contradictedRequirement(requirements, verdict) === null &&
 		unprovenRequirement(requirements, verdict) === null
 	);
@@ -305,7 +251,10 @@ function refusalReason(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): string {
-	const detail = verdict?.reason ?? "the judge gave no reason";
+	if (verdict === undefined)
+		return "the judge produced no verdict for this row";
+	const detail =
+		verdict.reason.length > 0 ? verdict.reason : "the judge gave no reason";
 	const bad = contradictedRequirement(requirements, verdict);
 	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);

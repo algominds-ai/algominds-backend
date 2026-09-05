@@ -98,6 +98,7 @@ export function exaCompanySearchResponse(
 	id: string | null,
 	url = "https://example.com",
 	costTotal = 0.005,
+	workforceTotal: number | null = null,
 ): Response {
 	return jsonResponse({
 		requestId: "req-company",
@@ -110,7 +111,17 @@ export function exaCompanySearchResponse(
 							id,
 							url,
 							title: "Example",
-							entities: [{ type: "company", properties: { name: "Example" } }],
+							entities: [
+								{
+									type: "company",
+									properties: {
+										name: "Example",
+										...(workforceTotal === null
+											? {}
+											: { workforce: { total: workforceTotal } }),
+									},
+								},
+							],
 						},
 					],
 	});
@@ -554,87 +565,6 @@ export function stubClaySequence(
 		return current.response;
 	};
 	return calls;
-}
-
-type JsonRpcId = string | number | null;
-type JsonRpcRequestBody = { id?: JsonRpcId; method?: string };
-
-function jsonRpcResult(id: JsonRpcId, result: unknown): Response {
-	return new Response(JSON.stringify({ jsonrpc: "2.0", id, result }), {
-		status: 200,
-		headers: {
-			"content-type": "application/json",
-			"mcp-session-id": "test-session",
-		},
-	});
-}
-
-function jsonRpcError(id: JsonRpcId, code: number, message: string): Response {
-	return new Response(
-		JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }),
-		{
-			status: 200,
-			headers: {
-				"content-type": "application/json",
-				"mcp-session-id": "test-session",
-			},
-		},
-	);
-}
-
-export type FakeMcpServerOptions = {
-	toolName: string;
-	failToolCall?: boolean;
-	capturedHeaders: Headers[];
-	deletes: { count: number };
-};
-
-function respondToMcpRpc(
-	body: JsonRpcRequestBody,
-	opts: FakeMcpServerOptions,
-): Response {
-	const id = body.id ?? null;
-	switch (body.method) {
-		case "server/discover":
-			return jsonRpcError(id, -32601, "Method not found");
-		case "initialize":
-			return jsonRpcResult(id, {
-				protocolVersion: "2025-11-25",
-				capabilities: { tools: {} },
-				serverInfo: { name: "fake-mcp", version: "1.0.0" },
-			});
-		case "notifications/initialized":
-			return new Response(null, { status: 202 });
-		case "tools/list":
-			return jsonRpcResult(id, {
-				tools: [
-					{
-						name: opts.toolName,
-						inputSchema: { type: "object", properties: {} },
-					},
-				],
-			});
-		case "tools/call":
-			if (opts.failToolCall) return jsonRpcError(id, -32000, "tool boom");
-			return jsonRpcResult(id, { content: [{ type: "text", text: "ok" }] });
-		default:
-			return new Response(null, { status: 404 });
-	}
-}
-
-/** An MCP JSON-RPC server over HTTP: `initialize`, `tools/list` and `tools/call` for one named tool, and a `DELETE` session close it counts. */
-export function fakeMcpServer(opts: FakeMcpServerOptions): typeof fetch {
-	return async (_input, init) => {
-		const method = init?.method ?? "GET";
-		if (method === "GET") return new Response(null, { status: 405 });
-		if (method === "DELETE") {
-			opts.deletes.count += 1;
-			return new Response(null, { status: 200 });
-		}
-		opts.capturedHeaders.push(new Headers(init?.headers));
-		const body: JsonRpcRequestBody = JSON.parse(String(init?.body ?? "{}"));
-		return respondToMcpRpc(body, opts);
-	};
 }
 
 /** An AI Gateway `fetch` that records every request but never resolves on its own, so a test can flush pending calls before choosing the order each one completes in. */

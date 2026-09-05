@@ -39,23 +39,21 @@ type PlanShape = {
 	route: string | null;
 	query: string;
 	angle: string;
-	pageQuery: string | null;
 	userLocation: string | null;
 };
 
 function planReply(overrides: Partial<PlanShape> = {}, cost?: number | null) {
-	const { route, query, angle, pageQuery, userLocation } = {
+	const { route, query, angle, userLocation } = {
 		route: null,
 		query: "small US software teams that sell without a sales team",
 		angle: "founder-led vertical software",
-		pageQuery: null,
 		userLocation: "US",
 		...overrides,
 	};
 	return objectReply(
 		{
 			route,
-			rounds: [{ angle, query, pageQuery }],
+			rounds: [{ angle, query }],
 			userLocation,
 			countries: ["United States"],
 			minWorkforce: null,

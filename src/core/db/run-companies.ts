@@ -1,6 +1,9 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, isNull } from "drizzle-orm";
-import { companyExaId } from "@/core/companies/candidates";
+import {
+	companyExaId,
+	companyWorkforceTotal,
+} from "@/core/companies/candidates";
 import type { DbEnv } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
 import type {
@@ -28,6 +31,7 @@ export type CompanyOfRun = Pick<
 	"id" | "domain" | "name" | "linkedinUrl" | "icpId"
 > & {
 	exaId: string | null;
+	workforceTotal: number | null;
 };
 export interface CompanyRunConnection {
 	select(columns: {
@@ -113,6 +117,7 @@ export async function companiesForRun(
 		linkedinUrl: row.linkedinUrl,
 		icpId: row.icpId,
 		exaId: companyExaId(row.data),
+		workforceTotal: companyWorkforceTotal(row.data),
 	}));
 }
 

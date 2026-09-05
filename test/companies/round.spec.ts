@@ -42,7 +42,6 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
 		index: 0,
 		statuses: [],
-		soft: [],
 		reason: "a reason",
 		sameOrganizationAs: null,
 		...overrides,
@@ -53,7 +52,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "banks",
 		angle: "banking",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -173,6 +171,7 @@ function spyingDeps(script: RoundScript): RoundSpy {
 									(req) => ({
 										id: req.id,
 										status: "proven",
+										quote: "",
 									}),
 								),
 							}),

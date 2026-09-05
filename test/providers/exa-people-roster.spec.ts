@@ -32,23 +32,28 @@ describe("exaOrganizationId", () => {
 			return exaCompanySearchResponse(ORG_ID, "https://acme.com");
 		};
 
-		const id = await exaOrganizationId(exaEnv(), "acme.com", new CostLedger());
+		const lookup = await exaOrganizationId(
+			exaEnv(),
+			"acme.com",
+			new CostLedger(),
+		);
 
-		expect(id).toBe(ORG_ID);
+		expect(lookup.organizationId).toBe(ORG_ID);
 		expect(body.category).toBe("company");
 		expect(body.includeDomains).toEqual(["acme.com"]);
 	});
 
-	it("returns null when Exa's company index does not carry the domain", async () => {
+	it("returns a null id and headcount when Exa's company index does not carry the domain", async () => {
 		globalThis.fetch = async () => exaCompanySearchResponse(null);
 
-		const id = await exaOrganizationId(
+		const lookup = await exaOrganizationId(
 			exaEnv(),
 			"nobody.example",
 			new CostLedger(),
 		);
 
-		expect(id).toBeNull();
+		expect(lookup.organizationId).toBeNull();
+		expect(lookup.workforceTotal).toBeNull();
 	});
 
 	it("skips a suffix-matched result and returns the one actually on the domain", async () => {
@@ -58,9 +63,13 @@ describe("exaOrganizationId", () => {
 				{ id: "id-wise", url: "https://wise.com/about" },
 			]);
 
-		const id = await exaOrganizationId(exaEnv(), "wise.com", new CostLedger());
+		const lookup = await exaOrganizationId(
+			exaEnv(),
+			"wise.com",
+			new CostLedger(),
+		);
 
-		expect(id).toBe("id-wise");
+		expect(lookup.organizationId).toBe("id-wise");
 	});
 
 	it("returns null when none of the results are on the requested domain", async () => {
@@ -70,9 +79,26 @@ describe("exaOrganizationId", () => {
 				{ id: "id-pairwise", url: "https://pairwise.com/" },
 			]);
 
-		const id = await exaOrganizationId(exaEnv(), "wise.com", new CostLedger());
+		const lookup = await exaOrganizationId(
+			exaEnv(),
+			"wise.com",
+			new CostLedger(),
+		);
 
-		expect(id).toBeNull();
+		expect(lookup.organizationId).toBeNull();
+	});
+
+	it("reads the matched result's headcount from the same search, with no extra call", async () => {
+		globalThis.fetch = async () =>
+			exaCompanySearchResponse(ORG_ID, "https://acme.com", 0.005, 65);
+
+		const lookup = await exaOrganizationId(
+			exaEnv(),
+			"acme.com",
+			new CostLedger(),
+		);
+
+		expect(lookup.workforceTotal).toBe(65);
 	});
 });
 

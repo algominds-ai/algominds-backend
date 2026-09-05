@@ -1,11 +1,23 @@
 import { spawn } from "node:child_process";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	closeSync,
+	mkdirSync,
+	openSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { armDatabaseUrl } from "@eval/arm-db";
 
 const BASE_CONNECTION_STRING =
 	"postgresql://postgres:postgres@localhost:5432/algo";
 const HEALTH_POLL_MS = 500;
 const HEALTH_TIMEOUT_MS = 60_000;
+const LOG_DIR = "eval/logs";
+
+function devServerLogPath(arm: string, port: number): string {
+	return `${LOG_DIR}/dev-${arm}-${port}.log`;
+}
 
 function armConfigPath(arm: string): string {
 	return `wrangler.eval-${arm}.jsonc`;
@@ -55,13 +67,16 @@ export async function startDevServer(
 ): Promise<DevServer> {
 	const configPath = writeArmConfig(arm);
 	const url = `http://localhost:${port}`;
+	mkdirSync(LOG_DIR, { recursive: true });
+	const logFd = openSync(devServerLogPath(arm, port), "a");
 	const child = spawn(
 		"bunx",
 		["wrangler", "dev", "--config", configPath, "--port", String(port)],
-		{ stdio: "ignore", detached: false },
+		{ stdio: ["ignore", logFd, logFd], detached: false },
 	);
 	const stop = () => {
 		child.kill();
+		closeSync(logFd);
 		rmSync(configPath, { force: true });
 	};
 	try {

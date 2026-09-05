@@ -1,19 +1,22 @@
 import type { SeededTrial } from "@eval/arm-db";
+import type { EngineGates, EngineScore } from "@eval/engine-score";
+import type { TrialCase } from "@eval/full-chain";
+import { budgetBlock, casesFor, newBudget } from "@eval/full-chain";
 import {
 	MAX_PROFILE_SPEND_DOLLARS,
 	MAX_SPEND_DOLLARS,
 	MIN_TRIALS,
 	PROFILES,
 } from "@eval/profiles";
-import type { TrialCase } from "@eval/run";
+import type { ResultRow } from "@eval/run";
 import {
-	budgetBlock,
-	casesFor,
-	newBudget,
 	parseArgs,
+	ratingLine,
 	runIdsByProfile,
+	scoredRowsFrom,
 	selectedProfiles,
 } from "@eval/run";
+import type { TrialOutput } from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
 describe("parseArgs", () => {
@@ -39,12 +42,16 @@ describe("parseArgs", () => {
 		});
 	});
 
-	it("rejects a trial count below the minimum", () => {
-		expect(() => parseArgs(["--trials", "1"])).toThrow(/at least/);
+	it("accepts a single trial", () => {
+		expect(parseArgs(["--trials", "1"]).trials).toBe(1);
+	});
+
+	it("rejects a trial count below one", () => {
+		expect(() => parseArgs(["--trials", "0"])).toThrow(/positive integer/);
 	});
 
 	it("rejects a trial count that is not an integer", () => {
-		expect(() => parseArgs(["--trials", "abc"])).toThrow(/at least/);
+		expect(() => parseArgs(["--trials", "abc"])).toThrow(/positive integer/);
 	});
 });
 
@@ -125,35 +132,157 @@ describe("casesFor", () => {
 	});
 });
 
+function output(overrides: Partial<TrialOutput> = {}): TrialOutput {
+	return {
+		engine: null,
+		companiesRunId: null,
+		peopleRunId: null,
+		peopleVerdict: null,
+		totalCostDollars: 0,
+		totalSeconds: null,
+		skipped: null,
+		scoredCompanies: [],
+		scoredPeople: [],
+		...overrides,
+	};
+}
+
+function row(
+	input: TrialCase,
+	outputOverrides: Partial<TrialOutput>,
+): ResultRow {
+	return {
+		input: { slug: input.slug, trialIndex: input.trialIndex, count: 3 },
+		output: output(outputOverrides),
+	};
+}
+
 describe("runIdsByProfile", () => {
-	it("groups run ids by the trial's profile slug", () => {
+	it("groups both run ids by the trial's profile slug", () => {
 		const rows = [
-			{
-				input: oneCase({ slug: "mstone" }),
-				output: { verdict: null, runId: "run-1", skipped: null },
-			},
-			{
-				input: oneCase({ slug: "mstone", trialIndex: 1 }),
-				output: { verdict: null, runId: "run-2", skipped: null },
-			},
-			{
-				input: oneCase({ slug: "aris" }),
-				output: { verdict: null, runId: "run-3", skipped: null },
-			},
+			row(oneCase({ slug: "mstone" }), {
+				companiesRunId: "company-run-1",
+				peopleRunId: "people-run-1",
+			}),
+			row(oneCase({ slug: "mstone", trialIndex: 1 }), {
+				companiesRunId: "company-run-2",
+				peopleRunId: "people-run-2",
+			}),
+			row(oneCase({ slug: "aris" }), {
+				companiesRunId: "company-run-3",
+				peopleRunId: "people-run-3",
+			}),
 		];
 		expect(runIdsByProfile(rows)).toEqual({
-			mstone: ["run-1", "run-2"],
-			aris: ["run-3"],
+			mstone: [
+				"company-run-1",
+				"people-run-1",
+				"company-run-2",
+				"people-run-2",
+			],
+			aris: ["company-run-3", "people-run-3"],
 		});
 	});
 
 	it("omits a trial the budget skipped before it ran", () => {
-		const rows = [
-			{
-				input: oneCase(),
-				output: { verdict: null, runId: null, skipped: "budget" },
-			},
-		];
+		const rows = [row(oneCase(), { skipped: "budget" })];
 		expect(runIdsByProfile(rows)).toEqual({});
+	});
+});
+
+function passingGates(): EngineGates {
+	return {
+		noKeyRejectedStored: true,
+		noDuplicateOrganisationGroup: true,
+		provingPassesWhereRequired: true,
+		peopleGatesPass: true,
+		bothRunsComplete: true,
+		everyStoredCompanyLabelled: true,
+		everyDeliveredPersonLabelled: true,
+		noRejectedPersonDelivered: true,
+		noOverDelivery: true,
+		costValidAndUnderBar: true,
+		secondsValidAndUnderBar: true,
+	};
+}
+
+function scoredEngine(engineScore: number): EngineScore {
+	return {
+		acceptedCompanies: 1,
+		acceptedCompaniesWithBuyer: 1,
+		acceptedPeople: 1,
+		deliveredPeopleCount: 1,
+		gates: passingGates(),
+		gatesPass: true,
+		companyYield: engineScore,
+		companyPrecision: 1,
+		buyerPrecision: 1,
+		buyerCoverage: engineScore,
+		engineQuality: engineScore,
+		engineScore,
+		acceptedPerDollar: 1,
+		acceptedPerMinute: 1,
+	};
+}
+
+describe("ratingLine", () => {
+	it("reports ten times the mean engine score when every profile is fully scored", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), { engine: scoredEngine(0.5) }),
+			row(oneCase({ slug: "aris" }), { engine: scoredEngine(1) }),
+		];
+		expect(ratingLine(rows, [{ slug: "mstone" }, { slug: "aris" }])).toBe(
+			"rating 7.50",
+		);
+	});
+
+	it("reports incomplete the moment one selected profile has a skipped trial", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), { engine: scoredEngine(1) }),
+			row(oneCase({ slug: "aris" }), { skipped: "budget" }),
+		];
+		expect(ratingLine(rows, [{ slug: "mstone" }, { slug: "aris" }])).toBe(
+			"rating incomplete (1 of 2 profiles)",
+		);
+	});
+
+	it("reports incomplete when a selected profile has no rows at all", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), { engine: scoredEngine(1) }),
+		];
+		expect(ratingLine(rows, [{ slug: "mstone" }, { slug: "aris" }])).toBe(
+			"rating incomplete (1 of 2 profiles)",
+		);
+	});
+});
+
+describe("scoredRowsFrom", () => {
+	it("carries each row's slug, trial index and scored companies and people", () => {
+		const rows = [
+			row(oneCase({ slug: "mstone" }), {
+				scoredCompanies: [{ domain: "a.com", label: "accept" }],
+				scoredPeople: [
+					{
+						linkedinUrl: "https://linkedin.com/in/a",
+						company: "a.com",
+						label: "accept",
+					},
+				],
+			}),
+		];
+		expect(scoredRowsFrom(rows)).toEqual([
+			{
+				slug: "mstone",
+				trialIndex: 0,
+				companies: [{ domain: "a.com", label: "accept" }],
+				people: [
+					{
+						linkedinUrl: "https://linkedin.com/in/a",
+						company: "a.com",
+						label: "accept",
+					},
+				],
+			},
+		]);
 	});
 });

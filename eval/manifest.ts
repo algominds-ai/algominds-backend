@@ -1,8 +1,21 @@
+import type { ScoredCompanyRow, ScoredPersonRow } from "@eval/scorers";
+
 export const WINNER_RULE =
-	"An arm wins a profile when every correctness gate holds; among arms that " +
-	"clear the gates, lower cost per " +
-	"stored company, then fewer seconds per stored company. Declared before " +
+	"An arm wins a profile when gates_pass holds for the full chain; among " +
+	"arms that clear the gates, higher engine_score wins. Declared before " +
 	"any arm runs; never chosen after seeing the numbers.";
+
+export type ScoredTrialRow = {
+	slug: string;
+	trialIndex: number;
+	companies: readonly ScoredCompanyRow[];
+	people: readonly ScoredPersonRow[];
+};
+
+export type KeyFileVersion = {
+	companyKeyHash: string;
+	peopleKeyHash: string;
+};
 
 export async function sha256Hex(text: string): Promise<string> {
 	const bytes = new TextEncoder().encode(text);
@@ -25,6 +38,8 @@ export type ManifestInput = {
 	finishedAt: string;
 	totalSpendDollars: number;
 	perProfileSpendDollars: Readonly<Record<string, number>>;
+	scoredRows: readonly ScoredTrialRow[];
+	keyFileVersions: Readonly<Record<string, KeyFileVersion>>;
 };
 
 export type Manifest = {
@@ -40,6 +55,8 @@ export type Manifest = {
 	finishedAt: string;
 	totalSpendDollars: number;
 	perProfileSpendDollars: Record<string, number>;
+	scoredRows: readonly ScoredTrialRow[];
+	keyFileVersions: Record<string, KeyFileVersion>;
 	winnerRule: string;
 };
 
@@ -55,9 +72,10 @@ async function hashEntries(
 
 /**
  * The complete, predeclared record of one experiment: what code ran it, what
- * data and config it ran against, what it cost, and the fixed rule that
- * decides a winner — so an arm cannot be re-judged by a metric picked after
- * the numbers were in.
+ * data and config it ran against, what it cost, the fixed rule that decides
+ * a winner, and every row and key file hash a trial scored against — so an
+ * arm cannot be re-judged by a metric picked after the numbers were in, and
+ * a trial can be rescored offline from this alone.
  */
 export async function buildManifest(input: ManifestInput): Promise<Manifest> {
 	return {
@@ -73,6 +91,8 @@ export async function buildManifest(input: ManifestInput): Promise<Manifest> {
 		finishedAt: input.finishedAt,
 		totalSpendDollars: input.totalSpendDollars,
 		perProfileSpendDollars: { ...input.perProfileSpendDollars },
+		scoredRows: input.scoredRows.map((row) => ({ ...row })),
+		keyFileVersions: { ...input.keyFileVersions },
 		winnerRule: WINNER_RULE,
 	};
 }

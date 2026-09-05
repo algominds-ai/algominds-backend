@@ -49,14 +49,26 @@ export type SelectBuyersResult = {
 	costDollars: number;
 };
 
+export type SelectBuyersCompany = {
+	name: string;
+	workforceTotal: number | null;
+};
+
 export type SelectBuyersInput = {
 	description: string | null;
 	buyer: ResolvedBuyer;
 	candidates: readonly Candidate[];
+	company: SelectBuyersCompany;
 };
 
 function rosterLine(candidate: Candidate): string {
 	return `${candidate.id} | ${candidate.title ?? "(no title)"} | ${candidate.location ?? "(no location)"}`;
+}
+
+function companyLine(company: SelectBuyersCompany): string {
+	return company.workforceTotal === null
+		? `company: ${company.name}, headcount unknown`
+		: `company: ${company.name}, ${company.workforceTotal} employees`;
 }
 
 function selectPrompt(input: SelectBuyersInput): string {
@@ -69,6 +81,7 @@ function selectPrompt(input: SelectBuyersInput): string {
 		);
 	}
 	sections.push("<rubric>", input.buyer.rubric ?? "", "</rubric>");
+	sections.push(companyLine(input.company));
 	sections.push("<roster>", ...input.candidates.map(rosterLine), "</roster>");
 	return sections.join("\n");
 }
@@ -94,10 +107,10 @@ function resolvePicks(
 }
 
 /**
- * Sends the roster as `id | title` lines and the buyer rubric to
- * `reasoningModel`, and keeps every model-picked candidate that resolves to
- * a known id. Unknown ids are dropped and counted; a null model reply is
- * zero picks.
+ * Sends the roster as `id | title` lines, the company's own headcount, and
+ * the buyer rubric to `reasoningModel`, and keeps every model-picked
+ * candidate that resolves to a known id. Unknown ids are dropped and
+ * counted; a null model reply is zero picks.
  */
 export async function selectBuyers(
 	input: SelectBuyersInput,

@@ -13,7 +13,6 @@ function planFor(query: string): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,
@@ -126,7 +125,6 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies at seed stage with a small team",
 		angle: "founder-led vertical software",
-		pageQuery: null,
 		recency: null,
 		eventWindowDays: null,
 		recencyDays: null,

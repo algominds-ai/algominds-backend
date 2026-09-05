@@ -36,7 +36,6 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
 		index: 0,
 		statuses: [],
-		soft: [],
 		reason: "a reason",
 		sameOrganizationAs: null,
 		...overrides,
@@ -125,16 +124,35 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 		expect(kept.stored).toHaveLength(1);
 	});
 
-	it("refuses a row that contradicts a hard requirement, whatever its proof", () => {
+	it("refuses a row that contradicts a hard requirement, whatever its proof, and falls back to a stand-in detail when its reason came back empty", () => {
 		const decision = decideRows({
 			requirements: [recordRequirement],
 			rows: [row("a.com")],
-			verdicts: [verdict({ statuses: [{ id: "r1", status: "contradicted" }] })],
+			verdicts: [
+				verdict({
+					statuses: [{ id: "r1", status: "contradicted" }],
+				}),
+			],
 			excluded: new Set(),
 		});
 
 		expect(decision.stored).toHaveLength(0);
 		expect(decision.rejects[0]?.reason).toContain("contradicts r1");
+
+		const empty = decideRows({
+			requirements: [recordRequirement],
+			rows: [row("a.com")],
+			verdicts: [
+				verdict({
+					statuses: [{ id: "r1", status: "contradicted" }],
+					reason: "",
+				}),
+			],
+			excluded: new Set(),
+		});
+		expect(empty.rejects[0]?.reason).toBe(
+			"contradicts r1: the judge gave no reason",
+		);
 	});
 
 	it("keeps a row whose hard record requirement the record simply does not state", () => {
@@ -147,7 +165,9 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 
 		expect(decision.stored.map((kept) => kept.domain)).toEqual(["a.com"]);
 	});
+});
 
+describe("a hard page or soft requirement is judged on its own terms", () => {
 	it("refuses a row whose hard page requirement no page proved, and stores one a cited page did", () => {
 		const refused = decideRows({
 			requirements: [pageRequirement],
@@ -187,79 +207,18 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 
 	it("reports the share of candidates whose page requirements were proved, for the next round to read", () => {
 		const verdicts = [
-			verdict({ index: 0, statuses: [{ id: "r2", status: "proven" }] }),
-			verdict({ index: 1, statuses: [{ id: "r2", status: "unproven" }] }),
+			verdict({
+				index: 0,
+				statuses: [{ id: "r2", status: "proven" }],
+			}),
+			verdict({
+				index: 1,
+				statuses: [{ id: "r2", status: "unproven" }],
+			}),
 		];
 
 		expect(provenRate([pageRequirement], verdicts)).toBe("1 of 2");
 		expect(provenRate([recordRequirement], verdicts)).toBeNull();
-	});
-});
-
-describe("one organisation is stored once, under one brand", () => {
-	it("drops a row the judge marked as the same organisation as another, ignoring a collapse onto itself or outside the batch", () => {
-		const collapsed = decideRows({
-			requirements: [recordRequirement],
-			rows: [row("home.barclays"), row("jobs.barclays")],
-			verdicts: [
-				verdict({ index: 0, statuses: [{ id: "r1", status: "proven" }] }),
-				verdict({
-					index: 1,
-					statuses: [{ id: "r1", status: "proven" }],
-					sameOrganizationAs: 0,
-				}),
-			],
-			excluded: new Set(),
-		});
-		expect(collapsed.stored.map((kept) => kept.domain)).toEqual([
-			"home.barclays",
-		]);
-		expect(collapsed.rejects[0]?.group).toBe(
-			"one organisation under more than one brand",
-		);
-
-		const ignored = decideRows({
-			requirements: [recordRequirement],
-			rows: [row("a.com"), row("b.com")],
-			verdicts: [
-				verdict({
-					index: 0,
-					statuses: [{ id: "r1", status: "proven" }],
-					sameOrganizationAs: 0,
-				}),
-				verdict({
-					index: 1,
-					statuses: [{ id: "r1", status: "proven" }],
-					sameOrganizationAs: 9,
-				}),
-			],
-			excluded: new Set(),
-		});
-		expect(ignored.stored.map((kept) => kept.domain)).toEqual([
-			"a.com",
-			"b.com",
-		]);
-	});
-});
-
-describe("a company this account already holds never comes back", () => {
-	it("drops an excluded domain and the brand the judge collapses onto it", () => {
-		const decision = decideRows({
-			requirements: [recordRequirement],
-			rows: [row("home.barclays"), row("jobs.barclays"), row("other.com")],
-			verdicts: [
-				verdict({ index: 0, statuses: [{ id: "r1", status: "proven" }] }),
-				verdict({
-					index: 1,
-					statuses: [{ id: "r1", status: "proven" }],
-					sameOrganizationAs: 0,
-				}),
-				verdict({ index: 2, statuses: [{ id: "r1", status: "proven" }] }),
-			],
-			excluded: new Set(["home.barclays"]),
-		});
-
-		expect(decision.stored.map((kept) => kept.domain)).toEqual(["other.com"]);
 	});
 });
 

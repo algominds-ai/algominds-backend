@@ -1,71 +1,99 @@
-import type { Verdict } from "@eval/headline";
-import { gatesPass, precision } from "@eval/scorers";
+import type { EngineGates, EngineScore } from "@eval/engine-score";
+import type { TrialOutput } from "@eval/scorers";
+import {
+	buyerCoverage,
+	buyerPrecision,
+	companyPrecision,
+	companyYield,
+	engineQuality,
+	engineScore,
+	gatesPass,
+} from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
-function verdict(overrides: Partial<Verdict> = {}): Verdict {
+function passingGates(): EngineGates {
 	return {
-		runId: "run-1",
-		gates: {
-			noKeyRejectedStored: true,
-			noDuplicateOrganisationGroup: true,
-			provingPassesWhereRequired: true,
-			recordBoundsHold: true,
-			costUnderBar: true,
-			secondsUnderBar: true,
-		},
-		allGatesPass: true,
-		storedCount: 1,
-		precision: 1,
-		unlabelledStoredCount: 0,
-		costPerStoredCompany: 0.1,
-		secondsPerStoredCompany: 10,
+		noKeyRejectedStored: true,
+		noDuplicateOrganisationGroup: true,
+		provingPassesWhereRequired: true,
+		peopleGatesPass: true,
+		bothRunsComplete: true,
+		everyStoredCompanyLabelled: true,
+		everyDeliveredPersonLabelled: true,
+		noRejectedPersonDelivered: true,
+		noOverDelivery: true,
+		costValidAndUnderBar: true,
+		secondsValidAndUnderBar: true,
+	};
+}
+
+function engine(overrides: Partial<EngineScore> = {}): EngineScore {
+	return {
+		acceptedCompanies: 1,
+		acceptedCompaniesWithBuyer: 1,
+		acceptedPeople: 1,
+		deliveredPeopleCount: 1,
+		gates: passingGates(),
+		gatesPass: true,
+		companyYield: 1 / 3,
+		companyPrecision: 1,
+		buyerPrecision: 1,
+		buyerCoverage: 1 / 3,
+		engineQuality: 1 / 3,
+		engineScore: 1 / 3,
+		acceptedPerDollar: 2,
+		acceptedPerMinute: 1,
 		...overrides,
 	};
 }
 
-describe("gatesPass", () => {
-	it("scores 1 when every gate held", () => {
-		expect(
-			gatesPass({ output: { verdict: verdict(), runId: "r", skipped: null } }),
-		).toEqual({
-			name: "gates_pass",
-			score: 1,
-		});
-	});
+function output(overrides: Partial<TrialOutput> = {}): TrialOutput {
+	return {
+		engine: engine(),
+		companiesRunId: "run-1",
+		peopleRunId: "run-2",
+		peopleVerdict: null,
+		totalCostDollars: 1,
+		totalSeconds: 60,
+		skipped: null,
+		scoredCompanies: [],
+		scoredPeople: [],
+		...overrides,
+	};
+}
 
-	it("scores 0 when any gate failed", () => {
-		const failing = verdict({ allGatesPass: false });
-		expect(
-			gatesPass({ output: { verdict: failing, runId: "r", skipped: null } }),
-		).toEqual({
-			name: "gates_pass",
-			score: 0,
+const SCORERS: readonly [
+	string,
+	typeof gatesPass,
+	(engine: EngineScore) => number,
+][] = [
+	["gates_pass", gatesPass, (engine) => (engine.gatesPass ? 1 : 0)],
+	["company_yield", companyYield, (engine) => engine.companyYield],
+	["company_precision", companyPrecision, (engine) => engine.companyPrecision],
+	["buyer_precision", buyerPrecision, (engine) => engine.buyerPrecision],
+	["buyer_coverage", buyerCoverage, (engine) => engine.buyerCoverage],
+	["engine_quality", engineQuality, (engine) => engine.engineQuality],
+	["engine_score", engineScore, (engine) => engine.engineScore],
+];
+
+describe.each(SCORERS)("%s scorer", (name, scorer, expected) => {
+	it(`reports the engine's own ${name}`, () => {
+		const built = engine();
+		expect(scorer({ output: output({ engine: built }) })).toEqual({
+			name,
+			score: expected(built),
 		});
 	});
 
 	it("is null for a trial the budget skipped", () => {
-		expect(
-			gatesPass({ output: { verdict: null, runId: null, skipped: "budget" } }),
-		).toBeNull();
+		expect(scorer({ output: output({ engine: null }) })).toBeNull();
 	});
 });
 
-describe("precision", () => {
-	it("reports the verdict's own precision", () => {
-		const half = verdict({ precision: 0.5 });
+describe("gatesPass", () => {
+	it("scores 0 when the engine's gate failed", () => {
 		expect(
-			precision({
-				output: { verdict: half, runId: "r", skipped: null },
-			}),
-		).toEqual({ name: "precision", score: 0.5 });
-	});
-
-	it("is null when the key has no accepted companies yet", () => {
-		const none = verdict({ precision: null });
-		expect(
-			precision({
-				output: { verdict: none, runId: "r", skipped: null },
-			}),
-		).toBeNull();
+			gatesPass({ output: output({ engine: engine({ gatesPass: false }) }) }),
+		).toEqual({ name: "gates_pass", score: 0 });
 	});
 });

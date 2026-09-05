@@ -31,7 +31,7 @@ function linkedinProvider(
 	id: string,
 	run: (input: LinkedinInput, env: Env) => Promise<LinkedinResult | null>,
 ): Provider<LinkedinInput, LinkedinResult> {
-	return { id, channels: ["linkedin"], cost: 0, run };
+	return { id, run };
 }
 
 function baseDeps(overrides: Partial<EnrichDeps> = {}): EnrichDeps {

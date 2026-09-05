@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { config } from "@/config";
-import type { CompanyRow, SearchResult } from "@/core/companies/gate";
+import type { CompanyRow } from "@/core/companies/gate";
 import { NOT_A_COMPANY_DOMAIN } from "@/core/companies/gate";
 import type { RejectDetail } from "@/core/companies/limits";
 import { entityRejectReason, planConstraints } from "@/core/companies/limits";
@@ -150,12 +150,6 @@ function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 	};
 }
 
-function toSearchResult(result: ExaResult): SearchResult {
-	return {
-		...(result.score !== undefined ? { score: result.score } : {}),
-	};
-}
-
 function toCompanyMatch(result: ExaResult): CompanyMatch {
 	return {
 		id: result.id,
@@ -181,19 +175,27 @@ export function toCompanyData(capture: CompanyCapture): CompanyData {
 	};
 }
 
-const CompanyDataIdSchema = z
-	.object({ result: z.object({ id: z.string().nullish() }).nullish() })
+const CompanyDataSchema = z
+	.object({
+		result: z.object({ id: z.string().nullish() }).nullish(),
+		entity: z.object({ workforceTotal: z.number().nullish() }).nullish(),
+	})
 	.nullish();
 
 /** Reads the Exa organization id a saved company's `data` column captured, or null for a row with no id on record — an agent-sourced company, or one saved before this field existed. */
 export function companyExaId(data: unknown): string | null {
-	const parsed = CompanyDataIdSchema.safeParse(data);
+	const parsed = CompanyDataSchema.safeParse(data);
 	return parsed.success ? (parsed.data?.result?.id ?? null) : null;
+}
+
+/** Reads the headcount a saved company's `data` column captured, or null for a row with no headcount on record. */
+export function companyWorkforceTotal(data: unknown): number | null {
+	const parsed = CompanyDataSchema.safeParse(data);
+	return parsed.success ? (parsed.data?.entity?.workforceTotal ?? null) : null;
 }
 
 export type FilterOutcome = {
 	rows: CompanyRow[];
-	results: SearchResult[];
 	rejects: FindCompaniesReject[];
 	captures: Record<string, CompanyCapture>;
 };
@@ -249,7 +251,6 @@ export function filterEntities(
 ): FilterOutcome {
 	const outcome: FilterOutcome = {
 		rows: [],
-		results: [],
 		rejects: [],
 		captures: {},
 	};
@@ -275,7 +276,6 @@ export function filterEntities(
 		}
 		const row = toCompanyRow(result, entity);
 		outcome.rows.push(row);
-		outcome.results.push(toSearchResult(result));
 		if (row.domain) {
 			outcome.captures[row.domain] = {
 				entity,
