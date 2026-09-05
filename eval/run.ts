@@ -36,7 +36,13 @@ import postgres from "postgres";
 
 const DEV_SERVER_PORT = 8787;
 
-export type RunArgs = { profile: string | null; arm: string; trials: number };
+export type RunArgs = {
+	profile: string | null;
+	arm: string;
+	trials: number;
+	count: number;
+	port: number;
+};
 
 function flagValue(argv: readonly string[], flag: string): string | null {
 	const index = argv.indexOf(flag);
@@ -51,7 +57,21 @@ export function parseArgs(argv: readonly string[]): RunArgs {
 	if (!Number.isInteger(trials) || trials < MIN_TRIALS) {
 		throw new Error(`eval: --trials must be an integer at least ${MIN_TRIALS}`);
 	}
-	return { profile, arm, trials };
+	const count = Number.parseInt(
+		flagValue(argv, "--count") ?? String(COMPANIES_PER_RUN),
+		10,
+	);
+	const port = Number.parseInt(
+		flagValue(argv, "--port") ?? String(DEV_SERVER_PORT),
+		10,
+	);
+	if (!Number.isInteger(count) || count < 1) {
+		throw new Error("eval: --count must be a positive integer");
+	}
+	if (!Number.isInteger(port) || port < 1024) {
+		throw new Error("eval: --port must be an integer above 1023");
+	}
+	return { profile, arm, trials, count, port };
 }
 
 export function selectedProfiles(
@@ -60,11 +80,16 @@ export function selectedProfiles(
 	return profilesFor(slug);
 }
 
-export type Budget = { spent: number; perProfile: Record<string, number> };
+export type Budget = {
+	spent: number;
+	perProfile: Record<string, number>;
+	profileCap: number;
+};
 
-export function newBudget(slugs: readonly string[]): Budget {
+export function newBudget(slugs: readonly string[], scale = 1): Budget {
 	return {
 		spent: 0,
+		profileCap: MAX_PROFILE_SPEND_DOLLARS * scale,
 		perProfile: Object.fromEntries(slugs.map((slug) => [slug, 0])),
 	};
 }
@@ -74,8 +99,8 @@ export function budgetBlock(budget: Budget, slug: string): string | null {
 		return `total spend $${budget.spent.toFixed(2)} at the $${MAX_SPEND_DOLLARS} cap`;
 	}
 	const spentOnProfile = budget.perProfile[slug] ?? 0;
-	if (spentOnProfile >= MAX_PROFILE_SPEND_DOLLARS) {
-		return `${slug} spend $${spentOnProfile.toFixed(2)} at the $${MAX_PROFILE_SPEND_DOLLARS} per-profile cap`;
+	if (spentOnProfile >= budget.profileCap) {
+		return `${slug} spend $${spentOnProfile.toFixed(2)} at the $${budget.profileCap} per-profile cap`;
 	}
 	return null;
 }
@@ -105,11 +130,19 @@ async function syncDatasetsFor(
 
 export type TrialCase = SeededTrial & { bars: ProfileBars };
 
-export function casesFor(seeded: readonly SeededTrial[]): TrialCase[] {
+/** The seeded trials with each profile's bars, scaled by `scale` so a request larger than the default keeps proportional cost and time bars. */
+export function casesFor(
+	seeded: readonly SeededTrial[],
+	scale = 1,
+): TrialCase[] {
 	return seeded.map((trial) => {
 		const profile = profileBySlug(trial.slug);
 		if (!profile) throw new Error(`eval: unknown profile ${trial.slug}`);
-		return { ...trial, bars: profile.bars };
+		const bars: ProfileBars = {
+			maxCostDollars: profile.bars.maxCostDollars * scale,
+			maxSeconds: profile.bars.maxSeconds * scale,
+		};
+		return { ...trial, bars };
 	});
 }
 
@@ -119,8 +152,9 @@ async function runOneTrial(
 	client: ApiClient,
 	sql: postgres.Sql,
 	trial: TrialCase,
+	count: number,
 ): Promise<TrialResult> {
-	const runId = await startCompaniesRun(client, trial.icpId, COMPANIES_PER_RUN);
+	const runId = await startCompaniesRun(client, trial.icpId, count);
 	await waitForRunTerminal(client, runId);
 	const run = await readRunReport(sql, runId);
 	const stored = await readStoredCompanies(sql, runId);
@@ -139,12 +173,17 @@ async function runOneTrial(
 }
 
 /** One trial's task: skip it without spending anything once the budget blocks it, otherwise start, wait, read back and score it, banking what it actually cost. */
-function buildTask(apiUrl: string, sql: postgres.Sql, budget: Budget) {
+function buildTask(
+	apiUrl: string,
+	sql: postgres.Sql,
+	budget: Budget,
+	count: number,
+) {
 	return async (trial: TrialCase): Promise<TrialOutput> => {
 		const blocked = budgetBlock(budget, trial.slug);
 		if (blocked) return { verdict: null, runId: null, skipped: blocked };
 		const client: ApiClient = { baseUrl: apiUrl, apiKey: trial.apiKey };
-		const result = await runOneTrial(client, sql, trial);
+		const result = await runOneTrial(client, sql, trial, count);
 		bankSpend(budget, trial.slug, result.costDollars);
 		return { verdict: result.verdict, runId: result.runId, skipped: null };
 	};
@@ -152,12 +191,16 @@ function buildTask(apiUrl: string, sql: postgres.Sql, budget: Budget) {
 
 type ArmSetup = { seeded: SeededTrial[]; apiUrl: string; stop: () => void };
 
-async function setUpArm(arm: string, trials: number): Promise<ArmSetup> {
+async function setUpArm(
+	arm: string,
+	trials: number,
+	port: number,
+): Promise<ArmSetup> {
 	bootstrapArmSchema(arm);
 	const seeded = await seedArmProfiles(arm, trials);
 	const envUrl = process.env.EVAL_API_URL;
 	if (envUrl) return { seeded, apiUrl: envUrl, stop: () => {} };
-	const server = await startDevServer(arm, DEV_SERVER_PORT);
+	const server = await startDevServer(arm, port);
 	return { seeded, apiUrl: server.url, stop: server.stop };
 }
 
@@ -265,19 +308,27 @@ async function main(): Promise<void> {
 	const args = parseArgs(process.argv.slice(2));
 	const profiles = selectedProfiles(args.profile);
 	const datasetSnapshotIds = await syncDatasetsFor(profiles);
-	const { seeded, apiUrl, stop } = await setUpArm(args.arm, args.trials);
-	const cases = casesFor(seeded).filter((trial) =>
+	const { seeded, apiUrl, stop } = await setUpArm(
+		args.arm,
+		args.trials,
+		args.port,
+	);
+	const scale = args.count / COMPANIES_PER_RUN;
+	const cases = casesFor(seeded, scale).filter((trial) =>
 		profiles.some((profile) => profile.slug === trial.slug),
 	);
 	const sql = postgres(armDatabaseUrl(args.arm), { max: 1 });
-	const budget = newBudget(profiles.map((profile) => profile.slug));
+	const budget = newBudget(
+		profiles.map((profile) => profile.slug),
+		scale,
+	);
 	const startedAt = new Date().toISOString();
 	const commit = gitCommit();
 	const experiment = `${commit.slice(0, 12)}-${args.arm}`;
 	try {
 		const result = await Eval("algo-backend", {
 			data: cases.map((trial) => ({ input: trial })),
-			task: buildTask(apiUrl, sql, budget),
+			task: buildTask(apiUrl, sql, budget, args.count),
 			scores: CODE_SCORERS,
 			experimentName: experiment,
 			metadata: { commit, arm: args.arm },

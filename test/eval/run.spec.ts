@@ -22,6 +22,8 @@ describe("parseArgs", () => {
 			profile: null,
 			arm: "baseline",
 			trials: MIN_TRIALS,
+			count: 3,
+			port: 8787,
 		});
 	});
 
@@ -32,6 +34,8 @@ describe("parseArgs", () => {
 			profile: "mstone",
 			arm: "candidate",
 			trials: 3,
+			count: 3,
+			port: 8787,
 		});
 	});
 
@@ -65,6 +69,7 @@ describe("newBudget", () => {
 		expect(newBudget(["mstone", "aris"])).toEqual({
 			spent: 0,
 			perProfile: { mstone: 0, aris: 0 },
+			profileCap: 2,
 		});
 	});
 });
