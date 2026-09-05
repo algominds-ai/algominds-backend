@@ -159,7 +159,7 @@ type RunContext = { client: ApiClient; sql: postgres.Sql };
 
 type StageContext = { context: RunContext; trial: TrialCase; profile: Profile };
 
-type CompaniesStageResult = {
+export type CompaniesStageResult = {
 	companiesRunId: string;
 	companiesStatus: string;
 	companiesCostDollars: number;
@@ -216,7 +216,7 @@ async function runCompaniesStage(
 	};
 }
 
-type PeopleStageResult = {
+export type PeopleStageResult = {
 	peopleRunId: string | null;
 	peopleStatus: string | null;
 	peopleCostDollars: number;
@@ -278,7 +278,7 @@ async function runPeopleStage(
 	};
 }
 
-function scoreTrial(
+export function scoreTrial(
 	profile: Profile,
 	count: number,
 	companies: CompaniesStageResult,
@@ -294,7 +294,11 @@ function scoreTrial(
 		companyGates: companies.companyGates,
 		companiesStatus: companies.companiesStatus,
 		peopleStatus: people.peopleStatus,
-		peopleGatesPass: people.peopleVerdict?.allGatesPass ?? null,
+		peopleGatesPass: people.peopleVerdict
+			? people.peopleVerdict.gates.runCompleted &&
+				people.peopleVerdict.gates.noKeyRejectedStored &&
+				people.peopleVerdict.gates.everyoneReachable
+			: null,
 		storedCompanies: companies.storedCompanies,
 		deliveredPeople: people.deliveredPeople,
 		requested: count,

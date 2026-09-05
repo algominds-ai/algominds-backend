@@ -56,6 +56,15 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "CEO of a subsidiary (IG Securities) at a company well over 50 people that already has a CMO and a Head of Product listed"
 		},
+		"https://linkedin.com/in/andrew-lawson-6754381": {
+			"label": "accept",
+			"name": "Andrew Lawson",
+			"title": "Group CEO",
+			"company": "fluro.co.uk",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-c2552308e5b0_2026-09-05",
+			"note": "Group CEO of Fluro, a company of about 48 staff, well under the 50-person exception threshold; based in the UK"
+		},
 		"https://linkedin.com/in/andrew-low-ah-kee-b112742": {
 			"label": "reject:not-buyer",
 			"name": "Andrew Low Ah Kee",
@@ -65,6 +74,15 @@
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "CEO of a division (Fanatics Commerce) at a company well over 50 people that already has multiple CMOs and CPOs listed"
 		},
+		"https://linkedin.com/in/andrew-mook-9098703b": {
+			"label": "reject:not-buyer",
+			"name": "Andrew Mook",
+			"title": "Head of Brand Marketing",
+			"company": "midnite.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-7ec247b88d2a_2026-09-05",
+			"note": "Head of Brand Marketing at Midnite; the delivered roster shows a VP, Growth (Jonathan Shaw, accepted) already accountable for growth/conversion, so this brand-specific marketing sub-function does not get elevated to the marketing-owner buyer role"
+		},
 		"https://linkedin.com/in/andyjsmart": {
 			"label": "accept",
 			"name": "Andy Smart",
@@ -73,6 +91,15 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "Chief Product Officer at Monzo, an explicit buyer title"
+		},
+		"https://linkedin.com/in/anna-kinney-32a08a2a": {
+			"label": "accept",
+			"name": "Anna Kinney",
+			"title": "Chief Product Officer",
+			"company": "gettongo.com",
+			"location": "Seattle, United States",
+			"firstSeenRunId": "people_dom-2912f27bef2a_2026-09-05",
+			"note": "Chief Product Officer at gettongo.com, an explicit CPO buyer role"
 		},
 		"https://linkedin.com/in/antoinelenel": {
 			"label": "accept",
@@ -371,6 +398,15 @@
 			"firstSeenRunId": "people_dom-1c8dacf84bc6_2026-09-04",
 			"note": "CEO & Co-Founder of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
 		},
+		"https://linkedin.com/in/john-downie-1b9562": {
+			"label": "accept",
+			"name": "John Downie",
+			"title": "CEO & Founder",
+			"company": "steadypay.co",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-c2552308e5b0_2026-09-05",
+			"note": "CEO & Founder of SteadyPay, a company of about 14 staff, well under the 50-person exception threshold; based in the UK"
+		},
 		"https://linkedin.com/in/johnroneill": {
 			"label": "accept",
 			"name": "John O'Neill",
@@ -641,6 +677,24 @@
 			"firstSeenRunId": "people_dom-513fa36291a3_2026-09-05",
 			"note": "Co-Founder & CEO of Lendwise, a company of about 10 staff, well under the 50-person threshold; based in London, UK"
 		},
+		"https://linkedin.com/in/ryanattfield": {
+			"label": "reject:not-buyer",
+			"name": "Ryan Attfield",
+			"title": "Head of Integrated Marketing Planning",
+			"company": "midnite.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-7ec247b88d2a_2026-09-05",
+			"note": "Head of Integrated Marketing Planning at Midnite; the delivered roster shows a VP, Growth (Jonathan Shaw, accepted) already accountable for growth/conversion, so this marketing-planning sub-function does not get elevated to the marketing-owner buyer role"
+		},
+		"https://linkedin.com/in/ryanmurton": {
+			"label": "reject:not-buyer",
+			"name": "Ryan Murton",
+			"title": "Vice President, Commercial",
+			"company": "midnite.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-7ec247b88d2a_2026-09-05",
+			"note": "Vice President, Commercial at Midnite; a partnerships/commercial-deal function, not the Chief Revenue Officer or another rubric-named role accountable for signup conversion, and the roster already has a VP Growth and Heads/VP of Product filling that accountability"
+		},
 		"https://linkedin.com/in/sabrinaloi": {
 			"label": "accept",
 			"name": "Sabrina Loi",
@@ -712,6 +766,15 @@
 			"location": null,
 			"firstSeenRunId": "people_dom-f59aecfce474_2026-09-04",
 			"note": "MD, Product APAC & ME, a regional role outside the qualifying countries"
+		},
+		"https://linkedin.com/in/shmuel-kaner-5414b9bb": {
+			"label": "accept",
+			"name": "Shmuel Kaner",
+			"title": "CBO",
+			"company": "griffex.com",
+			"location": "Sutton, England, United Kingdom",
+			"firstSeenRunId": "people_dom-7648d2c8b57f_2026-09-05",
+			"note": "CBO (Chief Business Officer) at griffex.com, a 4-staff company; treated as functionally equivalent to the rubric's Chief Revenue Officer/Head of Business Development buyer band"
 		},
 		"https://linkedin.com/in/susan-segal-6aa91b44": {
 			"label": "accept",

@@ -1,0 +1,276 @@
+{
+	"slug": "carta",
+	"icpId": "052615e9-c25b-430c-bade-a65877431b4e",
+	"people": {
+		"https://linkedin.com/in/aaron-ginn-6757ab1a": {
+			"label": "reject:not-buyer",
+			"name": "Aaron Ginn",
+			"title": "CEO & Co-Founder",
+			"company": "hydrahost.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "CEO & Co-Founder at hydrahost.com, a 65-staff company above the roughly-fifty-employee founder-exception threshold, matching the existing reject pattern on similarly-sized founders at helloaria.eu (53) and withassured.com (88)"
+		},
+		"https://linkedin.com/in/akshay-agrawal-57a30aa6": {
+			"label": "accept",
+			"name": "Akshay Agrawal",
+			"title": "CEO, Founder",
+			"company": "onoshealth.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "CEO, Founder of Onos Health, a company of about 21 staff, well under the 50-person threshold where the founder/CEO exception applies"
+		},
+		"https://linkedin.com/in/alan-lee-4150615": {
+			"label": "accept",
+			"name": "Alan Lee",
+			"title": "VP Finance",
+			"company": "primeintellect.ai",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "VP Finance at primeintellect.ai, an explicit finance-owner buyer role"
+		},
+		"https://linkedin.com/in/alex-saroyan": {
+			"label": "accept",
+			"name": "Alex Saroyan",
+			"title": "CEO, Co-Founder",
+			"company": "netris.io",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "CEO, Co-Founder at netris.io, a 37-staff company under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/amolsinghal": {
+			"label": "accept",
+			"name": "Amol Singhal",
+			"title": "Head of Finance & Operations",
+			"company": "civilgrid.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "Head of Finance & Operations at civilgrid.com, an explicit Head of Finance buyer role"
+		},
+		"https://linkedin.com/in/clemens-wessendorff": {
+			"label": "accept",
+			"name": "Clemens Wessendorff",
+			"title": "Co-founder and CEO",
+			"company": "arcintelligence.com",
+			"location": "Berlin, Germany",
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "Co-founder and CEO at arcintelligence.com, an 11-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/cl\u00e9ment-carrier-74009658": {
+			"label": "reject:not-buyer",
+			"name": "Cl\u00e9ment Carrier",
+			"title": "Co-founder & CEO",
+			"company": "helloaria.eu",
+			"location": "Paris, France",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
+			"note": "Co-founder & CEO at helloaria.eu, a 53-staff company that already has a named CFO (Zandre Coetzee); the founder/CEO exception only applies where no finance-owner role exists"
+		},
+		"https://linkedin.com/in/cpeterson42": {
+			"label": "accept",
+			"name": "Carl Peterson",
+			"title": "Co-Founder & CEO",
+			"company": "thundercompute.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Co-Founder & CEO of Thunder Compute, a company of about 10 staff, well under the 50-person threshold"
+		},
+		"https://linkedin.com/in/david-lighton-b027a917": {
+			"label": "accept",
+			"name": "David Lighton",
+			"title": "Founder & CEO",
+			"company": "diameterpay.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "Founder & CEO at diameterpay.com, a 20-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/dr-daniel-rifkin-md-mph-591946a": {
+			"label": "accept",
+			"name": "Dr. Daniel Rifkin, MD, MPH",
+			"title": "Founder/Chief Executive Officer",
+			"company": "ognomy.com",
+			"location": "Buffalo, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Founder/CEO of Ognomy, a company of about 20 staff, well under the 50-person threshold"
+		},
+		"https://linkedin.com/in/eladio-crego-gil-42b4603": {
+			"label": "accept",
+			"name": "Eladio Crego Gil",
+			"title": "CFO",
+			"company": "ipronics.com",
+			"location": "Brussels, Belgium",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
+			"note": "CFO at ipronics.com, an explicit finance-owner buyer role"
+		},
+		"https://linkedin.com/in/erinn-macaulay-51340711": {
+			"label": "reject:not-buyer",
+			"name": "Erinn Macaulay",
+			"title": "Head of Accounts",
+			"company": "onoshealth.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Head of Accounts is not one of the rubric's named finance-function titles (CFO, VP Finance, Head of Finance, Controller), and could as easily be a client-accounts/sales role, a named hard negative"
+		},
+		"https://linkedin.com/in/gabriel-james-safar-44789260": {
+			"label": "accept",
+			"name": "Gabriel-James Safar",
+			"title": "Co-founder and CEO",
+			"company": "tsuga.com",
+			"location": "Paris, France",
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "Co-founder and CEO at tsuga.com, a 41-staff company under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/james-owusu-b1453849": {
+			"label": "accept",
+			"name": "James Owusu",
+			"title": "Founder & CEO",
+			"company": "kord.com",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
+			"note": "Founder & CEO at kord.com, a 21-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/jan-philipp-haas-82379677": {
+			"label": "accept",
+			"name": "Jan Philipp Haas",
+			"title": "Co-Founder & CEO",
+			"company": "conduct.ai",
+			"location": "London, United Kingdom",
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "Co-Founder & CEO at conduct.ai, a 31-staff company under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/jasonliao02": {
+			"label": "accept",
+			"name": "Jason Liao",
+			"title": "Co-Founder and CEO",
+			"company": "mundoai.world",
+			"location": "Canada, Canada",
+			"firstSeenRunId": "people_dom-e68977153720_2026-09-05",
+			"note": "Co-Founder and CEO at mundoai.world, an 18-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/kahlil-lalji-76a30b138": {
+			"label": "accept",
+			"name": "Kahlil Lalji",
+			"title": "CEO & Co-founder",
+			"company": "natural.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
+			"note": "CEO & Co-founder at natural.com, a 17-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/kstoyanov": {
+			"label": "accept",
+			"name": "Konstantin Stoyanov, CFA",
+			"title": "Fractional Chief Financial Officer",
+			"company": "gritt.ai",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "Fractional Chief Financial Officer at gritt.ai, functioning as the company's finance-owner despite the fractional/part-time arrangement"
+		},
+		"https://linkedin.com/in/lindseyb": {
+			"label": "accept",
+			"name": "Lindsey B.",
+			"title": "VP, Strategy & Finance",
+			"company": "karoohealth.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-c7784ab4c45a_2026-09-05",
+			"note": "VP, Strategy & Finance at karoohealth.com, an explicit VP-of-Finance buyer role owning the company's finance function"
+		},
+		"https://linkedin.com/in/marta-rodriguez-blanco-322a052a": {
+			"label": "accept",
+			"name": "Marta Rodr\u00edguez Blanco",
+			"title": "Vice President Finance",
+			"company": "ipronics.com",
+			"location": "Valencia/Val\u00e8ncia, Spain",
+			"firstSeenRunId": "people_dom-bce7b816f3d2_2026-09-05",
+			"note": "Vice President Finance at ipronics.com, an explicit finance-owner buyer role"
+		},
+		"https://linkedin.com/in/mikeboydbrowne": {
+			"label": "accept",
+			"name": "Mike Browne",
+			"title": "VP of Finance",
+			"company": "flaglerhealth.io",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3652c1700b36_2026-09-05",
+			"note": "VP of Finance at flaglerhealth.io, an explicit finance-owner buyer role"
+		},
+		"https://linkedin.com/in/nickknuppe": {
+			"label": "accept",
+			"name": "Nick Knuppe",
+			"title": "Founder & CEO",
+			"company": "neno.co",
+			"location": "Amsterdam, Netherlands",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
+			"note": "Founder & CEO at neno.co, a 19-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/nitesh-shroff-08855148": {
+			"label": "reject:not-buyer",
+			"name": "Nitesh Shroff",
+			"title": "CEO and Co-Founder",
+			"company": "arintra.com",
+			"location": "San Francisco, United States",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
+			"note": "CEO and Co-Founder at arintra.com, a 120-staff company well above the fifty-employee threshold where the founder/CEO exception applies; at this size the finance-leader band, not the CEO, is the buyer"
+		},
+		"https://linkedin.com/in/patrick-driscoll-3487a315": {
+			"label": "accept",
+			"name": "Patrick Driscoll",
+			"title": "Chief Financial Officer",
+			"company": "qureight.com",
+			"location": "Cambridge, United Kingdom",
+			"firstSeenRunId": "people_dom-8ff8c7104e49_2026-09-05",
+			"note": "Chief Financial Officer at qureight.com, an explicit CFO buyer role"
+		},
+		"https://linkedin.com/in/patrick-nelli-02b544a": {
+			"label": "accept",
+			"name": "Patrick Nelli",
+			"title": "CEO and Co-Founder",
+			"company": "alignedmarketplace.com",
+			"location": "New York City, United States",
+			"firstSeenRunId": "people_dom-cee6ee25e75c_2026-09-05",
+			"note": "CEO and Co-Founder at alignedmarketplace.com, a 22-staff company well under the fifty-employee threshold with no finance-owner role in evidence"
+		},
+		"https://linkedin.com/in/rahul-shivkumar-04138252": {
+			"label": "reject:not-buyer",
+			"name": "Rahul Shivkumar",
+			"title": "Co-Founder",
+			"company": "withassured.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Assured has about 88 staff, above the 50-person threshold where the founder/CEO exception applies, and Co-Founder alone is not a named finance-function title"
+		},
+		"https://linkedin.com/in/varunakrishnamurthy": {
+			"label": "reject:not-buyer",
+			"name": "Varun Krishnamurthy",
+			"title": "Co-Founder & CEO",
+			"company": "withassured.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Assured has about 88 staff, above the 50-person threshold where the founder/CEO exception applies, and CEO alone is not one of the rubric's named finance-function titles once that exception no longer applies"
+		},
+		"https://linkedin.com/in/wade-ang-a89b48": {
+			"label": "accept",
+			"name": "Wade Ang",
+			"title": "CFO",
+			"company": "augusthealth.com",
+			"location": "Mountain View, United States",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
+			"note": "CFO at augusthealth.com, an explicit finance-owner buyer role"
+		},
+		"https://linkedin.com/in/william-messina-032917175": {
+			"label": "accept",
+			"name": "Will Messina",
+			"title": "Co-Founder & CEO",
+			"company": "grailpay.com",
+			"location": "New York, United States",
+			"firstSeenRunId": "people_dom-3a220b8bf56c_2026-09-05",
+			"note": "Co-Founder & CEO of GrailPay, a company of about 16 staff, well under the 50-person threshold"
+		},
+		"https://linkedin.com/in/zandrecoetzee": {
+			"label": "accept",
+			"name": "Zandre Coetzee CA(SA)",
+			"title": "Chief Financial Officer",
+			"company": "helloaria.eu",
+			"location": "Belgium, Belgium",
+			"firstSeenRunId": "people_dom-7c18a221b6d2_2026-09-05",
+			"note": "Chief Financial Officer at helloaria.eu, an explicit finance-owner buyer role"
+		}
+	}
+}

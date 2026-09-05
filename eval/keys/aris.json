@@ -57,11 +57,11 @@
 			}
 		},
 		"apex-its.com": {
-			"label": null,
+			"label": "accept",
 			"name": "Apex IT Services",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: the record's own fitReason flags that Apex also offers 'specialized IT staffing', leaving MSP-vs-staffing-firm culture fit unclear",
+			"note": "the description lists System Integration, EDI, BI/DWH-ETL, e-Business, and Web Services as its named IT-delivery lines, with 'Specialized IT staffing' listed as an additional 'plus' offering rather than the core business, so managed IT services is the primary line",
 			"record": {
 				"industry": null,
 				"description": "Apex IT Services, LLC (www.apex-its.com) is a CMMI Level 3 SBA 8(A) certified IT services firm delivering quality IT services in System Integration [SI], Electronic Data Interchange [EDI], Business Intelligence [BI]-Data Warehousing [DWH] Technologies - Extract Transform Load, [ETL] e-Business Technologies, Web Services and many others plus Specialized IT staffing for our clients. \r\n\r\nApex IT Services is equipped to meet your needs at your location or from our offices supported by our fully trained and staffed Technology Center. Our impressive client list is the result of a keen insight into expectations and exceeding them. Our expertise and resources can impact every stage of an Information Technology development or implementation project. \r\n\r\nWant to know more? Contact us to find out how we can enable IT for you ... Please email us at info@apex-its.com or call 443-445-2212 for immediate sales and other consulting related information.",
@@ -272,6 +272,24 @@
 				"fitReason": "VAR/MSP with 314 employees serving external IT clients across Western US."
 			}
 		},
+		"computersupport.com": {
+			"label": "accept",
+			"name": "StratusPointIT",
+			"firstSeenRunId": "companies_8856cf1e-5bba-45e2-91cb-14a3dcaa98d1_2026-09-05",
+			"lastSeenAt": "2026-09-05T07:22:47.581Z",
+			"note": "StratusPointIT, 32 staff, US-based managed IT support and cybersecurity provider serving small and medium organizations, clearly above the 10-staff floor with no staffing-firm caveat",
+			"record": {
+				"industry": null,
+				"description": "Founded in 2006, StratusPointIT’s mission is to harness the power of technology and help business executives get the most out of their technology investment, on premise or in the cloud. The company's ITAnyWhere Support offering provides workstation, network, server, cloud, backup, security and advisory services to hundreds of businesses so they can stay competitive with the innovative use of technology. StratusPointIT provides professional IT support and cybersecurity to small and medium organizations headquartered in MA, RI, NH, CT, VT, etc.",
+				"workforceTotal": 32,
+				"country": "United States",
+				"foundedYear": 2006,
+				"citedPage": "https://computersupport.com/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": ""
+			}
+		},
 		"comsolutionsusa.com": {
 			"label": "accept",
 			"name": "ComSolutions-Technical Services",
@@ -291,11 +309,11 @@
 			}
 		},
 		"coretechs.it": {
-			"label": null,
+			"label": "accept",
 			"name": "Coretechs",
 			"firstSeenRunId": "companies_dom-9e1f7ce76264_2026-09-04",
 			"lastSeenAt": "2026-09-04T03:28:21.351Z",
-			"note": "undecidable: the record's own fitReason flags headcount as exactly 10, not clearly above the 'more than roughly 10' floor",
+			"note": "managed IT/cybersecurity/virtual CIO firm in Baton Rouge with exactly 10 staff; matches the existing e3itservices.com precedent (also 10 staff) that this satisfies the 'more than roughly 10' floor",
 			"record": {
 				"industry": null,
 				"description": "Coretechs specializes in managed IT services, cybersecurity, virtual CIO, and physical security for businesses who need faster response times and want friendly, knowledgeable professionals who listen and have their best interests in mind.",
@@ -345,11 +363,11 @@
 			}
 		},
 		"dartmsp.com": {
-			"label": null,
+			"label": "accept",
 			"name": "DART Tech",
 			"firstSeenRunId": "companies_dom-307366386aed_2026-09-03",
 			"lastSeenAt": "2026-09-03T01:02:58.904Z",
-			"note": "undecidable: the record's description talks about 'full-service interactive media solutions' rather than managed IT, which does not match the company's own MSP branding, and there is no fitReason to resolve the mismatch",
+			"note": "the delivered people confirm managed services is a real line of business: Aaron Hebeisen holds the title Director of Managed Services and John Lorelle is Regional President, both at dartmsp.com, overriding the description's vague 'interactive media solutions' framing",
 			"record": {
 				"industry": null,
 				"description": "At DART Tech, nothing is more important to us than your success. We provide full-service interactive media solutions that are customized to achieve measurable results. We offer a unique combination of solutions and technical proficiency to make sure you get the maximum return on your technology investment.\n\nDART Tech has supported the Tampabay and surrounding areas Since 1982. Our strive for putting the client FIRST is the foundation of our company.",

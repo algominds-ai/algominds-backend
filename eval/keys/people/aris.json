@@ -1,0 +1,186 @@
+{
+	"slug": "aris",
+	"icpId": "5e8ca999-8a24-442a-853b-23c11bfd5d05",
+	"people": {
+		"https://linkedin.com/in/aaron-hebeisen-a8a1406": {
+			"label": "accept",
+			"name": "Aaron Hebeisen",
+			"title": "Director of Managed Services",
+			"company": "dartmsp.com",
+			"location": "Tampa, United States",
+			"firstSeenRunId": "people_dom-f934d1c02d7a_2026-09-05",
+			"note": "Director of Managed Services at dartmsp.com, an explicit director-of-managed-services buyer title"
+		},
+		"https://linkedin.com/in/adam-kaplan-93b999": {
+			"label": "accept",
+			"name": "Adam Kaplan",
+			"title": "President, Managing Partner and Cofounder",
+			"company": "wheelhouseit.com",
+			"location": "Wantagh, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
+			"note": "President, Managing Partner and Cofounder at wheelhouseit, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/charley-boudreau-255ab86": {
+			"label": "accept",
+			"name": "Charley Boudreau",
+			"title": "VP of IT Services & Chief Operating Officer",
+			"company": "computersupport.com",
+			"location": "Boston, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05",
+			"note": "VP of IT Services & Chief Operating Officer at computersupport.com, an explicit COO/VP-of-services buyer role"
+		},
+		"https://linkedin.com/in/dave-mcgilvray-3280973": {
+			"label": "accept",
+			"name": "Dave McGilvray",
+			"title": "Director of Helpdesk & Field Support",
+			"company": "computersupport.com",
+			"location": "Wilmington, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05",
+			"note": "Director of Helpdesk & Field Support at computersupport.com, a director who owns the MSP's core technical service-delivery headcount"
+		},
+		"https://linkedin.com/in/frank-w-vitetta-704b8980": {
+			"label": "accept",
+			"name": "Frank W. Vitetta",
+			"title": "Director of Service Delivery",
+			"company": "wheelhouseit.com",
+			"location": "Fort Lauderdale, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
+			"note": "Director of Service Delivery at wheelhouseit, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/gani-zebersky-847b784": {
+			"label": "accept",
+			"name": "Gani Zebersky",
+			"title": "Chief Executive Officer",
+			"company": "wheelhouseit.com",
+			"location": "Hollywood, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
+			"note": "Chief Executive Officer at wheelhouseit, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/hilary-wallace-26075819": {
+			"label": "accept",
+			"name": "Hilary LeBrun",
+			"title": "Chief Operating Officer",
+			"company": "paragusit.com",
+			"location": "Holyoke, United States",
+			"firstSeenRunId": "people_dom-f934d1c02d7a_2026-09-05",
+			"note": "Chief Operating Officer at paragusit.com, an explicit COO buyer role"
+		},
+		"https://linkedin.com/in/jay-thomas-7b2182180": {
+			"label": "accept",
+			"name": "Jay Thomas",
+			"title": "Vice President",
+			"company": "sharedit.com",
+			"location": "Quad Cities Metropolitan Area, United States",
+			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
+			"note": "stored evidence shows a clear IT-services career progression at sharedit.com (IT Team Leader 2011, Director of IT Services 2018, Vice President 2026), confirming the VP role continues the same technical/service-delivery track rather than sales or marketing"
+		},
+		"https://linkedin.com/in/jess-wolfe": {
+			"label": "accept",
+			"name": "Jess Wolfe, PMP",
+			"title": "Director of Operations",
+			"company": "valortech.io",
+			"location": "Milwaukee, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
+			"note": "Director of Operations at valortech, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/john-lorelle-742a444": {
+			"label": "accept",
+			"name": "John Lorelle",
+			"title": "Regional President",
+			"company": "dartmsp.com",
+			"location": "Tampa, United States",
+			"firstSeenRunId": "people_dom-f934d1c02d7a_2026-09-05",
+			"note": "Regional President at dartmsp.com, an explicit regional-president-at-a-roll-up buyer title"
+		},
+		"https://linkedin.com/in/kevin-spargo-a46153127": {
+			"label": "accept",
+			"name": "Kevin Spargo",
+			"title": "Chief Operating Officer",
+			"company": "csu-it.com",
+			"location": "Owings Mills, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05",
+			"note": "Chief Operating Officer at csu-it.com, an explicit COO buyer role"
+		},
+		"https://linkedin.com/in/kevin-stutting-7992aaa": {
+			"label": "accept",
+			"name": "Kevin Stutting",
+			"title": "President",
+			"company": "sharedit.com",
+			"location": "Bettendorf, United States",
+			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
+			"note": "President at sharedit.com, an 18-staff MSP well under the roughly-150 threshold where the owner/president personally decides hiring spend"
+		},
+		"https://linkedin.com/in/max-minkov": {
+			"label": "accept",
+			"name": "Max Minkov",
+			"title": "Chief Executive Officer",
+			"company": "csu-it.com",
+			"location": "Owings Mills, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05",
+			"note": "Chief Executive Officer at csu-it.com, a 14-staff MSP well under the roughly-150 threshold where the owner/CEO personally decides hiring spend"
+		},
+		"https://linkedin.com/in/oleg-kaufman-5a69204": {
+			"label": "accept",
+			"name": "Oleg Kaufman",
+			"title": "VP Tech Services",
+			"company": "onwardtek.com",
+			"location": "Chicago, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05",
+			"note": "VP Tech Services at onwardtek.com, an explicit VP-of-managed-services buyer role"
+		},
+		"https://linkedin.com/in/rick-sherman-111a2b4": {
+			"label": "accept",
+			"name": "Rick Sherman",
+			"title": "VP of Operations",
+			"company": "ferrumit.com",
+			"location": "Elgin, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
+			"note": "VP of Operations at ferrumit, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/robert-schuster-7ba38210": {
+			"label": "accept",
+			"name": "Robert Schuster",
+			"title": "Director of IT Operations Manager",
+			"company": "netopsconsulting.com",
+			"location": "Wooster, Ohio, United States",
+			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
+			"note": "Director of IT Operations Manager at netopsconsulting, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/ryan-sullender-3554b31ba": {
+			"label": "accept",
+			"name": "Ryan Sullender",
+			"title": "Managing Partner Operations Manager",
+			"company": "e3itservices.com",
+			"location": "Cherry Hill, New Jersey, United States",
+			"firstSeenRunId": "people_dom-13cd8103a466_2026-09-05",
+			"note": "Managing Partner Operations Manager at e3itservices.com, a 10-staff MSP where a managing partner personally decides hiring spend"
+		},
+		"https://linkedin.com/in/sawnicklincoln": {
+			"label": "accept",
+			"name": "Nick Lincoln",
+			"title": "Director of Operations",
+			"company": "saw.it",
+			"location": "Lake Charles, United States",
+			"firstSeenRunId": "people_dom-13cd8103a466_2026-09-05",
+			"note": "Director of Operations at saw.it, an explicit director-of-operations buyer title"
+		},
+		"https://linkedin.com/in/slava-ruderman-b016991": {
+			"label": "accept",
+			"name": "Slava Ruderman",
+			"title": "President",
+			"company": "onwardtek.com",
+			"location": "Chicago, United States",
+			"firstSeenRunId": "people_dom-415aed5c614e_2026-09-05",
+			"note": "President at onwardtek.com, a 17-staff MSP well under the roughly-150 threshold where the owner/president personally decides hiring spend"
+		},
+		"https://linkedin.com/in/tony-drews-a969284": {
+			"label": "accept",
+			"name": "Tony Drews",
+			"title": "Vice President, Software Support Services",
+			"company": "sharedit.com",
+			"location": "Bettendorf, United States",
+			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
+			"note": "Vice President, Software Support Services at sharedit.com, a VP-of-service-delivery-equivalent buyer role"
+		}
+	}
+}

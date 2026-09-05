@@ -25,6 +25,7 @@
 			"name": "Adyen",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "4,487 staff, Netherlands, fintech payments platform; Adyen's own blog quotes running Cilium CNI across 100+ Kubernetes clusters, dated 2026-07-08 within the window",
 			"record": {
 				"industry": "Financial services",
 				"description": "Adyen (AMS: ADYEN) is the financial technology platform of choice for leading companies. By providing end-to-end payments capabilities, data-driven insights, and financial products in a single global solution, Adyen helps businesses achieve their ambitions faster. With offices around the world, Adyen works with the likes of Meta, Uber, H&M, eBay, and Microsoft.\n\nFor support visit: https://support.adyen.com",
@@ -35,8 +36,25 @@
 				"citedDate": "2026-07-08",
 				"quote": "At Adyen, we run Cilium CNI across all our 100+ Kubernetes clusters.",
 				"fitReason": "Fintech platform, Amsterdam, 4487 staff, runs Cilium CNI across 100+ in-house Kubernetes clusters."
+			}
+		},
+		"allegro.eu": {
+			"label": "accept",
+			"name": "Allegro",
+			"firstSeenRunId": "companies_bf0c3bb5-4717-43ac-a826-2ea96aa4c074_2026-09-05",
+			"lastSeenAt": "2026-09-05T23:01:45.378Z",
+			"record": {
+				"industry": null,
+				"description": "Allegro is the most popular shopping platform in Poland and the largest e-commerce platform of European origin.\nWe operate a marketplace model which means that customers can buy whatever they need from over 135,000 merchants, who can list an unlimited number of offers on our platform.\n\nWe offer products in all key categories including Automotive, Fashion, Home&Garden, Electronics, Books and Collectibles, Kids or Health and Beauty. Each month, 22 million customers visit our platform, which is equivalent to almost 80% of all Internet users in Poland. They can choose from over 250m offers at the most attractive prices with maximum convenience including fast and free deliveries under the Allegro Smart! programme, modern financial services (Allegro Pay), as well as Poland\u2019s widest 50k pickup points network.\n\nIn 2019 we celebrated the 20th anniversary of Allegro in Poland.\nFor over two decades, we have been serving consumers and promoting the idea of entrepreneurship in one of the most innovative areas of the economy. We have come a long way from an auction site for private individuals looking for a modern alternative to their local flea market. Today, we are a vibrant international marketplace platform for professional sellers and a must-have sales channel for top international brands and retailers.\n\nWe currently employ more than 7000 employees and each of us ranks among the best experts in their field. Whether it\u2019s in Technology, Customer Experience, Commerce, Delivery Experience or many other teams, we\u2019re all proud to say that Allegro employs the best people on the market and all of us are ready to admit that it\u2019s #goodtobehere.\n\nESG Report 2022: https://allegro.pl/zobacz/esg\n\nCareer at Allegro: https://jobs.allegro.eu/ Allegro Tech: https://allegro.tech/\n\nBrand Journal: magazyn.allegro.pl\n\nSupport & help: pomoc.allegro.pl // facebook.com/allegro",
+				"workforceTotal": 3442,
+				"country": "Poland",
+				"foundedYear": 1999,
+				"citedPage": "https://jobs.allegro.eu/offer/software-engineer-2-technical-platform-4/",
+				"citedDate": "2025-04-08T00:00:00.000Z",
+				"quote": "The\u00a0**Technical Platform Teams**\u00a0provide the foundations for the structure and operations of the entire Allegro platform. This is where we build tools, development and infrastructure stacks and automation systems used by more than a hundred\u00a0**Allegro\u00a0**product teams and by the customer support department. We develop the full stack, starting from our own server room and private cloud, through containerization, mobile apps and application software to tools which offer AI support to our customers. At the same time, we are responsible for the performance, availability and security of the entire platform.\n...\nBy joining us, you will have a real impact on the infrastructure at\u00a0**Allegro**. You will design and implement highly scalable distributed solutions to facilitate business teams.\n...\n* We use, among others, Java 17, Kotlin, Coroutines, Scala, Spring, Reactive Programming, Spark, Dataproc, Microservices architecture supporting high request rates on our business data bus. Utilizing extensive Big Data resources on GCP and incorporating Machine Learning into our operational workflows.\n...\n* Microservices \u2013a few thousand microservices and 1.\n...\nm+ rps on our business data bus\n...\n* Our internal ecosystem is based on self-service and widely used tools, such as Kubernetes, Docker, Consul, GitHub or GitHub Actions. This will allow you, from day one, to develop software using any language, architecture and scale, restricted only by your creativity and imagination.\n...\n* Our deployment environment combines private Data Centers (tens of thousands of servers) and Public Clouds (Google Cloud and Microsoft Azure)",
+				"fitReason": "Certificate lifecycle/PKI governance practices not mentioned anywhere in the company's record or evidence."
 			},
-			"note": "4,487 staff, Netherlands, fintech payments platform; Adyen's own blog quotes running Cilium CNI across 100+ Kubernetes clusters, dated 2026-07-08 within the window"
+			"note": "3,442 staff, Poland, the largest e-commerce marketplace of European origin; the company's own job posting quotes a self-service internal ecosystem built on Kubernetes across a few thousand microservices doing 1m+ rps, dated 2025-04-08 within the window. Being listed on the Warsaw exchange is not excluded by this profile's requirements, unlike Carta's public-company exclusion; several already-accepted form3 entries are public companies."
 		},
 		"appdirect.com": {
 			"label": "accept",
@@ -54,6 +72,24 @@
 				"citedDate": "2025-02-13T00:00:00.000Z",
 				"quote": null,
 				"fitReason": "Blog confirms in-house Kubernetes/microservices since 2016 operated by AppDirect's own engineering team for its marketplace platform."
+			}
+		},
+		"appfolio.com": {
+			"label": null,
+			"name": "AppFolio",
+			"firstSeenRunId": "companies_c42ebc5a-5d44-403c-9e5f-4aee46c64556_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:14:37.042Z",
+			"note": "undecidable: the citedPage is an AWS blog about AppFolio's Kafka/MSK streaming migration; the only Kubernetes reference is a single line in an employee's bio (AWS infrastructure automation using Terraform and Kubernetes), not a description of production Kubernetes at scale across a distributed, multi-service architecture",
+			"record": {
+				"industry": null,
+				"description": "AppFolio (NASDAQ: APPF) AppFolio is the technology leader powering the future of the real estate industry. Our innovative platform and trusted partnership enable our customers to connect communities, increase operational efficiency, and grow their business. For more information about AppFolio, visit appfolio.com.",
+				"workforceTotal": 1436,
+				"country": "United States",
+				"foundedYear": null,
+				"citedPage": "https://aws.amazon.com/blogs/big-data/how-appfolio-transformed-its-data-streaming-architecture-with-amazon-msk-express-brokers/",
+				"citedDate": "2026-08-13T00:00:00.000Z",
+				"quote": "In this post, you learn how AppFolio adopted Amazon MSK Express brokers to replace hours-long rebalances and manual storage planning with a streaming platform that scales automatically.\n...\nAt AppFolio, real-time data is the foundation of the company\u2019s ability to deliver powerful, intelligent solutions that power the real estate industry. To achieve this level of performance, AppFolio engineered a modern streaming data architecture built on Amazon MSK with Express brokers. This infrastructure enables high-throughput, real-time applications at scale. With Amazon MSK Express brokers, AppFolio reliably ingests massive volumes of diverse data, including Change Data Capture (CDC) and server-side events, and makes it available to downstream consumers, such as real-time fraud detection, financial reporting, and automated property management workflows, within seconds of origin.\n...\nUntil early 2025, AppFolio ran their streaming platform on a single Amazon MSK cluster with Standard brokers, supporting both customer-facing and internal workloads. The architecture served them well through earlier growth phases. As AppFolio\u2019s data platform evolved to support increasingly complex use cases and higher throughput, two characteristics of their workload led them to look for a more elastic streaming foundation.\n...\nwith Amazon MSK\n...\nbrokers\n...\nAfter evaluating their options, AppFolio chose Amazon MSK Express brokers as the foundation for their next-generation streaming platform. Express brokers are a broker type offered under MSK Provisioned. They include pay-as-you-go elastic storage that scales automatically, intelligent partition rebalancing, and Kafka configuration defaults tuned for production workloads. Express brokers mapped directly to the requirements AppFolio identified:\n...\nAs part of the migration, AppFolio also took the opportunity to rethink how the cluster was being used. Rather than recreating a single shared cluster on Express brokers, they segmented their MSK clusters by workload type. This gives customer-facing and internal workloads dedicated resources, providing better isolation and more predictable performance for each workload class.\n...\nAppFolio\u2019s current architecture consists of multiple Amazon MSK clusters with Express brokers, segmented by workload type. Each cluster is sized and tuned for its specific traffic pattern, providing improved isolation and more predictable performance. The following diagram shows the deployment.\n\n Figure 2: Current architecture with workload-segmented Amazon MSK clusters using Express brokers \n\n##\n...\nSplitting their streaming traffic into workload-segmented clusters has given AppFolio more predictable performance. Customer-facing and internal workloads now run on dedicated infrastructure, and each cluster can be sized and tuned for its own traffic pattern.\n...\nBy using Amazon MSK Express brokers and adopting a workload-segmented cluster design, AppFolio has built a streaming foundation that scales elastically with their data growth and adapts quickly to changes in traffic. The pay-as-you-go storage and faster scaling of Express brokers let AppFolio\u2019s platform team focus engineering effort on building new capabilities for customers, rather than on Kafka capacity planning. As AppFolio continues to expand its platform for the real estate industry, the Amazon MSK Express brokers infrastructure provides a scalable foundation for future growth.\n...\nDevarsh is a Data Engineer at AppFolio, where he builds and operates large-scale, production-grade streaming data infrastructure that powers real-time analytics across the organization. His areas of focus include change data capture (CDC) pipelines, Apache Flink, Snowflake, and AWS infrastructure automation using Terraform and Kubernetes.\n...\nAarjvi is a Sr Technical Account Manager and container specialist at AWS, based in the San Francisco Bay Area. She helps customers solve cloud challenges and build scalable, reliable solutions for generative AI workloads. Her expertise spans Kubernetes architecture, GPU accelerated workloads, and helping enterprises navigate AI infrastructure at scale.",
+				"fitReason": "No evidence found regarding certificate lifecycle or PKI management practices at AppFolio."
 			}
 		},
 		"asos.com": {
@@ -97,6 +133,7 @@
 			"name": "bet365",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "5,136 staff, UK, online gambling; a trade-press article quotes bet365's own core services running in Kubernetes via GKE, dated 2025-12-03 within the window",
 			"record": {
 				"industry": "Online gambling",
 				"description": "We\u2019re one of the world\u2019s leading online gambling companies, revolutionising the industry since 2000. Founded by Denise Coates CBE, we now employ over 10,000 people and serve over 120 million customers in 26 languages. \n \nWe empower our employees to push boundaries and explore new ideas, cultivating a culture that celebrates and rewards creativity. This offers employees a wealth of growth opportunities, giving them the opportunity to make a real impact in the world of online gambling. As a forward-thinking company, we\u2019re breaking new ground in software innovation too, redefining what\u2019s possible for our global worldwide.\n \nOur focus on In-Play betting has solidified our market-leading position, featuring more than 1.38 million In-Play sporting events a year. With over 750 concurrent sporting fixtures at peak and more live sports streamed than anyone else in Europe (750,000), we handle over 6 million HTTP requests daily and process more than 1.5 million bets per hour at peak.",
@@ -107,8 +144,25 @@
 				"citedDate": "2025-12-03",
 				"quote": "The core services are written in Go and run in containerised environments managed through Kubernetes (via GKE).",
 				"fitReason": "UK online gambling operator, ~5136 staff, runs Go core services on Kubernetes/GKE; no PKI detail found."
-			},
-			"note": "5,136 staff, UK, online gambling; a trade-press article quotes bet365's own core services running in Kubernetes via GKE, dated 2025-12-03 within the window"
+			}
+		},
+		"bhvr.com": {
+			"label": "accept",
+			"name": "Behaviour Interactive",
+			"firstSeenRunId": "companies_9448172f-65e4-48c1-bd26-b03a2e0cd6a2_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:58:22.583Z",
+			"note": "1,017 staff in Canada, gaming vertical; the company's own careers page describes an in-house DevOps/Cloud role deploying and managing production Kubernetes, dated 2025-10-06 within the window, matching the same no-PKI-evidence boilerplate seen on other accepted entries like zooplus.com and zynga.com",
+			"record": {
+				"industry": "Video games",
+				"description": "Behaviour Interactive is the largest Canadian gaming studio, with more than 1,300 employees worldwide. Behaviour is best known for its flagship franchise, the multiplayer survival horror game Dead by Daylight\u2122, which has entertained over 60 million players across multiple platforms. The studio is currently expanding its portfolio of original IP with multiple projects. Behaviour has also established itself as one of the world\u2019s foremost providers of external development services. The company has partnered with many of the gaming industry\u2019s leaders, including Microsoft, Sony, EA, Warner, Netflix, and Take-Two, among many others. Over 30 years, Behaviour has developed an unparalleled, award-winning culture. The company was named one of the Best Places To Work in Canada by GamesIndustry.biz, and has been recognized with Deloitte Canada\u2019s Enterprise Fast 15 and Best Managed Company awards. Headquartered in Montreal, Behaviour has expanded its global presence with studios in Toronto (Behaviour Toronto), Seattle (Midwinter Entertainment), and the United Kingdom (Behaviour UK \u2013 North and Behaviour UK \u2013 South) and in Rotterdam (Behaviour Rotterdam). For more information, visit www.bhvr.com. ",
+				"workforceTotal": 1017,
+				"country": "Canada",
+				"foundedYear": 1992,
+				"citedPage": "https://www.bhvr.com/poste/senior-devops-cloud-specialist-confidential-co-development-project/",
+				"citedDate": "2025-10-06",
+				"quote": "Deploy and manage containerized applications using Kubernetes in a production environment, ensuring clusters are properly maintained, scalable, and secure.",
+				"fitReason": "No evidence found regarding Behaviour Interactive's certificate lifecycle or PKI governance practices."
+			}
 		},
 		"blog.gov.uk": {
 			"label": "reject:no-such-event",
@@ -162,6 +216,24 @@
 				"citedDate": "2025-11-10",
 				"quote": "This talk presents BT\u2019s real-world journey migrating from traditional GitLab and Terraform-driven deployments to a fully GitOps-based workflow using Flux, rolled out across more than 30 Kubernetes clusters at telco scale.",
 				"fitReason": "BT Group is a UK telecom with in-house GitOps team running 30+ Kubernetes clusters at telco scale."
+			}
+		},
+		"cariad.technology": {
+			"label": "accept",
+			"name": "CARIAD",
+			"firstSeenRunId": "companies_60a55872-7a75-4324-ad22-6c67669f13fb_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:15:18.669Z",
+			"note": "3,422 staff, Germany, automotive software subsidiary of Volkswagen Group; the company's own news page quotes Azure Kubernetes Service as the heart of its platform, dated 2026-02-24 within the window",
+			"record": {
+				"industry": "Automotive software",
+				"description": "CARIAD is the automotive software company of the Volkswagen Group. Building automotive software platforms and digital customer functions for iconic brands like Audi, Volkswagen and Porsche, CARIAD supports the Volkswagen Group in becoming the global automotive tech driver.\n\nIn software centers in Germany, the USA, China, Estonia and India, around 5,000 experts work on making the automotive experience safer, more sustainable and more comfortable for everyone. The company\u2019s products include advanced driver assistance systems, a unified infotainment platform, software functions for charging and driving performance, as well as data, backend and cloud solutions, and digital services in and around the vehicle.\u00a0\n\nWell-known cars like the Volkswagen ID. Buzz and ID.7, the Audi Q6 e-tron and the Porsche Macan 4 Electric are already equipped with the latest CARIAD technology. #WeAreCARIAD ",
+				"workforceTotal": 3422,
+				"country": "Germany",
+				"foundedYear": 2020,
+				"citedPage": "https://cariad.technology/de/en/news/stories/How-to-deliver-connected-car-services.html",
+				"citedDate": "2026-02-24",
+				"quote": "Azure Kubernetes Service (AKS) is the heart of the platform: it ensures applications run reliably in large-scale environments using standardized container packages.",
+				"fitReason": "CARIAD builds automotive software for VW brands, 3422 staff in Germany, using AKS as core platform."
 			}
 		},
 		"cash.app": {
@@ -259,6 +331,7 @@
 			"name": "eDreams ODIGEO",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "1,724 staff, Spain, online travel subscription platform; the company's own careers page quotes evolving its multi-cluster, multi-region Kubernetes platforms, dated 2026-05-20 within the window",
 			"record": {
 				"industry": "Online travel",
 				"description": "eDreams ODIGEO is the world\u2019s leading travel subscription platform. It pioneered Prime, the first and largest travel subscription programme, which has topped over 8 million members since launching in 2017. Prime members are subscribed to global travel, gaining access to a comprehensive multi-product offering for all their travel needs including hotels, rail, flights, dynamic packages, and car rental, among others compounded by industry-leading flexibility features and exclusive, member-only benefits. This entire Prime experience is powered by a proprietary, industry-leading AI platform that delivers a hyper-personalised service to its members. Listed on the Spanish Stock Market, the Company operates in 44 markets through its renowned brands eDreams, GO Voyages, Opodo, Travellink, and the metasearch engine Liligo to deliver a smarter, hyper-personalised, and comprehensive travel experience globally.",
@@ -269,14 +342,14 @@
 				"citedDate": "2026-05-20",
 				"quote": "Contribute to the evolution of our Kubernetes based platforms, including multi cluster and multi region setups",
 				"fitReason": "Travel subscription platform, 1724 employees in Barcelona, multi-cluster Kubernetes per careers page; no cert-mgmt data."
-			},
-			"note": "1,724 staff, Spain, online travel subscription platform; the company's own careers page quotes evolving its multi-cluster, multi-region Kubernetes platforms, dated 2026-05-20 within the window"
+			}
 		},
 		"elisa.com": {
 			"label": "accept",
 			"name": "Elisa",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "2,159 staff, Finland, telecom operator; a vendor case study quotes transforming Elisa's fixed-line authentication system into a containerised Kubernetes solution, dated 2025-08-14 within the window",
 			"record": {
 				"industry": "Telecommunications",
 				"description": "Teht\u00e4v\u00e4mme on tehd\u00e4 digitaalisesta el\u00e4m\u00e4st\u00e4 sujuvampaa. V\u00e4hent\u00e4\u00e4 kitkaa, karsia h\u00e4lin\u00e4\u00e4 ja lis\u00e4t\u00e4 luottamusta. Jotta jokaiselle vapautuu enemm\u00e4n tilaa onnellisuudelle. Yht\u00e4 lailla t\u00f6iss\u00e4 kuin vapaa-ajalla.\u200b\n\u200b\nTervetuloa tutustumaan tekoihimme, ideoihimme ja ihmisiimme.\u200b\n\u200b\n---\u200b\n\u200b\nWe're here to make digital life better. To reduce friction, cut through clutter, and build trust. So that everyone has more freedom to shape their own happiness. Both at work and outside it.\u200b\n\u200b\nFollow us to explore our ideas, meet our experts, and see our work in action.\u200b",
@@ -287,8 +360,7 @@
 				"citedDate": "2025-08-14",
 				"quote": "Earlier this year, the Radiator team was approached by one of our long-time Tier 1 operator customers, Elisa, to transform their existing fixed-line authentication Radiator AAA setup into a containerised solution running in Kubernetes environment.",
 				"fitReason": "Finnish telecom, 2159 employees; case study shows containerised Kubernetes AAA system for Tier 1 operator."
-			},
-			"note": "2,159 staff, Finland, telecom operator; a vendor case study quotes transforming Elisa's fixed-line authentication system into a containerised Kubernetes solution, dated 2025-08-14 within the window"
+			}
 		},
 		"eonenergy.com": {
 			"label": null,
@@ -344,6 +416,42 @@
 				"fitReason": "Online gambling operator, 3284 staff in US; vendor blog confirms AWS Kubernetes migration but no ownership or PKI detail."
 			}
 		},
+		"farfetch.com": {
+			"label": "accept",
+			"name": "FARFETCH",
+			"firstSeenRunId": "companies_2dbc4001-ed34-49ec-ab9c-49d1069a1c00_2026-09-05",
+			"lastSeenAt": "2026-09-05T17:08:58.805Z",
+			"note": "2,074 staff, UK, luxury-fashion e-commerce marketplace; the company's own job posting describes operating Linux and Kubernetes-based infrastructure systems",
+			"record": {
+				"industry": "Luxury fashion marketplace",
+				"description": "Farfetch is a leading global marketplace for the luxury fashion industry. The Farfetch Marketplace connects customers in over 190 countries and territories with items from more than 1,400 of the world\u2019s best brands, boutiques, and department stores, delivering a truly unique shopping experience and access to the most extensive selection of luxury on a global marketplace. \n\nFarfetch\u2019s leadership team is composed of Pankaj Srivastava (Chief Financial Officer), Stephen Eggleston (Chief Commercial Officer), Erik Rehn (Chief Operating & Technology Officer), and Sachin Kapur (Chief of Staff).\n\nLearn more about us: \nwww.aboutfarfetch.com",
+				"workforceTotal": 2074,
+				"country": "United Kingdom",
+				"foundedYear": 2007,
+				"citedPage": "https://jobs.lever.co/farfetch/20b5afe3-b498-4d6d-ab75-21677dbdebdc",
+				"citedDate": null,
+				"quote": "Operate and maintain a wide range of infrastructure components, including Linux and Kubernetes-based systems",
+				"fitReason": "No evidence on certificate lifecycle or PKI governance practices provided."
+			}
+		},
+		"fullscript.com": {
+			"label": "accept",
+			"name": "Fullscript",
+			"firstSeenRunId": "companies_d39c6b44-e95e-4e64-bc66-2fc4f3c49b4f_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:44:37.190Z",
+			"note": "609 staff, Canada, health SaaS platform; the company's own engineering blog quotes running almost their entire infrastructure on Kubernetes, dated 2025-01-14 within the window",
+			"record": {
+				"industry": null,
+				"description": "Fullscript believes in the power of whole person care and is fully committed to helping all providers deliver it. We help create an ongoing cycle of whole person care by giving providers a single platform that brings together industry-leading labs, clinically effective supplements, and an intuitive suite of tools to promote adherence and outcomes.\n\nwww.fullscript.com",
+				"workforceTotal": 609,
+				"country": "Canada",
+				"foundedYear": 2011,
+				"citedPage": "https://builders.fullscript.com/posts/fullscript-wrapped-2024",
+				"citedDate": "2025-01-14T00:00:00.000Z",
+				"quote": "We run almost our entire infrastructure on Kubernetes. It has proven to be a robust, easily managed, and infinitely scalable solution for our growth. It powers everything from our cloud and local development environments to our ad-hoc staging environments and production. It has allowed us to introduce new features for our developers to leverage, such as functions, without being tied to a specific cloud vendor.\n...\nAs mentioned, Kubernetes powers our \u201cCloud Development Environments\u201d. Last year, these became the default for all of our developers. Hosting backend application dependencies remotely ensures our developers aren\u2019t tied to one machine. They have proven to be portable, durable, and highly scalable. This switch helped improve the developer satisfaction of their \u201clocal\u201d environment setup from 4.12 to 4.43, one of our most significant areas of improvement last year.\n...\nDevelopers interact with these environments using our primary developer tool, \u201cRX.\u201d Our platform engineering team tirelessly works to allow our developers to get their jobs done without worrying about dependencies, backend services, or the nuances of various cloud services. RX enables new developers to get going in under an hour and allows us to roll out massive changes quickly, like enabling HTTPS in development in days, not weeks. Originally developed to support our central monolith, the team has made remarkable progress in supporting other applications we develop in\n...\nlast year.\n...\nIn 2024, we typically have 15\u201330 instances of the application running at any given time, but on our absolute busiest days, we can easily scale out to 150 pods, or more. Similarly, background job pods scale from 0 to 130+ daily, processing millions of jobs a year. All of this is managed in a Terraform repository, the contents of which are checked against production daily to prevent drift.",
+				"fitReason": "Health SaaS platform, 609 employees, Canada; engineering blog confirms Kubernetes runs almost entire production infrastructure."
+			}
+		},
 		"geotab.com": {
 			"label": "accept",
 			"name": "Geotab",
@@ -367,6 +475,7 @@
 			"name": "GitLab",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "2,335 staff, US, DevOps SaaS platform; GitLab's own blog quotes deploying containerized GitLab components via Kubernetes and Helm, dated 2025-12-01 within the window",
 			"record": {
 				"industry": "DevOps software",
 				"description": "GitLab is the Intelligent Orchestration Platform where software teams and their AI agents stay in flow to amplify their capacity for innovation. Together, they automate repetitive tasks to plan, build, secure, test, deploy and maintain software. With GitLab, software teams spend less time on coordination overhead and more time on the next big idea.\n\nGitLab Duo Agent Platform provides AI agents that automate tasks across the software lifecycle. Agents handle code generation, security analysis, code review, CI/CD troubleshooting, and custom workflows \u2014 while teams maintain control through enterprise governance.\n\nBuild what's next with us. Explore open roles and join our talent community: https://about.gitlab.com/jobs/",
@@ -377,8 +486,7 @@
 				"citedDate": "2025-12-01",
 				"quote": "Kubernetes: Deploys containerized GitLab components via our Helm chart.",
 				"fitReason": "GitLab is a SaaS DevOps platform, 2335 staff in SF, runs Kubernetes-based infra for its own customers."
-			},
-			"note": "2,335 staff, US, DevOps SaaS platform; GitLab's own blog quotes deploying containerized GitLab components via Kubernetes and Helm, dated 2025-12-01 within the window"
+			}
 		},
 		"gocardless.com": {
 			"label": "reject:no-such-event",
@@ -403,6 +511,7 @@
 			"name": "Motive",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "6,246 staff, US, fleet-management SaaS (automotive vertical); Motive's own engineering blog quotes running fully distributed, containerized AI inference across Kubernetes, dated 2025-02-25 within the window",
 			"record": {
 				"industry": "Fleet management",
 				"description": "Motive empowers the people who run physical operations with tools to make their work safer, more productive, and more profitable. For the first time ever, safety, operations and finance teams can manage their drivers, vehicles, equipment, and fleet related spend in a single system. \n\nWe serve nearly 100,000 customers, across a wide range of industries including construction, field service, energy, trucking and logistics, and the public sector, among others.\n\nPlease visit gomotive.com or email us at feedback@gomotive.com for more info.",
@@ -413,14 +522,14 @@
 				"citedDate": "2025-02-25",
 				"quote": "Building on the Triton framework with considerable optimizations and design choices, and running in a fully distributed and containerized fashion across Kubernetes, allows us to continually scale with the product and our customer base without a corresponding rise in operational costs.",
 				"fitReason": "Fleet SaaS platform, 6246 employees in US, in-house Kubernetes engineering evidenced by Medium blog; no cert-mgmt data."
-			},
-			"note": "6,246 staff, US, fleet-management SaaS (automotive vertical); Motive's own engineering blog quotes running fully distributed, containerized AI inference across Kubernetes, dated 2025-02-25 within the window"
+			}
 		},
 		"grammarly.com": {
 			"label": "accept",
 			"name": "Grammarly",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "701 staff, US, AI writing SaaS; Grammarly's own engineering blog quotes migrating its core text-processing platform to a Kubernetes-based data plane, dated 2025-07-24 within the window",
 			"record": {
 				"industry": "Business software",
 				"description": "Grammarly stands with Ukraine. We invite you to do the same. Here are some ways you can help: gram.ly/WeStandWithUkraine \n---\nGrammarly is the world\u2019s leading AI writing assistance company trusted by over 40 million people and 50,000 organizations every day. From instantly creating a first draft to perfecting every message, Grammarly helps people at 96% of the Fortune 500 get their point across\u2014and get results\u2014without compromising security or privacy. We believe that great writing gets work done. \n\nGrammarly\u2019s product offerings\u2014Grammarly Business, Grammarly Premium, Grammarly Free, and Grammarly for Education\u2014work where you do, delivering contextually relevant writing support across over 500,000 apps and websites. \n\nFounded in 2009, Grammarly is No. 7 on the Forbes Cloud 100, one of TIME\u2019s 100 Most Influential Companies, one of Fast Company\u2019s Most Innovative Companies in AI, and one of Inc.\u2019s Best Workplaces. Grammarly offers a dynamic hybrid working model. This approach helps foster trust, innovation, and a strong team culture, with the flexibility of working from home, whenever you need focus time.\n",
@@ -431,8 +540,7 @@
 				"citedDate": "2025-07-24",
 				"quote": "When we completed the migration of our text processing platform (i.e., the core services that analyze and improve users\u2019 writing, which we call the data plane) from a legacy container service to our new Kubernetes-based data plane on AWS, we expected the usual growing pains.",
 				"fitReason": "SaaS writing tool, 701 employees in San Francisco, in-house Kubernetes data plane per engineering blog; no cert-mgmt data."
-			},
-			"note": "701 staff, US, AI writing SaaS; Grammarly's own engineering blog quotes migrating its core text-processing platform to a Kubernetes-based data plane, dated 2025-07-24 within the window"
+			}
 		},
 		"guidewire.com": {
 			"label": "accept",
@@ -450,6 +558,60 @@
 				"citedDate": "2025-04-07",
 				"quote": "This improvement enhances security and makes it easier for OCM to integrate with cloud-native environments, especially for teams running EKS in production.",
 				"fitReason": "Guidewire is a 3184\u2011employee SaaS insurance platform in the US running production EKS clusters for direct insurer customers."
+			}
+		},
+		"hackerrank.com": {
+			"label": "accept",
+			"name": "HackerRank",
+			"firstSeenRunId": "companies_0b3c43c9-f0d7-4d19-9fc4-21a1124df2e9_2026-09-05",
+			"lastSeenAt": "2026-09-05T07:31:47.696Z",
+			"note": "582 staff, US, developer-hiring SaaS platform; the company's own engineering blog quotes EKS as central to its infrastructure, dated 2025-01-09 within the window",
+			"record": {
+				"industry": "Developer hiring",
+				"description": "HackerRank is a technology hiring platform that is the standard for assessing developer skills for 2500+ companies around the world. HackerRank helps companies hire skilled developers and innovate faster by enabling tech recruiters and hiring managers to objectively evaluate talent at every stage of the recruiting process.",
+				"workforceTotal": 582,
+				"country": "United States",
+				"foundedYear": 2012,
+				"citedPage": "https://engineering.hackerrank.com/empowering-business-success-through-seamless-eks-upgrades/",
+				"citedDate": "2025-01-09",
+				"quote": "At HackerRank, AWS Elastic Kubernetes Service (EKS) is central to our infrastructure, supporting critical applications and services with scalability, performance, and security at its core.",
+				"fitReason": "No evidence provided about HackerRank's certificate lifecycle or PKI governance practices."
+			}
+		},
+		"harness.io": {
+			"label": "accept",
+			"name": "Harness",
+			"firstSeenRunId": "companies_941cd5ee-6f38-40ba-8dec-8355389a6d2e_2026-09-05",
+			"lastSeenAt": "2026-09-05T18:25:50.359Z",
+			"note": "1,238 staff, US, software-delivery SaaS platform; the company's own engineering blog describes its Manager service running in a Kubernetes cluster with detailed blue-green Kubernetes deployment architecture, dated 2026-03-23 within the window",
+			"record": {
+				"industry": null,
+				"description": "Harness is a rapidly growing startup that is disrupting the software delivery market. The Harness Software Delivery Platform includes product modules for every aspect of software delivery, including: Continuous Integration, Continuous Delivery, Feature Flags, Cloud Cost Management, Service Reliability Management, Security Testing Orchestration, Chaos Engineering, Software Engineering Insights, Continuous Error Tracking, Code Repository, Internal Developer Portal, Software Supply Chain Assurance, Infrastructure as Code Management and AI/ML infused throughout with AI Development Assistant (AIDA). The platform is designed to help companies accelerate their cloud initiatives as well as their adoption of containers and orchestration tools like Kubernetes and Amazon ECS and make software delivery easier, giving devs their nights and weekends back.",
+				"workforceTotal": 1238,
+				"country": "United States",
+				"foundedYear": 2017,
+				"citedPage": "https://www.harness.io/blog/how-harness-gets-ship-done-with-zero-downtime-and-continuous-delivery",
+				"citedDate": "2026-03-23T00:00:00.000Z",
+				"quote": "# How Harness Gets Ship Done With Zero Downtime and CD | Harness Blog\n...\nHarness achieved zero downtime deployments by supporting multiple active versions of its Manager and Delegates, ensuring compatibility and seamless upgrades without disrupting ongoing customer executions. This approach, akin to Blue-Green deployment but more flexible, allows for instant rollback and daily production deployments, with rollbacks utilized twice in the last four weeks.\n...\nHarness has a key component called Manager which is responsible for orchestrating pipeline and workflow executions. Manager is a scaled out, multi-tenant service which coordinates with Delegates for execution of workflow steps.\n...\nDelegates are Harness managed processes running on the customers\u2019 premises. This is a critical piece of Harness architecture which enables Harness to orchestrate complex workflows in customers\u2019 environments without the need to have access to customers\u2019 resources (only customer delegates need to have access to customer resources).\n...\nManager is a multi-tenant service which runs in a Kubernetes Cluster. Delegates are standalone processes which run at customers\u2019 premises. There may be thousands of delegate processes (multiple delegates per customer) and this will increase by an order of magnitude as we grow. The delegates sit on customers\u2019 premises in diverse environments and varying quality of network connectivity. While Manager, being a central service, can upgrade more reliably and much quicker, the upgrade process of delegates takes a variable amount of time to converge. This creates a unique challenge for our upgrade process.\n...\nTo achieve seamless upgrades we went with approach to support multiple active versions. All the entities involved in an Execution are aware of their version; and only compatible versions do participate in an execution.\n...\nLet\u2019s zoom in to Manager side implementation. The following diagram depicts the Traffic flow for Manager, which is a Kubernetes deployment. It has a Load Balancer, Ingress Controller, Kubernetes Service, and Manager Pods.\n...\nWe create a version specific Deployment, Service, and Ingress object for every Manager version we deploy. Traffic from a Delegate comes to the same version of Manager pod due to HTTP header-based Ingress rules. In addition we have a Primary Service, which points to a particular version of Manager pods at a time. All customer traffic goes to the primary service.\n...\nWhen a new version needs to be deployed, we keep the old versions running and in parallel bring up the new version (shown in green in above diagram), both at manager and delegate side (this is akin to Blue-Green but more flexible as it can have more than two versions active).\n...\nAll existing executions keep progressing on the previous version without disruption. No customer request hits the new version yet since the Primary Service still points to the older version. This gives delegates ample opportunity to bring up processes with the new version and register themselves with the new Manager.\n...\nWhen the verification is completed the new version is primed and ready to serve customer requests with all Delegate connectivity up. At this time Primary Service is updated to point to the new version and new calls from users start going to the new version. See the following diagram.\n...\nKeeping the old version gives us additional capability of instant rollback. Since all the delegates of the old version are still up and connected to the old version of Manager, rollback simply requires flipping Primary Service back to the old version of Manager. This saves us warmup time to bring up the delegate processes discussed earlier.\n...\nOn the delegate side, we have a similar capability of running multiple versions in parallel. An agent [called watcher] on the delegate box takes a goal state of desired versions and makes sure those versions are up and running on the delegate box. Each of these delegate processes connect to their corresponding version of Managers using HTTP header-based routing.\n...\nOf course we use Harness for deploying Harness, and the following shows an execution of our own deployment\n...\n1. Teardown n-1 version of Manager / Delegate\n2. Deploy n+1 version\n3. Verify the service health on n+1\n4. Switch Primary to n+1\n...\nThis mechanism enables us to achieve zero downtime, anytime upgrades of Harness. Our production deployment happens once per day. Rollback mechanism has been used twice in last 4 weeks.",
+				"fitReason": "No evidence describing Harness's certificate lifecycle or PKI governance practices."
+			}
+		},
+		"hioscar.com": {
+			"label": "reject:unreachable",
+			"name": "Oscar Health",
+			"firstSeenRunId": "companies_fa5badb5-a274-497e-bb92-f4344af5ba84_2026-09-05",
+			"lastSeenAt": "2026-09-05T16:11:23.727Z",
+			"note": "the record's own fitReason says health insurance isn't among the listed reportable-downtime verticals",
+			"record": {
+				"industry": "Health insurance",
+				"description": "Oscar Health is a leading healthcare technology company, whose mission is to make a healthier life accessible and affordable for all.",
+				"workforceTotal": 1705,
+				"country": "United States",
+				"foundedYear": 2012,
+				"citedPage": "https://medium.com/oscar-tech/tackling-the-challenge-of-a-new-claims-system-part-2-07159a0d7c57",
+				"citedDate": "2024-10-02",
+				"quote": "In addition, this is a cloud-native platform built on AWS and leveraging EKS as the container orchestrator.",
+				"fitReason": "Health insurance isn't among the listed reportable-downtime verticals; no certificate-management evidence was found for Oscar Health."
 			}
 		},
 		"home.saxo": {
@@ -506,6 +668,24 @@
 				"fitReason": "Nordics ERP/SaaS vendor, headcount fits; SaaS K8s evidence proven; customer\u2011ownership unclear, cert lifecycle unproven."
 			}
 		},
+		"konghq.com": {
+			"label": null,
+			"name": "Kong",
+			"firstSeenRunId": "companies_941cd5ee-6f38-40ba-8dec-8355389a6d2e_2026-09-05",
+			"lastSeenAt": "2026-09-05T18:25:50.359Z",
+			"note": "undecidable: the only citation is Kong's own engineering blog about building the Kong Gateway Operator, a Kubernetes-native tool for managing Konnect entities; this demonstrates Kubernetes-tooling engineering work but does not confirm Kong itself runs production Kubernetes at scale for its own operations, the same product-feature-versus-own-infrastructure gap flagged for softwareag.com",
+			"record": {
+				"industry": null,
+				"description": "No AI without APIs.\n\nKong Inc., a leading developer of API and AI connectivity technologies, is building the connectivity layer for AI. Trusted by the Fortune 500 and AI-native startups alike, Kong\u2019s unified API and AI platform enables organizations to secure, manage, accelerate, govern, and monetize the flow of intelligence across APIs and AI traffic \u2014 on any model, any cloud.",
+				"workforceTotal": 756,
+				"country": "United States",
+				"foundedYear": 2017,
+				"citedPage": "https://konghq.com/blog/engineering/managing-konnect-entities-from-k8s-clusters",
+				"citedDate": "2024-12-18T00:00:00.000Z",
+				"quote": "How We Built It: Managing Konnect Entities from K8s Clusters with KGO | Kong Inc.\n\nDecember 18, 2024\n...\n# # How We Built It: Managing Konnect Entities from K8s Clusters with KGO \n\nPatryk Ma\u0142ek Sr Software Engineer , Kong\n...\nWe recently released [Kong Gateway Operator 1.4](https://konghq.com/blog/product-releases/kong-gateway-operator-1-4) Kong Gateway Operator 1.4 with support for managing Konnect entities from within the Kubernetes clusters. This means users can now manage their Konnect configurations declaratively, through Kubernetes resources powered by Kong\u2019s [Custom Resource Definition](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) Custom Resource Definition s. For example, here\u2019s how you can use a KongConsumer resource in Kubernetes to configure a Consumer in Konnect.\n...\nYou can read more about using the Operator to declaratively manage Konnect in the [Kong Gateway Operator docs](https://docs.konghq.com/gateway-operator/latest/guides/konnect-entities/architecture/) Kong Gateway Operator docs. In this blog post, we\u2019ll go through the design of this feature and how we\u2019ve built it.\n...\nstrongly typed resources to work with\n...\nAn alternative was to define a new, isolated API Group dedicated to Konnect. This would allow for a clear partition between Konnect and self-hosted Kubernetes configuration but it would require users to learn, install, and manage yet another set of CRDs. We wanted to avoid that so we\u2019ve decided to use the first approach.\n...\n- Anything that lives as part of a control plane\u2019s configuration is still going to use ``configuration.konghq.com`` API Group,\n\n- Anything else that constitutes an entity on its own in Konnect will live in a brand new API Group: ``konnect.konghq.com``\n...\nthat they are\n...\nsupporting resources without\n...\nthat the object\n...\n## ## Konnect SDK \n\nThe next piece of the puzzle is the actual communication with Konnect and the underlying Konnect API types. For this, we use our [sdk-konnect-go package](https://github.com/Kong/sdk-konnect-go/) sdk-konnect-go package. \n\nThanks to [speakeasy\u2019s Go SDK generation](https://www.speakeasy.com/docs/sdk-design/golang/methodology-go) speakeasy\u2019s Go SDK generation, this SDK is almost entirely generated from our OpenAPI spec which is the source of truth for our APIs. This allows us to focus on the robustness of our [kubernetes operator ](https://konghq.com/blog/learning-center/what-is-a-kubernetes-operator) kubernetes operator and leave the API specification to teams that provide those.\n...\nFollowing [Kubernetes operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) Kubernetes operator pattern \u2014 as we\u2019ve done so for every other controller in our operator \u2014we\u2019ve designed a control loop which takes the provided resource spec (the desired state) and aims to progress the Konnect entity state (the observed state) to match the former.\n...\nWe hope that this was insightful and now you know how Kong Gateway Operator manages Konnect entities from Kubernetes clusters.\n...\n- [Kong Gateway Operator\u2019s GitHub repository](https://github.com/Kong/gateway-operator) Kong Gateway Operator\u2019s GitHub repository\n\n- [Kubernetes configuration GitHub repository](https://github.com/Kong/kubernetes-configuration) Kubernetes configuration GitHub repository \n\n# # Configuring a Kubernetes Application on Kong Konnect \n\n Hello, everyone! Viktor Gamov, a developer advocate with Kong here. In this article, I would like to show you how to set up service connectivity using Kong Konnect and Kubernetes . I will deploy an application in Kubernetes, configure a runtime t\n...\n# # Building a First-Class Kubernetes Experience in Kong Konnect \n\n Simplify operations and scale with confidence To unlock Kubernetes\u2019 full potential, many enterprises are relying on three key building blocks available in Kong Konnect today: Kubernetes Ingress Controllers: Ingress controllers are used for managing\n...\n# # Insights into Kubernetes Deployments with Kong Ingress Controller \n\n This blog addresses the common challenges organizations face with fragmented API management in Kubernetes environments and presents Kong Konnect combined with the Kong Ingress Controller (KIC) as a comprehensive solution. We'll highlight the issues\n...\n# Configuring a Kubernetes Application on Kong Kon\n...\nHello, everyone! Viktor Gamov, a developer advocate with Kong here. In this article, I would like to show you how\n...\nset up service connectivity using Kong Konnect and Kubernetes . I will deploy an application in Kubernetes, configure a runtime t\n...\nSimplify operations and scale with confidence To unlock Kubernetes\u2019 full potential, many enterprises are relying on three key building blocks available in Kong Konnect today: Kubernetes Ingress Controllers: Ingress controllers are used for managing\n...\nThis blog addresses the common challenges organizations face with fragmented API management in Kubernetes environments and presents Kong Konnect combined with the Kong Ingress Controller (KIC) as a comprehensive solution. We'll highlight the issues\n\n Hello, everyone! Viktor Gamov, a developer advocate with Kong here. In this article, I would like to show you how to set up service connectivity using Kong Konnect and Kubernetes . I will deploy an application in Kubernetes, configure a runtime t",
+				"fitReason": "No evidence describing Kong's certificate lifecycle or PKI governance practices."
+			}
+		},
 		"kraken.tech": {
 			"label": "accept",
 			"name": "Kraken",
@@ -529,6 +709,7 @@
 			"name": "lastminute.com",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "1,158 staff, Switzerland, online travel operator; an AWS case study quotes moving stateless microservices on their EKS clusters to Spot Instances with Karpenter, dated 2025-11-17 within the window",
 			"record": {
 				"industry": "Travel technology",
 				"description": "lastminute.com is the European leader in Dynamic Holiday Packages.\nOur mission is to design, deliver and take responsibility for curated, integrated travel experiences so people can travel with confidence. Thanks to the iconic brand lastminute.com and a rich portfolio of vertical brands, we meet the most diverse needs of travellers across the entire holiday experience. As one of the few fully licensed European tour operators, we offer unlimited real-time travel combinations thanks to our proprietary Dynamic Holiday Packaging engine, providing additional customer protection and exclusive deals. lastminute.com N.V. is a publicly traded company listed under the ticker symbol, LMN on the SIX Swiss Exchange.\n",
@@ -539,8 +720,25 @@
 				"citedDate": "2025-11-17",
 				"quote": "For their Amazon Elastic Kubernetes Service (Amazon EKS) clusters, they identified stateless microservices that did not require long-running executions and moved them from on-demand to Amazon EC2 Spot Instance, leveraging Karpenter as an orchestrator to maximize savings and efficiency.",
 				"fitReason": "Swiss travel operator, 1158 employees, runs EKS microservices with Karpenter in-house; no PKI mention."
-			},
-			"note": "1,158 staff, Switzerland, online travel operator; an AWS case study quotes moving stateless microservices on their EKS clusters to Spot Instances with Karpenter, dated 2025-11-17 within the window"
+			}
+		},
+		"lifeatspotify.com": {
+			"label": "accept",
+			"name": "Spotify",
+			"firstSeenRunId": "companies_c42ebc5a-5d44-403c-9e5f-4aee46c64556_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:14:37.042Z",
+			"note": "8,921 staff, Sweden, media/audio-streaming platform; the kubernetes.io CNCF case study describes migrating from a homegrown orchestrator to production Kubernetes at scale (10M requests/sec on the largest service), dated 2025-02-19 within the window",
+			"record": {
+				"industry": null,
+				"description": "Deliver creativity to the world -- one note, one voice, one idea at a time.\n\nAt Spotify, we focus relentlessly on building the best and most valuable experience available anywhere, enhancing every moment by connecting the world to the art and the creatives who shape it.\n\nSpotify transformed music listening forever when it launched in Sweden in 2008. Discover, manage and share over 70m tracks for free, or upgrade to Spotify Premium to access exclusive features including offline mode, improved sound quality, and an ad-free music listening experience. \n\nToday, Spotify is the most popular global audio streaming service with 365m users, including 165m subscribers across 178 markets. We are the largest driver of revenue to the music business today.",
+				"workforceTotal": 8921,
+				"country": "Sweden",
+				"foundedYear": 2006,
+				"citedPage": "https://kubernetes.io/zh-cn/case-studies/spotify/",
+				"citedDate": "2025-02-19T00:00:00.000Z",
+				"quote": "Spotify Case Study | Kubernetes\n...\nSpotify: An Early Adopter of Containers, Spotify Is Migrating from Homegrown Orchestration to Kubernetes\n...\nLaunched in 2008, the audio-streaming platform has grown to over 200 million monthly active users across the world. \"Our goal is to empower creators and enable a really immersive listening experience for all of the consumers that we have today\u2014and hopefully the consumers we'll have in the future,\" says Jai Chakrabarti, Director of Engineering, Infrastructure and Operations. An early adopter of microservices and Docker, Spotify had containerized microservices running across its fleet of VMs with a homegrown container orchestration system called Helios. By late 2017, it became clear that \"having a small team working on the features was just not as efficient as adopting something that was supported by a much bigger community,\" he says.\n...\n\"We saw the amazing community that had grown up around Kubernetes, and we wanted to be part of that,\" says Chakrabarti. Kubernetes was more feature-rich than Helios. Plus, \"we wanted to benefit from added velocity and reduced cost, and also align with the rest of the industry on best practices and tools.\" At the same time, the team wanted to contribute its expertise and influence in the flourishing Kubernetes community. The migration, which would happen in parallel with Helios running, could go smoothly because \"Kubernetes fit very nicely as a complement and now as a replacement to Helios,\" says Chakrabarti.\n...\nThe team spent much of 2018 addressing the core technology issues required for a migration, which started late that year and is a big focus for 2019. \"A small percentage of our fleet has been migrated to Kubernetes, and some of the things that we've heard from our internal teams are that they have less of a need to focus on manual capacity provisioning and more time to focus on delivering features for Spotify,\" says Chakrabarti. The biggest service currently running on Kubernetes takes about 10 million requests per second as an aggregate service and benefits greatly from autoscaling, says Site Reliability Engineer James Wen. Plus, he adds, \"Before, teams would have to wait for an hour to create a new service and get an operational host to run it in production, but with Kubernetes, they can do that on the order of seconds and minutes.\" In addition, with Kubernetes's bin-packing and multi-tenancy capabilities, CPU utilization has improved on average two- to threefold.\n...\nAn early adopter of microservices and Docker, Spotify had containerized microservices running across its fleet of VMs since 2014. The company used an open source, homegrown container orchestration system called Helios, and in 2016-17 completed a migration from on premise data centers to Google Cloud. Underpinning these decisions, \"We have a culture around autonomous teams, over 200 autonomous engineering squads who are working on different pieces of the pie, and they need to be able to iterate quickly,\" Chakrabarti says. \"So for us to have developer velocity tools that allow squads to move quickly is really important.\"\n...\nAnother plus: \"Kubernetes fit very nicely as a complement and now as a replacement to Helios, so we could have it running alongside Helios to mitigate the risks,\" says Chakrabarti. \"During the migration, the services run on both, so we're not having to put all of our eggs in one basket until we can validate Kubernetes under a variety of load circumstances and stress circumstances.\"\n...\nThe team spent much of 2018 addressing the core technology issues required for the migration. \"We were able to use a lot of the Kubernetes APIs and extensibility features of Kubernetes to support and interface with our legacy infrastructure, so the integration was straightforward and easy,\" says Site Reliability Engineer James Wen.\n...\nMigration started late that year and has accelerated in 2019. \"Our focus is really on stateless services, and once we address our last remaining technology blocker, that's where we hope that the uptick will come from,\" says Chakrabarti. \"For stateful services there's more work that we need to do.\"\n...\nA small percentage of Spotify's fleet, containing over 150 services, has been migrated to Kubernetes so far. \"We've heard from our customers that they have less of a need to focus on manual capacity provisioning and more time to focus on delivering features for Spotify,\" says Chakrabarti. The biggest service currently running on Kubernetes takes over 10 million requests per second as an aggregate service and benefits greatly from autoscaling, says Wen. Plus, Wen adds, \"Before, teams would have to wait for an hour to create a new service and get an operational host to run it in production, but with Kubernetes, they can do that on the order of seconds and minutes.\" In addition, with Kubernetes's bin-packing and multi-tenancy capabilities, CPU utilization has improved on average two- to threefold.\n...\nChakrabarti points out that\n...\nall four of the top-level metrics that Spotify looks\n...\n\u2014lead time, deployment frequency, time to resolution, and operational\n...\n\u2014\"there is impact that\n...\ntheir own solutions\n...\nSpotify has also started to use gRPC and Envoy, replacing existing homegrown solutions, just as it had with Kubernetes. \"We created things because of the scale we were at, and there was no other solution existing,\" says Dave Zolotusky, Software Engineer, Infrastructure and Operations. \"But then the community kind of caught up and surpassed us, even for tools that work at that scale.\"\n...\nAs the team continues to fill out Spotify's cloud native stack\u2014tracing is up next\u2014it is using the CNCF landscape as a helpful guide. \"We look at things we need to solve, and if there are a bunch of projects, we evaluate them equivalently, but there is definitely value to the project being a CNCF project,\" says Zolotusky.\n...\nSpotify's experiences so far with Kubernetes bears this out. \"The community has been extremely helpful in getting us to work through all the technology much faster and much easier,\" Zolotusky says. \"It's been surprisingly easy to get in touch with anybody we wanted to, to get expertise on any of the things we're working with. And it's helped us validate all the things we're doing.\"",
+				"fitReason": "No evidence found regarding certificate lifecycle or PKI management practices at Spotify."
+			}
 		},
 		"liveramp.com": {
 			"label": "accept",
@@ -565,6 +763,7 @@
 			"name": "Lucid Motors",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "5,449 staff, US, automotive manufacturer; a cited article quotes Lucid's Kubernetes-native connected-vehicle cloud infrastructure with Argo CD, dated 2026-02-23 within the window",
 			"record": {
 				"industry": "Automotive manufacturing",
 				"description": "We launched Lucid in 2016 to build the world\u2019s best cars and accelerate the shift to clean energy. Our vehicles deliver best-in-class performance *and* efficiency. Equally important, we\u2019re building a world-class team: From our state-of-the-art factory in Arizona to our global headquarters in California\u2019s Silicon Valley, we\u2019re recruiting high-performing people who want to help decarbonize Earth. Join us!",
@@ -575,8 +774,25 @@
 				"citedDate": "2026-02-23",
 				"quote": "Since all workloads were Kubernetes-native, we used Argo CD with a central control plane to manage cluster and application deployments consistently across regions.",
 				"fitReason": "Lucid Motors is an automotive manufacturer, 5449 staff in US, runs Kubernetes-native connected-vehicle cloud infrastructure."
-			},
-			"note": "5,449 staff, US, automotive manufacturer; a cited article quotes Lucid's Kubernetes-native connected-vehicle cloud infrastructure with Argo CD, dated 2026-02-23 within the window"
+			}
+		},
+		"mendix.com": {
+			"label": "accept",
+			"name": "Mendix",
+			"firstSeenRunId": "companies_502bb251-dac3-4863-852b-477ca359974d_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:40:13.258Z",
+			"note": "767 staff, US, low-code/agentic-app SaaS platform; the company's own engineering blog describes migrating Mendix Cloud from Cloud Foundry to production Kubernetes, including moving all internal applications to it in November 2024, dated 2025-02-27 within the window",
+			"record": {
+				"industry": null,
+				"description": "The future of work demands smarter applications. Mendix is where you build, deploy, and orchestrate the intelligent solutions the human-AI workforce relies on\u2014with built-in shared context and governance that connects everything perfectly.\n\nCreate production-ready agentic applications and AI agents that understand your business inside and out. They're built on your data, follow your logic, and fit seamlessly into your existing architecture. Connect agents across all your business systems, then orchestrate workflows where AI handles the routine and humans step in exactly when they're needed; with full context already in hand.\n\nThe difference is simple: most enterprise AI projects stall out because companies treat governance, integration, and trust as afterthoughts. We flip that script. With Mendix, every agent decision, human approval, and AI output is automatically traceable and compliant from the start. That's what separates AI experiments from AI that actually runs your business.\n\nWhether you're launching your first intelligent application or scaling an organization-wide portfolio, leading companies worldwide trust Mendix to bridge the gap between human expertise and AI capabilities\u2014creating workforces that don't just use technology, they orchestrate it.\n\nReady to build intelligent applications that work the way you do?\n\nMendix is a Siemens business.",
+				"workforceTotal": 767,
+				"country": "United States",
+				"foundedYear": 2005,
+				"citedPage": "https://www.mendix.com/blog/mendix-clouds-next-evolution-embracing-kubernetes-for-a-future-ready-platform/",
+				"citedDate": "2025-02-27T00:00:00.000Z",
+				"quote": "- Feddo van Ede \n- February 27, 2025\n- minute read \n\nMendix Cloud is evolving. To ensure scalability, security, and future innovation, we are transitioning from Cloud Foundry to Kubernetes. This move strengthens our platform\u2019s foundation, making it more reliable and adaptable for the years ahead.\n...\nFor the past decade, Cloud Foundry has been a solid backbone for Mendix Cloud. However, with shifting industry standards, we need a solution that keeps pace with modern cloud computing demands. Kubernetes has emerged as the dominant platform for containerized applications, offering flexibility, robust community support, and advanced scaling capabilities.\n...\nBy adopting Kubernetes, we are reinforcing our commitment to continuous improvement. This transition will allow us to implement new features faster while maintaining a secure and performant infrastructure for all Mendix users.\n...\nCloud Foundry, a technology that was cutting-edge when we adopted it 10 years ago. For many years, Cloud Foundry has been an industry standard, providing a reliable and scalable foundation for Mendix applications. However,\n...\nKubernetes has become the de facto industry standard for running containerized applications, with strong community support and continuous advancements. By adopting Kubernetes, we:\n...\n- Ensure a future-proof infrastructure.\n- Gain a more flexible, scalable, and secure foundation for our customers.\n- Enable the rapid implementation of new features that enhance performance and security.\n...\n- May 2024: We launched Kubernetes for Free Apps. This allowed us to gain valuable insights, expertise, and real-world performance data.\n- November 2024: We m ove d all internal Mendix applications running on Mendix Cloud to Kubernetes. By \u201cdrinking our own champagne,\u201d we built confidence in the platform\u2019s stability and performance.\n- Ongoing: We have been working to achieve feature parity between Cloud Foundry and Kubernetes for paid applications. We are now at a point where we can start rolling out Kubernetes to our customers.\n...\nStarting in March, we will begin enabling customer applications to m ov e from Cloud Foundry to Kubernetes. To ensure a smooth transition, we have designed a controlled process:\n...\n- We will not m ove all applications at once. Instead, we will begin with a small subset and gradually increase the pace as we monitor performance and stability.\n- This is integrated with the deployment process. If a deployment package has been used before, it will follow the existing deployment pattern. If it\u2019s a new deployment, it will be placed on Kubernetes for non-production environments and retain the existing platform for production environments.\n- Only runtime engines (containers) will be moved. Databases and file documents will remain untouched.\n- If an issue arises, we can roll back individual environments to Cloud Foundry or temporarily pause to ensure minimal disruption.\n...\nYou can check\n...\nPortal to see\n...\n. Additionally, before deploying, the Deploy Wizard will notify you if your environment is set\n...\nbe moved to Kubernetes. This ensures that you have clear visibility and can take extra care in testing your app before deployment.\n...\nM oving to Kubernetes not only ensures a secure, performant and reliable platform for the future, but it also enables us to look into offering new features should there be enough customer demand. This could include features like:\n...\n- Private connectivity\n- Auto-scaling capabilities\n- Customizable firewall rules\n- Rate-limiting options\n...\nAs we roll out\n...\n- Continue deploying as you normally would.\n- Thoroughly test your applications on Kubernetes in a non-Production environment before deploying to Production.\n- Contact your Customer Success Manager (CSM) or Mendix Support if you encounter any issues.\n...\nis a significant",
+				"fitReason": "No evidence describing certificate lifecycle or PKI governance practices was found for Mendix."
+			}
 		},
 		"michelin.com": {
 			"label": "reject:unreachable",
@@ -704,6 +920,24 @@
 				"fitReason": "French SaaS payroll firm, 634 staff, security page shows Kubernetes and in-house managed network/access controls."
 			}
 		},
+		"payone.com": {
+			"label": null,
+			"name": "PAYONE",
+			"firstSeenRunId": "companies_bf0c3bb5-4717-43ac-a826-2ea96aa4c074_2026-09-05",
+			"lastSeenAt": "2026-09-05T23:01:45.378Z",
+			"record": {
+				"industry": null,
+				"description": "With more than 260,000 customers and 6 billion processed transactions per year, PAYONE is the leading payment provider in Germany and Austria. In stationary shops, mobile or online - PAYONE helps merchants and service providers to address the challenges of cashless payments. PAYONE ensures quick, easy and reliable digital payment processes. PAYONE develops customised solutions for all industries and sizes of companies according to the highest security standards. PAYONE is a joint venture of Worldline and the DSV Group (Deutscher Sparkassenverlag).",
+				"workforceTotal": 543,
+				"country": "Germany",
+				"foundedYear": 2003,
+				"citedPage": "https://meiyu.eu/projekt/payone/",
+				"citedDate": "2025-05-22T00:00:00.000Z",
+				"quote": "## F\u00fcr Payone haben wir eine skalierbare Zahlungsplattform entwickelt, die Kassensysteme, Terminals und Security-Gates zuverl\u00e4ssig verbindet \u2013 schnell, sicher, hochverf\u00fcgbar.\n...\nKartenzahlung ist l\u00e4ngst Alltag \u2013 aber im Hintergrund l\u00e4uft Hochtechnologie. F\u00fcr Payone haben wir eine neue Zahlungsplattform entwickelt, die Kassensysteme, Terminals, Security-Gates und Autorisierungssysteme sicher und zuverl\u00e4ssig verbindet. Das Projekt hatte es in sich: verteilte Systeme, sensible Datenstr\u00f6me, hohe Sicherheitsanforderungen \u2013 und das Ganze in Echtzeit.\n...\nNeben der Plattform entstand auch eine performante Client-App f\u00fcr Zahlungsterminals, direkt angebunden an Kassensysteme \u00fcber die Open Payment Initiative (OPI). Im Backend sorgt eine Microservice-Architektur auf Kubernetes f\u00fcr Stabilit\u00e4t und Skalierbarkeit, abgesichert durch mutual TLS und modernste Messaging-Technologien. Was daraus wurde? Ein System, das t\u00e4glich Millionen Transaktionen m\u00f6glich macht \u2013 robust, sicher, jederzeit erweiterbar.\n...\n- Entwicklung einer modularen Zahlungsplattform auf Kubernetes mit Spring Boot im Backend\n- Aufbau eines Cloud-basierten Microservice-Systems, abgesichert mit mutual TLS\n- Realisierung der Client-App in C/C++ mit Boost, inklusive direkter Anbindung \u00fcber die Open Payment Initiative (OPI)\n- Einsatz von ActiveMQ/RabbitMQ f\u00fcr Messaging, sowie Protobuf f\u00fcr effiziente Datenkommunikation\n- Etablierung einer CI/CD-Pipeline mit TeamCity, Octopus, SonarQube & automatisiertem Testing\n...\n- Kafka\n- Spring Boot\n- Kubernetes\n- Aurora PostgreSQL\n\n- AWS\n- Argo\n- GitLab CI/CD\n- Renovate\n\n- Java 17\n- Prometheus\n- RabbitMQ\n- SonarQube",
+				"fitReason": "No evidence on in-house day-to-day operations or certificate/PKI lifecycle management practices."
+			},
+			"note": "undecidable: the only citation is meiyu.eu's own portfolio case study describing a payment platform meiyu built for PAYONE as a client, not PAYONE's own engineering account; the record's own fitReason flags in-house day-to-day operations as unconfirmed, and a third-party dev shop's build case study does not establish whether PAYONE itself keeps in-house ownership per r4"
+		},
 		"pci.com": {
 			"label": "reject:no-such-event",
 			"name": "PCI Pharma Services",
@@ -727,6 +961,7 @@
 			"name": "Peacock",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "1,346 staff, US, streaming media; a cited conference talk titled 'Zero-Downtime at Scale: Migrating Peacock's Global Streaming to Amazon EKS', dated 2025-12-05 within the window",
 			"record": {
 				"industry": "Media entertainment",
 				"description": "New York City-based media and entertainment company operating a subscription video-on-demand streaming service with movies, television, live events, news, and sports.",
@@ -737,8 +972,25 @@
 				"citedDate": "2025-12-05",
 				"quote": "Zero-Downtime at Scale: Migrating Peacock's Global Streaming to Amazon EKS.",
 				"fitReason": "US streaming media firm, 1346 employees, migrated global streaming to production EKS at scale; no PKI evidence."
-			},
-			"note": "1,346 staff, US, streaming media; a cited conference talk titled 'Zero-Downtime at Scale: Migrating Peacock's Global Streaming to Amazon EKS', dated 2025-12-05 within the window"
+			}
+		},
+		"plaid.com": {
+			"label": "accept",
+			"name": "Plaid",
+			"firstSeenRunId": "companies_2dbc4001-ed34-49ec-ab9c-49d1069a1c00_2026-09-05",
+			"lastSeenAt": "2026-09-05T17:08:58.805Z",
+			"note": "1,130 staff, US, fintech data-network platform; the company's own engineering blog describes running hundreds of services across tens of thousands of pods on dozens of Kubernetes clusters, dated 2024-12-19 within the window",
+			"record": {
+				"industry": "Financial technology",
+				"description": "Plaid is a data network that powers the tools millions of people rely on to live a healthier financial life. Plaid works with thousands of companies like Venmo, SoFi, and Betterment, several of the Fortune 500, and many of the largest banks to make it easy for people to connect their financial accounts to the apps and services they want to use. Plaid\u2019s network covers more than 12,000 financial institutions across the US, Canada, UK and Europe. Headquartered in San Francisco, the company was founded in 2013 by Zach Perret and William Hockey.",
+				"workforceTotal": 1130,
+				"country": "United States",
+				"foundedYear": 2013,
+				"citedPage": "https://engineering.plaid.com/security-at-scale-b94475905810",
+				"citedDate": "2024-12-19",
+				"quote": "At Plaid, we run hundreds of services across tens of thousands of pods on dozens of Kubernetes clusters hosted in AWS.",
+				"fitReason": "No evidence on certificate lifecycle or PKI governance practices provided."
+			}
 		},
 		"postfinance.ch": {
 			"label": "accept",
@@ -781,6 +1033,7 @@
 			"name": "Rapyd",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "673 staff, UK, fintech-as-a-service; a vendor case study quotes Kubernetes as central to Rapyd's infrastructure, supporting more than 15 clusters, dated 2025-04-10 within the window",
 			"record": {
 				"industry": "Financial services",
 				"description": "Build Bold.\n\nLiberate global commerce with all the tools your business needs to create payment, payout and fintech experiences everywhere.\n\nAround the world, customers want to pay in a thousand different ways. Businesses and consumers want to get paid faster. And developers want to build new products and possibilities. Rapyd makes it happen, giving you more ways than anyone to make fintech work for your business. With Rapyd, your business can accept and send payments to just about anyone\u2014faster, cheaper and easier. And Rapyd clients see an average of 196% return on investment and spend 70% less time managing payments.\n\nWhether you\u2019re building an app, selling a product, sending payments or doing a little of everything, Rapyd has solutions that let you boldly do what you do best.\n\n\u2022 Send and receive funds\n\u2022 Add hundreds of payment methods worldwide\n\u2022 Issue prepaid virtual and physical cards\n\u2022 Simplify money management and foreign exchange\n\u2022 Integrate fintech with APIs",
@@ -791,8 +1044,7 @@
 				"citedDate": "2025-04-10",
 				"quote": "Kubernetes was already central to Rapyd\u2019s infrastructure, supporting more than 15 clusters and enabling the speed and agility needed to innovate at scale.",
 				"fitReason": "Fintech-as-a-service platform, London, 673 staff, 15+ Kubernetes clusters central to its own infrastructure."
-			},
-			"note": "673 staff, UK, fintech-as-a-service; a vendor case study quotes Kubernetes as central to Rapyd's infrastructure, supporting more than 15 clusters, dated 2025-04-10 within the window"
+			}
 		},
 		"rbccm.com": {
 			"label": "accept",
@@ -810,6 +1062,24 @@
 				"citedDate": "2026-05-13",
 				"quote": "SPIRE/SPIFFE integration for workload identity across all 50+ clusters, replacing certificate-per-service approaches with a hub-and-spoke SPIRE architecture that satisfies our zero-trust requirements.",
 				"fitReason": "Investment bank, 8441 employees Toronto; CNCF blog details 50+ clusters and in-house SPIRE replacing per-service certs."
+			}
+		},
+		"rippling.com": {
+			"label": "accept",
+			"name": "Rippling",
+			"firstSeenRunId": "companies_d39c6b44-e95e-4e64-bc66-2fc4f3c49b4f_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:44:37.190Z",
+			"note": "5,534 staff, US, HR/IT/Finance SaaS; the company's own engineering blog quotes using Kubernetes to run all of its applications, dated 2026-06-15 within the window",
+			"record": {
+				"industry": null,
+				"description": "Rippling is a workforce management system that eliminates the friction from running a business. Today, most companies struggle with everything from routine tasks, like running payroll, to cross-functional planning, like aligning on headcount. That\u2019s because all their data related to people, processes, and systems is scattered in a hundred places. \n\nRippling has every application you need to run your business\u2014from applicant tracking and payroll to IT and expenses\u2014in one place. But unlike other systems, Rippling sits on top of a unified platform. Data flows dynamically between Rippling\u2019s applications, giving every team a shared source of truth, the power to automate processes, and access to the insights they need. This allows your business to execute better, faster.\n\nBased in San Francisco, CA, Rippling has raised $1.2B from the world\u2019s top investors\u2014including Kleiner Perkins, Founders Fund, Sequoia, Greenoaks, and Bedrock.\n\nGet help: rippling.com/contact\nLicensing details: https://app.rippling.com/licensing",
+				"workforceTotal": 5534,
+				"country": "United States",
+				"foundedYear": 2016,
+				"citedPage": "https://www.rippling.com/blog/document-engine-part-2",
+				"citedDate": "2026-06-15T00:00:00.000Z",
+				"quote": "Part 1 covered how Rippling's Filings Engine and its core Document Engine are crucial for managing payroll and tax obligations across various agencies. The system generates over 10 million documents weekly, ensuring compliance with diverse agency requirements, which vary from electronic (XML, Fixed-Width, CSV/TSV) to paper-friendly (PDF) formats. In this post, we continue by describing how we operate this system efficiently at a large scale. \n\nOnce the challenge of gathering accurate data for our documents is resolved, the next problem is to generate them on a large scale in an efficient way.\n...\n- Within a single process (Go)\n- The Cloud (Kubernetes)\n- Task orchestrator (Temporal.io)\n- The database (Aurora RDS Postgres)\n...\n### Scaling in Kubernetes \n\nRippling uses Kubernetes to run all of our applications, and the tech has proven itself useful here as well. With Kubernetes, a single application\u2019s deployment can span across multiple pods \u2014 each pod is an independent instance (with one or more containers).\n...\nLet\u2019s say the job of generating documents is executed by a document-generation worker. Deploying multiple pods of this worker can enhance the system's throughput. There are several variables to optimize for here:\n...\n- Divisibility\n...\nspecific use case\n...\na juncture where further division of work becomes impractical or unfeasible\n...\nimposes a limit\n...\nthe number of workers\n...\n- Downstream dependencies: The workers may need to communicate with external services, such as a database, to perform their tasks. Setting the pod count to be too high can put an excessive load on the DB, leading to potential performance issues, increased response times, or even service outages. It's essential to balance the pod count to ensure efficient resource utilization without overwhelming external services. The downstream services may be scalable at a higher cost, making it more feasible to limit the scale instead.\n...\n- Shared state: Separate pods mean separate states, which makes data structures like shared in-memory caches less efficient. For example, we can no longer pre-load data for all the jobs in one query. The introduction of a shared cache across pods would be a further trade-off \u2014 it complicates the architecture, so in certain cases, splitting the work into less granular chunks may turn out to be more optimal.\n...\nLet's start by discussing cost efficiency. One way we tackle this challenge is through autoscaling. Instead of maintaining the maximum number of worker pods constantly active, we adapt to the fluctuating nature of our workloads. Typically, our workloads experience bursts of activity, resulting in periods where the extra machines are unnecessary. By scaling down during these times, we can reduce infrastructure costs. On the other hand, when a surge of work occurs sporadically, we scale up temporarily to accommodate the increased demand.\n...\nTo manage the document generation at scale, we use Temporal as the framework for task orchestration. Its main units of flow control are workflows and activities. A workflow is a piece of code that only defines the control flow and should never run any compute-heavy or I/O operations directly. It can, however, call one or more activities, which represent the actual atomic operations, and serve as building blocks for the workflow. Both workflows and activities have well-defined inputs and outputs.\n...\nWorkers sign up for a specific Temporal queue, where each worker listening to this queue should be capable of handling any of its scheduled workflows or activities. Temporal Cloud manages the queues in our setup, but you could run it entirely within your infrastructure as well. The workers are always running inside our Kubernetes cluster, and are programming language-independent. As of July 2024, Temporal provides SDKs for Golang, Python, Java, PHP, TypeScript, and .NET. A child workflow can run in a different queue than the parent. This allows you to leverage a different programming language for certain tasks by setting up a distinct queue and assigning workers specifically for that segment of work. These workers will then handle tasks and send the results back to the parent workflow, across the different tech stack boundaries.\n...\nOne last part of the infrastructure that we decided to scale dynamically is the database. We use Amazon\u2019s Relational Database Service (RDS), set up with Terraform. Usually, you specify a number of RDS instances, and for each instance, you specify a machine size. The machine size determines the number of CPUs and gigabytes of RAM you are getting, which very well translates to performance in the case of the Postgres database.\n...\nHowever, Amazon also provides a special instance type, called \u201cServerless v2\u201d as part of AWS Aurora. Here we can specify the DB's minimal and maximal capacity in\u2026 well, capacity units (ACU \u2014 Aurora Capacity Units). One ACU gives us roughly 2 GiB of RAM. If our instance is supposed to scale from 1 to 32 units, it would get from 2 to 64 GiB of RAM. This gives us a DB that can scale vertically, on demand, and most importantly, without interruption of any of the operations. It\u2019s important to remember that a \u201cserverless\u201d instance is still a single instance \u2014 for horizontal scaling, more instances can still be defined and utilized.\n...\nRippling\u2019s document engine has allowed us to successfully process more than 900M documents for tens of thousands of customer companies. While our focus here has been on the generation side, the system also handles documents received from agencies, e.g. agency notices and power of attorney. For this\n...\n, the team is investigating GPT models to parse the submissions and\n...\nvaluable insights back into",
+				"fitReason": "HR/IT/Finance SaaS, 5534 employees, US; engineering blog proves Kubernetes-run multi-service architecture and in-house ops."
 			}
 		},
 		"roche.com": {
@@ -835,6 +1105,7 @@
 			"name": "Roku",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "4,494 staff, US, streaming media; a case study quotes Roku operating over 110 Kubernetes clusters, dated 2026-04-05 within the window",
 			"record": {
 				"industry": "Streaming media",
 				"description": "Streaming television platform and media company operating Roku devices, Roku OS, and The Roku Channel.",
@@ -845,8 +1116,25 @@
 				"citedDate": "2026-04-05",
 				"quote": "Roku operates over 110 Kubernetes clusters.",
 				"fitReason": "Streaming media firm, 4494 staff, US; case study confirms 110+ in-house Kubernetes clusters; no cert-management evidence."
+			}
+		},
+		"sainsburys.jobs": {
+			"label": "reject:unreachable",
+			"name": "Sainsbury's Digital, Tech and Data",
+			"firstSeenRunId": "companies_bf0c3bb5-4717-43ac-a826-2ea96aa4c074_2026-09-05",
+			"lastSeenAt": "2026-09-05T23:01:45.378Z",
+			"record": {
+				"industry": null,
+				"description": "Our tech team plays a vital role in supporting Sainsbury\u2019s mission and strategy for the future. We power the UK\u2019s third-busiest retail site, and our innovations allow our customers to shop and connect with us whenever they want to, reliably and safely, and help our colleagues to do their jobs brilliantly. ",
+				"workforceTotal": 860,
+				"country": "United Kingdom",
+				"foundedYear": null,
+				"citedPage": "https://jobsforwomen.co.uk/jobs/engineer-java-colleague-operations/",
+				"citedDate": "2024-11-12T00:00:00.000Z",
+				"quote": "By engineering innovative, smart technology, we put the tools in our colleagues\u2019 hands to power a global supply chain. Whether it\u2019s wine from New Zealand or milk from the local dairy farm \u2013 our tech performs. We solve problems at scale. We process billions of records, predicting and planning to make our customers lives easier. We keep our warehouses and stores operating smoothly around the clock, because\n...\n\u2019s important to our customers is important to us.\n...\nAs an Engineer (Java), you\u2019ll be part of one of our Engineering teams, creating great products by interpreting and following best practice architectural and engineering principles, operating frameworks, and new and improved tech applications and solutions. Using Java (8+) with tools and frameworks like Spring Boot, Hibernate, Maven and Apache Kafka, you\u2019ll own the design and development of large-scale, high performance services, microservices and event driven architecture.\n...\n- You\u2019ll own the design and development of large-scale high performance services using Java (8+) with tools and frameworks like Spring Boot, Hibernate and Maven. This includes websites, apps, microservices and event driven architecture\n- You\u2019ll contribute to our product technical roadmap\n- You\u2019ll work with cloud and container technologies such as Kubernetes and Fargate on AWS\n- You\u2019ll lead the design and support of services and internal frameworks that enhance Sainsbury\u2019s capabilities\n- Engineering throughout the whole product lifecycle, including decommissioning\n- You\u2019ll consider the cost and service support implications of your engineering choices",
+				"fitReason": "No evidence about certificate lifecycle or PKI management practices for Sainsbury's."
 			},
-			"note": "4,494 staff, US, streaming media; a case study quotes Roku operating over 110 Kubernetes clusters, dated 2026-04-05 within the window"
+			"note": "ruling this as Sainsbury's itself rather than the scoped 'Digital, Tech and Data' careers-subdomain entity the record names, Sainsbury's is a large UK-wide retail group well above the 501-10,000 staff band this profile requires; the delivered workforceTotal of 860 reflects only the tech-division seed, not the parent company. No other Sainsbury's domain exists in this key to carry a same-as to."
 		},
 		"santander.com": {
 			"label": "reject:unreachable",
@@ -885,10 +1173,11 @@
 			}
 		},
 		"sennder.com": {
-			"label": null,
+			"label": "reject:unreachable",
 			"name": "sennder",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "the record's own description confirms sennder is a digital road-freight forwarder connecting shippers to a trucking fleet; freight forwarding/logistics does not match any of the profile's listed downtime-sensitive verticals, despite strong Kubernetes evidence",
 			"record": {
 				"industry": "Freight marketplace",
 				"description": "sennder \u2013 Europe\u2019s #1 digital freight-forwarder for Full Truck Loads.\n\nsennder, a leading digital road freight forwarder in Europe, is offering shippers access to a connected fleet of thousands of trucks. In a traditional industry, we are moving fast and focus on the digitalization and automation of all road logistics processes. sennder deploys over 40,000 trucks across Europe, with access to more than 120,000 vehicles. By leveraging our proprietary technology and offering advanced green transport solutions, we are creating a transparent, flexible and efficient road freight network. \n\nsennder is backed by some of Europe\u2019s leading investors including Baillie Gifford, Accel, HV Capital and Lakestar along with industry experts Poste Italiane and Scania to assure innovation and state of the art offerings.\n\nImprint: https://www.sennder.com/imprint\nPrivacy Policy: https://www.sennder.com/privacy-policy",
@@ -899,14 +1188,14 @@
 				"citedDate": "2025-12-26",
 				"quote": "Sennder runs 8 clusters and 150+ nodes on AWS EKS, using Karpenter and KEDA to enable highly dynamic scaling throughout the day.",
 				"fitReason": "sennder is a freight-forwarding marketplace, 827 staff in Berlin, runs its own EKS clusters; vertical not clearly listed."
-			},
-			"note": "undecidable: the record's own fitReason flags that sennder's freight-forwarding marketplace vertical is not clearly listed among the profile's downtime-sensitive verticals, despite strong Kubernetes evidence"
+			}
 		},
 		"skyscanner.net": {
 			"label": "accept",
 			"name": "Skyscanner",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "1,313 staff, UK, travel technology; a KubeCon EU 2026 talk titled around Skyscanner's Istio mesh handling 60M requests per minute confirms in-house service-mesh infrastructure at scale, dated 2026-03-24 within the window",
 			"record": {
 				"industry": "Travel technology",
 				"description": "\ud83c\udf0e We're here to help every traveller explore the world effortlessly, with a vision to become the world's number one travel ally.\n",
@@ -917,8 +1206,7 @@
 				"citedDate": "2026-03-24",
 				"quote": "At Skyscanner scale, every architecture choice carries cost and ops impact.",
 				"fitReason": "UK travel-tech firm, 1313 staff; KubeCon talk shows in-house Istio mesh at scale; no PKI delegation evidence."
-			},
-			"note": "1,313 staff, UK, travel technology; a KubeCon EU 2026 talk titled around Skyscanner's Istio mesh handling 60M requests per minute confirms in-house service-mesh infrastructure at scale, dated 2026-03-24 within the window"
+			}
 		},
 		"softwareag.com": {
 			"label": null,
@@ -979,6 +1267,7 @@
 			"name": "TenneT",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "849 staff, Netherlands, electricity grid operator (energy vertical); a cited article quotes an on-premises PaaS environment built on Kubernetes and Kafka powering grid-security tooling, dated 2026-04-02 within the window",
 			"record": {
 				"industry": "Electricity utilities",
 				"description": "TenneT is a leading European grid operator. We are committed to providing a secure and reliable supply of electricity 24 hours a day, 365 days a year, while helping to drive the energy transition in our pursuit of a brighter energy future \u2013 more sustainable, reliable and affordable than ever before. In our role as the first cross-border Transmission System Operator (TSO) we design, build, maintain and operate over 26,000 kilometres of high-voltage electricity grid in the Netherlands and large parts of Germany, and facilitate the European energy market through our 17 interconnectors to neighbouring countries. With a turnover of 9.1 billion euros and total assets of 55 billion euros, we are one of the largest investors in national and international electricity grids, both onshore and offshore. \n\nEvery day our 10.836 employees take ownership, show courage and make and maintain connections to ensure that the supply and demand of electricity is balanced for over 43 million people. \n\nLighting the way ahead together",
@@ -989,8 +1278,7 @@
 				"citedDate": "2026-04-02",
 				"quote": "First, TenneT had access to a modern on-premises PaaS environment (Kubernetes, Kafka, S3-compatible storage) that allowed cloud-native design principles from day one.",
 				"fitReason": "European grid operator, Arnhem, 849 staff, in-house PaaS with Kubernetes/Kafka powering grid security tooling."
-			},
-			"note": "849 staff, Netherlands, electricity grid operator (energy vertical); a cited article quotes an on-premises PaaS environment built on Kubernetes and Kafka powering grid-security tooling, dated 2026-04-02 within the window"
+			}
 		},
 		"traderepublic.com": {
 			"label": "accept",
@@ -1008,6 +1296,24 @@
 				"citedDate": "2025-03-17T07:02:40.000Z",
 				"quote": null,
 				"fitReason": "Berlin fintech bank, 729 staff, engineering blog shows Kubernetes CronJobs and distributed processing; no cert-lifecycle evidence found."
+			}
+		},
+		"trivago.com": {
+			"label": "accept",
+			"name": "trivago",
+			"firstSeenRunId": "companies_c42ebc5a-5d44-403c-9e5f-4aee46c64556_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:14:37.042Z",
+			"note": "607 staff, Germany, travel/hotel-search platform; the company's own engineering blog quotes Kubernetes as its main orchestration tool running hundreds of microservices, dated 2024-12-20 within the window",
+			"record": {
+				"industry": null,
+				"description": "When travelers are searching for a hotel, we want the obvious choice to be trivago! By comparing prices from major booking sites, we're making it easy for people to find hotels they want at a price they\u2019ll love. In the lively city of D\u00fcsseldorf, we seize opportunities to learn everyday, innovate, and make an enduring mark on the travel industry. \n\nA career at trivago is a journey designed for people who crave continuous development and want to thrive in a high-performing team. Here you will find those who aren't afraid of change but rather embrace it, turning every challenge into a pathway for growth.",
+				"workforceTotal": 607,
+				"country": "Germany",
+				"foundedYear": 2005,
+				"citedPage": "https://tech.trivago.com/post/2024-12-20-life-of-sre-as-a-salesperson",
+				"citedDate": "2024-12-20T00:00:00.000Z",
+				"quote": "Working as a Site Reliability Engineer at trivago, I discovered myself as a Salesperson (or an influencer for Tech Teams), who goes out to help teams adopt trivago best practices by using the tools and solutions we craft together with Platform Engineering, Developer Experience, and Observability teams. My job is to be the bridge between the cloud infrastructure and product development teams. One of our main goals is to maximize the adoption of best practices at trivago.\n...\n> We empower teams by delivering secure, scalable and predictable cloud-based solutions, so they can focus on solving business problems\n...\nAt the moment, I\u2019m assigned to a couple of backend teams as a dedicated support person. These teams are \u201cSearch & Ranking\u201d and \u201cMarketing Solutions\u201d. I understand the system architecture of the services in both teams and also know what those products are offering to their customers, and these teams are customers of the SRE Backend Squad.\n...\nI work with these teams closely to help configure CI/CD workflows in GitHub Actions, Cloud and on-prem resource provisioning using Terraform, Metrics and Alerts instrumentation in Prometheus, visualize business metrics in Grafana dashboards, set up related SLIs and SLOs, optimize workload resource utilization etc.\n...\nKubernetes is our main orchestration tool at trivago. In order to package an application, we often need common resource types, including Deployment, Service, HorizontalPodAutoscaler, ConfigMap, ServiceMonitor, PrometheusRule, GrafanaDashboard etc. In a world of micro-service patterns where we are running hundreds of micro-services, writing similar Kubernetes resource definition again and again is cumbersome and error prone. Instead we aim for providing a common Helm chart that provides sane defaults with customizability and teams can adjust certain parameters based on the service needs.\n...\nSince we have many microservices, to construct proper business metrics, we need to connect telemetry data from all of them. This is why we have a central place where all telemetry data can be shown to achieve proper business metrics and set up SLIs and SLOs accordingly. That being said, with the help of Application Packaging Chart that I described above, we expose application metrics automatically on certain endpoints. Then the centralized monitoring setup collects all of those and shows them in one single place. That way, developers don\u2019t have to care which part of application runs on which Kubernetes cluster. All metrics are connected and can be browsed in a single pane.",
+				"fitReason": "No evidence found regarding certificate lifecycle or PKI management practices at trivago."
 			}
 		},
 		"tubitv.com": {
@@ -1051,6 +1357,7 @@
 			"name": "Vestiaire Collective",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "506 staff, France, luxury-resale e-commerce marketplace; the company's own engineering blog quotes running a service on Vestiaire Collective's own Kubernetes clusters, dated 2024-12-10 within the window",
 			"record": {
 				"industry": "Fashion marketplace",
 				"description": "We are the leading global platform for pre-loved luxury fashion. \n\nOur mission is to transform the fashion industry for a more sustainable future by empowering our community to shop more consciously.\n\nGuided by our philosophy \u201cThink First, Buy Second,\u201d we offer a trusted space for our members to extend the life of their most-loved fashion pieces.\nOur platform is unique thanks to a rare inventory of 5 million items, with over 30,000 new pieces added daily.\n\nOur global team of 600 employees represents more than 50 nationalities, united by our core values of community, activism, transparency, dedication, and greatness.\n\nVestiaire Collective was founded in 2009 and operates in 70 countries. The company is headquartered in Paris, with offices in New York, London, Berlin, Singapore, Ho Chi Minh City and Lisbon, and four authentication centers in France, the UK, the US, and Hong Kong.\n\nTo learn more, download our app, visit vestiairecollective.com, and follow @vestiaireco on Instagram.",
@@ -1061,8 +1368,25 @@
 				"citedDate": "2024-12-10",
 				"quote": "We have been running the service on Vestiaire Collective\u2019s Kubernetes clusters without GPU support.",
 				"fitReason": "Luxury resale marketplace, Paris, 506 staff, runs its own services on Vestiaire's Kubernetes clusters."
-			},
-			"note": "506 staff, France, luxury-resale e-commerce marketplace; the company's own engineering blog quotes running a service on Vestiaire Collective's own Kubernetes clusters, dated 2024-12-10 within the window"
+			}
+		},
+		"wealthsimple.com": {
+			"label": "accept",
+			"name": "Wealthsimple",
+			"firstSeenRunId": "companies_0b3c43c9-f0d7-4d19-9fc4-21a1124df2e9_2026-09-05",
+			"lastSeenAt": "2026-09-05T07:31:47.696Z",
+			"note": "1,765 staff, Canada, consumer fintech platform; the company's own engineering blog quotes running several production Kubernetes clusters, dated 2025-01-30 within the window",
+			"record": {
+				"industry": "Consumer finance",
+				"description": "Better than your bank. wsim.co/legal",
+				"workforceTotal": 1765,
+				"country": "Canada",
+				"foundedYear": 2014,
+				"citedPage": "https://engineering.wealthsimple.com/adventures-in-migrating-microservices",
+				"citedDate": "2025-01-30",
+				"quote": "We run several production Kubernetes clusters for various use cases, some of which are IPv6-native and others are IPv4.",
+				"fitReason": "No evidence about Wealthsimple's certificate lifecycle or PKI management approach is given."
+			}
 		},
 		"whatnot.com": {
 			"label": "accept",
@@ -1087,6 +1411,7 @@
 			"name": "WHOOP",
 			"firstSeenRunId": "companies_ca6a4bf1-c683-4a2d-b4ab-67bde9c0d48d_2026-09-05",
 			"lastSeenAt": "2026-09-05T03:54:09.586Z",
+			"note": "974 staff, US, health and wellness technology; WHOOP's own engineering blog gives a detailed account of production Kubernetes networking incidents on AWS, dated 2025-09-11 within the window",
 			"record": {
 				"industry": "Health and wellness technology",
 				"description": "Solving problems that sit at a unique intersection of hardware, tech, health, fitness and design.\n",
@@ -1097,8 +1422,7 @@
 				"citedDate": "2025-09-11T00:00:00.000Z",
 				"quote": "How We Solved Intermittent Kubernetes Connectivity Issues | WHOOP Engineering\n...\nSoftware engineering is a continuous dialogue of learning, and today, we're contributing our chapter: a detailed breakdown of networking incidents that unfolded in our Kubernetes environment on AWS during June. While the timing of these overnight occurrences fortunately minimized impact to our WHOOP members, they revealed critical insights into the subtle ways system updates can destabilize distributed infrastructure. What follows is our journey of investigation: how we tracked down the root cause, the challenges we uncovered, and the improvements we've implemented.\n...\nThe culprit turned out to be an interaction between Ubuntu's automatic security updates and a tool called`needrestart`. When certain system services restarted during these automated updates, they cleared the kernel's connection-tracking state \u2014 essentially erasing the node's \"memory\" of which pods owned which network connections.\n...\nbehavior stemmed from a change in Ubuntu's update system that allowed\n...\nunattended application of\n...\npatches. This feature that had previously been disabled by default due to related issues in Ubuntu's parent distribution.\n...\nImmediate response: We deployed a solution to prevent the problematic automatic service restarts on our Kubernetes nodes. Since implementing this change, the overnight connectivity issues have completely stopped.\n...\nEnhanced monitoring: We added\n...\npacket capture tools and expanded our observability\n...\ncorrelate application timeouts with network-level events, giving us\n...\nvisibility into similar issues should they arise.\n...\nInfrastructure evolution: We're evaluating a transition from general-purpose Ubuntu to container-optimized operating systems like Flatcar. These platforms are designed specifically for cluster workloads and handle updates through coordinated, image-based approaches that drain nodes before applying changes rather than restarting services in place.\n...\nRather than simply blocking updates indefinitely, we've implemented a more controlled update strategy that maintains security while preventing the disruptive service restarts that caused this issue.\n...\nReliability remains our top priority. While member impact was minimal due to timing, we take any repeated system interruption seriously. The immediate fix has eliminated these specific incidents, and our ongoing infrastructure improvements will help prevent similar classes of issues.\n...\nWe're continuing to invest in tools and practices that make our platform more resilient, including better coordination between system updates and application workloads, enhanced monitoring capabilities, and infrastructure choices optimized for our distributed architecture.\n...\nThis incident reinforced that even routine system maintenance can have unexpected effects in complex distributed systems, and that the best defense is a combination of careful tooling choices, robust monitoring, and the ability to quickly reproduce and understand system behavior when issues arise.",
 				"fitReason": "WHOOP is a wellness wearable/app company, 974 staff in Boston, runs its own Kubernetes infra for members."
-			},
-			"note": "974 staff, US, health and wellness technology; WHOOP's own engineering blog gives a detailed account of production Kubernetes networking incidents on AWS, dated 2025-09-11 within the window"
+			}
 		},
 		"wise.com": {
 			"label": "accept",
@@ -1152,6 +1476,24 @@
 				"citedDate": "2026-03-30T00:00:00.000Z",
 				"quote": null,
 				"fitReason": "Zapier's own blog shows in-house Kubernetes/Kafka production ops serving its customers; no cert-management evidence."
+			}
+		},
+		"zdsk.co": {
+			"label": "accept",
+			"name": "Zendesk",
+			"firstSeenRunId": "companies_c42ebc5a-5d44-403c-9e5f-4aee46c64556_2026-09-05",
+			"lastSeenAt": "2026-09-05T08:14:37.042Z",
+			"note": "5,288 staff, US, customer-service SaaS platform; the company's own engineering blog describes each Zendesk partition running its own Kubernetes cluster in production, dated 2024-12-02 within the window",
+			"record": {
+				"industry": null,
+				"description": "Move beyond deflection. Deliver real resolutions with self-improving AI agents that learn, adapt, and outperform, on every channel, on any platform.",
+				"workforceTotal": 5288,
+				"country": "United States",
+				"foundedYear": 2007,
+				"citedPage": "https://zendesk.engineering/simplifying-datastore-provisioning-with-kubernetes-operators-a403d9ecd99c",
+				"citedDate": "2024-12-02T00:00:00.000Z",
+				"quote": "Welcome to the second blog post of our Self-Service Datastore series, where we share our journey towards creating a more efficient and reliable way to manage datastores at Zendesk. In today\u2019s dynamic application development landscape, the ability to swiftly provision datastores is crucial for maintaining agility and delivering exceptional user experiences.\n...\nProvisioning encompasses all steps involved in requesting a datastore: configuring it to meet company standards, ensuring security and compliance, and managing access credentials. In this article, we\u2019ll explore how we have simplified this process using Kubernetes storage operators, enabling our engineering teams to obtain datastores with ease and minimal complexity. Our approach has eliminated the need of those teams to master every detail of our datastore offerings or navigate the intricacies of third-party provisioning tools.\n...\nKubernetes storage operators\n...\n. The operator pattern encapsulates the\n...\nautomating the complex tasks of provisioning and managing datast\n...\nAt Zendesk, applications are deployed across multiple partitions. Each Zendesk partition is associated with its own Kubernetes cluster, and storage operators are deployed to each of these clusters with configurations that guarantee datastores are provisioned in the correct AWS regions. Deployed in its own Kubernetes namespace, the storage operator watches for custom resources (CRs) of specific storage types across the entire Kubernetes cluster. Then, they communicate with the proper AWS account and region, and credential storage to ensure efficient and secure provisioning of the datastore and its credentials.\n...\nAt Zendesk, we have implemented a select group of Kubernetes storage operators to streamline our datastore provisioning and management. By concentrating on a smaller set of datastores \u2014 one for each type \u2014 we enhance our operational efficiency and simplify management. Our operators include:\n...\n- Aurora MySQL: A fully managed relational database service that provides high performance and availability.\n- DynamoDB: A fully managed NoSQL database service designed for high scalability and low latency.\n- S3: Amazon Simple Storage Service (S3) for scalable object storage with high durability and availability.\n- ElastiCache: An in-memory data structure store used for caching and real-time analytics.\n- SQS: Amazon Simple Queue Service (SQS) for reliable message queuing between distributed systems.\n...\nAdditionally, we have implemented controllers that allow these datastores to be shared across multiple applications. This capability not only reduces costs but also promotes efficient resource utilization within our infrastructure.\n...\nBy leveraging Kubernetes operators, we have created a self-service, efficient, and reliable framework that significantly reduces the burden on our engineering teams. The investment in building these operators pays off handsomely, not just in terms of time savings but also in the enhanced security and compliance that they bring to our data management processes.\n...\nMoreover, as we scale, the operators exhibit remarkable adaptability, seamlessly managing datastores across multiple AWS regions and ensuring that each deployment is both efficient and compliant with Zendesk\u2019s standards. This scalability, combined with the robust architecture of our operators, underlines their value not only to engineering teams but to the entire organization.",
+				"fitReason": "No evidence found regarding certificate lifecycle or PKI management practices at Zendesk."
 			}
 		},
 		"zooplus.com": {

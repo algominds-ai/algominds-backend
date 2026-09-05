@@ -11,6 +11,24 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Technology Infrastructure at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/adam-kreitals": {
+			"label": "accept",
+			"name": "Adam Kreitals",
+			"title": "Head of Engineering - AI Platform Engineering",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Engineering - AI Platform Engineering at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/adamcfuller": {
+			"label": "accept",
+			"name": "Adam Fuller",
+			"title": "Head of Technical, Trading and Operational Support",
+			"company": "commsec.com.au",
+			"location": "Greater Sydney Area",
+			"firstSeenRunId": "people_dom-7a7f9b1891eb_2026-09-05",
+			"note": "Head of Technical, Trading and Operational Support at commsec.com.au, a Head-level technology leadership role"
+		},
 		"https://linkedin.com/in/alex-richards-7572313b": {
 			"label": "accept",
 			"name": "Alex Richards",
@@ -29,6 +47,24 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Technology - Service Management at colescareers, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/alistairgj": {
+			"label": "accept",
+			"name": "Alistair Grevis-James",
+			"title": "Head of Artificial Intelligence",
+			"company": "carsales.com.au",
+			"location": "Parkville, Victoria, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Head of Artificial Intelligence at carsales.com.au, a technology-domain head owning budget for their own engineering team"
+		},
+		"https://linkedin.com/in/amber-lydiate-258b384": {
+			"label": "accept",
+			"name": "Amber Lydiate",
+			"title": "Chief Information Officer",
+			"company": "middys.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Chief Information Officer at middys, matching the technology-leadership buyer rubric; based in Australia"
+		},
 		"https://linkedin.com/in/andrew-grech-b214045": {
 			"label": "accept",
 			"name": "Andrew Grech",
@@ -37,6 +73,24 @@
 			"location": "Sydney, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Director IT Engineering & Operations at blackmores, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/andrewprest": {
+			"label": "accept",
+			"name": "Andrew Prest",
+			"title": "Head of Technology Resilience and Compliance",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Technology Resilience and Compliance at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/angelica-jackson-": {
+			"label": "accept",
+			"name": "Angelica J.",
+			"title": "Director Of Information Technology",
+			"company": "suncorpgroup.com.au",
+			"location": "Brisbane City, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Director Of Information Technology at suncorpgroup.com.au, an explicit IT Director buyer title"
 		},
 		"https://linkedin.com/in/anthony-carnovale-b045b287": {
 			"label": "accept",
@@ -55,6 +109,15 @@
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Data and Integrations at costagroup, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/arshadmasih": {
+			"label": "accept",
+			"name": "Arshad Masih",
+			"title": "Head of Cloud Platforms Engineering | Data Centre infrastructure and  Networking | Automation",
+			"company": "tpgtelecom.com.au",
+			"location": "Barangaroo, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Head of Cloud Platforms Engineering at tpgtelecom.com.au, an explicit Head of Engineering-equivalent role"
 		},
 		"https://linkedin.com/in/ashokmj3": {
 			"label": "accept",
@@ -83,6 +146,15 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Technology, AI and Data Engineering at colescareers, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/brett-ashhurst-22920718": {
+			"label": "accept",
+			"name": "Brett Ashhurst",
+			"title": "Technology Director - Transition & Integration and Head of Architecture",
+			"company": "suncorpgroup.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Technology Director - Transition & Integration and Head of Architecture at suncorpgroup.com.au, an explicit Director of Technology buyer title"
+		},
 		"https://linkedin.com/in/brian-townshend-4350034": {
 			"label": "accept",
 			"name": "Brian Townshend",
@@ -91,6 +163,24 @@
 			"location": "Noosa Heads, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Chief Information Officer - Food & Liquor at metcashcareers, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/cameron-smith-6249aa4": {
+			"label": "accept",
+			"name": "Cameron Smith",
+			"title": "Head of IT Platforms - Sales & Care",
+			"company": "tpgtelecom.com.au",
+			"location": "Perth, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Head of IT Platforms - Sales & Care at tpgtelecom.com.au, an explicit Head of IT match"
+		},
+		"https://linkedin.com/in/chris-hartley-76784b79": {
+			"label": "accept",
+			"name": "Chris Hartley",
+			"title": "Chief Information Officer - Computershare Communication Services",
+			"company": "computershare.com",
+			"location": "Abbotsford, Australia",
+			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05",
+			"note": "Chief Information Officer at computershare.com, an explicit c-suite technology executive in Australia"
 		},
 		"https://linkedin.com/in/chris-helderman-macs-cp-a7395153": {
 			"label": "accept",
@@ -101,6 +191,15 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "National IT Director at aldicareers, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/chris-olver-8681203b": {
+			"label": "accept",
+			"name": "Chris Olver",
+			"title": "Head of Technology Operations & Cyber Security",
+			"company": "shift.com.au",
+			"location": "Brookvale, Australia",
+			"firstSeenRunId": "people_dom-d6cef5a31787_2026-09-05",
+			"note": "Head of Technology Operations & Cyber Security at shift, matching the technology-leadership buyer rubric; based in Australia"
+		},
 		"https://linkedin.com/in/cnapoli": {
 			"label": "accept",
 			"name": "Chris Napoli",
@@ -110,6 +209,15 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Group Head of Core Retail Technology (General Manager) at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/corne-grotius": {
+			"label": "accept",
+			"name": "Corne Grotius",
+			"title": "Head Of Information Technology",
+			"company": "suncorpgroup.com.au",
+			"location": "Brisbane, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Head Of Information Technology at suncorpgroup.com.au, an explicit Head of IT buyer title"
+		},
 		"https://linkedin.com/in/dafina-zdravkovski-23b9b9a": {
 			"label": "accept",
 			"name": "Dafina Zdravkovski",
@@ -118,6 +226,15 @@
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Enterprise Application Technology at colescareers, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/dallasjclark": {
+			"label": "accept",
+			"name": "Dallas Grace-Clark",
+			"title": "Head of Engineering Enterprise (promoted from Engineering Manager within 5 months, 2025)",
+			"company": "comparethemarket.com.au",
+			"location": "Brisbane, Australia",
+			"firstSeenRunId": "people_dom-d6cef5a31787_2026-09-05",
+			"note": "Head of Engineering Enterprise (promoted from Engineering Manager within 5 months, 2025) at comparethemarket, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/daniel-dos-santos-4537387a": {
 			"label": "accept",
@@ -164,6 +281,24 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Engineering - Digital Platforms at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/evan-craig-b11a7b5": {
+			"label": "accept",
+			"name": "Evan Craig",
+			"title": "Chief Information Officer",
+			"company": "cuscal.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Chief Information Officer at cuscal, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/gary-chant-24658265": {
+			"label": "accept",
+			"name": "Gary Chant",
+			"title": "Head of Wireless Engineering",
+			"company": "tpgtelecom.com.au",
+			"location": "Brisbane, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Head of Wireless Engineering at tpgtelecom.com.au, an explicit Head of Engineering buyer title"
+		},
 		"https://linkedin.com/in/genevieve-elliott": {
 			"label": "accept",
 			"name": "Genevieve Elliott",
@@ -172,6 +307,24 @@
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Chief Information Officer at bunnings, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/giovanni-chiarelli-17513683": {
+			"label": "accept",
+			"name": "Giovanni Chiarelli",
+			"title": "Chief Technology Officer",
+			"company": "tpgtelecom.com.au",
+			"location": "Barangaroo, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Chief Technology Officer at tpgtelecom.com.au, an explicit CTO buyer title"
+		},
+		"https://linkedin.com/in/glencameron": {
+			"label": "accept",
+			"name": "Glen Cameron",
+			"title": "Engineering Director",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Engineering Director at seek, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/hughfahy": {
 			"label": "accept",
@@ -218,6 +371,33 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Information Technology at costagroup, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/james-ross-55989b": {
+			"label": "accept",
+			"name": "James Ross",
+			"title": "Chief Technology Officer APAC",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Chief Technology Officer APAC at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/jamie-casas-a197aa35": {
+			"label": "accept",
+			"name": "Jamie C.",
+			"title": "Head of Engineering - Digital Solutions",
+			"company": "ugllimited.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Engineering - Digital Solutions at ugllimited, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/jay-billimoria-7965b337": {
+			"label": "accept",
+			"name": "Jay Billimoria",
+			"title": "Head of Engineering - Technology",
+			"company": "ugllimited.com",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Engineering - Technology at ugllimited, matching the technology-leadership buyer rubric; based in Australia"
+		},
 		"https://linkedin.com/in/joe-razavi-ab08813": {
 			"label": "accept",
 			"name": "Joe Razavi",
@@ -226,6 +406,15 @@
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Information Technology Operations at chemistwarehouse, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/jose-perez-1b31ba1a": {
+			"label": "accept",
+			"name": "Jose Perez",
+			"title": "Head of Engineering",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Head of Engineering at seek.com, an explicit rubric buyer title"
 		},
 		"https://linkedin.com/in/jsette": {
 			"label": "accept",
@@ -299,6 +488,51 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Infrastructure, Security & Operations, a core technology-function leadership role"
 		},
+		"https://linkedin.com/in/lester-dong-b463a522": {
+			"label": "accept",
+			"name": "Lester Dong",
+			"title": "Head of Engineering - Search Engine Acquisition (SEA) & Discover",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Engineering - Search Engine Acquisition (SEA) & Discover at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/linda-da-silva-22a4a910": {
+			"label": "accept",
+			"name": "Linda Da Silva",
+			"title": "Group Chief Technology & Transformation Officer",
+			"company": "nib.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05",
+			"note": "Group Chief Technology & Transformation Officer at nib.com.au, an explicit c-suite technology executive"
+		},
+		"https://linkedin.com/in/lisa-tobin-b975403": {
+			"label": "accept",
+			"name": "Lisa Tobin",
+			"title": "Group Executive Technology",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05",
+			"note": "Group Executive Technology at seek.com, a group-executive-level technology leader in Australia"
+		},
+		"https://linkedin.com/in/luisa-ramirez-b8711b65": {
+			"label": "accept",
+			"name": "Luisa Ramirez Garcia",
+			"title": "Head of Engineering",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05",
+			"note": "Head of Engineering at seek.com, an explicit rubric buyer title"
+		},
+		"https://linkedin.com/in/luisaramirezgarcia": {
+			"label": "accept",
+			"name": "Luisa Ramirez Garcia",
+			"title": "Head of Engineering",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Engineering at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
 		"https://linkedin.com/in/manish-goel-5b4b5816": {
 			"label": "accept",
 			"name": "Manish Goel",
@@ -326,6 +560,15 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Platform Engineering and Operations at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/mark-mcdougall-45a1241": {
+			"label": "accept",
+			"name": "Mark McDougall",
+			"title": "Global CIO",
+			"company": "computershare.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05",
+			"note": "Global CIO at computershare.com, an explicit c-suite technology executive in Australia"
+		},
 		"https://linkedin.com/in/michael-hua-7003b021": {
 			"label": "accept",
 			"name": "Michael Hua",
@@ -334,6 +577,24 @@
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of IT: Merchandise, Supply Chain & Enterprise Applications at countryroadgroup, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/michael-watterson-271a604": {
+			"label": "accept",
+			"name": "Michael Watterson",
+			"title": "Group Head of Cloud and Technology Services",
+			"company": "nib.com.au",
+			"location": "Newcastle, Australia",
+			"firstSeenRunId": "people_dom-5fd01a17ac2c_2026-09-05",
+			"note": "Group Head of Cloud and Technology Services at nib.com.au, an explicit Head of Cloud/Technology match"
+		},
+		"https://linkedin.com/in/mike-wood-gaicd-3a559a": {
+			"label": "accept",
+			"name": "Mike Wood  (GAICD)",
+			"title": "CIO, Insurance",
+			"company": "suncorpgroup.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "CIO, Insurance at suncorpgroup.com.au, an explicit c-suite CIO buyer title"
 		},
 		"https://linkedin.com/in/morleym": {
 			"label": "accept",
@@ -352,6 +613,15 @@
 			"location": "Kew, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Chief Technology Officer at bapcor, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/nahandy": {
+			"label": "accept",
+			"name": "Nathan Handy",
+			"title": "Head of Engineering - Commercial",
+			"company": "comparethemarket.com.au",
+			"location": "Brisbane City, Australia",
+			"firstSeenRunId": "people_dom-d6cef5a31787_2026-09-05",
+			"note": "Head of Engineering - Commercial at comparethemarket, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/neil-whiteing-732a": {
 			"label": "accept",
@@ -461,6 +731,24 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Chief Information Officer at countryroadgroup, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/prashant-sagar-30764645": {
+			"label": "accept",
+			"name": "Prashant Sagar",
+			"title": "Head of Engineering - Engineering Platforms",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head of Engineering - Engineering Platforms at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/priyankaparanagama": {
+			"label": "accept",
+			"name": "Priyanka Paranagama",
+			"title": "Chief Technology Officer",
+			"company": "suncorpgroup.com.au",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Chief Technology Officer at suncorpgroup.com.au, an explicit c-suite CTO buyer title"
+		},
 		"https://linkedin.com/in/reyner-stephens-3b14bb11b": {
 			"label": "accept",
 			"name": "Reyner Stephens",
@@ -478,6 +766,24 @@
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Data & Integration Platforms at bunnings, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/richard-young-112a5a9": {
+			"label": "accept",
+			"name": "Richard Young",
+			"title": "Head Of Engineering",
+			"company": "seek.com",
+			"location": "Melbourne, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Head Of Engineering at seek, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/ricky-mcalister-35399123": {
+			"label": "accept",
+			"name": "Ricky McAlister",
+			"title": "Head of Engineering",
+			"company": "shift.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-d6cef5a31787_2026-09-05",
+			"note": "Head of Engineering at shift, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/rickywhiteaustralia": {
 			"label": "accept",
@@ -506,6 +812,42 @@
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Oracle Platforms at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/ross-booth-01541515": {
+			"label": "accept",
+			"name": "Ross Booth",
+			"title": "Data Services Director",
+			"company": "carsales.com.au",
+			"location": "Beaumaris, Victoria, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Data Services Director at carsales.com.au, a technology-domain director role"
+		},
+		"https://linkedin.com/in/russell-hodey-7212a51": {
+			"label": "accept",
+			"name": "Russell Hodey",
+			"title": "Technology Director - Pre-Delivery",
+			"company": "suncorpgroup.com.au",
+			"location": "Collaroy Plateau, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "Technology Director - Pre-Delivery at suncorpgroup.com.au, an explicit Director of Technology buyer title"
+		},
+		"https://linkedin.com/in/ryan-jones-721896144": {
+			"label": "accept",
+			"name": "Ryan Jones",
+			"title": "Crew Tech Lead (Head of Engineering)",
+			"company": "commsec.com.au",
+			"location": "Sydney, New South Wales, Australia",
+			"firstSeenRunId": "people_dom-7a7f9b1891eb_2026-09-05",
+			"note": "Crew Tech Lead (Head of Engineering) at commsec.com.au, an explicit Head of Engineering match"
+		},
+		"https://linkedin.com/in/ryan-spain-53965a7": {
+			"label": "accept",
+			"name": "Ryan Spain",
+			"title": "Chief Technology Officer",
+			"company": "cuscal.com",
+			"location": "Brisbane, Australia",
+			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
+			"note": "Chief Technology Officer at cuscal, matching the technology-leadership buyer rubric; based in Australia"
+		},
 		"https://linkedin.com/in/sai-namuduri-a5865b58": {
 			"label": "accept",
 			"name": "Sai Namuduri",
@@ -523,6 +865,15 @@
 			"location": "Sydney, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Chief Information Officer - Wholesale and Supply Chain at metcashcareers, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/saurabh-sood-99388827": {
+			"label": "accept",
+			"name": "Saurabh Sood",
+			"title": "Technology Head/Platform Owner",
+			"company": "tpgtelecom.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Technology Head/Platform Owner at tpgtelecom.com.au, an explicit Head of Technology match"
 		},
 		"https://linkedin.com/in/saurav-sachdev-6990903a": {
 			"label": "accept",
@@ -550,6 +901,15 @@
 			"location": "Sydney, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Chief Digital & Technology Officer at arnotts, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/shabir-bakshi-5144065": {
+			"label": "accept",
+			"name": "Shabir Bakshi",
+			"title": "Head of Information Technology - Platforms",
+			"company": "tpgtelecom.com.au",
+			"location": "Macquarie Park, Australia",
+			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
+			"note": "Head of Information Technology - Platforms at tpgtelecom.com.au, an explicit Head of IT match"
 		},
 		"https://linkedin.com/in/shane-west-79393415": {
 			"label": "accept",
@@ -604,6 +964,15 @@
 			"location": "Sydney, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
 			"note": "Head of Technology Delivery and Transformation at harrisfarm, matching the technology-leadership buyer rubric; based in Australia"
+		},
+		"https://linkedin.com/in/tom-richardson-577451182": {
+			"label": "accept",
+			"name": "Tom Richardson",
+			"title": "EGM Insurance Technology",
+			"company": "suncorpgroup.com.au",
+			"location": "Sydney, Australia",
+			"firstSeenRunId": "people_dom-7109520dc5a7_2026-09-05",
+			"note": "EGM Insurance Technology at suncorpgroup.com.au, an Executive General Manager role matching the rubric's General Manager Technology buyer title"
 		},
 		"https://linkedin.com/in/tony-latella-20231516": {
 			"label": "accept",
