@@ -1,3 +1,4 @@
+import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import type { RetrievedPage } from "@/core/companies/candidates";
 import type { CostLedger } from "@/core/cost";
@@ -25,6 +26,23 @@ function textByUrl(contents: ExaContentsResult): Map<string, string> {
 	return found;
 }
 
+/** The batch's contents, or null when the vendor answered with a shape this code does not read, since a homepage is optional evidence and never worth a failed round. */
+async function contentsOrNothing(
+	urls: readonly string[],
+	env: Env,
+	ledger: CostLedger,
+): Promise<ExaContentsResult | null> {
+	try {
+		return await exaContents([...urls], env, ledger, {
+			maxCharacters: HOMEPAGE_MAX_CHARACTERS,
+			livecrawl: "fallback",
+		});
+	} catch (error) {
+		if (error instanceof NonRetryableError) return null;
+		throw error;
+	}
+}
+
 /**
  * Every candidate's own homepage, one Exa `/contents` call for the whole
  * batch with a cached page reused when fresh and a fresh crawl otherwise. A
@@ -37,10 +55,12 @@ export async function fetchHomepages(
 	ledger: CostLedger,
 ): Promise<RetrievedPage[]> {
 	if (domains.length === 0) return [];
-	const contents = await exaContents(domains.map(homepageUrl), env, ledger, {
-		maxCharacters: HOMEPAGE_MAX_CHARACTERS,
-		livecrawl: "fallback",
-	});
+	const contents = await contentsOrNothing(
+		domains.map(homepageUrl),
+		env,
+		ledger,
+	);
+	if (contents === null) return [];
 	const byUrl = textByUrl(contents);
 	return domains.flatMap((domain) => {
 		const url = homepageUrl(domain);

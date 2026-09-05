@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { fetchHomepages } from "@/core/companies/homepages";
 import { CostLedger } from "@/core/cost";
 import { fakeSecretEnv } from "../support/env";
-import { exaContentsFetch } from "../support/fetch";
+import { exaContentsFetch, jsonResponse } from "../support/fetch";
 
 function exaEnv(): Env {
 	return fakeSecretEnv({ EXA_API_KEY: "test-exa-key" });
@@ -37,6 +37,16 @@ describe("fetchHomepages", () => {
 			},
 		]);
 		expect(ledger.total()).toBeGreaterThan(0);
+	});
+
+	it("returns nothing, not an error, when the vendor answers with a shape it does not read", async () => {
+		globalThis.fetch = async () => jsonResponse({ unexpected: true });
+		const pages = await fetchHomepages(
+			["acme.com"],
+			exaEnv(),
+			new CostLedger(),
+		);
+		expect(pages).toEqual([]);
 	});
 
 	it("never calls Exa for an empty domain list", async () => {
