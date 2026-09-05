@@ -1,7 +1,5 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import type { ApiClient } from "@eval/api-client";
-import { startCompaniesRun, waitForRunTerminal } from "@eval/api-client";
 import type { SeededTrial } from "@eval/arm-db";
 import {
 	armDatabaseUrl,
@@ -10,25 +8,28 @@ import {
 } from "@eval/arm-db";
 import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
 import { startDevServer } from "@eval/dev-server";
-import { computeVerdict } from "@eval/headline";
+import type {
+	Budget,
+	SanitizedInput,
+	TrialCase,
+	TrialMetadata,
+} from "@eval/full-chain";
+import {
+	buildTask,
+	casesFor,
+	emptyTrialMetadata,
+	newBudget,
+	sanitizedInputFor,
+} from "@eval/full-chain";
 import { readKeyFile } from "@eval/keys-io";
 import { seedKeyFileFromArm } from "@eval/label";
 import { buildManifest } from "@eval/manifest";
-import type { ProfileBars } from "@eval/profiles";
 import {
 	COMPANIES_PER_RUN,
-	MAX_PROFILE_SPEND_DOLLARS,
-	MAX_SPEND_DOLLARS,
 	MIN_TRIALS,
 	type PROFILES,
-	profileBySlug,
 	profilesFor,
 } from "@eval/profiles";
-import {
-	readRequiresProvingPass,
-	readRunReport,
-	readStoredCompanies,
-} from "@eval/read";
 import type { TrialOutput } from "@eval/scorers";
 import { CODE_SCORERS } from "@eval/scorers";
 import { Eval } from "braintrust";
@@ -80,36 +81,6 @@ export function selectedProfiles(
 	return profilesFor(slug);
 }
 
-export type Budget = {
-	spent: number;
-	perProfile: Record<string, number>;
-	profileCap: number;
-};
-
-export function newBudget(slugs: readonly string[], scale = 1): Budget {
-	return {
-		spent: 0,
-		profileCap: MAX_PROFILE_SPEND_DOLLARS * scale,
-		perProfile: Object.fromEntries(slugs.map((slug) => [slug, 0])),
-	};
-}
-
-export function budgetBlock(budget: Budget, slug: string): string | null {
-	if (budget.spent >= MAX_SPEND_DOLLARS) {
-		return `total spend $${budget.spent.toFixed(2)} at the $${MAX_SPEND_DOLLARS} cap`;
-	}
-	const spentOnProfile = budget.perProfile[slug] ?? 0;
-	if (spentOnProfile >= budget.profileCap) {
-		return `${slug} spend $${spentOnProfile.toFixed(2)} at the $${budget.profileCap} per-profile cap`;
-	}
-	return null;
-}
-
-function bankSpend(budget: Budget, slug: string, cost: number): void {
-	budget.spent += cost;
-	budget.perProfile[slug] = (budget.perProfile[slug] ?? 0) + cost;
-}
-
 function gitCommit(): string {
 	return execFileSync("git", ["rev-parse", "HEAD"], {
 		encoding: "utf8",
@@ -128,67 +99,6 @@ async function syncDatasetsFor(
 	return snapshotIds;
 }
 
-export type TrialCase = SeededTrial & { bars: ProfileBars };
-
-/** The seeded trials with each profile's bars, scaled by `scale` so a request larger than the default keeps proportional cost and time bars. */
-export function casesFor(
-	seeded: readonly SeededTrial[],
-	scale = 1,
-): TrialCase[] {
-	return seeded.map((trial) => {
-		const profile = profileBySlug(trial.slug);
-		if (!profile) throw new Error(`eval: unknown profile ${trial.slug}`);
-		const bars: ProfileBars = {
-			maxCostDollars: profile.bars.maxCostDollars * scale,
-			maxSeconds: profile.bars.maxSeconds * scale,
-		};
-		return { ...trial, bars };
-	});
-}
-
-type TrialResult = TrialOutput & { costDollars: number };
-
-async function runOneTrial(
-	client: ApiClient,
-	sql: postgres.Sql,
-	trial: TrialCase,
-	count: number,
-): Promise<TrialResult> {
-	const runId = await startCompaniesRun(client, trial.icpId, count);
-	await waitForRunTerminal(client, runId);
-	const run = await readRunReport(sql, runId);
-	const stored = await readStoredCompanies(sql, runId);
-	const requiresProvingPass = await readRequiresProvingPass(sql, trial.icpId);
-	const profile = profileBySlug(trial.slug);
-	if (!profile) throw new Error(`eval: unknown profile ${trial.slug}`);
-	const key = readKeyFile(profile.slug, profile.icpId);
-	const verdict = computeVerdict({
-		key,
-		run,
-		bars: trial.bars,
-		requiresProvingPass,
-		stored,
-	});
-	return { verdict, runId, skipped: null, costDollars: run.costDollars };
-}
-
-/** One trial's task: skip it without spending anything once the budget blocks it, otherwise start, wait, read back and score it, banking what it actually cost. */
-function buildTask(
-	apiUrl: string,
-	sql: postgres.Sql,
-	budget: Budget,
-	count: number,
-) {
-	return async (trial: TrialCase): Promise<TrialOutput> => {
-		const blocked = budgetBlock(budget, trial.slug);
-		if (blocked) return { verdict: null, runId: null, skipped: blocked };
-		const client: ApiClient = { baseUrl: apiUrl, apiKey: trial.apiKey };
-		const result = await runOneTrial(client, sql, trial, count);
-		bankSpend(budget, trial.slug, result.costDollars);
-		return { verdict: result.verdict, runId: result.runId, skipped: null };
-	};
-}
-
 type ArmSetup = { seeded: SeededTrial[]; apiUrl: string; stop: () => void };
 
 async function setUpArm(
@@ -204,47 +114,34 @@ async function setUpArm(
 	return { seeded, apiUrl: server.url, stop: server.stop };
 }
 
-async function companyLabelPairs(
-	sql: postgres.Sql,
-	slug: string,
-	runId: string,
-): Promise<string> {
-	const profile = profileBySlug(slug);
-	if (!profile) return "";
-	const key = readKeyFile(profile.slug, profile.icpId);
-	const stored = await readStoredCompanies(sql, runId);
-	return stored
-		.map((row) => `${row.domain}:${key.companies[row.domain]?.label ?? "-"}`)
-		.join(", ");
-}
+export type ResultRow = { input: SanitizedInput; output: TrialOutput };
 
-async function verdictLine(
-	sql: postgres.Sql,
-	input: TrialCase,
-	output: TrialOutput,
-): Promise<string | null> {
-	const label = `${input.slug} t${input.trialIndex}`;
-	if (!output) return `${label}: no output (the trial threw)`;
-	if (output.skipped) return `${label}: skipped (${output.skipped})`;
-	const verdict = output.verdict;
-	if (!verdict || !output.runId) return null;
-	const companies = await companyLabelPairs(sql, input.slug, output.runId);
+function trialLine(row: ResultRow): string {
+	const label = `${row.input.slug} t${row.input.trialIndex}`;
+	if (row.output.skipped) return `${label}: skipped (${row.output.skipped})`;
+	const engine = row.output.engine;
+	if (!engine) return `${label}: no output (the trial threw)`;
+	const requested = row.input.count;
+	const seconds = row.output.totalSeconds ?? 0;
 	return (
-		`${label}: ${verdict.allGatesPass ? "PASS" : "FAIL"} gates, ` +
-		`precision ${verdict.precision ?? "n/a"}, ` +
-		`$${(verdict.costPerStoredCompany ?? 0).toFixed(3)}/company, ` +
-		`${(verdict.secondsPerStoredCompany ?? 0).toFixed(1)}s/company — ${companies}`
+		`${label}: score ${engine.engineScore.toFixed(2)} ` +
+		`yield ${engine.acceptedCompanies}/${requested} ` +
+		`coverage ${engine.acceptedCompaniesWithBuyer}/${requested} ` +
+		`buyer-precision ${engine.acceptedPeople}/${engine.deliveredPeopleCount} ` +
+		`$${row.output.totalCostDollars.toFixed(2)} ${seconds.toFixed(1)}s`
 	);
 }
 
-async function printVerdicts(
-	sql: postgres.Sql,
-	rows: readonly { input: TrialCase; output: TrialOutput }[],
-): Promise<void> {
-	for (const { input, output } of rows) {
-		const line = await verdictLine(sql, input, output);
-		if (line) console.log(line);
-	}
+function printTrialLines(rows: readonly ResultRow[]): void {
+	for (const row of rows) console.log(trialLine(row));
+}
+
+function meanEngineScore(rows: readonly ResultRow[]): number {
+	const scores = rows
+		.map((row) => row.output.engine?.engineScore)
+		.filter((score): score is number => score !== undefined);
+	if (scores.length === 0) return 0;
+	return scores.reduce((total, score) => total + score, 0) / scores.length;
 }
 
 async function seedKeyFiles(
@@ -260,12 +157,15 @@ async function seedKeyFiles(
 }
 
 export function runIdsByProfile(
-	rows: readonly { input: TrialCase; output: TrialOutput }[],
+	rows: readonly ResultRow[],
 ): Record<string, string[]> {
 	const byProfile: Record<string, string[]> = {};
 	for (const { input, output } of rows) {
-		if (!output?.runId) continue;
-		byProfile[input.slug] = [...(byProfile[input.slug] ?? []), output.runId];
+		const ids = [output.companiesRunId, output.peopleRunId].filter(
+			(id): id is string => id !== null,
+		);
+		if (ids.length === 0) continue;
+		byProfile[input.slug] = [...(byProfile[input.slug] ?? []), ...ids];
 	}
 	return byProfile;
 }
@@ -276,7 +176,7 @@ type ManifestContext = {
 	arm: string;
 	startedAt: string;
 	budget: Budget;
-	rows: readonly { input: TrialCase; output: TrialOutput }[];
+	rows: readonly ResultRow[];
 	datasetSnapshotIds: Record<string, string | null>;
 };
 
@@ -304,6 +204,46 @@ async function writeExperimentManifest(
 	);
 }
 
+type EvalContext = {
+	apiUrl: string;
+	sql: postgres.Sql;
+	budget: Budget;
+	cases: readonly TrialCase[];
+	count: number;
+	experiment: string;
+	commit: string;
+	arm: string;
+};
+
+async function runEval(context: EvalContext): Promise<{
+	results: readonly ResultRow[];
+	experimentUrl: string | undefined;
+}> {
+	const { apiUrl, sql, budget, cases, count, experiment, commit, arm } =
+		context;
+	const result = await Eval<SanitizedInput, TrialOutput, void, TrialMetadata>(
+		"algo-backend",
+		{
+			data: cases.map((trial) => ({
+				input: sanitizedInputFor(trial, count),
+				metadata: emptyTrialMetadata(),
+			})),
+			task: buildTask(apiUrl, sql, budget, cases),
+			scores: CODE_SCORERS,
+			experimentName: experiment,
+			metadata: { commit, arm },
+			maxConcurrency: 1,
+		},
+	);
+	return {
+		results: result.results.map((row) => ({
+			input: row.input,
+			output: row.output,
+		})),
+		experimentUrl: result.summary.experimentUrl,
+	};
+}
+
 async function main(): Promise<void> {
 	const args = parseArgs(process.argv.slice(2));
 	const profiles = selectedProfiles(args.profile);
@@ -326,33 +266,30 @@ async function main(): Promise<void> {
 	const commit = gitCommit();
 	const experiment = `${commit.slice(0, 12)}-${args.arm}`;
 	try {
-		const result = await Eval("algo-backend", {
-			data: cases.map((trial) => ({ input: trial })),
-			task: buildTask(apiUrl, sql, budget, args.count),
-			scores: CODE_SCORERS,
-			experimentName: experiment,
-			metadata: { commit, arm: args.arm },
-			maxConcurrency: 1,
+		const { results, experimentUrl } = await runEval({
+			apiUrl,
+			sql,
+			budget,
+			cases,
+			count: args.count,
+			experiment,
+			commit,
+			arm: args.arm,
 		});
-		const rows = result.results.map((row) => ({
-			input: row.input,
-			output: row.output,
-		}));
 		await writeExperimentManifest({
 			experiment,
 			commit,
 			arm: args.arm,
 			startedAt,
 			budget,
-			rows,
+			rows: results,
 			datasetSnapshotIds,
 		});
 		await seedKeyFiles(sql, profiles);
-		await printVerdicts(sql, rows);
+		printTrialLines(results);
+		console.log(`rating ${(10 * meanEngineScore(results)).toFixed(2)}`);
 		console.log(`eval: total spend $${budget.spent.toFixed(4)}`);
-		console.log(
-			`eval: experiment ${result.summary.experimentUrl ?? experiment}`,
-		);
+		console.log(`eval: experiment ${experimentUrl ?? experiment}`);
 	} finally {
 		await sql.end();
 		stop();

@@ -71,6 +71,14 @@ export async function readStoredCompanies(
 	});
 }
 
+const RunStatusRowSchema = z.object({ status: z.string() });
+
+/** The run's own status column, the terminal state `waitForRunTerminal` already waited for. */
+export async function readRunStatus(sql: Sql, runId: string): Promise<string> {
+	const rows = await sql`select status from run where id = ${runId}`;
+	return RunStatusRowSchema.parse(rows[0]).status;
+}
+
 const IcpRowSchema = z.object({ doc: IcpDocSchema.nullish() });
 
 /** Whether the profile's own requirements name a hard page requirement, the only case a stored company must carry a proven citation. */
