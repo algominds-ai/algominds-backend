@@ -63,6 +63,8 @@ const JUDGE_INSTRUCTIONS = [
 	"excludes or not what it requires, e.g. selling IT services contradicts an IT-services",
 	"exclusion; `unproven` when they say nothing either way, e.g. silence on hiring is",
 	"unproven, not contradicted, for hiring.",
+	"A row whose name or description says the company was acquired, merged, shut down, sunset",
+	"or no longer operates contradicts every hard requirement, so the row is refused.",
 	"A row's evidence page proves a requirement only when the quote is about the company the",
 	"row names and the page records it; a quote about another company proves nothing.",
 	"A row's `pageEvidence` object, when present, gives the quote already found for one or",

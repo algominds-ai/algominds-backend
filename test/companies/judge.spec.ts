@@ -239,6 +239,17 @@ describe("the judge is told which requirements need a status", () => {
 
 		expect(userMessage(gateway.calls[0])).not.toContain("Preferences.");
 	});
+
+	it("tells the model an acquired, merged or shut-down record contradicts every hard requirement", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(objectReply(verdictsFor(rows))),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		await judge(requirements, rows, fakeGatewayEnv());
+
+		expect(userMessage(gateway.calls[0])).toContain("acquired");
+	});
 });
 
 describe("the kind of page a row came from is a label, not something the judge weighs", () => {
