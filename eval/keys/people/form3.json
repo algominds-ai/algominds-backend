@@ -138,13 +138,13 @@
 			"note": "SVP of Engineering at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/chad-chen-b3704044": {
-			"label": "accept",
+			"label": "reject:not-buyer",
 			"name": "Chad Chen",
 			"title": "Director of Engineering",
 			"company": "dexcom.com",
 			"location": "United States, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
-			"note": "Director of Engineering at dexcom.com, explicitly within the buyer rubric's director-level Engineering list"
+			"note": "influencer by the frozen Director rule"
 		},
 		"https://linkedin.com/in/chadyancey": {
 			"label": "reject:not-buyer",
@@ -264,13 +264,13 @@
 			"note": "Head of Engineering at adevinta, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/dr-karan-bhatia-3901b81": {
-			"label": "accept",
+			"label": "reject:not-buyer",
 			"name": "Dr. Karan Bhatia",
 			"title": "Senior Director of Engineering",
 			"company": "dexcom.com",
 			"location": "Summit, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
-			"note": "Senior Director of Engineering at dexcom.com, a director-level Engineering role"
+			"note": "influencer by the frozen Director rule"
 		},
 		"https://linkedin.com/in/eleni-fragkiadaki": {
 			"label": "reject:not-buyer",
@@ -300,13 +300,13 @@
 			"note": "Chief Information Security Officer at datadoghq, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/evan-wu-6327072b0": {
-			"label": "accept",
+			"label": "reject:not-buyer",
 			"name": "Evan Wu",
 			"title": "Director of Engineering",
 			"company": "dexcom.com",
 			"location": "United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
-			"note": "Director of Engineering at dexcom.com, explicitly within the buyer rubric's director-level Engineering list"
+			"note": "influencer by the frozen Director rule"
 		},
 		"https://linkedin.com/in/fadi-beyrouti-896558": {
 			"label": "accept",
@@ -1074,22 +1074,22 @@
 			"note": "Head of Platform Reliability at adyen, matching the platform/infrastructure/security technology-leadership buyer rubric"
 		},
 		"https://linkedin.com/in/swerenfl": {
-			"label": "accept",
+			"label": "reject:not-buyer",
 			"name": "Richard Staehler III, CISM",
 			"title": "Director, Information Security",
 			"company": "dexcom.com",
 			"location": "Chicago, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
-			"note": "Director, Information Security at dexcom.com, explicitly within the buyer rubric's director-level Information Security list"
+			"note": "influencer by the frozen Director rule"
 		},
 		"https://linkedin.com/in/thayyil": {
-			"label": "accept",
+			"label": "reject:not-buyer",
 			"name": "Ranjit Thayyil",
 			"title": "Director of Software Engineering",
 			"company": "dexcom.com",
 			"location": "San Diego, United States",
 			"firstSeenRunId": "people_dom-f6b426002d41_2026-09-05",
-			"note": "Director of Software Engineering at dexcom.com, explicitly within the buyer rubric's director-level Engineering list"
+			"note": "influencer by the frozen Director rule"
 		},
 		"https://linkedin.com/in/thomas-enders-43253611": {
 			"label": "accept",
