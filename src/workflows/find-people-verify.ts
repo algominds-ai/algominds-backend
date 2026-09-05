@@ -8,6 +8,8 @@ import {
 } from "@/core/db/queries";
 import type { NewEvidence, NewPerson, Person } from "@/core/db/schema";
 import type { Candidate } from "@/core/people/candidate";
+import type { IdentityGroup } from "@/core/people/person-identity";
+import { groupByPersonIdentity } from "@/core/people/person-identity";
 import {
 	personVerifyEvidenceRow,
 	rawEvidenceRow,
@@ -238,14 +240,26 @@ async function verifyPick(pick: PickContext): Promise<PickOutcome> {
 
 type PickResult = { pick: SelectedBuyer; outcome: PickOutcome };
 
+/** One group per identity among a company's verified picks: a canonical LinkedIn URL, or a matching normalized name, title and domain, groups two picks as the same person. */
+function pickGroups(
+	results: readonly PickResult[],
+	domain: string,
+): Array<IdentityGroup<PickResult>> {
+	return groupByPersonIdentity(
+		results.filter((result) => result.outcome.verified),
+		(result) => result.pick.candidate,
+		domain,
+	);
+}
+
 function verifiedPersonRows(
 	ctx: CompanyLoopContext,
 	progress: CompanyProgress,
 	results: readonly PickResult[],
 ): NewPerson[] {
 	const rows: NewPerson[] = [];
-	for (const { pick, outcome } of results) {
-		if (!outcome.verified) continue;
+	for (const group of pickGroups(results, progress.domain)) {
+		const { pick } = group.canonical;
 		const row = toNewPerson(
 			pick.candidate,
 			{ companyId: progress.companyId, organizationId: ctx.organizationId },
@@ -264,6 +278,24 @@ function personForPick(
 ): Person | undefined {
 	const url = pick.candidate.url;
 	return url ? stored.find((person) => person.linkedinUrl === url) : undefined;
+}
+
+/** One append-only "person-alias" evidence row for a candidate a company's other verified pick already delivered, carrying that duplicate's own LinkedIn URL on the person that was kept. */
+function personAliasEvidenceRow(
+	progress: CompanyProgress,
+	person: Person | undefined,
+	duplicate: PickResult,
+): NewEvidence {
+	const body = { url: duplicate.pick.candidate.url };
+	return person
+		? personVerifyEvidenceRow({
+				personId: person.id,
+				runCompanyId: progress.runCompanyId,
+				kind: "person-alias",
+				source: "engine",
+				body,
+			})
+		: rawEvidenceRow(progress.runCompanyId, "person-alias", "engine", body);
 }
 
 function verifiedEvidenceRows(
@@ -289,6 +321,12 @@ function verifiedEvidenceRows(
 						})
 					: rawEvidenceRow(progress.runCompanyId, item.kind, "exa", item.body),
 			);
+		}
+	}
+	for (const group of pickGroups(results, progress.domain)) {
+		const person = personForPick(stored, group.canonical.pick);
+		for (const duplicate of group.duplicates) {
+			rows.push(personAliasEvidenceRow(progress, person, duplicate));
 		}
 	}
 	return rows;
