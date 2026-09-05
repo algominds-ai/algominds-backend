@@ -220,7 +220,7 @@
 		},
 		"https://linkedin.com/in/drmohamadsawwaf": {
 			"label": "accept",
-			"name": "Dr. Mohamad Sawwaf د. محمد صواف",
+			"name": "Dr. Mohamad Sawwaf \u062f. \u0645\u062d\u0645\u062f \u0635\u0648\u0627\u0641",
 			"title": "Founder & Group Chief Executive Officer",
 			"company": "manzil.co",
 			"location": null,
@@ -228,20 +228,22 @@
 			"note": "Founder & Group CEO of Manzil, a company of about 24 staff, well under the 50-person exception threshold"
 		},
 		"https://linkedin.com/in/edokaidoko": {
-			"label": null,
+			"label": "accept",
 			"name": "Edoka Idoko",
 			"title": "Chief Executive Officer",
 			"company": "mypryme.com",
 			"location": "United Kingdom, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "CEO of Pryme, a company of about 20 staff, well under the 50-person threshold; based in the UK"
 		},
 		"https://linkedin.com/in/emmasayle": {
-			"label": null,
+			"label": "accept",
 			"name": "Emma Sayle",
 			"title": "Founder & CEO",
 			"company": "killingkittens.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Founder & CEO of Killing Kittens, a company of about 11 staff, well under the 50-person threshold; based in London, UK"
 		},
 		"https://linkedin.com/in/ericshoemaker": {
 			"label": "accept",
@@ -262,12 +264,13 @@
 			"note": "Chief Technology and Product Officer blends an engineering role into the title, and Monzo already has a separate CPO covering the pure product function"
 		},
 		"https://linkedin.com/in/george-rawlings-32b726112": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "George Rawlings",
 			"title": "Co-Founder",
 			"company": "thursday.com",
 			"location": "United Kingdom, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Co-Founder at Thursday, a company of about 77 staff, which already has a Head of Growth Marketing (Josh Hine) listed in this same batch, so the founder exception does not apply"
 		},
 		"https://linkedin.com/in/gino-guatavita-7269139b": {
 			"label": "accept",
@@ -279,12 +282,13 @@
 			"note": "Co-Founder & President of Kontigo, a company of about 8 staff, well under the 50-person exception threshold"
 		},
 		"https://linkedin.com/in/grantroscoe": {
-			"label": null,
+			"label": "accept",
 			"name": "Grant Roscoe",
 			"title": "CEO & Founder",
 			"company": "getcrescent.com",
 			"location": "San Francisco, United States",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "CEO & Founder of Crescent, a company of about 15 staff, well under the 50-person threshold; based in San Francisco, US"
 		},
 		"https://linkedin.com/in/guillaume-torche-4a209790": {
 			"label": "reject:not-buyer",
@@ -395,12 +399,13 @@
 			"note": "VP, Growth at Midnite, a senior growth-ownership title matching the buyer rubric; based in London, UK"
 		},
 		"https://linkedin.com/in/joshhine": {
-			"label": null,
+			"label": "accept",
 			"name": "Josh Hine",
 			"title": "Head Of Growth Marketing",
 			"company": "thursday.com",
 			"location": "Maidstone, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Head Of Growth Marketing at Thursday, an explicit buyer title; based in Maidstone, UK"
 		},
 		"https://linkedin.com/in/justin-tsai-b637011": {
 			"label": "accept",
@@ -457,12 +462,13 @@
 			"note": "Chief Executive Officer - Fanatics Italy, a regional subsidiary chief outside the qualifying countries"
 		},
 		"https://linkedin.com/in/lucy-reeves-8b69337": {
-			"label": null,
+			"label": "accept",
 			"name": "Lucy Reeves",
 			"title": "Owner",
 			"company": "muddymatches.co.uk",
 			"location": "Greater Northampton Area, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Owner of Muddy Matches, a company of about 4 staff, well under the 50-person threshold; an Owner title at a small company counts as founder; based in the UK"
 		},
 		"https://linkedin.com/in/mario-l-52603783": {
 			"label": "accept",
@@ -492,20 +498,22 @@
 			"note": "CEO of a division (Fanatics Betting & Gaming) at a company well over 50 people that already has multiple CMOs and CPOs listed"
 		},
 		"https://linkedin.com/in/matthew-xavier-hunter-73786966": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Matthew Xavier Hunter",
 			"title": "Founder",
 			"company": "thursday.com",
 			"location": "Brooklyn, United States",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Founder at Thursday, a company of about 77 staff, which already has a Head of Growth Marketing (Josh Hine) listed in this same batch, so the founder exception does not apply"
 		},
 		"https://linkedin.com/in/matthewmcneilllove": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Matthew McNeill Love",
 			"title": "Co-Founder",
 			"company": "thursday.com",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Co-Founder at Thursday, a company of about 77 staff, which already has a Head of Growth Marketing (Josh Hine) listed in this same batch, so the founder exception does not apply"
 		},
 		"https://linkedin.com/in/michael-carney-6776991": {
 			"label": "reject:not-buyer",
@@ -670,12 +678,13 @@
 			"note": "title names 'Head of Business Development' at Coinbase, an explicit buyer title"
 		},
 		"https://linkedin.com/in/sean-sanders-382992108": {
-			"label": null,
+			"label": "accept",
 			"name": "Sean Sanders",
 			"title": "Founder & CEO",
 			"company": "altify.app",
 			"location": "London, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "Founder & CEO of Altify, a company of about 20 staff, well under the 50-person threshold; based in London, UK"
 		},
 		"https://linkedin.com/in/selena-kalvaria-00830066": {
 			"label": "accept",
@@ -723,12 +732,13 @@
 			"note": "Senior Director, Business Development and Strategic Partnerships is a director-level role, not a Head-of-level buyer title"
 		},
 		"https://linkedin.com/in/temitope-alabi-39619b78": {
-			"label": null,
+			"label": "reject:duplicate",
 			"name": "Tope Alabi",
 			"title": "Co-Founder",
 			"company": "afriex.com",
 			"location": "United Kingdom, United Kingdom",
-			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05"
+			"firstSeenRunId": "people_dom-d2690c2ad4c7_2026-09-05",
+			"note": "same name, title, company and location as the already-labelled https://linkedin.com/in/topealabi entry, just a different LinkedIn URL for the same person"
 		},
 		"https://linkedin.com/in/timomall": {
 			"label": "accept",
