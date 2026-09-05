@@ -120,12 +120,13 @@
 			"note": "Chief Information Officer - Food & Liquor at metcashcareers, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/chris-hartley-76784b79": {
-			"label": null,
+			"label": "accept",
 			"name": "Chris Hartley",
 			"title": "Chief Information Officer - Computershare Communication Services",
 			"company": "computershare.com",
 			"location": "Abbotsford, Australia",
-			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05"
+			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05",
+			"note": "Chief Information Officer at computershare.com, an explicit c-suite technology executive in Australia"
 		},
 		"https://linkedin.com/in/chris-helderman-macs-cp-a7395153": {
 			"label": "accept",
@@ -184,11 +185,11 @@
 		"https://linkedin.com/in/david-grozdan-1355b03b": {
 			"label": "accept",
 			"name": "David Grozdan",
-			"title": "Head of IT ‐ Manufacturing",
+			"title": "Head of IT \u2010 Manufacturing",
 			"company": "blackmores.com.au",
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
-			"note": "Head of IT ‐ Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
+			"note": "Head of IT \u2010 Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/elzanne-van-der-westhuizen-0ba53933": {
 			"label": "accept",
@@ -407,12 +408,13 @@
 			"note": "Head of Engineering - Search Engine Acquisition (SEA) & Discover at seek, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/lisa-tobin-b975403": {
-			"label": null,
+			"label": "accept",
 			"name": "Lisa Tobin",
 			"title": "Group Executive Technology",
 			"company": "seek.com",
 			"location": "Melbourne, Australia",
-			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05"
+			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05",
+			"note": "Group Executive Technology at seek.com, a group-executive-level technology leader in Australia"
 		},
 		"https://linkedin.com/in/luisaramirezgarcia": {
 			"label": "accept",
@@ -451,12 +453,13 @@
 			"note": "Head of Platform Engineering and Operations at bunnings, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/mark-mcdougall-45a1241": {
-			"label": null,
+			"label": "accept",
 			"name": "Mark McDougall",
 			"title": "Global CIO",
 			"company": "computershare.com",
 			"location": "Melbourne, Australia",
-			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05"
+			"firstSeenRunId": "people_dom-cc0fcd115f1f_2026-09-05",
+			"note": "Global CIO at computershare.com, an explicit c-suite technology executive in Australia"
 		},
 		"https://linkedin.com/in/michael-hua-7003b021": {
 			"label": "accept",

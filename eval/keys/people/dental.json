@@ -3,20 +3,22 @@
 	"icpId": "4213915c-0b0c-43f0-bd4a-5379e3a0a594",
 	"people": {
 		"https://linkedin.com/in/alex-sharp-dds-53826a104": {
-			"label": null,
+			"label": "accept",
 			"name": "Alex Sharp, DDS",
 			"title": "Chief Executive Officer",
 			"company": "sharedpracticesgroup.com",
 			"location": "Cabot, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Chief Executive Officer at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/alexis-stickovitch-781228131": {
-			"label": null,
+			"label": "accept",
 			"name": "Alexis Stickovitch",
 			"title": "Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Glen Allen, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/amanda-gushura-307504166": {
 			"label": "accept",
@@ -37,36 +39,40 @@
 			"note": "Operations Leader, Office Leader at dentalonepartners, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/andrea-morales-90a29a250": {
-			"label": null,
+			"label": "accept",
 			"name": "Andrea Morales",
 			"title": "Manager of Operations/Implant Consultant",
 			"company": "sharedpracticesgroup.com",
 			"location": "Springdale, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Manager of Operations/Implant Consultant at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/andrew-s-5a01691ab": {
-			"label": null,
+			"label": "accept",
 			"name": "Andrew S.",
 			"title": "Chief Executive Officer",
 			"company": "prosmile.com",
 			"location": "New York City, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Chief Executive Officer at prosmile.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/angela-bowman-85a25527b": {
-			"label": null,
+			"label": "accept",
 			"name": "Angela Bowman",
 			"title": "Practice Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "North East, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/annette-young-4978459a": {
-			"label": null,
+			"label": "accept",
 			"name": "Annette Young",
 			"title": "Regional Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Greenville, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/armanda-lester-4a72b996": {
 			"label": "accept",
@@ -96,12 +102,13 @@
 			"note": "Regional Director Of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/chris-mccomas-7759b6b4": {
-			"label": null,
+			"label": "accept",
 			"name": "Chris McComas",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Murfreesboro, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/cliff-mcdonald-4693a012": {
 			"label": "accept",
@@ -113,12 +120,13 @@
 			"note": "Regional Director Of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/cynthia-monroy-38b31a252": {
-			"label": null,
+			"label": "accept",
 			"name": "Cynthia Monroy",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Kuna, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/dana-ventura-059851209": {
 			"label": "accept",
@@ -139,28 +147,31 @@
 			"note": "Regional Director Of Operations at prosmile, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/diana-burton-5392575a": {
-			"label": null,
+			"label": "accept",
 			"name": "Diana Burton",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Alton, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/donna-long-4bb75a15": {
-			"label": null,
+			"label": "accept",
 			"name": "Donna Long",
 			"title": "Regional Manager",
 			"company": "nadentalgroup.com",
 			"location": "Snellville, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Manager at nadentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/drucila-clark-04288477": {
-			"label": null,
+			"label": "accept",
 			"name": "Drucila Clark",
 			"title": "Regional Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Phoenix, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/eduardo-laventman-0428444": {
 			"label": "accept",
@@ -172,12 +183,13 @@
 			"note": "Chief Operating Officer at lonepeakdentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/elizabeth-vigil-667204a1": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Elizabeth Vigil",
 			"title": "Office Manager Advantage Dental",
 			"company": "peakdentalservices.com",
 			"location": "Pueblo, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Office Manager at peakdentalservices.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/elvis-bara-8ba63a238": {
 			"label": "accept",
@@ -189,12 +201,13 @@
 			"note": "General Manager at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/eugenia-ruiz-522a2aa6": {
-			"label": null,
+			"label": "accept",
 			"name": "Eugenia Connell",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Summerville, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/franci-raines-a424a451": {
 			"label": "accept",
@@ -206,12 +219,13 @@
 			"note": "Senior Regional Director of Operations, Tennessee at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/geralyn-burton-61750a17b": {
-			"label": null,
+			"label": "accept",
 			"name": "Geralyn Burton",
 			"title": "Practice Manager",
 			"company": "peakdentalservices.com",
 			"location": "Austin, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Manager at peakdentalservices.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/haseena-saheem-9754b1184": {
 			"label": "accept",
@@ -223,20 +237,22 @@
 			"note": "Senior Dental Operations Manager | Practice Growth & Team Leadership at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/jeanette-gestner-9b1b439": {
-			"label": null,
+			"label": "accept",
 			"name": "Jeanette Gestner",
 			"title": "Practice Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Grand Junction, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/jeiliani-santiago-b63682262": {
-			"label": null,
+			"label": "accept",
 			"name": "Jeiliani Santiago",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Conroe, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/jessica-hunter-1a99b016a": {
 			"label": "accept",
@@ -257,28 +273,31 @@
 			"note": "Doctor Partner & Regional Clinical Vice President is a clinical-oversight role (clinical standards/protocols), not the administrative operations/budget role the rubric requires"
 		},
 		"https://linkedin.com/in/kailyn-howe-00066b1bb": {
-			"label": null,
+			"label": "accept",
 			"name": "Kailyn Howe",
 			"title": "Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Columbus, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/katlyn-lentz-2a9139166": {
-			"label": null,
+			"label": "accept",
 			"name": "Katlyn Lentz",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Washington, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/kelly-auerhamer-8217441b1": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Kelly Auerhamer",
 			"title": "Orthodontic Office Manager",
 			"company": "peakdentalservices.com",
 			"location": "United States, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Orthodontic Office Manager at peakdentalservices.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/kelsey-williams-590678159": {
 			"label": "accept",
@@ -290,12 +309,13 @@
 			"note": "Senior Regional Director of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/kem-howell-28b5a4221": {
-			"label": null,
+			"label": "accept",
 			"name": "Kem Howell",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Denver, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/kim-hough-0470351a1": {
 			"label": "accept",
@@ -334,20 +354,22 @@
 			"note": "Regional Director of Operations, Columbus, OH at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/letaleja-fleshman-997027177": {
-			"label": null,
+			"label": "accept",
 			"name": "Letaleja Fleshman",
 			"title": "Practice Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Omaha, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/maria-landis-5235a79a": {
-			"label": null,
+			"label": "accept",
 			"name": "Maria Landis",
 			"title": "Practice Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Orlando, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/mark-cornwell": {
 			"label": "accept",
@@ -359,28 +381,31 @@
 			"note": "Regional Director of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/matt-guarino-dmd-823bb421": {
-			"label": null,
+			"label": "accept",
 			"name": "Matt Guarino DMD",
 			"title": "Co-Founder and COO",
 			"company": "sharedpracticesgroup.com",
 			"location": "Richmond, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Co-Founder and COO at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/michael-chmelar-562720230": {
-			"label": null,
+			"label": "accept",
 			"name": "Michael Chmelar",
 			"title": "Practice Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Sacramento, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/michael-rodriguez-316777186": {
-			"label": null,
+			"label": "accept",
 			"name": "Michael Rodriguez",
 			"title": "Practice Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Burlington, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/michael-s-lynch-dds-552b41126": {
 			"label": "accept",
@@ -410,12 +435,13 @@
 			"note": "Regional Director of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/mikaela-mays-ab92842a1": {
-			"label": null,
+			"label": "accept",
 			"name": "Mikaela Mays",
 			"title": "Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Mountain Home, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/morgan-eanes-a6a114351": {
 			"label": "accept",
@@ -427,20 +453,22 @@
 			"note": "Practice Manager at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/mychele-jackson-taylor-58ab642b": {
-			"label": null,
+			"label": "accept",
 			"name": "Mychele Jackson-Taylor",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "United States, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/nancyt-martinez": {
-			"label": null,
+			"label": "accept",
 			"name": "Nancy Martinez",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Myrtle Beach, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/nick-deninno053179": {
 			"label": "accept",
@@ -452,12 +480,13 @@
 			"note": "Regional Director of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/paul-reda-21abb47": {
-			"label": null,
+			"label": "accept",
 			"name": "Paul Reda",
 			"title": "Chief Executive Officer",
 			"company": "nadentalgroup.com",
 			"location": "New York, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Chief Executive Officer at nadentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/paulmorash": {
 			"label": "accept",
@@ -469,44 +498,49 @@
 			"note": "Regional Director of Operations at lonepeakdentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/rachael-smith-0991a65": {
-			"label": null,
+			"label": "accept",
 			"name": "Rachael Smith",
 			"title": "Startup Regional Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Colorado Springs, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Startup Regional Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/rachel-leckenby-47687813a": {
-			"label": null,
+			"label": "accept",
 			"name": "Rachel Leckenby",
 			"title": "Practice Operations Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "United States, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Practice Operations Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/raina-castillo-373438bb": {
-			"label": null,
+			"label": "accept",
 			"name": "RAINA CASTILLO",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Juneau, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/ramsha-misbah-178518173": {
-			"label": null,
+			"label": "accept",
 			"name": "Ramsha Misbah",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Richmond, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/ray-caruso-872004a2": {
-			"label": null,
+			"label": "accept",
 			"name": "Ray Caruso",
 			"title": "President & CEO",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Denver Metropolitan Area, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "President & CEO at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/renae-mansor-8404a4204": {
 			"label": "accept",
@@ -518,20 +552,22 @@
 			"note": "Regional Director Of Operations at nadentalgroup, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/rene-rodriguez29": {
-			"label": null,
+			"label": "accept",
 			"name": "Rene Rodriguez",
 			"title": "Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Dayton, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/ron-martinez-8199711a": {
-			"label": null,
+			"label": "accept",
 			"name": "Ron Martinez",
 			"title": "Regional Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "San Rafael, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/ryantorresan": {
 			"label": "accept",
@@ -552,12 +588,13 @@
 			"note": "Director of Operations at prosmile, an operations/administrative leadership title owning the software budget for the practice or group"
 		},
 		"https://linkedin.com/in/sherry-diferdinando-01a6b9323": {
-			"label": null,
+			"label": "accept",
 			"name": "Sherry DiFerdinando",
 			"title": "Regional Vice President Operations",
 			"company": "prosmile.com",
 			"location": "Philadelphia, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Vice President Operations at prosmile.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/stephencwolf": {
 			"label": "accept",
@@ -614,28 +651,31 @@
 			"note": "same name, title, company and location as the already-accepted https://linkedin.com/in/tiffany-masse-3610a1375 entry, just a different LinkedIn URL for the same person"
 		},
 		"https://linkedin.com/in/tina-louis-ritz-17021713": {
-			"label": null,
+			"label": "accept",
 			"name": "Tina Louis (Ritz)",
 			"title": "Regional Manager",
 			"company": "sharedpracticesgroup.com",
 			"location": "Tampa, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Manager at sharedpracticesgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/trina-reuther": {
-			"label": null,
+			"label": "reject:not-buyer",
 			"name": "Trina Reuther",
 			"title": "Senior Office Manager",
 			"company": "peakdentalservices.com",
 			"location": "Colorado Springs, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Senior Office Manager at peakdentalservices.com; the rubric names office managers explicitly as influencers, not budget-owning buyers"
 		},
 		"https://linkedin.com/in/vandie-glenn-2531b0308": {
-			"label": null,
+			"label": "accept",
 			"name": "Vandie Glenn",
 			"title": "Regional Operations Manager",
 			"company": "lonepeakdentalgroup.com",
 			"location": "Pocatello, United States",
-			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05"
+			"firstSeenRunId": "people_dom-946c8c5e1f67_2026-09-05",
+			"note": "Regional Operations Manager at lonepeakdentalgroup.com, an operations-leadership or owner/executive title owning the practice group's administrative budget"
 		},
 		"https://linkedin.com/in/wendy-pineda-964a1834": {
 			"label": "accept",

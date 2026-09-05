@@ -39,12 +39,13 @@
 			"note": "Head of Accounts is not one of the rubric's named finance-function titles (CFO, VP Finance, Head of Finance, Controller), and could as easily be a client-accounts/sales role, a named hard negative"
 		},
 		"https://linkedin.com/in/patrick-driscoll-3487a315": {
-			"label": null,
+			"label": "accept",
 			"name": "Patrick Driscoll",
 			"title": "Chief Financial Officer",
 			"company": "qureight.com",
 			"location": "Cambridge, United Kingdom",
-			"firstSeenRunId": "people_dom-8ff8c7104e49_2026-09-05"
+			"firstSeenRunId": "people_dom-8ff8c7104e49_2026-09-05",
+			"note": "Chief Financial Officer at qureight.com, an explicit CFO buyer role"
 		},
 		"https://linkedin.com/in/rahul-shivkumar-04138252": {
 			"label": "reject:not-buyer",

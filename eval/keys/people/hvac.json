@@ -30,12 +30,13 @@
 			"note": "President at engcool, an owner/operations-leadership title owning the budget for the business; based in Florida"
 		},
 		"https://linkedin.com/in/drew-williams-17496a5": {
-			"label": null,
+			"label": "accept",
 			"name": "Drew Williams",
 			"title": "Chief Operating Officer",
 			"company": "aircond.com",
 			"location": "Carrollton, United States",
-			"firstSeenRunId": "people_dom-ac7ee130d00f_2026-09-05"
+			"firstSeenRunId": "people_dom-ac7ee130d00f_2026-09-05",
+			"note": "Chief Operating Officer at aircond.com, a c-suite operations leader owning the budget, matching the rubric's operations-leader buyer band"
 		},
 		"https://linkedin.com/in/raymond-perez-msi": {
 			"label": "accept",
