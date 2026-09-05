@@ -20,6 +20,14 @@
 			"firstSeenRunId": "people_dom-4d7ee8222a23_2026-09-05",
 			"note": "President & CEO at jrhobbs.com, an explicit owner/c-suite buyer role"
 		},
+		"https://linkedin.com/in/brian-estes-148336117": {
+			"label": null,
+			"name": "Brian Estes",
+			"title": "President",
+			"company": "estesair.com",
+			"location": "Atlanta, United States",
+			"firstSeenRunId": "people_dom-d7d0fa5d6455_2026-09-05"
+		},
 		"https://linkedin.com/in/christopher-horan-24766b39": {
 			"label": "accept",
 			"name": "Christopher Horan",
@@ -127,6 +135,14 @@
 			"location": "Fort Myers, United States",
 			"firstSeenRunId": "people_dom-8b9c563747d5_2026-09-05",
 			"note": "General Manager at pagemech.com, an explicit GM buyer role"
+		},
+		"https://linkedin.com/in/steve-lackley-a3601a15a": {
+			"label": null,
+			"name": "Steve Lackley",
+			"title": "Commercial Division Manager",
+			"company": "estesair.com",
+			"location": "United States, United States",
+			"firstSeenRunId": "people_dom-d7d0fa5d6455_2026-09-05"
 		},
 		"https://linkedin.com/in/w-r-6ba121134": {
 			"label": "accept",

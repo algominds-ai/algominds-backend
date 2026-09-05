@@ -20,6 +20,14 @@
 			"firstSeenRunId": "people_dom-329eae018527_2026-09-05",
 			"note": "Head of Engineering - AI Platform Engineering at seek, matching the technology-leadership buyer rubric; based in Australia"
 		},
+		"https://linkedin.com/in/adamcfuller": {
+			"label": null,
+			"name": "Adam Fuller",
+			"title": "Head of Technical, Trading and Operational Support",
+			"company": "commsec.com.au",
+			"location": "Greater Sydney Area",
+			"firstSeenRunId": "people_dom-7a7f9b1891eb_2026-09-05"
+		},
 		"https://linkedin.com/in/alex-richards-7572313b": {
 			"label": "accept",
 			"name": "Alex Richards",
@@ -212,11 +220,11 @@
 		"https://linkedin.com/in/david-grozdan-1355b03b": {
 			"label": "accept",
 			"name": "David Grozdan",
-			"title": "Head of IT \u2010 Manufacturing",
+			"title": "Head of IT ‐ Manufacturing",
 			"company": "blackmores.com.au",
 			"location": "Melbourne, Australia",
 			"firstSeenRunId": "people_dom-8eaa915d142e_2026-09-05",
-			"note": "Head of IT \u2010 Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
+			"note": "Head of IT ‐ Manufacturing at blackmores, matching the technology-leadership buyer rubric; based in Australia"
 		},
 		"https://linkedin.com/in/elzanne-van-der-westhuizen-0ba53933": {
 			"label": "accept",
@@ -757,6 +765,14 @@
 			"location": "Beaumaris, Victoria, Australia",
 			"firstSeenRunId": "people_dom-d3f34e19796e_2026-09-05",
 			"note": "Data Services Director at carsales.com.au, a technology-domain director role"
+		},
+		"https://linkedin.com/in/ryan-jones-721896144": {
+			"label": null,
+			"name": "Ryan Jones",
+			"title": "Crew Tech Lead (Head of Engineering)",
+			"company": "commsec.com.au",
+			"location": "Sydney, New South Wales, Australia",
+			"firstSeenRunId": "people_dom-7a7f9b1891eb_2026-09-05"
 		},
 		"https://linkedin.com/in/ryan-spain-53965a7": {
 			"label": "accept",

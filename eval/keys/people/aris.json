@@ -2,6 +2,14 @@
 	"slug": "aris",
 	"icpId": "5e8ca999-8a24-442a-853b-23c11bfd5d05",
 	"people": {
+		"https://linkedin.com/in/aaron-hebeisen-a8a1406": {
+			"label": null,
+			"name": "Aaron Hebeisen",
+			"title": "Director of Managed Services",
+			"company": "dartmsp.com",
+			"location": "Tampa, United States",
+			"firstSeenRunId": "people_dom-f934d1c02d7a_2026-09-05"
+		},
 		"https://linkedin.com/in/adam-kaplan-93b999": {
 			"label": "accept",
 			"name": "Adam Kaplan",
@@ -47,6 +55,14 @@
 			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
 			"note": "Chief Executive Officer at wheelhouseit, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
 		},
+		"https://linkedin.com/in/hilary-wallace-26075819": {
+			"label": null,
+			"name": "Hilary LeBrun",
+			"title": "Chief Operating Officer",
+			"company": "paragusit.com",
+			"location": "Holyoke, United States",
+			"firstSeenRunId": "people_dom-f934d1c02d7a_2026-09-05"
+		},
 		"https://linkedin.com/in/jess-wolfe": {
 			"label": "accept",
 			"name": "Jess Wolfe, PMP",
@@ -55,6 +71,14 @@
 			"location": "Milwaukee, United States",
 			"firstSeenRunId": "people_dom-a52746a4c6f3_2026-09-05",
 			"note": "Director of Operations at valortech, matching the MSP buyer rubric (owner/founder/CEO or director/VP of service delivery and operations); based in the US"
+		},
+		"https://linkedin.com/in/john-lorelle-742a444": {
+			"label": null,
+			"name": "John Lorelle",
+			"title": "Regional President",
+			"company": "dartmsp.com",
+			"location": "Tampa, United States",
+			"firstSeenRunId": "people_dom-f934d1c02d7a_2026-09-05"
 		},
 		"https://linkedin.com/in/kevin-spargo-a46153127": {
 			"label": "accept",
