@@ -130,39 +130,13 @@ async function liveEnv(): Promise<LiveInput> {
 	};
 }
 
-function normalizedWhitespace(text: string): string {
-	return text.replace(/\s+/g, " ").trim();
-}
-
-/** Mirrors `evidenceText`/`quoteFoundIn` in `src/core/companies/judge-evidence.ts`: whether `quote` occurs verbatim, whitespace aside, in the row's own description, evidence quote and page evidence. */
-function quoteInEvidence(
-	quote: string | undefined,
-	replayCase: ReplayCase,
-): boolean {
-	if (!quote || quote.trim().length === 0) return false;
-	const pageQuotes = Object.values(replayCase.pageEvidence).map(
-		(entry) => entry.quote,
-	);
-	const text = [
-		replayCase.row.description,
-		replayCase.row.evidenceQuote,
-		...pageQuotes,
-	]
-		.filter((value): value is string => value !== null && value !== undefined)
-		.join("\n");
-	return normalizedWhitespace(text).includes(normalizedWhitespace(quote));
-}
-
 function printMustBeProven(
 	replayCase: ReplayCase,
 	verdict: Verdict | undefined,
 ): void {
 	for (const req of mustBeProven(replayCase.requirements)) {
 		const entry = verdict?.statuses.find((status) => status.id === req.id);
-		const grounded = quoteInEvidence(entry?.quote, replayCase);
-		console.log(
-			`    ${req.id}: ${entry?.status ?? "unproven"}${entry?.quote ? `  quote="${entry.quote}"  in evidence=${grounded}` : ""}`,
-		);
+		console.log(`    ${req.id}: ${entry?.status ?? "unproven"}`);
 	}
 }
 
@@ -172,9 +146,7 @@ function printAllHardStatuses(
 ): void {
 	for (const req of hardRequirements(replayCase.requirements)) {
 		const entry = verdict?.statuses.find((status) => status.id === req.id);
-		console.log(
-			`    all: ${req.id}: ${entry?.status ?? "unproven"}${entry?.quote ? `  quote="${entry.quote}"` : ""}`,
-		);
+		console.log(`    all: ${req.id}: ${entry?.status ?? "unproven"}`);
 	}
 }
 
