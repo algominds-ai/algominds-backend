@@ -66,13 +66,13 @@
 			"note": "Chief Operating Officer at paragusit.com, an explicit COO buyer role"
 		},
 		"https://linkedin.com/in/jay-thomas-7b2182180": {
-			"label": null,
+			"label": "accept",
 			"name": "Jay Thomas",
 			"title": "Vice President",
 			"company": "sharedit.com",
 			"location": "Quad Cities Metropolitan Area, United States",
 			"firstSeenRunId": "people_dom-9a23c0327132_2026-09-05",
-			"note": "undecidable: the title is a bare 'Vice President' with no functional qualifier, so it cannot be confirmed as owning service delivery/operations/managed services versus a sales or marketing VP function, which the rubric treats as a hard negative"
+			"note": "stored evidence shows a clear IT-services career progression at sharedit.com (IT Team Leader 2011, Director of IT Services 2018, Vice President 2026), confirming the VP role continues the same technical/service-delivery track rather than sales or marketing"
 		},
 		"https://linkedin.com/in/jess-wolfe": {
 			"label": "accept",
