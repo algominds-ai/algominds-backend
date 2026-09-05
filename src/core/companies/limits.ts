@@ -8,32 +8,40 @@ export type NumericLimit = {
 	ceiling: (plan: SearchPlan) => number | null;
 };
 
+const WORKFORCE_LIMIT: NumericLimit = {
+	label: "headcount",
+	reading: (entity) => entity.workforceTotal,
+	floor: (plan) => plan.minWorkforce,
+	ceiling: (plan) => plan.maxWorkforce,
+};
+
+const FOUNDED_YEAR_LIMIT: NumericLimit = {
+	label: "founding year",
+	reading: (entity) => entity.foundedYear,
+	floor: (plan) => plan.minFoundedYear,
+	ceiling: (plan) => plan.maxFoundedYear,
+};
+
+const ANNUAL_REVENUE_LIMIT: NumericLimit = {
+	label: "annual revenue",
+	reading: (entity) => entity.revenueAnnual,
+	floor: (plan) => plan.minRevenueAnnual,
+	ceiling: (plan) => plan.maxRevenueAnnual,
+};
+
+const FUNDING_RAISED_LIMIT: NumericLimit = {
+	label: "funding raised",
+	reading: (entity) => entity.fundingTotal,
+	floor: (plan) => plan.minFundingTotal,
+	ceiling: (plan) => plan.maxFundingTotal,
+};
+
 /** Every figure Exa reports for a company that a profile can bound. */
 export const NUMERIC_LIMITS: readonly NumericLimit[] = [
-	{
-		label: "headcount",
-		reading: (entity) => entity.workforceTotal,
-		floor: (plan) => plan.minWorkforce,
-		ceiling: (plan) => plan.maxWorkforce,
-	},
-	{
-		label: "founding year",
-		reading: (entity) => entity.foundedYear,
-		floor: (plan) => plan.minFoundedYear,
-		ceiling: (plan) => plan.maxFoundedYear,
-	},
-	{
-		label: "annual revenue",
-		reading: (entity) => entity.revenueAnnual,
-		floor: (plan) => plan.minRevenueAnnual,
-		ceiling: (plan) => plan.maxRevenueAnnual,
-	},
-	{
-		label: "funding raised",
-		reading: (entity) => entity.fundingTotal,
-		floor: (plan) => plan.minFundingTotal,
-		ceiling: (plan) => plan.maxFundingTotal,
-	},
+	WORKFORCE_LIMIT,
+	FOUNDED_YEAR_LIMIT,
+	ANNUAL_REVENUE_LIMIT,
+	FUNDING_RAISED_LIMIT,
 ];
 
 function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
@@ -88,31 +96,65 @@ const STATED_HEADCOUNT_LIMIT: NumericLimit = {
 	ceiling: (plan) => plan.maxWorkforce,
 };
 
+type LimitReading = { present: boolean; detail: RejectDetail | null };
+
+function readLimit(
+	limit: NumericLimit,
+	entity: CompanyEntity,
+	plan: SearchPlan,
+): LimitReading {
+	const reading = limit.reading(entity);
+	if (reading === null) return { present: false, detail: null };
+	const ceiling = limit.ceiling(plan);
+	if (ceiling !== null && reading > ceiling) {
+		const group = `${limit.label} above the limit of ${ceiling}`;
+		return {
+			present: true,
+			detail: {
+				reason: `${limit.label} ${reading} above the limit of ${ceiling}`,
+				group,
+			},
+		};
+	}
+	const floor = limit.floor(plan);
+	if (floor !== null && reading < floor) {
+		const group = `${limit.label} below the floor of ${floor}`;
+		return {
+			present: true,
+			detail: {
+				reason: `${limit.label} ${reading} below the floor of ${floor}`,
+				group,
+			},
+		};
+	}
+	return { present: true, detail: null };
+}
+
+/** Rejects on revenue and funding together only when every reading present for the pair fails its bound. */
+function financialBandRejectReason(
+	entity: CompanyEntity,
+	plan: SearchPlan,
+): RejectDetail | null {
+	const readings = [ANNUAL_REVENUE_LIMIT, FUNDING_RAISED_LIMIT]
+		.map((limit) => readLimit(limit, entity, plan))
+		.filter((reading) => reading.present);
+	if (readings.length === 0) return null;
+	if (readings.some((reading) => reading.detail === null)) return null;
+	const failing = readings.find((reading) => reading.detail !== null);
+	return failing?.detail ?? null;
+}
+
 function numericRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
 ): RejectDetail | null {
-	for (const limit of [...NUMERIC_LIMITS, STATED_HEADCOUNT_LIMIT]) {
-		const reading = limit.reading(entity);
-		if (reading === null) continue;
-		const ceiling = limit.ceiling(plan);
-		if (ceiling !== null && reading > ceiling) {
-			const group = `${limit.label} above the limit of ${ceiling}`;
-			return {
-				reason: `${limit.label} ${reading} above the limit of ${ceiling}`,
-				group,
-			};
-		}
-		const floor = limit.floor(plan);
-		if (floor !== null && reading < floor) {
-			const group = `${limit.label} below the floor of ${floor}`;
-			return {
-				reason: `${limit.label} ${reading} below the floor of ${floor}`,
-				group,
-			};
-		}
-	}
-	return null;
+	const workforce = readLimit(WORKFORCE_LIMIT, entity, plan);
+	if (workforce.detail !== null) return workforce.detail;
+	const foundedYear = readLimit(FOUNDED_YEAR_LIMIT, entity, plan);
+	if (foundedYear.detail !== null) return foundedYear.detail;
+	const financial = financialBandRejectReason(entity, plan);
+	if (financial !== null) return financial;
+	return readLimit(STATED_HEADCOUNT_LIMIT, entity, plan).detail;
 }
 
 function countryRejectReason(
