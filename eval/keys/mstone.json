@@ -1784,6 +1784,23 @@
 				"fitReason": "Shell's Australian energy solutions arm, revenue far above floor, fits energy vertical despite smaller headcount."
 			}
 		},
+		"shift.com.au": {
+			"label": null,
+			"name": "Shift",
+			"firstSeenRunId": "companies_96ba7d39-8541-4498-b4ef-e9162b06817e_2026-09-05",
+			"lastSeenAt": "2026-09-05T06:47:11.782Z",
+			"record": {
+				"industry": null,
+				"description": "Shift provides Australian businesses with credit and payment products that help them manage cash flow with confidence.\n\nUsing real‑time financial data, Shift gives businesses visibility of their available credit and control over when and how they access funds. This supports cash flow management, asset purchases and streamlined trade terms, without lengthy approval processes or administration.\n\nSince 2014, Shift has supported thousands of Australian businesses to operate and grow with certainty, flexibility and control.",
+				"workforceTotal": 241,
+				"country": "Australia",
+				"foundedYear": 2014,
+				"citedPage": "https://shift.com.au/",
+				"citedDate": null,
+				"quote": null,
+				"fitReason": "No evidence describing an in-house tech team holding budget/authority to engage contractors directly."
+			}
+		},
 		"siteminder.com": {
 			"label": "accept",
 			"name": "SiteMinder",
