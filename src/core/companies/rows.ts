@@ -4,10 +4,15 @@ import type {
 } from "@/core/companies/candidates";
 import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import type { EvidenceByRow } from "@/core/companies/judge-evidence";
+import { judgedFields } from "@/core/companies/judge-evidence";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
+import type { Requirement } from "@/core/requirements";
+import { hardRequirements, mustBeProven } from "@/core/requirements";
 
 const EVIDENCE_SOURCE = "exa";
+const ENGINE_SOURCE = "engine";
 const RAW_RESULT_MAX_CHARS = 20_000;
 const PAGE_TEXT_MAX_CHARS = 10_000;
 const ROUND_REFUSALS_MAX_CHARS = 20_000;
@@ -174,4 +179,53 @@ export function roundRefusalsEvidenceRow(
 		value: value.slice(0, ROUND_REFUSALS_MAX_CHARS),
 		source: EVIDENCE_SOURCE,
 	};
+}
+
+type JudgeRequirementFlag = { id: string; quoteRequired: boolean };
+
+/** Every hard requirement the judge was told about, each carrying whether that requirement needed a quote for a `proven` status. */
+function judgeRequirementFlags(
+	requirements: readonly Requirement[],
+): JudgeRequirementFlag[] {
+	const grounded = new Set(mustBeProven(requirements).map((req) => req.id));
+	return hardRequirements(requirements).map((req) => ({
+		id: req.id,
+		quoteRequired: grounded.has(req.id),
+	}));
+}
+
+export type JudgeInputRowsInput = {
+	runId: string;
+	round: number;
+	rows: readonly CompanyRow[];
+	evidenceByRow: EvidenceByRow;
+	requirements: readonly Requirement[];
+};
+
+/**
+ * One append-only evidence row per row the judge is about to see, carrying
+ * the exact fields, page evidence and requirement list the model call reads,
+ * so a later replay can reproduce that call byte for byte.
+ */
+export function judgeInputEvidenceRows(
+	input: JudgeInputRowsInput,
+): NewEvidence[] {
+	const { runId, round, rows, evidenceByRow, requirements } = input;
+	const requirementFlags = judgeRequirementFlags(requirements);
+	return rows.map((row, index) => {
+		const evidence = evidenceByRow.get(index);
+		return {
+			subjectType: "run",
+			subjectId: runId,
+			kind: "judge-input",
+			value: JSON.stringify({
+				round,
+				domain: row.domain,
+				fields: judgedFields(row, evidence),
+				evidence: evidence ? Object.fromEntries(evidence) : null,
+				requirements: requirementFlags,
+			}),
+			source: ENGINE_SOURCE,
+		};
+	});
 }
