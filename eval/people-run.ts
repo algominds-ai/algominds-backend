@@ -39,7 +39,7 @@ const RunCompanyRowSchema = z.object({
 	people_verified: z.number(),
 });
 
-async function fetchRunCompanies(
+export async function fetchRunCompanies(
 	sql: Sql,
 	runId: string,
 ): Promise<StoredRunCompany[]> {
@@ -59,7 +59,7 @@ const PersonRowSchema = z.object({
 	data: z.object({ location: z.string().nullable() }).nullish(),
 });
 
-async function fetchRunPeople(
+export async function fetchRunPeople(
 	sql: Sql,
 	runId: string,
 ): Promise<StoredPersonRecord[]> {

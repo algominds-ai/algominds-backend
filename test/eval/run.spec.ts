@@ -1,19 +1,15 @@
 import type { SeededTrial } from "@eval/arm-db";
+import type { TrialCase } from "@eval/full-chain";
+import { budgetBlock, casesFor, newBudget } from "@eval/full-chain";
 import {
 	MAX_PROFILE_SPEND_DOLLARS,
 	MAX_SPEND_DOLLARS,
 	MIN_TRIALS,
 	PROFILES,
 } from "@eval/profiles";
-import type { TrialCase } from "@eval/run";
-import {
-	budgetBlock,
-	casesFor,
-	newBudget,
-	parseArgs,
-	runIdsByProfile,
-	selectedProfiles,
-} from "@eval/run";
+import type { ResultRow } from "@eval/run";
+import { parseArgs, runIdsByProfile, selectedProfiles } from "@eval/run";
+import type { TrialOutput } from "@eval/scorers";
 import { describe, expect, it } from "vitest";
 
 describe("parseArgs", () => {
@@ -125,35 +121,58 @@ describe("casesFor", () => {
 	});
 });
 
+function output(overrides: Partial<TrialOutput> = {}): TrialOutput {
+	return {
+		engine: null,
+		companiesRunId: null,
+		peopleRunId: null,
+		peopleVerdict: null,
+		totalCostDollars: 0,
+		totalSeconds: null,
+		skipped: null,
+		...overrides,
+	};
+}
+
+function row(
+	input: TrialCase,
+	outputOverrides: Partial<TrialOutput>,
+): ResultRow {
+	return {
+		input: { slug: input.slug, trialIndex: input.trialIndex, count: 3 },
+		output: output(outputOverrides),
+	};
+}
+
 describe("runIdsByProfile", () => {
-	it("groups run ids by the trial's profile slug", () => {
+	it("groups both run ids by the trial's profile slug", () => {
 		const rows = [
-			{
-				input: oneCase({ slug: "mstone" }),
-				output: { verdict: null, runId: "run-1", skipped: null },
-			},
-			{
-				input: oneCase({ slug: "mstone", trialIndex: 1 }),
-				output: { verdict: null, runId: "run-2", skipped: null },
-			},
-			{
-				input: oneCase({ slug: "aris" }),
-				output: { verdict: null, runId: "run-3", skipped: null },
-			},
+			row(oneCase({ slug: "mstone" }), {
+				companiesRunId: "company-run-1",
+				peopleRunId: "people-run-1",
+			}),
+			row(oneCase({ slug: "mstone", trialIndex: 1 }), {
+				companiesRunId: "company-run-2",
+				peopleRunId: "people-run-2",
+			}),
+			row(oneCase({ slug: "aris" }), {
+				companiesRunId: "company-run-3",
+				peopleRunId: "people-run-3",
+			}),
 		];
 		expect(runIdsByProfile(rows)).toEqual({
-			mstone: ["run-1", "run-2"],
-			aris: ["run-3"],
+			mstone: [
+				"company-run-1",
+				"people-run-1",
+				"company-run-2",
+				"people-run-2",
+			],
+			aris: ["company-run-3", "people-run-3"],
 		});
 	});
 
 	it("omits a trial the budget skipped before it ran", () => {
-		const rows = [
-			{
-				input: oneCase(),
-				output: { verdict: null, runId: null, skipped: "budget" },
-			},
-		];
+		const rows = [row(oneCase(), { skipped: "budget" })];
 		expect(runIdsByProfile(rows)).toEqual({});
 	});
 });
