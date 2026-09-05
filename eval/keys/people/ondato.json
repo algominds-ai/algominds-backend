@@ -81,7 +81,7 @@
 			"company": "midnite.com",
 			"location": "London, United Kingdom",
 			"firstSeenRunId": "people_dom-7ec247b88d2a_2026-09-05",
-			"note": "Head of Brand Marketing at midnite.com; a brand-marketing function head, not the CMO or one of the rubric's named Growth/Product/Business Development heads"
+			"note": "Head of Brand Marketing at Midnite; the delivered roster shows a VP, Growth (Jonathan Shaw, accepted) already accountable for growth/conversion, so this brand-specific marketing sub-function does not get elevated to the marketing-owner buyer role"
 		},
 		"https://linkedin.com/in/andyjsmart": {
 			"label": "accept",
@@ -684,7 +684,7 @@
 			"company": "midnite.com",
 			"location": "London, United Kingdom",
 			"firstSeenRunId": "people_dom-7ec247b88d2a_2026-09-05",
-			"note": "Head of Integrated Marketing Planning at midnite.com; a marketing-planning function head, not the CMO or one of the rubric's named Growth/Product/Business Development heads"
+			"note": "Head of Integrated Marketing Planning at Midnite; the delivered roster shows a VP, Growth (Jonathan Shaw, accepted) already accountable for growth/conversion, so this marketing-planning sub-function does not get elevated to the marketing-owner buyer role"
 		},
 		"https://linkedin.com/in/ryanmurton": {
 			"label": "reject:not-buyer",
@@ -693,7 +693,7 @@
 			"company": "midnite.com",
 			"location": "London, United Kingdom",
 			"firstSeenRunId": "people_dom-7ec247b88d2a_2026-09-05",
-			"note": "Vice President, Commercial at midnite.com; a commercial-function VP, not the Chief Revenue Officer or one of the rubric's other named buyer titles"
+			"note": "Vice President, Commercial at Midnite; a partnerships/commercial-deal function, not the Chief Revenue Officer or another rubric-named role accountable for signup conversion, and the roster already has a VP Growth and Heads/VP of Product filling that accountability"
 		},
 		"https://linkedin.com/in/sabrinaloi": {
 			"label": "accept",
