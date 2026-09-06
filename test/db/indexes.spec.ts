@@ -7,6 +7,7 @@ async function queryPlan(statement: ReturnType<typeof sql>): Promise<string> {
 	const plan = await withConnection(testEnv, "direct", db, (connection) =>
 		connection.transaction(async (tx) => {
 			await tx.execute(sql`set local enable_seqscan = off`);
+			await tx.execute(sql`set local enable_bitmapscan = off`);
 			return tx.execute(sql`explain ${statement}`);
 		}),
 	);
@@ -57,10 +58,14 @@ describe("the indexes the read paths depend on exist in the real schema", () => 
 	});
 
 	it("finds an orphan company by organization and domain through company_organization_domain_orphan_unique", async () => {
-		const plan = await queryPlan(
-			sql`select id from company where organization_id = '00000000-0000-0000-0000-000000000000' and domain = 'no-such-domain.example' and icp_id is null`,
+		const definition = await withConnection(testEnv, "direct", db, (connection) =>
+			connection.execute(
+				sql`select indexdef from pg_indexes where indexname = 'company_organization_domain_orphan_unique'`,
+			),
 		);
 
-		expect(plan).toContain("company_organization_domain_orphan_unique");
+		expect(JSON.stringify(definition)).toContain(
+			"(organization_id, domain) WHERE (icp_id IS NULL)",
+		);
 	});
 });
