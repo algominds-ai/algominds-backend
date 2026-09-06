@@ -1,0 +1,130 @@
+<title>Algo Engine Phase 2 Handoff</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#f7f6f2;--ink:#1e2126;--muted:#5c6470;--rule:#d9d5cc;--accent:#8a4b1f;--panel:#efece4;--good:#2f6b3a;--bad:#9a2b2b;--warn:#8a6d1f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#181a1d;--ink:#e6e3dc;--muted:#a19c92;--rule:#33373d;--accent:#d69a6a;--panel:#22252a;--good:#7fc48c;--bad:#e08383;--warn:#d8b862}}
+:root[data-theme="dark"]{--bg:#181a1d;--ink:#e6e3dc;--muted:#a19c92;--rule:#33373d;--accent:#d69a6a;--panel:#22252a;--good:#7fc48c;--bad:#e08383;--warn:#d8b862}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:15px;line-height:1.55;margin:0}
+main{max-width:74ch;margin:0 auto;padding:40px 24px 80px}
+h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:2rem;line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 28px;font-size:.95rem}
+h2{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:1.25rem;margin:40px 0 10px;padding-top:14px;border-top:1px solid var(--rule)}
+h3{font-size:1rem;font-weight:600;margin:18px 0 6px}
+p{margin:0 0 12px}
+ul{margin:0 0 12px;padding-left:22px}li{margin:3px 0}
+code,pre{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.86em}
+code{background:var(--panel);padding:1px 5px;border-radius:3px}
+pre{background:var(--panel);padding:12px 14px;border-radius:4px;overflow-x:auto;line-height:1.45}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.8rem;letter-spacing:.04em;text-transform:uppercase}
+.wrap{overflow-x:auto}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 6px}
+.kpi div{background:var(--panel);padding:12px 14px;border-radius:4px}
+.kpi b{display:block;font-family:"IBM Plex Serif",Georgia,serif;font-size:1.6rem;font-weight:600;line-height:1.1}
+.kpi span{color:var(--muted);font-size:.82rem}
+.ok{color:var(--good)}.no{color:var(--bad)}.hold{color:var(--warn)}
+.lbl{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);font-weight:600}
+</style>
+<main>
+<p class="lbl">algo-backend · phase 2 · 2026-09-04 to 2026-09-06</p>
+<h1>Algo Engine Phase 2 Handoff</h1>
+<p class="sub">Local only, nothing pushed. Owner Lahfir. Companion files in <code>exports/</code>: RESUME.md, ledger.md, codex-*.md, trace-false-accepts.md, provider-audit.md, p2-*-scored.txt.</p>
+
+<div class="kpi">
+<div><b>6.29</b><span>validated gated rating, measured twice on one build (from 2.86)</span></div>
+<div><b>$69.80</b><span>real spend; $68.37 recorded in the eval databases</span></div>
+<div><b>5 of 7</b><span>profiles at 0.8 to 1.0 on every draw</span></div>
+<div><b>0.40</b><span>best gated Ondato ever, on the held candidate</span></div>
+</div>
+
+<h2>1. Goal and rules</h2>
+<p>Take the GTM engine to 10/10: the right companies for any ICP and the right decision makers at them, verified, no per-company cap, at scale, at reasonable cost and speed. Rules that held: five companies per account per run; the engine changes only when an eval proves it; no hardcoded passes; Braintrust for every score; codex (<code>gpt-6-astra</code>, high effort, one resumed session) as adversarial advisor on every critical decision; Sonnet sub-agents for mechanical work.</p>
+
+<h2>2. The ruler</h2>
+<p><code>eval/run.ts --arm &lt;arm&gt; --trials 1 --count 5 [--profile &lt;slug&gt;] --port &lt;port&gt;</code> runs a companies run then a people run per profile into a local database <code>eval_&lt;arm&gt;</code> and logs one Braintrust experiment per arm. Keys live on branch <code>p2/base</code>: <code>eval/keys/&lt;slug&gt;.json</code> and <code>eval/keys/people/&lt;slug&gt;.json</code>. <code>eval/rescore.ts --arm &lt;arm&gt;</code> replays a finished arm against the current keys and scorer.</p>
+<p>Seven hard profiles: mstone, aris, form3, carta, ondato, dental, hvac. Composite: company_yield A/5, buyer_precision T/P, buyer_coverage B/5, engine_quality = coverage × precision, engine_score = gates × quality, rating = 10 × mean. Gates: every delivered row labelled, no key-rejected row delivered, no duplicate organisation, proving holds, both runs complete, per-profile time and cost ceilings. One wrong or unlabelled delivered row zeroes the profile. Contested rulings were adjudicated blind by codex (<code>exports/codex-brutal.md</code>).</p>
+
+<h2>3. Money</h2>
+<table><tr><th>Item</th><th>Dollars</th></tr>
+<tr><td>Recorded in the eval databases, all arms</td><td>68.37</td></tr>
+<tr><td>Judge and selector replays, outside the ledger</td><td>about 0.72</td></tr>
+<tr><td>Unrecorded calls in two failed rounds (gap now fixed)</td><td>about 0.50</td></tr>
+<tr><td>Real total against a cap that moved 20 → 30 → 40 → 60 → 80</td><td>about 69.80</td></tr></table>
+<p>Cost per profile per full-chain run $0.40 to $3.40 (Form3 is the expensive one); a seven-profile draw $4.5 to $8; time per profile 60 to 640 s.</p>
+
+<h2>4. Results in order</h2>
+<h3>Seven-profile draws (gated rating)</h3>
+<div class="wrap"><table><tr><th>Draw</th><th>Rating</th><th>Zeros</th></tr>
+<tr><td>baseline</td><td>2.86</td><td>five profiles</td></tr>
+<tr><td>confirmation</td><td>3.43</td><td>four profiles</td></tr>
+<tr><td>final</td><td>4.29</td><td>mstone (time), carta, ondato, hvac</td></tr>
+<tr><td>final2</td><td>6.29</td><td>form3, ondato</td></tr>
+<tr><td>final3 (same build)</td><td>6.29</td><td>form3 (harness hang), ondato</td></tr></table></div>
+<p>Same build, different zero sets: the noise at one draw per profile is about ±2 points. Ungated numbers on the last full draw: company precision 0.91, yield 0.91, buyer precision 0.91, buyer coverage 0.77.</p>
+<h3>Single-profile screens on candidate branches</h3>
+<div class="wrap"><table><tr><th>Arm</th><th>Candidate</th><th>Outcome</th></tr>
+<tr><td>p2judge-form3</td><td>judge category rule</td><td class="ok">form3 1.00, 5/5, 26/26</td></tr>
+<tr><td>p2screen-ondato</td><td>grounding + entity + authority</td><td class="no">0: 5/5 companies clean, three marketing picks rejected</td></tr>
+<tr><td>p2form3-b1</td><td>one-row judge</td><td class="no">0: careers-domain entity (Sainsbury's)</td></tr>
+<tr><td>p2form3-ent</td><td>+ entity v1</td><td class="no">0: Decathlon Digital division</td></tr>
+<tr><td>p2ondato-last</td><td>+ authority evidence</td><td class="no">0: Sidekick, a contested ruling</td></tr>
+<tr><td>p2fit-ondato</td><td>+ buyer-fit check</td><td class="no">0: SteadyPay plus two empty rosters</td></tr>
+<tr><td>p2fit-form3b</td><td>same</td><td class="no">0: two undecidable evidence sources</td></tr>
+<tr><td>p2fit2-ondato</td><td>+ judge output, fallback, source kinds, exclusion, fresh crawl</td><td class="ok">0.40, gates ok, 5/5 companies, 2/2 people</td></tr>
+<tr><td>p2fit2-form3</td><td>same</td><td class="no">0: Lloyds subsidiary record, 10/10 people</td></tr>
+<tr><td>p2fit3-ondato</td><td>+ operator check, GetLeads key fixed</td><td class="no">0: SteadyPay again, a defunct company, a no-evidence company</td></tr>
+<tr><td>p2fit3-form3</td><td>same</td><td class="no">0: only two delivered, 7/7 people</td></tr></table></div>
+
+<h2>5. Merged (staging = master = a619a91, gate green)</h2>
+<ul>
+<li>Judge and round steps never retry a timed-out model call: a hung stage went from 1162 s to 244 s.</li>
+<li>A row with no judge verdict is never stored (real defect on plain-requirement profiles).</li>
+<li>Every started vendor run leaves its id; the judge's exact inputs are saved before the call; a failed round records its spend.</li>
+<li>Harness: dev-server log captured, hung stage abandoned at twice its ceiling; replay tools for the judge and the selector.</li>
+<li>Form3 vertical list strict (a named contract change); judge batch 4; scorer counts same-as subsidiaries; fixtures match the engine's rubrics.</li>
+<li>From the $40 phase: verification concurrency 5, headcount line for the selector.</li></ul>
+
+<h2>6. Held on branches, each gated</h2>
+<p><code>p2/screen</code> at b87a13f carries all of these together (660 tests green) and ran the last screens.</p>
+<div class="wrap"><table><tr><th>Branch</th><th>Change</th><th>Status</th></tr>
+<tr><td>p2/ground 48a4fa8</td><td>strict or page requirement proven only by a verbatim quote from the row's evidence</td><td class="hold">correct refusals on saved rows; starves Form3 yield</td></tr>
+<tr><td>p2/source fafb118</td><td>a requirement naming its source kinds is proven only from one of them</td><td class="hold">hold pending adjudication of refused positives</td></tr>
+<tr><td>p2/excl 3e0e701</td><td>exclusion judged apart from inclusion, and wins</td><td class="hold">did not catch SteadyPay (LaaS read as incidental)</td></tr>
+<tr><td>p2/screen (CONSIST)</td><td>a page proves only when its named operator is the judged company</td><td class="hold">needs paired acceptance testing</td></tr>
+<tr><td>p2/entity d21d410</td><td>division, careers and identity-conflict records resolve to a corroborated parent or are refused</td><td class="hold">unvalidated heuristics</td></tr>
+<tr><td>p2/fallback 6ef74fa</td><td>fallback roster when the first selection is empty</td><td class="hold">wiring proven, recovery not</td></tr>
+<tr><td>p2/screen c2d5bba, 62984c1</td><td>buyer-fit check before paid verification, audit row per pick</td><td class="hold">still fails open on an unknown verdict</td></tr>
+<tr><td>p2/fresh 36e8399</td><td>fresh crawl on verification reads; LinkedIn out of proof search for source-constrained requirements</td><td class="hold">no measured coverage gain yet</td></tr>
+<tr><td>p2/batch2 0587aa3</td><td>one-row judge</td><td class="hold">no timeouts, double cost, no cross-row grouping</td></tr>
+<tr><td>p2/judgeout2 16a49d3</td><td>judge output persisted as evidence</td><td class="hold">signed for merge; cherry-pick conflicts with batch context</td></tr>
+<tr><td>p2/authority 80234c7</td><td>authority verdict recorded as evidence</td><td class="hold">enforcing version zeroed founders, dropped</td></tr>
+<tr><td>p2/excerpt 4336914</td><td>2,500-char passage around each proving hit</td><td class="hold">deferred</td></tr>
+<tr><td>p2/selector a7decef</td><td>prompt sentence for sub-function titles</td><td class="no">replay 5/7 with regressions</td></tr></table></div>
+
+<h2>7. Defects and status</h2>
+<p><b class="ok">Fixed and merged:</b> judge timeout retry storm; unjudged rows stored; unrecorded failed-round spend; agent runs without ids; judge inputs not saved; discarded dev-server logs; hung stages waiting forever; scorer dropping same-as subsidiaries; fixtures diverged from the engine's rubrics; the local secrets store lacked <code>gl-api-key</code>, so the GetLeads roster fallback failed in every eval run until the last screen.</p>
+<p><b class="hold">Diagnosed, fix on a branch:</b> division and subsidiary records judged as companies (Sainsbury's, Decathlon Digital, Lloyds Bank); proof from a personal profile (Mollie); a mixed-channel company accepted on its consumer line (SteadyPay, three times); sub-function marketing heads delivered as buyers (Midnite); empty companies from empty rosters (Badoo, Taboo); an unknown verification verdict for a real executive (Kontigo); a defunct company proven from historical copy (Monolith).</p>
+<p><b>Open contract questions:</b> does a mixed-channel company with a real consumer self-serve app qualify for Ondato r2 (as written, no); does an engineer's personal account count as Kubernetes-at-scale evidence for Form3 r5 (as written, no); Sidekick as sales-led (contested, kept reject).</p>
+
+<h2>8. Codex record</h2>
+<p>Twenty-plus consultations in <code>exports/codex-*.md</code>. Consistent positions: measure before changing; promote only what a run proves; keep the brutal gate; no half credit for contested rows; 6.29 is the only validated rating; forecast for the candidate on a fresh draw 6.4 to 7.7 with band 5 to 8.6; probability of a gated 10 within this budget about 2 percent. Its self-criticism, signed by the author: too many safeguards were built in succession before their assumptions were settled.</p>
+
+<h2>9. Environment notes</h2>
+<ul>
+<li>One eval per worktree at a time: two dev servers collide on port 9229 and the wrangler state directory.</li>
+<li>One gate at a time on the machine: concurrent gates share <code>algo_test</code> and the secrets store and produce false failures.</li>
+<li>Wait loops: <code>pgrep -f '^bun .*scripts/gate\.mjs'</code>, never a pattern that matches its own shell.</li>
+<li>Key commits use <code>--no-verify</code> after <code>bunx biome check eval/keys</code>; never serialize keys with ASCII escaping.</li>
+<li>Each eval worktree needs <code>.env</code> and <code>.wrangler/state/v3/secrets-store</code> copied from the root; the store now holds <code>gl-api-key</code>.</li>
+<li>Identical judge inputs on one commit hit the AI Gateway cache at $0; change the input to force a fresh call.</li>
+<li>Spend watchdog: launcher scripts sum <code>run.cost_dollars</code> over <code>eval_p2*</code> every 30 s and kill past a cap.</li></ul>
+<pre>codex exec resume --last -m gpt-6-astra -c model_reasoning_effort='"high"' \
+  -c approval_policy='"never"' -c sandbox_mode='"read-only"' "$(cat prompt.md)" &lt; /dev/null &gt; answer.md</pre>
+
+<h2>10. How to continue</h2>
+<p>Zero cost first: the frozen regression set <code>eval/regression/judge-rows.json</code> on <code>p2/base</code> (every judged company row with its key ruling) and <code>bun eval/judge-replay.ts --regression</code> score a judge change for cents on precision and retention per profile. The selector replay does the same for the Midnite roster.</p>
+<p>Then one repair at a time: regression set, then one profile live ($1.5 to $3.5), then a seven-profile draw ($8) only when Form3 and Ondato both pass their screen bar: five accepted distinct companies, every delivered person accepted, buyers at four of five, within ceilings. Three seven-profile draws, about $24, are the minimum for a rating with a band.</p>
+<p>The two repairs with the most evidence: entity and evidence alignment (proof operator equals judged company; size bars applied to the resolved entity) and buyer coverage (roster keywords from the rubric's named titles; a corroborated second source when a verification verdict is unknown).</p>
+<p>What 10 requires: every profile fulfils five distinct accepted companies and its buyer requirements within frozen gates, repeatedly. No price buys a guarantee.</p>
+</main>
