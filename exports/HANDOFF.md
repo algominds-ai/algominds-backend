@@ -117,3 +117,7 @@ What 10 requires, in codex's words: every profile fulfils five distinct accepted
 ## 11. Files
 
 `exports/RESUME.md` (running log), `exports/ledger.md` (decisions), `exports/codex-*.md` (all consultations), `exports/trace-false-accepts.md` (root causes of the false accepts), `exports/provider-audit.md` (options sent versus available per provider), `exports/replay-ground-*.md` (replay results), `exports/contested-rulings.md`, `exports/p2-*-scored.txt` (every score line), `exports/throttle-check.md`.
+
+## Appendix A. Why the last Form3 screen scored zero with every delivered row accepted
+
+Arm p2fit3-form3: the only false gate is `bothRunsComplete`. The companies run ended with status `capped` (the rounds were exhausted at two accepted companies for a five-company ask) rather than `complete`; every other company and people gate passes (appdirect.com and clear.bank accepted, 7/7 people accepted). So the stricter judge on that candidate did not deliver a wrong row; it could not fill the ask. Arm p2fit2-form3 fails a different gate, `noKeyRejectedStored`, on lloydsbank.com. The scorer treats a capped run as a failed fulfilment by design; whether a capped-but-clean run should score its coverage (0.40 here) is a ruler decision for the next owner.
