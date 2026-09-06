@@ -34,6 +34,7 @@ function liveEnv(input: z.infer<typeof LiveInputSchema>): Env {
 it("writes and scores the live onboarding profile", {
 	timeout: 180_000,
 }, async () => {
+	const startedAt = Date.now();
 	const input = LiveInputSchema.parse(testEnv);
 	const env = liveEnv(input);
 	const fixture = IcpDocSchema.parse(JSON.parse(input.ONBOARD_LIVE_FIXTURE));
@@ -44,30 +45,40 @@ it("writes and scores the live onboarding profile", {
 		read.pages,
 		input.ONBOARD_LIVE_NOTE || null,
 	);
-	if (written.description === null) {
+	if (written.profile === null) {
 		console.log("FAIL  the model wrote no profile");
-		return;
+		console.log(
+			JSON.stringify({
+				elapsedSeconds: (Date.now() - startedAt) / 1000,
+				costDollars: read.ledger.total() + written.ledger.total(),
+			}),
+		);
+		throw new Error("onboard eval: model wrote no profile");
 	}
-	const checks = scoreOnboardProfile(
-		{
-			description: written.description,
-			requirements: written.requirements,
-			buyer: written.buyer,
-		},
-		fixture,
-	);
+	const checks = scoreOnboardProfile(written.profile, {
+		...fixture,
+		instructions: input.ONBOARD_LIVE_NOTE || null,
+	});
 	for (const check of checks) console.log(formatCheckLine(check));
 	console.log(summaryLine(checks));
 	console.log(
+		JSON.stringify({
+			elapsedSeconds: (Date.now() - startedAt) / 1000,
+			costDollars: read.ledger.total() + written.ledger.total(),
+			readCostDollars: read.ledger.total(),
+			modelCostDollars: written.ledger.total(),
+		}),
+	);
+	console.log(
 		JSON.stringify(
 			{
-				description: written.description,
-				seller: written.seller,
-				buyer: written.buyer,
-				requirements: written.requirements,
+				profile: written.profile,
 			},
 			null,
 			2,
 		),
 	);
+	if (checks.some((check) => !check.passed)) {
+		throw new Error("onboard eval: structural check failed");
+	}
 });

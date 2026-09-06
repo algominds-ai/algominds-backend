@@ -1,0 +1,181 @@
+{
+  "status": 200,
+  "body": {
+    "requestId": "9e0f0c94b21d27e5afb15507af7be365",
+    "results": [
+      {
+        "id": "https://www.cloudflare.com/products/access/",
+        "title": "Cloudflare Access - Secure, Quantum-Safe Access to Private Applications",
+        "url": "https://www.cloudflare.com/products/access/",
+        "author": null,
+        "text": "# Access\n\n> Safe access to private applications\n\nCategory: sase\n\n## Overview\n\nAccess is part of Cloudflare's sase offerings on the Workers platform.\n\n## Resources\n\n- Full Documentation: Complete technical documentation for Access\n- Get Started: Sign up and start building\n- Pricing: See pricing details\n\n## Related Products\n\n- AI Security for Apps: Protect your AI-powered applications with advanced security features\n- Browser Isolation: Protect Users and Data with Cloudflare Browser Isolation\n- Data Loss Prevention: Protect sensitive data\n- Email Security: AI-driven Email Protection\n\n---\n\nThis is a markdown version of https://www.cloudflare.com/products/access for AI/LLM consumption.",
+        "image": "https://www.cloudflare.com/preview.png",
+        "favicon": "https://www.cloudflare.com/favicon.ico"
+      },
+      {
+        "id": "https://www.cloudflare.com/",
+        "title": "Cloudflare: Build for the agent era",
+        "url": "https://www.cloudflare.com/",
+        "author": null,
+        "text": "# Cloudflare\n\n> Deploy serverless code instantly across the globe with zero cold starts, infinite scalability, and integrated storage, AI, and network services.\n\n## What is Cloudflare Workers?\n\nCloudflare Workers is a serverless platform that runs your code on Cloudflare's global network of 330+ data centers. Unlike traditional serverless platforms that use containers, Workers uses V8 isolates for instant startup times with no cold starts.\n\n## Key Features\n\n- Zero Cold Starts: Code starts executing immediately using V8 isolates\n- Global by Default: Deploy once, run in 330+ cities worldwide\n- Multiple Languages: JavaScript, TypeScript, Python, Rust, and WASM\n- Integrated Platform: Storage (R2, D1, KV), AI (Workers AI), and network services built-in\n- Pay for What You Use: CPU-time based billing, not wall-clock time\n\n## Products\n\n### Compute\n\n- Workers: Global serverless functions\n- Containers: Any language, anywhere\n- Durable Objects: Stateful compute\n- Browser Rendering: Automated browsers\n- Workflows: Process orchestration\n\n### Storage\n\n- R2: Egress-free object storage\n- Hyperdrive: Global database acceleration\n- D1: Serverless SQL\n- KV: Key-value storage\n- Queues: Message processing\n\n### AI\n\n- Workers AI: Edge AI models\n- AI Gateway: AI observability\n- Vectorize: Vector database\n- AI Search: Instant retrieval\n\n### Media\n\n- Images: Image optimization\n- Stream: Video streaming\n- RealtimeKit: Live communications\n\n### Network\n\n- DNS: Fast DNS\n- CDN: Content delivery\n- WAF: Application protection\n- Load Balancing: Zero downtime\n- Rate Limiting: Abuse prevention\n- Bot Mitigation: Block bots\n\n## Getting Started\n\n1. Sign up at dash.cloudflare.com\n2. Install the CLI: `npm install -g wrangler`\n3. Create a project: `wrangler init my-worker`\n4. Deploy: `wrangler deploy`\n\n## Resources\n\n- Documentation: Full technical docs\n- Pricing: See what it costs\n- Discord: Community support\n\n---\n\nThis is a markdown version of https://www.cloudflare.com for AI/LLM consumption.",
+        "image": "https://www.cloudflare.com/preview.png",
+        "favicon": "https://www.cloudflare.com/favicon.ico",
+        "entities": [
+          {
+            "id": "https://exa.ai/library/organization/mxwft7wlgy9",
+            "type": "company",
+            "version": 1,
+            "properties": {
+              "name": "Cloudflare",
+              "foundedYear": 2009,
+              "description": "Cloudflare, Inc. (NYSE: NET) is the leading connectivity cloud company. It empowers organizations to make their employees, applications and networks faster and more secure everywhere, while reducing complexity and cost. Cloudflare’s connectivity cloud delivers the most full-featured, unified platform of cloud-native products and developer tools, so any organization can gain the control they need to work, develop, and accelerate their business. \n\nPowered by one of the world’s largest and most interconnected networks, Cloudflare blocks billions of threats online for its customers every day. It is trusted by millions of organizations – from the largest brands to entrepreneurs and small businesses to nonprofits, humanitarian groups, and governments across the globe. ",
+              "workforce": {
+                "total": 4802
+              },
+              "headquarters": {
+                "address": "101 Townsend St, San Francisco, California 94107, US",
+                "city": "San Francisco",
+                "postalCode": null,
+                "country": "United States"
+              },
+              "financials": {
+                "revenueAnnual": 2167937000,
+                "fundingTotal": 2609796000,
+                "fundingLatestRound": null
+              },
+              "webTraffic": null,
+              "research": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "https://snyk.io/platform/",
+        "title": "Snyk AI Security Platform | AI-Driven Developer Security Platform | Snyk",
+        "url": "https://snyk.io/platform/",
+        "publishedDate": "2025-10-14T04:00:00.000Z",
+        "author": null,
+        "text": "Snyk AI Security Platform | AI-Driven Developer Security Platform | Snyk\n\nSkip to main content\n\n# Snyk AI Security Platform\n\nSecurity at machine speed.\n\nDiscover our plans Book a live demo\n\nYour browser does not support the video tag.\n\n## The Snyk AI Security Platform\n\nSnyk’s AI-native and agentic platform helps organizations secure and govern development to unleash productivity, reduce business risk, and accelerate software delivery for the age of AI.\n\nThe Snyk AI Security Platform provides an independent validation layer for AI-built software. It separates the validator from the generator: deterministic engines paired with frontier-model reasoning validate the code AI writes, the models and agents it runs, and the applications it builds instead of trusting the system that produced them to grade its own work.\n\n## Evo Agent Security\n\nAI-native security orchestration — securing the code AI writes, the models and agents it runs, and the applications it builds.\n\nSecure the AI workforce powering modern development\n\n## Agentic Development Security (ADS)\n\nGovern what agents use, what they do, and what they generate by validating external tools before they are used, governing agent behavior during execution, and securing code at the moment it is created.\n\nTotal visibility and machine-speed governance for AI applications\n\n## AI Security Posture Management (AI-SPM)\n\nThe centralized command center for your AI security posture. Replace manual reviews with automated, code-first governance that turns business intent into enforceable guardrails.\n\nProactive defense through AI-native simulation\n\n## Continuous Offensive Security (COS)\n\nFind the architectural flaws and chained business-logic vulnerabilities that are hard to detect with traditional scanners with AI Pentesting and Red Teaming — before attackers exploit them.\n\nIn AI security, detection was never the bottleneck. By pairing Claude's capabilities with Snyk, enterprises can turn high-fidelity findings into action inside the workflows where software is built.\n\nJason Clinton\n\nDeputy CISO, Anthropic\n\n## Security engines powering deterministic validation\n\nA new generation of builders — humans, models, and autonomous agents — now creates software together. When creation accelerates beyond human speed, risk accelerates with it. Even the most capable model in the world cannot be trusted to govern its own cybersecurity output at scale. Snyk's AI Security Platform uses a mix of proprietary security engines, self-hosted models, and third-party frontier models through secure connections.\n\n### Deterministic validation\n\nSnyk pairs frontier-model reasoning with deterministic engines and a decade of curated security intelligence to give AI-generated code the confidence, repeatability, and governance enterprises need.\n\n### Cross-tool governance\n\nDevelopers use a stack of AI tools and coding agents — Claude, Cursor, Copilot, Codex, Windsurf. Anthropic only governs Claude; OpenAI only governs its own. The generator cannot be the validator. Snyk validates across the entire coding agent stack — so no vendor grading its own output.\n\n### Security intelligence flywheel\n\nSnyk uses frontier models to find novel vulnerability patterns, then backports those findings into its deterministic engines. Customers get frontier-quality detections at deterministic speed.\n\n### Improved outcomes for AI fixes\n\nSnyk adds its security intelligence on top. On its own, Claude Sonnet 4.6 produces a secure and functional fix ~72% of the time; with Snyk intelligence layered on, that \"merge-ready\" rate climbs to ~82% inside Snyk Agent Fix.\n\n## The prescriptive path to operationalize AI security\n\nBridge the gap between developer velocity and security governance with a defined, 6-step path to operationalize security at machine speed.\n\n## Stabilize by eliminating blind spots and stopping the bleeding\n\nStep 1: Foundational visibility\n\nAutomatically discover and inventory every asset—including code, dependencies, and AI models.\n\nStep 2: Prevention and AI guardrails\n\nEnforce 'Secure at Inception' guardrails across AI assistants, IDEs, and pipelines to prevent vulnerabilities before they enter the codebase.\n\n## Optimize by focusing on what matters and fixing at machine speed\n\nStep 3: Strategic prioritization\n\nPinpoint exploitable risks using deep application intelligence, risk scores, and reachability analysis to focus on what truly threatens the business.\n\nStep 4: AI-accelerated remediation\n\nEmpower developers with trusted, AI-powered \"one-click\" fixes directly in the IDE and pull request to dramatically accelerate the fix rate and burn down your security debt.\n\n## Scale the program and deploy autonomous defense\n\nStep 5: Governance and measurement\n\nSustain the program with automated policy enforcement and actionable analytics to track risk reduction, developer adoption, and prove ROI.\n\nStep 6: Agentic orchestration\n\nDeploy Evo, the agentic security orchestrator, to future-proof your defense and provide autonomous, runtime protection for non-deterministic AI-native applications.\n\n## Future-proof your AI transformation\n\nEvery company is moving toward AI, and security has to move with it. Snyk is ready to support our AI initiatives by protecting us as we adopt and experiment with AI. That's exactly the kind of partner we want for this next phase.\n\nLeon Direito\n\nCISO, Yalo\n\n## Additional resources\n\nWhite Paper\n\nSecure Every Layer, Empower Every Team: The Unified Snyk Platform\n\nBlog\n\nSnyk Named a Leader in the 2025 Gartner® Magic Quadrant™ for Application Security Testing\n\nSnyk is recognized as a Leader in the 2025 Gartner® Magic Quadrant™ for Application Security Testing (AST), validating our developer-first approach and comprehensive platform for securing the modern SDLC.\n\neBook\n\nFrom Shift Left to Secure at Inception: The Evolution of AppSec in the Age of AI\n\n## Can you trust what you’re shipping?\n\nEvery organization building with AI needs to answer this one question. Get started with Snyk in minutes.\n\n## Try Snyk for free\n\nCreate your free Snyk account to start securing AI-generated code in minutes.\n\nNo credit card required.\n\n## See Snyk in action\n\nSee why the world's largest engineering organizations trust Snyk as their independent AI security validator.\n\nBook a live demo\n\n## Get in touch\n\nQuestions about the platform or where to start? We'd love to talk through your AI security program.",
+        "image": "https://snyk.io/_next/static/immutable/media/default-social.1914d_5uc4of3.jpg",
+        "entities": [
+          {
+            "id": "https://exa.ai/library/organization/8dntsj6jnyq",
+            "type": "company",
+            "version": 1,
+            "properties": {
+              "name": "Snyk",
+              "foundedYear": 2015,
+              "description": "Snyk, the leader in secure AI software development, empowers organizations to build fast and stay secure by unleashing developer productivity and reducing business risk. The company’s AI Trust Platform seamlessly integrates into developer and security workflows to accelerate secure software delivery in the AI Era. Snyk delivers trusted, actionable insights and automated remediation, enabling modern organizations to innovate without limits. Snyk is redefining secure AI-driven software delivery for over 4,500 customers worldwide today.\nSnyk was named a Leader in the 2023 Gartner Magic Quadrant™ for Application Security Testing (AST) and in The Forrester Wave™: Software Composition Analysis (SCA) 2023, and has been recognized on the Forbes Cloud 100 2022 along with the 2023 CNBC Disruptor 50. \n\nFor more information, visit https://snyk.io.",
+              "workforce": {
+                "total": 916
+              },
+              "headquarters": {
+                "address": "100 Summer St, 7th Floor, Boston, Massachusetts 02110, US",
+                "city": "Boston",
+                "postalCode": null,
+                "country": "United States"
+              },
+              "financials": {
+                "revenueAnnual": 278385984,
+                "fundingTotal": 1192500000,
+                "fundingLatestRound": null
+              },
+              "webTraffic": {
+                "visitsMonthly": 1081486,
+                "countryRank": 31990,
+                "avgDurationSeconds": 128,
+                "history": [
+                  {
+                    "value": 828456,
+                    "dateFrom": "2026-03",
+                    "dateTo": "2026-03"
+                  },
+                  {
+                    "value": 1106911,
+                    "dateFrom": "2026-04",
+                    "dateTo": "2026-04"
+                  },
+                  {
+                    "value": 1106911,
+                    "dateFrom": "2026-04",
+                    "dateTo": "2026-04"
+                  },
+                  {
+                    "value": 1229170,
+                    "dateFrom": "2026-05",
+                    "dateTo": "2026-05"
+                  },
+                  {
+                    "value": 1229170,
+                    "dateFrom": "2026-05",
+                    "dateTo": "2026-05"
+                  },
+                  {
+                    "value": 1081486,
+                    "dateFrom": "2026-06",
+                    "dateTo": "2026-06"
+                  }
+                ]
+              },
+              "research": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "https://www.deel.com/payroll/",
+        "title": "Payroll Solutions | Hire & Pay in 130+ Countries | Deel",
+        "url": "https://www.deel.com/payroll/",
+        "author": null,
+        "text": "Payroll Solutions | Hire & Pay in 130+ Countries | Deel\n\n# Run payroll on one platform, globally\n\nWhat would you like to do with Deel Payroll?\n\nProcess payroll globally\n\nConsolidate multiple vendors\n\nExpand markets\n\nAutomate compliance\n\nReduce processing time\n\nBook a demo\n\n4.8/5\n\n5K+ Reviews\n\n4.5/5\n\n9K+ Reviews\n\nTrusted by 40,000+ companies from startups to enterprise\n\n175 STORIESRead about real results\n\n## Simplify your entire global operations\n\n### One platform for payroll\n\nTrack payroll status, variances, and global workforce costs in one intuitive dashboard.\n\n### Run payroll your way\n\nChoose self-serve or managed payroll by country. Mix models as your business scales.\n\n### Built-in compliance\n\nLocal rules, filings, and statutory requirements apply automatically before payroll runs.\n\n### Modern 24/7 support\n\nReceive fast, accurate support across multiple channels, including email, phone, live chat, Slack, and Teams.\n\n### Reliable global payments\n\nApprove once. Deel handles FX, local payment rails, and multi-currency payouts, including crypto.\n\n### Enterprise ready\n\nSOC 2 Type II, ISO 27001, and GDPR-compliant. Integrates with Workday, SAP, Oracle, NetSuite, Okta, Azure AD, and more.\n\nBook a demo\n\n### The impact of one connected payroll platform\n\n60%\n\nless time processing payroll\n\n(Forrester TEI™)\n\n75%\n\nfewer payroll employee queries\n\n(Forrester TEI™)\n\n67%\n\nreturn on investment\n\n(Forrester TEI™)\n\nsee it in action\n\n## Explore how simple global payroll can be\n\nBook a demo\n\nHow it Works\n\n## A simple payroll flow from start to finish\n\n### Get set up fast\n\nLaunch payroll country by country with guided onboarding and clear timelines — SMBs can be live in as little as 1–2 weeks.\n\n### Bring your workforce into Deel\n\nImport employees, contractors, EOR, PEO, and even third-party payrolls into one system.\n\n### Configure payroll by country\n\nChoose self-serve or managed payroll. Set approvals, roles, and controls by entity or region.\n\n### Automate compliance\n\nPayroll calculations and local rules are applied automatically. AI flags anomalies and missing data before approval.\n\n### Approve once. Pay everywhere.\n\nFinalize payroll, manage FX, and pay workers in local currency—with optional crypto payouts where supported.\n\n### Track everything in one place\n\nSee payroll status, variances, and consolidated reporting across all countries and worker types, even for third party payroll.\n\nBook a demo\n\n## Built for every business size\n\n### Startups and remote-first teams\n\nGet compliant payroll live in days without building in-house expertise.\n\n### Scaling and mid-market teams\n\nAdd new countries without re-implementing payroll each time.\n\n### Enterprises\n\nIntegrate with Workday, SAP, or Oracle and maintain governance, auditability, and security.\n\nBook a demo\n\nPRODUCT NEEDS\n\n## A product fit for every need\n\nDeel PayrollEORPEOContractorLocal Payroll Payroll ConnectExpense ManagementBenefits AI Agent\n\n##### For companies running payroll through their own entities\n\nRun multi-country payroll for employees and contractors. Self-serve or fully managed.\n\nBook a demo\n\n## See what customers are saying\n\n### How Turing expedites payments for 6,000+ global workers with Deel\n\n### How Revolut streamlined employee relocation with Deel\n\n### How Magic saves 50+ hours a month on admin using Deel\n\n### How BCG centralized payroll across 6 nations with Deel\n\n### How Telin cut onboarding time and expanded globally with Deel\n\n## FAQs\n\n### What is Deel Payroll?\n\nDeel Payroll is a single platform to run payroll for employees and contractors across countries. You can run payroll yourself or have Deel manage it—with unified data, built-in compliance, and global payments in one system.\n\n### Can I run payroll myself or have Deel manage it?\n\nYes. Deel supports both models:\n\n- Self-serve payroll for teams with in-house expertise\n- Managed payroll where Deel runs payroll end to end You can choose the model per country and mix both as you scale.\n\n### How are my payments handled?\n\nApprove payroll once and Deel manages FX, local payments rails, and multi-currency payouts with optional crypto payouts where supported.\n\n### Do I need to replace my current payroll provider everywhere?\n\nNo. Many teams start with one country or entity and expand over time. With Payroll Connect, you can view Deel-run payroll and third-party payrolls side by side in one dashboard during transitions.\n\n### What worker types does Deel Payroll support?\n\nEmployees, contractors, EOR, and PEO—all visible in one platform with consolidated reporting.\n\n### How does Deel handle compliance?\n\nLocal tax rules, statutory requirements, and filings are applied automatically before payroll runs. Built-in intelligence flags anomalies, missing data, and potential risks so issues are caught early—not at the last minute.\n\n### How long does implementation take?\n\nSMBs can typically go live in 1–2 weeks. Larger or multi-entity organizations follow a phased rollout with a dedicated implementation manager and clear country playbooks.\n\n### How does Deel handle payroll in countries where the engine isn’t live yet?\n\nIn those countries, Deel manages payroll through local workflows and in-country experts. You only ever work with Deel—payroll results flow back into the same platform, with the same visibility, approvals, and reporting.\n\n### Does Deel integrate with our existing systems?\n\nYes. Deel integrates with HR, finance, and identity systems including Workday (GPC-certified), SAP, Oracle, NetSuite, BambooHR, HiBob, Okta, and Azure AD.\n\n### Is Deel secure?\n\nYes. Deel is SOC 2 Type II, ISO 27001, and GDPR compliant, with role-based access controls, audit trails, and enterprise-grade security across regions.\n\n### Can Deel scale as we grow into new countries?\n\nYes. Start with one country or team and expand at your own pace. Deel supports phased expansion without replatforming or vendor sprawl.\n\n### Deel makes growing remote and international teams effortless\n\n150+\n\ncountries\n\n+40,000\n\ncustomers\n\n$20B+\n\ncompliantly processed global payroll\n\n90+\n\nNPS for enterprise customers\n\nBook a demo\n\n## See the products that help you pay anywhere\n\nBook a demo\n\n### Excellent global payroll\n\n4.8/5 based on 5,801 reviews\n\nJeremy C.\n\nThe best payroll solution, period. We've used every payroll solution - Gusto, Rippling, you name it - Deel is the only one that is...\n\nKanshobi S.\n\nSimply the best platform for global payroll. Admin that used to take days now takes 5 minutes.\n\nSparsh S.\n\nI love the money transfer feature. With one click you can transfer money to any bank in the world.\n\nJose Mario L.\n\nAn indispensable tool for global payroll. With Deel you can send money from anywhere in the world and get it transferred same day ...\n\nMohammed H.\n\nThe best choice for companies operating internationally: facilitates payroll through local policies, eliminating a big challenge f...\n\nJuan Pablo C.\n\nThe best and most flexible global payment platform on the market.\n\nChanelle D.\n\nDeel has made my experience with employing and paying international folks a breeze!\n\nAlexandra S.\n\nMakes it easy to pay a worldwide team. You simply pay in one currency, and your employees and contractors receive in their local c...\n\nJose M.\n\nDeel handles payments for employees and contractors anywhere in the world. Everyone gets their wages on time, at the bank of their...",
+        "image": "https://deel-website-media-prod.s3.amazonaws.com/General_Purple_f6b2f3f9bd.png",
+        "favicon": "https://www.deel.com/icon.png?e9556fbc67fbe781"
+      }
+    ],
+    "statuses": [
+      {
+        "id": "https://www.cloudflare.com/products/access/",
+        "status": "success",
+        "source": "crawled"
+      },
+      {
+        "id": "https://www.cloudflare.com/",
+        "status": "success",
+        "source": "crawled"
+      },
+      {
+        "id": "https://snyk.io/platform/",
+        "status": "success",
+        "source": "crawled"
+      },
+      {
+        "id": "https://gusto.com/product/payroll",
+        "status": "error",
+        "error": {
+          "httpStatusCode": 504,
+          "tag": "CRAWL_LIVECRAWL_TIMEOUT"
+        }
+      },
+      {
+        "id": "https://www.deel.com/payroll/",
+        "status": "success",
+        "source": "crawled"
+      },
+      {
+        "id": "https://pos.toasttab.com/toast-platform",
+        "status": "error",
+        "error": {
+          "httpStatusCode": 500,
+          "tag": "CRAWL_UNKNOWN_ERROR"
+        }
+      }
+    ],
+    "costDollars": {
+      "total": 0.004,
+      "contents": {
+        "text": 0.004
+      }
+    },
+    "searchTime": 10017.055309999967
+  }
+}

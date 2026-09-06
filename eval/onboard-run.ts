@@ -1,6 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { ARM_SEED_PROFILES } from "@eval/arm-seed";
+import {
+	ARM_SEED_PROFILES,
+	UNSUPPORTED_LEGACY_ARM_SEEDS,
+} from "@eval/arm-seed";
 
 function flagValue(argv: readonly string[], flag: string): string | null {
 	const index = argv.indexOf(flag);
@@ -15,7 +18,12 @@ function profileArg(argv: readonly string[]): string {
 
 function seedProfile(slug: string): (typeof ARM_SEED_PROFILES)[number] {
 	const profile = ARM_SEED_PROFILES.find((entry) => entry.slug === slug);
-	if (!profile) throw new Error(`eval:onboard: unknown profile ${slug}`);
+	if (!profile) {
+		const legacy = UNSUPPORTED_LEGACY_ARM_SEEDS.includes(slug)
+			? "; legacy fixture is unsupported, use a recorded canonical profile"
+			: "";
+		throw new Error(`eval:onboard: unknown profile ${slug}${legacy}`);
+	}
 	return profile;
 }
 

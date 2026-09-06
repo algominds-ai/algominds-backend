@@ -5,11 +5,12 @@ import type { IcpDoc, SynthesizeInput } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { fakeGatewayEnv } from "../support/env";
 import { chatCompletionResponse, fakeGateway } from "../support/fetch";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = {
-	description:
-		"fintech companies at seed stage in San Francisco with a small team",
-};
+const icp: IcpDoc = profileFixture(
+	{ offer: "Fintech software", buyer: "Revenue leaders" },
+	"Find fintech companies at seed stage in San Francisco with a small team.",
+);
 
 const RequestBodySchema = z.object({
 	model: z.string(),
@@ -64,20 +65,28 @@ function planReply(overrides: Partial<PlanShape> = {}, cost?: number) {
 	);
 }
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company has twenty employees or fewer and is based in the United States",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement: Requirement = requirementFixture(
+	"the company has twenty employees or fewer and is based in the United States",
+);
 
 const pageRequirement: Requirement = {
-	id: "r2",
-	text: "the company published an engineering page showing it runs the platform itself",
-	kind: "hard",
-	proof: "page",
-	windowDays: 30,
+	kind: "required",
+	anyOf: [
+		{
+			allOf: [
+				{
+					text: "the company published an engineering page showing it runs the platform itself",
+					window: {
+						amount: 30,
+						unit: "days",
+						appliesTo: "publication",
+						direction: "past",
+					},
+					sourceRule: "company domain",
+				},
+			],
+		},
+	],
 };
 
 function recordOnlyInput(): SynthesizeInput {
@@ -131,7 +140,9 @@ describe("the round runs on the route the requirements allow", () => {
 		const agentRound = await synthesize(pageGatedInput(), fakeGatewayEnv());
 		expect(agentRound.route).toBe("agent");
 		expect(agentRound.plans[0]?.source).toBe("exa-agent");
-		expect(agentRound.plans[0]?.recency).toBe(pageRequirement.text);
+		expect(agentRound.plans[0]?.recency).toContain(
+			pageRequirement.anyOf[0]?.allOf[0]?.text,
+		);
 		expect(agentRound.plans[0]?.eventWindowDays).toBe(30);
 
 		const searchGateway = fakeGateway([

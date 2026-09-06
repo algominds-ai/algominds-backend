@@ -1,79 +1,34 @@
-import type { IcpDoc } from "@eval/icp-doc";
-import type { Requirement } from "@/core/requirements";
+import { type IcpDoc, IcpDocSchema } from "@eval/icp-doc";
 
-export type WrittenOnboardProfile = {
-	description: string;
-	requirements: readonly Requirement[];
-	buyer: { rubric: string } | null;
-};
-
+export type WrittenOnboardProfile = IcpDoc;
 export type OnboardCheck = { name: string; passed: boolean };
 
-const BOUND_RE = /\$?\d{1,3}(?:,\d{3})+(?:\.\d+)?|\$?\d+(?:\.\d+)?[MBK]\b/gi;
-const BANNED_STEMS = ["announc", "launch", "rais", "complain", "review"];
-
-export function hardRequirementsOf(
-	requirements: readonly Requirement[],
-): Requirement[] {
-	return requirements.filter((req) => req.kind === "hard");
-}
-
-function boundTokens(text: string): string[] {
-	const found = text.match(BOUND_RE) ?? [];
-	return found.map((token) => token.replace(/\$/g, "").toUpperCase());
-}
-
-function containsBound(text: string, token: string): boolean {
-	return text.toUpperCase().replace(/\$/g, "").includes(token);
-}
-
-function hasBannedWord(text: string): boolean {
-	const lower = text.toLowerCase();
-	return BANNED_STEMS.some((stem) => lower.includes(stem));
-}
-
-function checkNoBannedWords(writtenHard: readonly Requirement[]): OnboardCheck {
-	const offenders = writtenHard.filter((req) => hasBannedWord(req.text));
-	return {
-		name: "no written hard requirement carries a bonus-only word",
-		passed: offenders.length === 0,
-	};
-}
-
-function checkBoundsCovered(
-	fixtureHard: readonly Requirement[],
-	writtenHard: readonly Requirement[],
-): OnboardCheck[] {
-	const bounds = new Set<string>();
-	for (const req of fixtureHard) {
-		for (const token of boundTokens(req.text)) bounds.add(token);
-	}
-	return Array.from(bounds).map((token) => ({
-		name: `numeric bound ${token} appears in a written hard requirement`,
-		passed: writtenHard.some((written) => containsBound(written.text, token)),
-	}));
-}
-
+/** Structural checks only; regexes cannot judge ICP meaning. */
 export function scoreOnboardProfile(
 	written: WrittenOnboardProfile,
-	fixture: IcpDoc,
+	fixture?: IcpDoc,
 ): OnboardCheck[] {
-	const fixtureHard = hardRequirementsOf(fixture.requirements ?? []);
-	const writtenHard = hardRequirementsOf(written.requirements);
+	const parsed = IcpDocSchema.safeParse(written);
+	const sourceUrls = written.seller.sourceUrls;
 	return [
 		{
-			name: "description is at most 1000 characters",
-			passed: written.description.length <= 1000,
+			name: "profile matches canonical onboarding schema",
+			passed: parsed.success,
 		},
 		{
-			name: "written hard requirement count is at most five",
-			passed: writtenHard.length <= 5,
+			name: "seller source URLs are unique",
+			passed: new Set(sourceUrls).size === sourceUrls.length,
 		},
-		checkNoBannedWords(writtenHard),
-		...checkBoundsCovered(fixtureHard, writtenHard),
 		{
-			name: "buyer rubric is at most 400 characters",
-			passed: written.buyer !== null && written.buyer.rubric.length <= 400,
+			name: "seller domain is preserved",
+			passed:
+				fixture === undefined ||
+				written.seller.domain === fixture.seller.domain,
+		},
+		{
+			name: "targeting instructions are preserved",
+			passed:
+				fixture === undefined || written.instructions === fixture.instructions,
 		},
 	];
 }

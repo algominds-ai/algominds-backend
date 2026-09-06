@@ -1,0 +1,164 @@
+{
+  "completedModelOutputs": 26,
+  "failedOutputs": 1,
+  "recordedTotalDollars": 1.45732,
+  "unknownBillingReserveDollars": 2.0,
+  "reserveIsNotAnInvoice": true,
+  "unknownChargeReconciled": false,
+  "unknownCases": [
+    "earlier interrupted request",
+    "original-final exceeded 90s call timeout; potential unreported first attempt",
+    "form3-full-brief-final two timed-out attempts"
+  ],
+  "agentTokenCostsIncluded": false,
+  "ceilingDollars": 50,
+  "rows": [
+    {
+      "id": "original-grouped",
+      "status": "complete",
+      "batch": "diagnostic",
+      "dollars": 0.094172,
+      "seconds": 50.963
+    },
+    {
+      "id": "compliance-control-grouped",
+      "status": "complete",
+      "batch": "diagnostic",
+      "dollars": 0.059586,
+      "seconds": 21.962
+    },
+    {
+      "id": "cloudflare-access-v2",
+      "status": "complete",
+      "batch": "validation",
+      "dollars": 0.028128,
+      "seconds": 22.751
+    },
+    {
+      "id": "snyk-domain-only-v2",
+      "status": "complete",
+      "batch": "validation",
+      "dollars": 0.011704,
+      "seconds": 5.689
+    },
+    {
+      "id": "gusto-payroll-v2",
+      "status": "complete",
+      "batch": "validation",
+      "dollars": 0.022832,
+      "seconds": 12.77
+    },
+    {
+      "id": "deel-composite-v2",
+      "status": "complete",
+      "batch": "validation",
+      "dollars": 0.035454,
+      "seconds": 24.587
+    },
+    {
+      "id": "toast-operations-v2",
+      "status": "complete",
+      "batch": "validation",
+      "dollars": 0.031404,
+      "seconds": 16.14
+    },
+    {
+      "id": "ondato-optional-v2",
+      "status": "complete",
+      "batch": "validation",
+      "dollars": 0.065766,
+      "seconds": 26.676
+    },
+    {
+      "id": "original-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.126962,
+      "seconds": 166.687
+    },
+    {
+      "id": "compliance-control-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.096816,
+      "seconds": 55.697
+    },
+    {
+      "id": "cloudflare-access-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.031386,
+      "seconds": 25.509
+    },
+    {
+      "id": "snyk-domain-only-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.017852,
+      "seconds": 11.575
+    },
+    {
+      "id": "deel-composite-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.039752,
+      "seconds": 29.061
+    },
+    {
+      "id": "toast-operations-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.034192,
+      "seconds": 18.95
+    },
+    {
+      "id": "ondato-optional-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.070714,
+      "seconds": 31.943
+    },
+    {
+      "id": "future-event-final",
+      "status": "complete",
+      "batch": "final-controls",
+      "dollars": 0.019638,
+      "seconds": 14.016
+    },
+    {
+      "id": "form3-baseline-final",
+      "status": "complete",
+      "batch": "real-accounts",
+      "dollars": 0.086936,
+      "seconds": 73.417
+    },
+    {
+      "id": "form3-candidate-final",
+      "status": "complete",
+      "batch": "real-accounts",
+      "dollars": 0.052424,
+      "seconds": 39.632
+    },
+    {
+      "id": "aris-baseline-final",
+      "status": "complete",
+      "batch": "real-accounts",
+      "dollars": 0.039824,
+      "seconds": 34.381
+    },
+    {
+      "id": "aris-candidate-final",
+      "status": "complete",
+      "batch": "real-accounts",
+      "dollars": 0.048632,
+      "seconds": 41.306
+    },
+    {
+      "id": "form3-full-brief-final",
+      "status": "failed",
+      "batch": "real-accounts",
+      "dollars": 0,
+      "seconds": 180.022
+    }
+  ]
+}

@@ -60,8 +60,8 @@ const financialBand: Partial<SearchPlan> = {
 	maxFundingTotal: 20_000_000,
 };
 
-describe("revenue and funding raised count as one alternative band", () => {
-	it("keeps a company whose revenue is in band even when its funding is below the floor", () => {
+describe("provider bounds are independent required limits", () => {
+	it("rejects a failed funding bound even when its revenue bound passes", () => {
 		const outcome = filterEntities(
 			[
 				result(
@@ -72,10 +72,10 @@ describe("revenue and funding raised count as one alternative band", () => {
 			plan(financialBand),
 			"2026-09-03",
 		);
-		expect(outcome.rejects).toEqual([]);
-		expect(outcome.rows.map((row) => row.domain)).toEqual([
-			"revenue-in-band.com",
+		expect(outcome.rejects.map((reject) => reject.reason)).toEqual([
+			"funding raised 50000 below the floor of 1000000",
 		]);
+		expect(outcome.rows).toEqual([]);
 	});
 
 	it("rejects with the revenue reason when both revenue and funding are below their floors", () => {
@@ -165,14 +165,14 @@ describe("a single-bounded plan ignores the other financial figure entirely", ()
 	});
 });
 
-describe("planConstraints renders the money bounds as one alternative when both are set", () => {
-	it("joins revenue and funding into one clause when the plan bounds both", () => {
+describe("planConstraints preserves each independent provider bound", () => {
+	it("states both bounds without inventing a financial alternative", () => {
 		const text = planConstraints(plan(financialBand));
 
 		expect(text).toContain(
-			"Every company must have a annual revenue between 5000000 and 50000000 or funding raised between 1000000 and 20000000.",
+			"Every company must have a funding raised between 1000000 and 20000000.",
 		);
-		expect(text).not.toContain(
+		expect(text).toContain(
 			"Every company must have a annual revenue between 5000000 and 50000000.",
 		);
 	});

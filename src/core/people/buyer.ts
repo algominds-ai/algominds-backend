@@ -1,13 +1,12 @@
 import { z } from "zod";
-import type { IcpDoc } from "@/core/synthesize";
-import { BandSchema, IcpBuyerSchema, SENIOR_BANDS } from "@/core/synthesize";
+import type { IcpDoc } from "@/core/icp";
 
 export const ResolvedBuyerSchema = z.object({
 	mode: z.enum(["target", "profile", "roster"]),
-	buyerSource: z.enum(["target", "captured", "description", "none"]),
+	buyerSource: z.enum(["target", "captured", "none"]),
+	offer: z.string().nullable(),
+	instructions: z.string().nullable(),
 	rubric: z.string().nullable(),
-	bands: z.array(BandSchema),
-	keywordBands: IcpBuyerSchema.shape.keywordBands,
 });
 
 export type ResolvedBuyer = z.infer<typeof ResolvedBuyerSchema>;
@@ -22,41 +21,39 @@ function targetRubric(target: string | readonly string[]): string {
 	return ["Titles to find:", ...target.map((title) => `- ${title}`)].join("\n");
 }
 
+function context(
+	profile: IcpDoc | null,
+): Pick<ResolvedBuyer, "offer" | "instructions"> {
+	return {
+		offer: profile?.icp.offer ?? null,
+		instructions: profile?.instructions ?? null,
+	};
+}
+
 /**
- * Resolves who the buyer is by walking the ladder: request target, then
- * captured profile buyer, then profile description, then roster mode. Returns
- * the plain, storable rung that answered.
+ * Resolves the explicit request target before the canonical ICP buyer string.
+ * A profile without a buyer stays roster-only; seller description is never a
+ * person-selection rubric.
  */
 export function resolveBuyer(input: ResolveBuyerInput): ResolvedBuyer {
 	const { target, profile } = input;
+	const shared = context(profile);
 
 	if (target !== null) {
 		return {
 			mode: "target",
 			buyerSource: "target",
 			rubric: targetRubric(target),
-			bands: [...SENIOR_BANDS],
-			keywordBands: [],
+			...shared,
 		};
 	}
 
-	if (profile?.buyer) {
+	if (profile?.icp.buyer) {
 		return {
 			mode: "profile",
 			buyerSource: "captured",
-			rubric: profile.buyer.rubric,
-			bands: profile.buyer.bands,
-			keywordBands: profile.buyer.keywordBands,
-		};
-	}
-
-	if (profile) {
-		return {
-			mode: "profile",
-			buyerSource: "description",
-			rubric: profile.description,
-			bands: [...SENIOR_BANDS],
-			keywordBands: [],
+			rubric: profile.icp.buyer,
+			...shared,
 		};
 	}
 
@@ -64,7 +61,6 @@ export function resolveBuyer(input: ResolveBuyerInput): ResolvedBuyer {
 		mode: "roster",
 		buyerSource: "none",
 		rubric: null,
-		bands: [...SENIOR_BANDS],
-		keywordBands: [],
+		...shared,
 	};
 }

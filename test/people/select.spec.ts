@@ -59,13 +59,13 @@ it("returns observed candidates by id", async () => {
 
 	const result = await selectBuyers(
 		{
-			description: null,
 			buyer: {
 				mode: "profile",
 				buyerSource: "captured",
 				rubric,
-				bands: ["c-suite"],
-				keywordBands: [],
+				offer: "Finance workflow automation",
+				instructions:
+					"Target growth and finance leaders; contact location is unrestricted.",
 			},
 			candidates,
 			company: { name: "Acme", workforceTotal: null },
@@ -97,13 +97,12 @@ it("keeps every known pick, however many the rubric matches, and drops only unkn
 
 	const result = await selectBuyers(
 		{
-			description: null,
 			buyer: {
 				mode: "profile",
 				buyerSource: "captured",
+				offer: null,
+				instructions: null,
 				rubric,
-				bands: ["c-suite"],
-				keywordBands: [],
 			},
 			candidates,
 			company: { name: "Acme", workforceTotal: null },
@@ -117,28 +116,24 @@ it("keeps every known pick, however many the rubric matches, and drops only unkn
 	expect(result.droppedIds).toEqual([999]);
 });
 
-it("returns zero picks, a null reply, and the ledger's cost after two failures", async () => {
+it("returns zero picks, a null reply, and the ledger's cost after a failed call", async () => {
 	const candidates = [candidate(1, "Chief Financial Officer")];
 	const emptyReply = {
 		content: "",
 		finishReason: "length" as const,
 		cost: 0.00001,
 	};
-	const gateway = fakeGateway([
-		chatCompletionResponse(emptyReply),
-		chatCompletionResponse(emptyReply),
-	]);
+	const gateway = fakeGateway([chatCompletionResponse(emptyReply)]);
 	globalThis.fetch = gateway.fetch;
 
 	const result = await selectBuyers(
 		{
-			description: null,
 			buyer: {
 				mode: "profile",
 				buyerSource: "captured",
+				offer: null,
+				instructions: null,
 				rubric,
-				bands: ["c-suite"],
-				keywordBands: [],
 			},
 			candidates,
 			company: { name: "Acme", workforceTotal: null },
@@ -146,10 +141,10 @@ it("returns zero picks, a null reply, and the ledger's cost after two failures",
 		env,
 	);
 
-	expect(gateway.calls).toHaveLength(2);
+	expect(gateway.calls).toHaveLength(1);
 	expect(result.picks).toEqual([]);
 	expect(result.reply).toBeNull();
-	expect(result.costDollars).toBeCloseTo(0.00002, 12);
+	expect(result.costDollars).toBeCloseTo(0.00001, 12);
 });
 
 it("sends the rubric and roster as delimited data, not as instructions", async () => {
@@ -164,13 +159,13 @@ it("sends the rubric and roster as delimited data, not as instructions", async (
 
 	await selectBuyers(
 		{
-			description: "quantum widget sellers to fintech buyers",
 			buyer: {
 				mode: "profile",
 				buyerSource: "captured",
 				rubric: sentinelRubric,
-				bands: ["c-suite"],
-				keywordBands: [],
+				offer: "Quantum widget workflow automation",
+				instructions:
+					"Quantum widget sellers to fintech buyers; do not infer contact geography.",
 			},
 			candidates,
 			company: { name: "Acme", workforceTotal: null },
@@ -192,7 +187,7 @@ it("sends the rubric and roster as delimited data, not as instructions", async (
 	expect(system).not.toContain(sentinelRubric);
 	expect(user).toContain(sentinelTitle);
 	expect(user).toContain(sentinelRubric);
-	expect(system).toContain("exclude a candidate whose");
+	expect(system).toContain("contact geography");
 	expect(user).toContain("| (no location)");
 });
 
@@ -205,13 +200,12 @@ it("sends the company's headcount in the prompt data when the caller knows it", 
 
 	await selectBuyers(
 		{
-			description: null,
 			buyer: {
 				mode: "profile",
 				buyerSource: "captured",
+				offer: null,
+				instructions: null,
 				rubric,
-				bands: ["c-suite"],
-				keywordBands: [],
 			},
 			candidates,
 			company: { name: "Acme", workforceTotal: 42 },
@@ -235,13 +229,12 @@ it("tells the model the company's headcount is unknown rather than guessing a nu
 
 	await selectBuyers(
 		{
-			description: null,
 			buyer: {
 				mode: "profile",
 				buyerSource: "captured",
+				offer: null,
+				instructions: null,
 				rubric,
-				bands: ["c-suite"],
-				keywordBands: [],
 			},
 			candidates,
 			company: { name: "Acme", workforceTotal: null },

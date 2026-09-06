@@ -1,11 +1,12 @@
 import type { Context } from "hono";
-import type { z } from "zod";
+import { z } from "zod";
 import {
 	createIcp,
 	findRun,
 	loadIcp,
 	organizationDomain,
 } from "@/core/db/queries";
+import { draftIcp, IcpDocSchema } from "@/core/icp";
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
@@ -39,12 +40,34 @@ export async function resolveIcpId(
 		const owned = await loadIcp(env, body.icpId);
 		return owned?.organizationId === organizationId ? owned.id : null;
 	}
+	const domain = await organizationDomain(env, organizationId);
 	const row = await createIcp(env, {
-		description: body.prompt,
-		domain: await organizationDomain(env, organizationId),
+		doc: draftIcp(domain, body.prompt),
+		domain,
 		organizationId,
 	});
 	return row.id;
+}
+
+/** Reads a profile only for its owner, including the exact instructions to revise. */
+export async function getIcp(
+	c: Context<ApiEnv, "/icp/:icpId">,
+): Promise<Response> {
+	const id = z.uuid().safeParse(c.req.param("icpId"));
+	if (!id.success) return c.json({ error: "unknown profile" }, 404);
+	const row = await loadIcp(c.env, id.data);
+	if (!row || row.organizationId !== c.get("organizationId"))
+		return c.json({ error: "unknown profile" }, 404);
+	const parsed = IcpDocSchema.safeParse(row.doc);
+	if (!parsed.success)
+		return c.json(
+			{
+				error:
+					"legacy profile; onboard again with the original targeting instructions",
+			},
+			409,
+		);
+	return c.json({ icpId: row.id, profile: parsed.data }, 200);
 }
 
 /**

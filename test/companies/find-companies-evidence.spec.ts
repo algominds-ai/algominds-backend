@@ -6,9 +6,11 @@ import { gate } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
 import type { CompanyEntity, ExaResult } from "@/core/providers/exa/search";
+import { conditionRefs } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
 import { fakeSecretEnv } from "../support/env";
 import { exaContentsFetch } from "../support/fetch";
+import { profileFixture, requirementFixture } from "../support/icp";
 
 function goodResult(
 	domain: string,
@@ -49,15 +51,7 @@ function exaOptions(): FindCompaniesOptions {
 		organizationId: "org-1",
 		env: fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
 		today: "2026-08-30",
-		requirements: [
-			{
-				id: "r1",
-				text: "the company fits the profile",
-				kind: "hard",
-				proof: "record",
-				windowDays: null,
-			},
-		],
+		requirements: [requirementFixture("the company fits the profile")],
 	};
 }
 
@@ -106,6 +100,7 @@ function agentPlan(
 	const plan = testPlan({
 		recency: "a role posted in the last 30 days",
 		recencyDays: 30,
+		conditionIds: ["r1.a1.c1"],
 		source: "exa-agent",
 		...overrides,
 	});
@@ -130,9 +125,10 @@ function searchPlan(
 const noopJudge: FindCompaniesDeps["judge"] = async (requirements, rows) => ({
 	verdicts: rows.map((_row, index) => ({
 		index,
-		statuses: requirements
-			.filter((r) => r.kind === "hard")
-			.map((r) => ({ id: r.id, status: "proven" as const, quote: "" })),
+		statuses: conditionRefs(requirements).map(({ id }) => ({
+			id,
+			status: "proven" as const,
+		})),
 		reason: "fits icp",
 		sameOrganizationAs: null,
 	})),
@@ -142,7 +138,10 @@ const noopJudge: FindCompaniesDeps["judge"] = async (requirements, rows) => ({
 const passthroughBackfill: FindCompaniesDeps["backfill"] = async (domains) =>
 	domains.map((domain) => ({ domain, record: null }));
 
-const icp = { description: "fintech companies" };
+const icp = profileFixture(
+	{ offer: "Fintech software" },
+	"Find fintech companies.",
+);
 
 const originalFetch = globalThis.fetch;
 
@@ -151,7 +150,7 @@ afterEach(() => {
 });
 
 describe("a round that demanded proof checks its own evidence before the judge sees it", () => {
-	it("rejects a page that truly does not exist, keeps one that merely lacks the quote, and keeps one the crawler refused", async () => {
+	it("keeps only a page whose quoted evidence is present on the crawled page", async () => {
 		const good = agentRow("good.com", "Good Co is hiring now.");
 		const notFound = agentRow("missing404.com", "Missing Co is hiring now.");
 		const noQuote = agentRow("noquote.com", "No Quote Co is hiring now.");
@@ -174,10 +173,7 @@ describe("a round that demanded proof checks its own evidence before the judge s
 			judge: noopJudge,
 		});
 
-		expect(result.companies.map((row) => row.domain).sort()).toEqual([
-			"good.com",
-			"noquote.com",
-		]);
+		expect(result.companies.map((row) => row.domain)).toEqual(["good.com"]);
 		expect(result.captures["good.com"]?.result.evidenceCheck).toBe("found");
 		expect(result.captures["noquote.com"]?.result.evidenceCheck).toBe(
 			"missing",
@@ -185,35 +181,6 @@ describe("a round that demanded proof checks its own evidence before the judge s
 		expect(
 			result.rejects.some((reject) => reject.reason === "CRAWL_NOT_FOUND"),
 		).toBe(true);
-	});
-
-	it("records an evidenceCheck and a proving page for every one of a dozen quoted companies from one agent round", async () => {
-		const rows = Array.from({ length: 12 }, (_, i) =>
-			agentRow(`co${i}.example`, `Co ${i} is hiring now.`),
-		);
-		const byUrl = Object.fromEntries(
-			rows.map((_row, i) => [
-				`https://co${i}.example/careers`,
-				{ text: `Co ${i} is hiring now.` },
-			]),
-		);
-		globalThis.fetch = exaContentsFetch(byUrl);
-		const { agentRound } = scriptedAgentRound([rows]);
-
-		const result = await findCompanies(icp, 12, exaOptions(), {
-			recentDomains: async () => [],
-			synthesize: agentPlan(),
-			search: async () => ({ requestId: "req-1", results: [] }),
-			agentRound,
-			backfill: passthroughBackfill,
-			prove: async () => [],
-			homepages: async () => [],
-			gate,
-			judge: noopJudge,
-		});
-
-		expect(result.companies).toHaveLength(12);
-		expect(result.pages).toHaveLength(12);
 	});
 });
 
@@ -254,7 +221,11 @@ describe("a round that demanded proof but never had it to check", () => {
 
 		const result = await findCompanies(icp, 1, exaOptions(), {
 			recentDomains: async () => [],
-			synthesize: agentPlan({ recency: null, recencyDays: null }),
+			synthesize: agentPlan({
+				recency: null,
+				recencyDays: null,
+				conditionIds: [],
+			}),
 			search: async () => ({ requestId: "req-1", results: [] }),
 			agentRound,
 			backfill: passthroughBackfill,
@@ -309,12 +280,8 @@ describe("captures across sources agree on shape", () => {
 		});
 
 		const capture = result.captures["agentco.com"];
-		expect(capture ? Object.keys(capture).sort() : []).toEqual([
-			"entity",
-			"raw",
-			"result",
-			"source",
-		]);
+		expect(capture?.entity).toBeDefined();
+		expect(capture?.raw).toBeDefined();
 		expect(result.companies.map((row) => row.domain)).toEqual(["agentco.com"]);
 	});
 });

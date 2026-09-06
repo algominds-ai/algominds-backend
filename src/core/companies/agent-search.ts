@@ -95,18 +95,22 @@ function agentQuery(
 /** Names who the run prospects for, so the agent stops returning that seller's own customers and its competitors. */
 function sellerSentences(seller: IcpSeller | null): string[] {
 	if (seller === null) return [];
-	const sentences = [
-		`You are prospecting for ${seller.domain}. Never return that company, and never`,
-		"treat a page on its own site as proof of another company's signal.",
-	];
+	const sentences: string[] = [];
+	if (seller.domain !== null) {
+		sentences.push(
+			`You are prospecting for ${seller.domain}. Never return that company, and never treat a page on its own site as proof of another company's signal.`,
+		);
+	}
 	if (seller.customers.length > 0) {
 		sentences.push(
 			`These companies already buy from it, so never return them: ${seller.customers.join(", ")}.`,
 		);
 	}
-	sentences.push(
-		`Never return a company that competes with ${seller.domain}. ${seller.competitorTest}`,
-	);
+	if (seller.domain !== null && seller.description.trim() !== "") {
+		sentences.push(
+			`Never return a company that competes with ${seller.domain}. Use the seller description as context: ${seller.description}`,
+		);
+	}
 	return sentences;
 }
 

@@ -247,6 +247,7 @@ async function judgeOneSlice(
 		applyEvidenceChecks(captures, checked.checks);
 		const proved = await proveAndJudge({
 			route,
+			icp: ctx.icp,
 			deps,
 			requirements: ctx.requirements,
 			checked,

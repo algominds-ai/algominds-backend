@@ -5,6 +5,7 @@ import { requireApiKey } from "@/http/auth";
 import type { Job } from "@/http/jobs";
 import {
 	domainsScopeId,
+	getIcp,
 	onboardScopeId,
 	resolveIcpId,
 	startJob,
@@ -136,6 +137,7 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		}),
 	);
 
+	api.get("/icp/:icpId", getIcp);
 	api.get("/runs/:runId", getRunStatus);
 	api.get("/runs/:runId/companies", getRunCompanies);
 	api.get("/runs/:runId/people", getRunPeople);

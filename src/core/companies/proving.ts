@@ -4,7 +4,11 @@ import type {
 	RetrievedPage,
 } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
-import type { RequirementEvidence, Verdict } from "@/core/companies/judge";
+import type {
+	JudgeResult,
+	RequirementEvidence,
+	Verdict,
+} from "@/core/companies/judge";
 import type { ProvenRow, ProvingHit } from "@/core/companies/proof";
 import {
 	applyEvidenceChecks,
@@ -13,11 +17,14 @@ import {
 	provingDemand,
 	withEvidence,
 } from "@/core/companies/proof";
-import { CostLedger } from "@/core/cost";
+import { addPartialSpend, CostLedger } from "@/core/cost";
 import type { QuoteCheckReason } from "@/core/providers/exa/contents";
-import type { Requirement } from "@/core/requirements";
-import { hardPageRequirements } from "@/core/requirements";
-import type { SynthesizeResult } from "@/core/synthesize";
+import type { ConditionRef, Requirement } from "@/core/requirements";
+import {
+	evidenceDemandConditions,
+	requiredSatisfied,
+} from "@/core/requirements";
+import type { IcpDoc, SynthesizeResult } from "@/core/synthesize";
 
 type ProveInput = {
 	deps: FindCompaniesDeps;
@@ -26,6 +33,8 @@ type ProveInput = {
 	env: Env;
 	ledger: CostLedger;
 	today: string;
+	neededByRow?: ReadonlyMap<number, ReadonlySet<string>>;
+	seedEvidenceByRow?: EvidenceByRow;
 };
 
 type EvidenceByRow = Map<number, Map<string, RequirementEvidence>>;
@@ -45,14 +54,19 @@ function recordRequirementEvidence(
 ): void {
 	const perRow =
 		evidenceByRow.get(index) ?? new Map<string, RequirementEvidence>();
-	perRow.set(requirementId, { url: hit.url, quote: hit.quote });
+	perRow.set(requirementId, {
+		url: hit.url,
+		quote: hit.quote,
+		publishedDate: hit.publishedDate,
+		text: hit.text,
+	});
 	evidenceByRow.set(index, perRow);
 }
 
 /** One requirement's proven hit folded onto the round's rows, pages, checks and per-requirement evidence. The first hard page requirement also lands on the row's own single evidence slot, for the display fields that read it. */
 function applyProvenEntry(
 	state: ProvedCandidates,
-	demand: Requirement,
+	demand: ConditionRef,
 	isPrimary: boolean,
 	entry: ProvenRow,
 ): void {
@@ -87,23 +101,44 @@ function applyProvenEntry(
  * and the judge leaves that requirement unproven.
  */
 async function proveCandidates(input: ProveInput): Promise<ProvedCandidates> {
-	const { deps, requirements, candidates, env, ledger, today } = input;
-	const demands = hardPageRequirements(requirements);
+	const {
+		deps,
+		requirements,
+		candidates,
+		env,
+		ledger,
+		today,
+		neededByRow,
+		seedEvidenceByRow,
+	} = input;
+	const demands = evidenceDemandConditions(requirements);
 	const state: ProvedCandidates = {
 		rows: [...candidates],
 		pages: [],
 		checks: {},
-		evidenceByRow: new Map(),
+		evidenceByRow: new Map(seedEvidenceByRow ?? []),
 	};
 	for (const [demandIndex, demand] of demands.entries()) {
+		const selected = candidates.flatMap((row, index) => {
+			const needed = neededByRow?.get(index);
+			return neededByRow === undefined || needed?.has(demand.id)
+				? [{ row, index }]
+				: [];
+		});
+		if (selected.length === 0) continue;
 		const proven = await deps.prove(
-			candidates,
+			selected.map((entry) => entry.row),
 			provingDemand(demand, today),
 			env,
 			ledger,
 		);
 		for (const entry of proven) {
-			applyProvenEntry(state, demand, demandIndex === 0, entry);
+			const originalIndex = selected[entry.index]?.index;
+			if (originalIndex === undefined) continue;
+			applyProvenEntry(state, demand, demandIndex === 0, {
+				index: originalIndex,
+				hit: entry.hit,
+			});
 		}
 	}
 	return state;
@@ -135,6 +170,68 @@ type ReproveInput = {
 	today: string;
 };
 
+function neededProofs(
+	requirements: readonly Requirement[],
+	rows: readonly CompanyRow[],
+	verdicts: readonly Verdict[],
+): Map<number, Set<string>> {
+	const ids = evidenceDemandConditions(requirements).map((demand) => demand.id);
+	const byIndex = new Map(verdicts.map((verdict) => [verdict.index, verdict]));
+	const needed = new Map<number, Set<string>>();
+	rows.forEach((_row, index) => {
+		const verdict = byIndex.get(index);
+		const statuses = new Map(
+			(verdict?.statuses ?? []).map((entry) => [entry.id, entry.status]),
+		);
+		if (requiredSatisfied(requirements, statuses)) return;
+		const missing = new Set(ids.filter((id) => statuses.get(id) !== "proven"));
+		if (missing.size > 0) needed.set(index, missing);
+	});
+	return needed;
+}
+
+async function judgeIfRows(input: {
+	deps: FindCompaniesDeps;
+	requirements: readonly Requirement[];
+	rows: readonly CompanyRow[];
+	env: Env;
+	options: Parameters<FindCompaniesDeps["judge"]>[3];
+}): Promise<JudgeResult> {
+	const { deps, requirements, rows, env, options } = input;
+	return rows.length > 0
+		? deps.judge(requirements, rows, env, options)
+		: { verdicts: [], ledger: new CostLedger() };
+}
+
+async function prepareCandidates(input: {
+	route: SynthesizeResult["route"];
+	checked: CheckedRows;
+	deps: FindCompaniesDeps;
+	requirements: readonly Requirement[];
+	env: Env;
+	ledger: CostLedger;
+	today: string;
+}): Promise<ProvedCandidates> {
+	const { route, checked, deps, requirements, env, ledger, today } = input;
+	if (route === "search") {
+		return {
+			rows: [...checked.kept],
+			pages: [...checked.pages],
+			checks: checked.checks,
+			evidenceByRow: new Map(),
+		};
+	}
+	const reproved = await reproveUnverified({
+		deps,
+		requirements,
+		checked,
+		env,
+		ledger,
+		today,
+	});
+	return { ...reproved, checks: { ...checked.checks, ...reproved.checks } };
+}
+
 /** The rows with every one whose quote the page check did not find stripped of its evidence and sent through the proving pass; rows the check found, or that no check ran on, are returned as they were. */
 async function reproveUnverified(
 	input: ReproveInput,
@@ -147,7 +244,7 @@ async function reproveUnverified(
 	const rows = [...checked.kept];
 	const pages = [...checked.pages];
 	if (unverified.length === 0) {
-		return { rows, pages, checks: {}, evidenceByRow: new Map() };
+		return { rows, pages, checks: checked.checks, evidenceByRow: new Map() };
 	}
 	const proved = await proveCandidates({
 		deps,
@@ -177,6 +274,7 @@ async function reproveUnverified(
 
 export type ProveAndJudgeInput = {
 	route: SynthesizeResult["route"];
+	icp: IcpDoc;
 	deps: FindCompaniesDeps;
 	requirements: readonly Requirement[];
 	checked: CheckedRows;
@@ -216,7 +314,11 @@ async function attachHomepages(
 		if (!homepage) return;
 		const perRow =
 			proved.evidenceByRow.get(index) ?? new Map<string, RequirementEvidence>();
-		perRow.set("homepage", { url: homepage.url, quote: homepage.text });
+		perRow.set("homepage", {
+			url: homepage.url,
+			quote: homepage.text,
+			text: homepage.text,
+		});
 		proved.evidenceByRow.set(index, perRow);
 	});
 }
@@ -225,38 +327,88 @@ async function attachHomepages(
 export async function proveAndJudge(
 	input: ProveAndJudgeInput,
 ): Promise<ProveAndJudgeOutcome> {
-	const { route, deps, requirements, checked, env, ledger, captures, today } =
-		input;
-	const proved =
-		route === "search"
-			? await proveCandidates({
-					deps,
-					requirements,
-					candidates: [...checked.kept],
-					env,
-					ledger,
-					today,
-				})
-			: await reproveUnverified({
-					deps,
-					requirements,
-					checked,
-					env,
-					ledger,
-					today,
-				});
-	applyEvidenceChecks(captures, proved.checks);
-	applyRowEvidence(captures, proved.rows);
-	await attachHomepages(deps, proved, env, ledger);
-	const judged =
-		proved.rows.length > 0
-			? await deps.judge(requirements, proved.rows, env, proved.evidenceByRow)
-			: { verdicts: [], ledger: new CostLedger() };
-	applyJudgeReasons(captures, proved.rows, judged.verdicts);
-	return {
-		rows: proved.rows,
-		pages: proved.pages,
-		verdicts: judged.verdicts,
-		ledger: judged.ledger,
+	const {
+		route,
+		icp,
+		deps,
+		requirements,
+		checked,
+		env,
+		ledger,
+		captures,
+		today,
+	} = input;
+	const initial = await prepareCandidates({
+		route,
+		checked,
+		deps,
+		requirements,
+		env,
+		ledger,
+		today,
+	});
+	let initialJudged: { verdicts: Verdict[]; ledger: CostLedger } = {
+		verdicts: [],
+		ledger: new CostLedger(),
 	};
+	await attachHomepages(deps, initial, env, ledger);
+	if (route === "search") {
+		initialJudged = await judgeIfRows({
+			deps,
+			requirements,
+			rows: initial.rows,
+			env,
+			options: {
+				evidenceByRow: initial.evidenceByRow,
+				today,
+				profile: icp,
+			},
+		});
+	}
+	try {
+		const neededByRow =
+			route === "search"
+				? neededProofs(requirements, initial.rows, initialJudged.verdicts)
+				: new Map<number, Set<string>>();
+		const proved =
+			route === "search" && neededByRow.size > 0
+				? await proveCandidates({
+						deps,
+						requirements,
+						candidates: initial.rows,
+						env,
+						ledger,
+						today,
+						neededByRow,
+						seedEvidenceByRow: initial.evidenceByRow,
+					})
+				: initial;
+		applyEvidenceChecks(captures, proved.checks);
+		applyRowEvidence(captures, proved.rows);
+		const unchangedSearch = route === "search" && proved === initial;
+		const judged = unchangedSearch
+			? initialJudged
+			: await judgeIfRows({
+					deps,
+					requirements,
+					rows: proved.rows,
+					env,
+					options: {
+						evidenceByRow: proved.evidenceByRow,
+						today,
+						profile: icp,
+					},
+				});
+		applyJudgeReasons(captures, proved.rows, judged.verdicts);
+		return {
+			rows: proved.rows,
+			pages: proved.pages,
+			verdicts: judged.verdicts,
+			ledger: unchangedSearch
+				? initialJudged.ledger
+				: CostLedger.merge(initialJudged.ledger, judged.ledger),
+		};
+	} catch (error) {
+		throw addPartialSpend(error, initialJudged.ledger.total());
+	}
 }

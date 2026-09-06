@@ -2,7 +2,7 @@ import type { RunReport, StoredCompanyRecord } from "@eval/headline";
 import { IcpDocSchema } from "@eval/icp-doc";
 import type { Sql } from "postgres";
 import { z } from "zod";
-import { hardPageRequirements } from "@/core/requirements";
+import { evidenceDemandConditions } from "@/core/requirements";
 
 const RunRowSchema = z.object({
 	id: z.string(),
@@ -90,5 +90,7 @@ export async function readRequiresProvingPass(
 	const row = rows[0];
 	if (!row) return false;
 	const parsed = IcpRowSchema.parse(row);
-	return hardPageRequirements(parsed.doc?.requirements ?? []).length > 0;
+	return (
+		evidenceDemandConditions(parsed.doc?.icp.requirements ?? []).length > 0
+	);
 }

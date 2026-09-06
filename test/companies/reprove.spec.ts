@@ -7,13 +7,26 @@ import type { ProvingHit } from "@/core/companies/proof";
 import { proveAndJudge } from "@/core/companies/proving";
 import { CostLedger } from "@/core/cost";
 import type { Requirement } from "@/core/requirements";
+import { profileFixture } from "../support/icp";
 
 const pageRequirement: Requirement = {
-	id: "r2",
-	text: "announced a priced round in the last ninety days",
-	kind: "hard",
-	proof: "page",
-	windowDays: 90,
+	kind: "required",
+	anyOf: [
+		{
+			allOf: [
+				{
+					text: "announced a priced round in the last ninety days",
+					window: {
+						amount: 90,
+						unit: "days",
+						appliesTo: "publication",
+						direction: "past",
+					},
+					sourceRule: "company domain",
+				},
+			],
+		},
+	],
 };
 
 function agentRow(): CompanyRow {
@@ -101,6 +114,7 @@ async function judgeAgentRow(hits: ProvingHit | null) {
 	const captures = { "bank.com": capture() };
 	const harness = deps(hits);
 	await proveAndJudge({
+		icp: profileFixture({ requirements: [pageRequirement] }),
 		route: "agent",
 		deps: harness.deps,
 		requirements: [pageRequirement],

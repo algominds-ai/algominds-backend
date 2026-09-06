@@ -10,7 +10,7 @@ async function publicCall(path: string): Promise<Response> {
 }
 
 describe("OpenAPI document and Swagger UI", () => {
-	it("answers both with no API key, the document naming all eight paths", async () => {
+	it("answers both with no API key, the document naming the API paths", async () => {
 		const doc = await publicCall("/openapi.json");
 		const docBody: { paths?: { [path: string]: unknown } } = await doc.json();
 		const docs = await publicCall("/docs");
@@ -21,6 +21,7 @@ describe("OpenAPI document and Swagger UI", () => {
 				"/companies/find",
 				"/enrich",
 				"/icp/onboard",
+				"/icp/{icpId}",
 				"/people/find",
 				"/runs/{runId}",
 				"/runs/{runId}/companies",

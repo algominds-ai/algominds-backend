@@ -1,0 +1,38 @@
+{
+  "id": "snyk-domain-only-final",
+  "status": "complete",
+  "output": {
+    "seller": {
+      "domain": "snyk.io",
+      "description": "Snyk provides an AI-native, agentic security platform that helps organizations secure and govern software development. It validates AI-generated code, the models and agents used in development, and the applications built by them through deterministic security engines combined with frontier-model reasoning. The platform includes Evo Agent Security, Agentic Development Security (ADS), AI Security Posture Management (AI-SPM), and Continuous Offensive Security (COS), covering asset discovery, AI guardrails, risk prioritization, AI-accelerated remediation, governance/measurement, and agentic orchestration.",
+      "customers": [
+        "Yalo"
+      ],
+      "sourceUrls": [
+        "https://snyk.io/platform/"
+      ]
+    },
+    "icp": {
+      "offer": null,
+      "buyer": null,
+      "requirements": [],
+      "unknowns": [
+        "No targeting note was supplied, so the intended offer scope, buyer role, and any targeting requirements could not be determined."
+      ]
+    }
+  },
+  "cost": {
+    "total": 0.017852,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.017852
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "onboard-profile-probe",
+        "dollars": 0.017852
+      }
+    ]
+  },
+  "seconds": 11.575
+}

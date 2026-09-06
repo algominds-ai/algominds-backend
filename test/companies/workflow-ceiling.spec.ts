@@ -8,6 +8,7 @@ import { db, withConnection } from "@/core/db/client";
 import { organizationForSlug } from "@/core/db/organizations";
 import { closeRun, createIcp, findRun, openRun } from "@/core/db/queries";
 import { icp as icpTable, run as runTable } from "@/core/db/schema";
+import { profileFixture, requirementFixture } from "../support/icp";
 
 const started: string[] = [];
 
@@ -26,28 +27,26 @@ async function seedRun(
 		`companies-ceiling-${label}-${crypto.randomUUID()}`,
 		label,
 	);
+	const domain = `${label}-${crypto.randomUUID()}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: `seed profile for the ${label} test`,
-		domain: `${label}-${crypto.randomUUID()}.internal`,
+		domain,
 		organizationId: org.id,
+		doc: profileFixture(
+			{
+				requirements: [requirementFixture("the company fits the profile")],
+			},
+			`seed profile for the ${label} test`,
+			domain,
+		),
 	});
 	return { organizationId: org.id, icpId: icpRow.id };
 }
 
 function loadIcpMock(organizationId: string) {
 	return {
-		doc: {
-			description: "anything",
-			requirements: [
-				{
-					id: "r1",
-					text: "the company fits the profile",
-					kind: "hard" as const,
-					proof: "record" as const,
-					windowDays: null,
-				},
-			],
-		},
+		doc: profileFixture({
+			requirements: [requirementFixture("the company fits the profile")],
+		}),
 		organizationId,
 	};
 }

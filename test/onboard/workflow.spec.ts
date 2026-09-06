@@ -8,6 +8,7 @@ import { db, withConnection } from "@/core/db/client";
 import { organizationForSlug } from "@/core/db/organizations";
 import { closeRun, createIcp, findRun, openRun } from "@/core/db/queries";
 import { icp as icpTable, run } from "@/core/db/schema";
+import { draftIcp } from "@/core/icp";
 import { NOTE_MAX_LENGTH } from "@/core/onboard";
 import { buildRunId, onboardScopeId } from "@/http/jobs";
 import app from "@/index";
@@ -143,7 +144,7 @@ async function seedSpentDay(): Promise<SpentDaySeed> {
 		"onboard-ceiling",
 	);
 	const icpRow = await createIcp(testEnv, {
-		description: "seed profile for the onboarding ceiling test",
+		doc: draftIcp(org.slug, "seed profile for the onboarding ceiling test"),
 		domain: org.slug,
 		organizationId: org.id,
 	});

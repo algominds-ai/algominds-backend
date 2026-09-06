@@ -3,17 +3,23 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
+import { addPartialSpend, CostLedger, PartialSpendError } from "@/core/cost";
 import {
 	assertUnderDailyCeiling,
 	closeErroredRun,
 	closeRun,
 	loadIcp,
 	openRun,
+	recordRunSpend,
 } from "@/core/db/queries";
+import type { IcpDoc } from "@/core/icp";
+import { IcpDocSchema } from "@/core/icp";
 import type { ResolvedBuyer } from "@/core/people/buyer";
 import { resolveBuyer } from "@/core/people/buyer";
-import type { IcpDoc } from "@/core/synthesize";
-import { IcpDocSchema } from "@/core/synthesize";
+import {
+	deriveProviderHints,
+	EMPTY_PROVIDER_HINTS,
+} from "@/core/people/roster";
 import { peopleFindSchema } from "@/http/schemas";
 import { runCompanies } from "@/workflows/find-people-company";
 import type { TargetCompany } from "@/workflows/find-people-target";
@@ -37,6 +43,53 @@ export type FindPeopleSummary = {
 	mode: ResolvedBuyer["mode"];
 	buyerSource: ResolvedBuyer["buyerSource"];
 };
+
+type ProviderHintsPurchase = {
+	hints: Awaited<ReturnType<typeof deriveProviderHints>>;
+	costDollars: number;
+	error: string | null;
+};
+
+async function purchaseProviderHints(input: {
+	step: WorkflowStep;
+	env: Env;
+	target: readonly TargetCompany[];
+	buyer: ResolvedBuyer;
+	instanceId: string;
+	priorSpend: number;
+}): Promise<ProviderHintsPurchase> {
+	const { step, env, target, buyer, instanceId, priorSpend } = input;
+	const provider = await step.do(
+		"derive-people-provider-hints",
+		config.stepConfig.paidCall,
+		async (): Promise<ProviderHintsPurchase> => {
+			if (target.length === 0) {
+				return { hints: EMPTY_PROVIDER_HINTS, costDollars: 0, error: null };
+			}
+			const ledger = new CostLedger();
+			try {
+				const hints = await deriveProviderHints(buyer, env, ledger);
+				return { hints, costDollars: ledger.total(), error: null };
+			} catch (error) {
+				const spent =
+					error instanceof PartialSpendError
+						? error
+						: addPartialSpend(error, ledger.total());
+				const cause = spent.cause;
+				return {
+					hints: EMPTY_PROVIDER_HINTS,
+					costDollars: spent.costDollars,
+					error: cause instanceof Error ? cause.message : String(cause),
+				};
+			}
+		},
+	);
+	const total = priorSpend + provider.costDollars;
+	await step.do("bank-provider-hints", config.stepConfig.databaseCall, () =>
+		recordRunSpend(env, instanceId, total),
+	);
+	return provider;
+}
 
 async function loadProfile(
 	env: Env,
@@ -127,6 +180,21 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
+		const provider = await purchaseProviderHints({
+			step,
+			env: this.env,
+			target: target.companies,
+			buyer,
+			instanceId: event.instanceId,
+			priorSpend: opened.alreadySpent,
+		});
+		const providerSpend = opened.alreadySpent + provider.costDollars;
+		if (provider.error) {
+			throw new NonRetryableError(
+				`findPeople: provider hints failed: ${provider.error}`,
+			);
+		}
+
 		const companies = clampCompanies(target.companies, payload.maxCompanies);
 		const loop = await runCompanies(
 			{
@@ -136,9 +204,10 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 				organizationId,
 				buyer,
 				profile,
+				providerHints: provider.hints,
 			},
 			companies,
-			opened.alreadySpent,
+			providerSpend,
 		);
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>

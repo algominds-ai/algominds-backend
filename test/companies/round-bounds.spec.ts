@@ -5,8 +5,9 @@ import { findCompanies } from "@/core/companies";
 import { gate } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import type { IcpDoc } from "@/core/synthesize";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = { description: "a profile" };
+const icp: IcpDoc = profileFixture();
 
 function searchPlan() {
 	return {
@@ -38,15 +39,7 @@ function options(
 		organizationId: "org-1",
 		env: testEnv,
 		today: "2026-09-03",
-		requirements: [
-			{
-				id: "r1",
-				text: "the company is a bank",
-				kind: "hard",
-				proof: "record",
-				windowDays: null,
-			},
-		],
+		requirements: [requirementFixture("the company is a bank")],
 		maxRounds: 1,
 		...overrides,
 	};

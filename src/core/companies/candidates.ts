@@ -77,7 +77,7 @@ export function seedExcludedDomains(
 	seller: IcpDoc["seller"],
 ): Set<string> {
 	const seeded = new Set(caller.map(normalizeDomain));
-	if (seller) seeded.add(normalizeDomain(seller.domain));
+	if (seller?.domain) seeded.add(normalizeDomain(seller.domain));
 	return seeded;
 }
 
@@ -231,6 +231,7 @@ function rowRejectReason(
 ): RejectDetail | null {
 	const detail = entityRejectReason(entity, plan);
 	if (detail) return detail;
+	if ((plan.conditionIds?.length ?? 0) > 0) return null;
 	const stale = staleRejectReason(
 		result.publishedDate ?? null,
 		plan.recencyDays,

@@ -7,7 +7,9 @@ import { filterEntities, toCompanyData } from "@/core/companies/candidates";
 import { gate } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import type { CompanyEntity, ExaResult } from "@/core/providers/exa/search";
+import { conditionRefs } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
+import { profileFixture, requirementFixture } from "../support/icp";
 
 function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
 	return {
@@ -160,7 +162,7 @@ function keptDeps(): FindCompaniesDeps {
 			verdicts: rows.map((_row, index) => ({
 				index,
 				statuses: requirements.map((r) => ({
-					id: r.id,
+					id: conditionRefs([r])[0]?.id ?? "r1.a1.c1",
 					status: "proven" as const,
 					quote: "",
 				})),
@@ -174,21 +176,13 @@ function keptDeps(): FindCompaniesDeps {
 
 describe("a kept company's row carries the judge's own reason for keeping it", () => {
 	it("carries the reason onto the row and onto toCompanyData's own result", async () => {
-		const icp = { description: "fintech companies" };
+		const icp = profileFixture();
 		const options: FindCompaniesOptions = {
 			icpId: "icp-1",
 			organizationId: "org-1",
 			env: testEnv,
 			today: TODAY,
-			requirements: [
-				{
-					id: "r1",
-					text: "fits the profile",
-					kind: "hard",
-					proof: "record",
-					windowDays: null,
-				},
-			],
+			requirements: [requirementFixture("fits the profile")],
 		};
 
 		const result = await findCompanies(icp, 1, options, keptDeps());

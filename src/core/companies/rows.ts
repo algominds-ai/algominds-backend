@@ -9,7 +9,10 @@ import { judgedFields } from "@/core/companies/judge-evidence";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 import type { Requirement } from "@/core/requirements";
-import { hardRequirements, mustBeProven } from "@/core/requirements";
+import {
+	evidenceDemandConditions,
+	requiredConditionRefs,
+} from "@/core/requirements";
 
 const EVIDENCE_SOURCE = "exa";
 const ENGINE_SOURCE = "engine";
@@ -187,8 +190,10 @@ type JudgeRequirementFlag = { id: string; quoteRequired: boolean };
 function judgeRequirementFlags(
 	requirements: readonly Requirement[],
 ): JudgeRequirementFlag[] {
-	const grounded = new Set(mustBeProven(requirements).map((req) => req.id));
-	return hardRequirements(requirements).map((req) => ({
+	const grounded = new Set(
+		evidenceDemandConditions(requirements).map((req) => req.id),
+	);
+	return requiredConditionRefs(requirements).map((req) => ({
 		id: req.id,
 		quoteRequired: grounded.has(req.id),
 	}));

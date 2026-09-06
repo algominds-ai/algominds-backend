@@ -1,0 +1,20 @@
+[
+  {
+    "account": "form3",
+    "sourcePath": "/private/tmp/claude-501/form3/note.txt",
+    "sha256": "325bc2cfcab9cc977102fcc8dd7737a42ba3c3a864cc27b9817091a5e2410e96",
+    "provenance": "saved local explicit onboarding payload; authoring origin not independently authenticated"
+  },
+  {
+    "account": "aris",
+    "sourcePath": "/private/tmp/claude-501/greenfield/note-aris.txt",
+    "sha256": "eeae4f278525302ae08d0fdce01cc04ca8ad42dc32ad25cb0a6f68f8147cd643",
+    "provenance": "local dogfood input copied from a buyer rubric fixture; not an independently archived original seller note"
+  },
+  {
+    "account": "form3-full",
+    "sourcePath": "/private/tmp/claude-501/form3/icp-full.md",
+    "sha256": "953134403e3c0d1ae979f09e6a8429565daaca7ee9ac0a41e3258066638c2508",
+    "provenance": "locally authored brief attributing facts to client form/call, not a raw transcript"
+  }
+]

@@ -18,19 +18,11 @@ import {
 	icp as icpTable,
 	run,
 } from "@/core/db/schema";
-import type { Requirement } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
 import { reportRound, roundPlan } from "@/workflows/find-companies-persist";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const storedRequirements: Requirement[] = [
-	{
-		id: "r1",
-		text: "the company fits the profile",
-		kind: "hard",
-		proof: "record",
-		windowDays: null,
-	},
-];
+const storedRequirements = [requirementFixture("the company fits the profile")];
 
 async function seedRun(
 	label: string,
@@ -40,11 +32,15 @@ async function seedRun(
 		`companies-summary-${label}-${crypto.randomUUID()}`,
 		label,
 	);
+	const domain = `${label}-${crypto.randomUUID()}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: `seed profile for the ${label} test`,
-		domain: `${label}-${crypto.randomUUID()}.internal`,
+		domain,
 		organizationId: org.id,
-		requirements: storedRequirements,
+		doc: profileFixture(
+			{ requirements: storedRequirements },
+			`seed profile for the ${label} test`,
+			domain,
+		),
 	});
 	return { organizationId: org.id, icpId: icpRow.id };
 }

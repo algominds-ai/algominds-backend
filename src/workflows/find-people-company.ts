@@ -8,12 +8,13 @@ import {
 	saveRunCompanies,
 	updateRunCompany,
 } from "@/core/db/queries";
+import type { IcpDoc } from "@/core/icp";
 import type { ResolvedBuyer } from "@/core/people/buyer";
 import { resolveIdentity } from "@/core/people/identity";
+import type { PeopleProviderHints } from "@/core/people/roster";
 import { rawEvidenceRow } from "@/core/people/rows";
 import { exaOrganizationId } from "@/core/providers/exa/people-roster";
 import { RetryableProviderError } from "@/core/providers/waterfall";
-import type { IcpDoc } from "@/core/synthesize";
 import { applyCostEntries } from "@/workflows/agent-poll";
 import {
 	rescueUnresolved,
@@ -34,6 +35,7 @@ export type CompanyLoopContext = {
 	organizationId: string;
 	buyer: ResolvedBuyer;
 	profile: IcpDoc | null;
+	providerHints?: PeopleProviderHints;
 };
 
 export type CompanyProgress = {

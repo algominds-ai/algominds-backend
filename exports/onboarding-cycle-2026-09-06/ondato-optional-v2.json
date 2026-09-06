@@ -1,0 +1,182 @@
+{
+  "id": "ondato-optional-v2",
+  "status": "complete",
+  "output": {
+    "seller": {
+      "domain": "ondato.com",
+      "description": "Ondato is a Lithuania-founded, UK-headquartered SaaS compliance company (Ondato OS) providing KYC, KYB, AML/PEP/sanctions screening, identity verification, authentication, virtual branch, transaction monitoring, and document-free age verification/age assurance tools for businesses across 190+ countries.",
+      "customers": [
+        "OnlyFans",
+        "Fansly",
+        "Ooredoo",
+        "Fjord Bank",
+        "Saldo Bank",
+        "Twinsbet",
+        "Guru Pay",
+        "7bet",
+        "Blue EMI",
+        "1stopVAT",
+        "Fintrust",
+        "TGS Baltic (TEGOS)",
+        "InRento",
+        "LKU Group",
+        "HeavyFinance (InSoil)",
+        "TonyBet"
+      ],
+      "sourceUrls": [
+        "https://ondato.com/",
+        "https://ondato.com/about-us/",
+        "https://ondato.com/faq/",
+        "https://ondato.com/case-studies/",
+        "https://ondato.com/industries/neobanking/",
+        "https://ondato.com/identity-verification/",
+        "https://ondato.com/aml-software/",
+        "https://ondato.com/case-studies/ooredoo-case-study/",
+        "https://ondato.com/case-studies/onlyfans-case-study/",
+        "https://ondato.com/case-studies/fjord-bank-ondato-case-study/",
+        "https://ondato.com/case-studies/saldobank-ondato-case-study/",
+        "https://ondato.com/authentication-solutions/"
+      ]
+    },
+    "icp": {
+      "offer": "Ondato's age assurance / age verification solution for age-gated platforms",
+      "buyer": "Head of Growth, Chief Product Officer, or Founder/CEO — all equally eligible with no roster-dependent fallback rule; excludes compliance, risk, and legal roles.",
+      "requirements": [
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Operates a private, age-gated platform",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Serves users in the UK",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "text": "Serves users in the US",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Has at least 20 employees, with no upper size bound",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Is not a competing age-verification vendor",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "preferred",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Company has a product or platform launch planned within the given window",
+                  "window": {
+                    "amount": 12,
+                    "unit": "months",
+                    "appliesTo": "event"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "preferred",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Users have posted signup-verification complaints within the given window",
+                  "window": {
+                    "amount": 6,
+                    "unit": "months",
+                    "appliesTo": "event"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "preferred",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Company has raised growth funding within the given window",
+                  "window": {
+                    "amount": 120,
+                    "unit": "days",
+                    "appliesTo": "event"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "unknowns": []
+    }
+  },
+  "cost": {
+    "total": 0.065766,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.065766
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "onboard-profile-probe",
+        "dollars": 0.065766
+      }
+    ]
+  },
+  "seconds": 26.676
+}

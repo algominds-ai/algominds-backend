@@ -157,13 +157,21 @@ describe("a run never prospects for the seller it prospects on behalf of", () =>
 		const seller = {
 			domain: "https://www.form3.tech/about",
 			customers: ["Klarna"],
-			competitorTest: "A competitor sells payment infrastructure to banks.",
+			description: "payment infrastructure for banks",
+			sourceUrls: [],
 		};
 
 		expect([...seedExcludedDomains(["acme.com"], seller)].sort()).toEqual([
 			"acme.com",
 			"form3.tech",
 		]);
-		expect([...seedExcludedDomains(["acme.com"], null)]).toEqual(["acme.com"]);
+		expect([
+			...seedExcludedDomains(["acme.com"], {
+				domain: null,
+				description: "",
+				customers: [],
+				sourceUrls: [],
+			}),
+		]).toEqual(["acme.com"]);
 	});
 });

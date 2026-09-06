@@ -31,7 +31,12 @@ export const JudgeModelSchema = z.object({
 });
 
 /** One page a search proved for one requirement id, so the judge can weigh a second or third hard page requirement on its own evidence rather than only the first. */
-export type RequirementEvidence = { url: string; quote: string };
+export type RequirementEvidence = {
+	url: string;
+	quote: string;
+	publishedDate?: string | null;
+	text?: string;
+};
 
 export type EvidenceByRow = ReadonlyMap<
 	number,
@@ -44,10 +49,13 @@ export type JudgedFields = {
 	description: string | null;
 	evidenceUrl?: string;
 	evidenceQuote?: string;
+	evidenceDate?: string;
+	evidencePublisher?: string;
+	evidenceKind?: string;
 	pageEvidence?: Record<string, RequirementEvidence>;
 };
 
-/** The row cut to only the fields the judge instructions read: its own record, and the page it cites when it cites one. Everything else — signal, dates, publisher, the kind label — never changes a verdict. */
+/** The company record and dated source evidence supplied to the judge. */
 export function judgedFields(
 	row: CompanyRow,
 	extra: ReadonlyMap<string, RequirementEvidence> | undefined,
@@ -61,6 +69,11 @@ export function judgedFields(
 				: row.description.slice(0, JUDGE_DESCRIPTION_CHARS),
 		...(row.evidenceUrl !== null ? { evidenceUrl: row.evidenceUrl } : {}),
 		...(row.evidenceQuote !== null ? { evidenceQuote: row.evidenceQuote } : {}),
+		...(row.evidenceDate !== null ? { evidenceDate: row.evidenceDate } : {}),
+		...(row.evidencePublisher !== null
+			? { evidencePublisher: row.evidencePublisher }
+			: {}),
+		...(row.evidenceKind !== null ? { evidenceKind: row.evidenceKind } : {}),
 		...(extra && extra.size > 0
 			? { pageEvidence: Object.fromEntries(extra) }
 			: {}),

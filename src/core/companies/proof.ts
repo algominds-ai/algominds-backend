@@ -19,7 +19,7 @@ import {
 	readJson,
 	throwForStatus,
 } from "@/core/providers/exa/http";
-import type { Requirement } from "@/core/requirements";
+import type { ConditionRef } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
 
 const {
@@ -82,33 +82,55 @@ async function postProvingSearch(
 	ledger.reported("exa", "prove", parsed.data.costDollars.total);
 	for (const result of parsed.data.results) {
 		const quote = result.highlights?.[0];
-		if (!quote) continue;
+		const text = result.text ?? "";
+		if (!quote || !text || !quoteFoundInText(text, quote)) continue;
 		return {
 			url: result.url,
 			quote,
 			publishedDate: result.publishedDate ?? null,
-			text: result.text ?? "",
+			text,
 		};
 	}
 	return null;
 }
 
 export type ProvingDemand = {
-	requirement: Requirement;
+	requirement: ConditionRef;
 	notBefore: string | null;
 };
 
 const MS_PER_DAY = 86_400_000;
 
-/** The requirement paired with the earliest date a page may carry and still prove it: `today` less its window, or null when it has no window. */
+/** The requirement paired with the earliest publication date a page may carry, or null when no publication bound applies. */
 export function provingDemand(
-	requirement: Requirement,
+	requirement: ConditionRef,
 	today: string,
 ): ProvingDemand {
-	if (requirement.windowDays === null) return { requirement, notBefore: null };
-	const notBefore = new Date(
-		new Date(today).getTime() - requirement.windowDays * MS_PER_DAY,
-	);
+	const window = requirement.condition.window;
+	if (
+		window === null ||
+		window.direction !== "past" ||
+		window.appliesTo !== "publication"
+	)
+		return { requirement, notBefore: null };
+	const parsedToday = new Date(`${today}T00:00:00Z`);
+	if (Number.isNaN(parsedToday.getTime()))
+		return { requirement, notBefore: null };
+	let notBefore = parsedToday;
+	if (window.unit === "days") {
+		notBefore = new Date(parsedToday.getTime() - window.amount * MS_PER_DAY);
+	} else {
+		const months =
+			window.unit === "months" ? window.amount : window.amount * 12;
+		const day = parsedToday.getUTCDate();
+		notBefore = new Date(parsedToday.getTime());
+		notBefore.setUTCDate(1);
+		notBefore.setUTCMonth(notBefore.getUTCMonth() - months);
+		const lastDay = new Date(
+			Date.UTC(notBefore.getUTCFullYear(), notBefore.getUTCMonth() + 1, 0),
+		).getUTCDate();
+		notBefore.setUTCDate(Math.min(day, lastDay));
+	}
 	return { requirement, notBefore: notBefore.toISOString().slice(0, 10) };
 }
 
@@ -125,7 +147,7 @@ function provingRequest(
 		...(demand.notBefore ? { startPublishedDate: demand.notBefore } : {}),
 		contents: {
 			text: { maxCharacters: CONTENTS_MAX_CHARACTERS },
-			highlights: { query: demand.requirement.text },
+			highlights: { query: demand.requirement.condition.text },
 		},
 	};
 }
@@ -145,17 +167,31 @@ async function proveRequirement(
 	const name = row.name ?? row.domain ?? "";
 	const domain = row.domain === null ? null : normalizeDomain(row.domain);
 	if (domain === null) return null;
-	const text = demand.requirement.text;
+	const text = demand.requirement.condition.text;
 	const scoped = await postProvingSearch(
 		provingRequest(`${name}: ${text}`, demand, domain),
 		env,
 		ledger,
 	);
-	if (scoped) return scoped;
-	return postProvingSearch(
+	if (scoped && validDate(scoped.publishedDate, demand.notBefore))
+		return scoped;
+	const open = await postProvingSearch(
 		provingRequest(`${name} (${domain}): ${text}`, demand, null),
 		env,
 		ledger,
+	);
+	return open && validDate(open.publishedDate, demand.notBefore) ? open : null;
+}
+
+function validDate(value: string | null, notBefore: string | null): boolean {
+	if (notBefore === null) return true;
+	if (value === null) return false;
+	const published = Date.parse(value);
+	const earliest = Date.parse(`${notBefore}T00:00:00Z`);
+	return (
+		Number.isFinite(published) &&
+		Number.isFinite(earliest) &&
+		published >= earliest
 	);
 }
 
@@ -190,14 +226,14 @@ export async function proveRows(
 export function withEvidence(
 	row: CompanyRow,
 	hit: ProvingHit,
-	requirement: Requirement,
+	requirement: ConditionRef,
 ): CompanyRow {
 	return {
 		...row,
 		evidenceUrl: hit.url,
 		evidenceQuote: hit.quote,
 		evidenceDate: hit.publishedDate,
-		signal: requirement.text,
+		signal: requirement.condition.text,
 	};
 }
 
@@ -224,11 +260,6 @@ export type EvidenceOutcome = {
 	checks: Record<string, QuoteCheckReason>;
 	pages: RetrievedPage[];
 };
-
-const PAGE_MISSING_REASONS = new Set<QuoteCheckReason>([
-	"CRAWL_NOT_FOUND",
-	"UNSUPPORTED_URL",
-]);
 
 type EvidenceEntry = { index: number; url: string; quote: string };
 
@@ -294,15 +325,16 @@ function contentsBatches(urls: readonly string[]): string[][] {
 	return batches;
 }
 
-/** Every url's crawl outcome, fetched as concurrent `exaContents` calls of at most `PROVING_CONCURRENCY` urls each rather than one unbounded call. */
+/** Every url's crawl outcome, fetched in bounded batches so the round never launches all provider calls at once. */
 async function fetchContents(
 	urls: readonly string[],
 	env: Env,
 	ledger: CostLedger,
 ): Promise<ExaContentsResult> {
-	const batches = await Promise.all(
-		contentsBatches(urls).map((batch) => exaContents(batch, env, ledger)),
-	);
+	const batches: ExaContentsResult[] = [];
+	for (const batch of contentsBatches(urls)) {
+		batches.push(await exaContents(batch, env, ledger));
+	}
 	return {
 		requestId: batches[0]?.requestId ?? "",
 		results: batches.flatMap((batch) => batch.results),
@@ -346,7 +378,8 @@ export async function verifyEvidenceRows(
 		const row = rows[entry.index];
 		if (!row) continue;
 		const outcome = entryOutcome(lookup, entry);
-		if (PAGE_MISSING_REASONS.has(outcome.reason)) {
+		if (row.domain) checks[row.domain] = outcome.reason;
+		if (!outcome.found) {
 			rejects.push({
 				index: entry.index,
 				reason: "evidence-not-on-page",
@@ -355,7 +388,6 @@ export async function verifyEvidenceRows(
 			continue;
 		}
 		kept.push(row);
-		if (row.domain) checks[row.domain] = outcome.reason;
 		const page = entryPage(row, entry, lookup);
 		if (page) pages.push(page);
 	}
@@ -416,5 +448,5 @@ export function applyJudgeReasons(
 
 /** Whether the round's plan demanded proof from the agent, the only case an evidence quote was ever asked for. */
 export function demandsEvidenceProof(plan: SearchPlan): boolean {
-	return plan.source === "exa-agent" && plan.recency !== null;
+	return plan.source === "exa-agent" && (plan.conditionIds?.length ?? 0) > 0;
 }

@@ -250,9 +250,10 @@ describe("the prompt tells the agent what day it is and what proves an event", (
 describe("the agent is told who it prospects for", () => {
 	const seller = {
 		domain: "form3.tech",
-		customers: ["Klarna", "N26"],
-		competitorTest:
+		description:
 			"A competitor sells payment infrastructure to banks and fintechs.",
+		customers: ["Klarna", "N26"],
+		sourceUrls: [],
 	};
 
 	function promptFor(sellerBlock: typeof seller | null): string | undefined {
@@ -272,10 +273,10 @@ describe("the agent is told who it prospects for", () => {
 
 		expect(withSeller).toContain("form3.tech");
 		expect(withSeller).toContain("Klarna");
-		expect(withSeller).toContain(seller.competitorTest);
+		expect(withSeller).toContain(seller.description);
 		expect(withoutSeller).not.toContain("form3.tech");
 		expect(withoutSeller).not.toContain("prospecting for");
 		expect(noCustomers).not.toContain("already buy from it");
-		expect(noCustomers).toContain(seller.competitorTest);
+		expect(noCustomers).toContain(seller.description);
 	});
 });

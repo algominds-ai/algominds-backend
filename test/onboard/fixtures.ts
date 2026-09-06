@@ -1,38 +1,45 @@
 import type { introspectWorkflowInstance } from "cloudflare:test";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
+import type { IcpDoc, IcpSeller } from "@/core/icp";
 import { readSellerPages, writeSellerProfile } from "@/core/onboard";
-import type { IcpSeller } from "@/core/synthesize";
 import { ONBOARD_STEPS } from "@/workflows/onboard-icp";
 import { fakeModelEnv, fakeSecretEnv } from "../support/env";
+import { profileFixture, requirementFixture } from "../support/icp";
 
 export function sellerFixture(domain: string): IcpSeller {
-	return { domain, customers: ["Acme Corp"], competitorTest: "test" };
+	return {
+		domain,
+		description: "Acme sells tooling.",
+		customers: ["Acme Corp"],
+		sourceUrls: [`https://${domain}/`],
+	};
 }
 
-export function sellerPagesFixture(
-	domain: string,
-	costDollars = 0.01,
-): { pages: { url: string; text: string }[]; costDollars: number } {
-	return { pages: [{ url: `https://${domain}/`, text: "" }], costDollars };
+export function sellerPagesFixture(domain: string, costDollars = 0.01) {
+	return {
+		value: [{ url: `https://${domain}/`, text: "Acme sells tooling." }],
+		costDollars,
+		error: null,
+	};
 }
 
 type WriteProfileOverrides = {
-	description?: string | null;
-	wroteProfile?: boolean;
+	profile?: IcpDoc | null;
 	costDollars?: number;
+	error?: string | null;
 };
-
 export function writeProfileFixture(
 	domain: string,
 	overrides: WriteProfileOverrides = {},
 ) {
 	return {
-		description:
-			"description" in overrides ? overrides.description : "a mocked profile",
-		seller: sellerFixture(domain),
-		wroteProfile: overrides.wroteProfile ?? true,
+		value:
+			"profile" in overrides
+				? overrides.profile
+				: profileFixture({}, null, domain),
 		costDollars: overrides.costDollars ?? 0.01,
+		error: overrides.error ?? null,
 	};
 }
 
@@ -93,10 +100,9 @@ export async function buildIcp(env: Env, domain: string, note?: string | null) {
 		read.pages,
 		note ?? null,
 	);
-	if (written.description === null) {
+	if (!written.profile)
 		throw new NonRetryableError(`onboard: no profile written for ${domain}`);
-	}
-	return { ...written, description: written.description };
+	return written;
 }
 
 const ModelRequestBodySchema = z.object({
@@ -110,30 +116,16 @@ export function messageContent(body: unknown, role: string): string {
 	return message.content;
 }
 
-type ProfileReplyOverrides = {
-	buyer?: {
-		rubric: string;
-		bands: readonly string[];
-		keywordBands: { band: string; keywords: string[] }[];
-	} | null;
-};
-
+type ProfileReplyOverrides = Partial<IcpDoc["icp"]> & { domain?: string };
 export function profileReply(overrides: ProfileReplyOverrides = {}): string {
-	return JSON.stringify({
-		description: "a four paragraph ideal customer profile",
-		customers: ["Acme Corp"],
-		competitorTest: "A competitor sells the same tooling to other vendors.",
-		buyer: null,
-		requirements: [
-			{
-				id: "r1",
-				text: "runs its own delivery team",
-				kind: "hard",
-				proof: "record",
-				windowDays: null,
-			},
-		],
-		sizeBand: null,
-		...overrides,
-	});
+	const { domain = "acme.example", ...target } = overrides;
+	const doc = profileFixture(
+		{
+			requirements: [requirementFixture("runs its own delivery team")],
+			...target,
+		},
+		null,
+		domain,
+	);
+	return JSON.stringify({ seller: sellerFixture(domain), icp: doc.icp });
 }

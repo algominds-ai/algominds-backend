@@ -6,31 +6,41 @@ import type { Verdict } from "@/core/companies/judge";
 import { decideRows, provenRate } from "@/core/companies/judge";
 import { applyRecords } from "@/core/companies/record";
 import type { CompanyEntity, ExaResult } from "@/core/providers/exa/search";
-import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
+import { requirementFixture } from "../support/icp";
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement = requirementFixture("the company is a bank");
+const recordId = conditionRefs([recordRequirement])[0]?.id ?? "r1.a1.c1";
 
-const pageRequirement: Requirement = {
-	id: "r2",
-	text: "the company published an engineering page about its platform",
-	kind: "hard",
-	proof: "page",
-	windowDays: 730,
+const pageRequirement = {
+	...requirementFixture(
+		"the company published an engineering page about its platform",
+	),
+	anyOf: [
+		{
+			allOf: [
+				{
+					text: "the company published an engineering page about its platform",
+					window: {
+						amount: 730,
+						unit: "days" as const,
+						appliesTo: "publication" as const,
+						direction: "past" as const,
+					},
+					sourceRule: null,
+				},
+			],
+		},
+	],
 };
+const pageId = conditionRefs([pageRequirement])[0]?.id ?? "r1.a1.c1";
 
-const softRequirement: Requirement = {
-	id: "r3",
-	text: "the company posted a platform role recently",
-	kind: "soft",
-	proof: "page",
-	windowDays: 30,
-};
+const softRequirement = requirementFixture(
+	"the company posted a platform role recently",
+	"preferred",
+);
+const softId =
+	conditionRefs([recordRequirement, softRequirement])[1]?.id ?? "r2.a1.c1";
 
 function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
@@ -94,34 +104,15 @@ describe("the route a round runs on comes from its requirements", () => {
 });
 
 describe("the refusal policy differs by what can prove a requirement", () => {
-	it("refuses a row whose strict record requirement the record does not establish, and keeps one whose plain record requirement is merely unproven", () => {
-		const strict: Requirement = {
-			...recordRequirement,
-			id: "r9",
-			strict: true,
-		};
+	it("refuses a row whose required condition the record does not establish", () => {
 		const refused = decideRows({
-			requirements: [strict],
+			requirements: [recordRequirement],
 			rows: [row("a.com")],
-			verdicts: [verdict({ statuses: [{ id: "r9", status: "unproven" }] })],
+			verdicts: [verdict({ statuses: [{ id: recordId, status: "unproven" }] })],
 			excluded: new Set(),
 		});
 		expect(refused.stored).toHaveLength(0);
-		expect(refused.rejects[0]?.reason).toContain(
-			"the record does not establish r9",
-		);
-
-		const kept = decideRows({
-			requirements: [recordRequirement],
-			rows: [row("a.com")],
-			verdicts: [
-				verdict({
-					statuses: [{ id: recordRequirement.id, status: "unproven" }],
-				}),
-			],
-			excluded: new Set(),
-		});
-		expect(kept.stored).toHaveLength(1);
+		expect(refused.rejects[0]?.reason).toContain("required condition");
 	});
 
 	it("refuses a row that contradicts a hard requirement, whatever its proof, and falls back to a stand-in detail when its reason came back empty", () => {
@@ -130,40 +121,40 @@ describe("the refusal policy differs by what can prove a requirement", () => {
 			rows: [row("a.com")],
 			verdicts: [
 				verdict({
-					statuses: [{ id: "r1", status: "contradicted" }],
+					statuses: [{ id: recordId, status: "contradicted" }],
 				}),
 			],
 			excluded: new Set(),
 		});
 
 		expect(decision.stored).toHaveLength(0);
-		expect(decision.rejects[0]?.reason).toContain("contradicts r1");
+		expect(decision.rejects[0]?.reason).toContain("contradicts");
 
 		const empty = decideRows({
 			requirements: [recordRequirement],
 			rows: [row("a.com")],
 			verdicts: [
 				verdict({
-					statuses: [{ id: "r1", status: "contradicted" }],
+					statuses: [{ id: recordId, status: "contradicted" }],
 					reason: "",
 				}),
 			],
 			excluded: new Set(),
 		});
 		expect(empty.rejects[0]?.reason).toBe(
-			"contradicts r1: the judge gave no reason",
+			"contradicts r1.a1.c1: the judge gave no reason",
 		);
 	});
 
-	it("keeps a row whose hard record requirement the record simply does not state", () => {
+	it("refuses a row whose required record condition is unproven", () => {
 		const decision = decideRows({
 			requirements: [recordRequirement],
 			rows: [row("a.com")],
-			verdicts: [verdict({ statuses: [{ id: "r1", status: "unproven" }] })],
+			verdicts: [verdict({ statuses: [{ id: recordId, status: "unproven" }] })],
 			excluded: new Set(),
 		});
 
-		expect(decision.stored.map((kept) => kept.domain)).toEqual(["a.com"]);
+		expect(decision.stored).toHaveLength(0);
 	});
 });
 
@@ -172,16 +163,16 @@ describe("a hard page or soft requirement is judged on its own terms", () => {
 		const refused = decideRows({
 			requirements: [pageRequirement],
 			rows: [row("a.com")],
-			verdicts: [verdict({ statuses: [{ id: "r2", status: "unproven" }] })],
+			verdicts: [verdict({ statuses: [{ id: pageId, status: "unproven" }] })],
 			excluded: new Set(),
 		});
 		expect(refused.stored).toHaveLength(0);
-		expect(refused.rejects[0]?.reason).toContain("no page proved r2");
+		expect(refused.rejects[0]?.reason).toContain("required condition");
 
 		const proved = decideRows({
 			requirements: [pageRequirement],
 			rows: [row("a.com")],
-			verdicts: [verdict({ statuses: [{ id: "r2", status: "proven" }] })],
+			verdicts: [verdict({ statuses: [{ id: pageId, status: "proven" }] })],
 			excluded: new Set(),
 		});
 		expect(proved.stored.map((kept) => kept.domain)).toEqual(["a.com"]);
@@ -194,8 +185,8 @@ describe("a hard page or soft requirement is judged on its own terms", () => {
 			verdicts: [
 				verdict({
 					statuses: [
-						{ id: "r1", status: "proven" },
-						{ id: "r3", status: "contradicted" },
+						{ id: recordId, status: "proven" },
+						{ id: softId, status: "contradicted" },
 					],
 				}),
 			],
@@ -209,11 +200,11 @@ describe("a hard page or soft requirement is judged on its own terms", () => {
 		const verdicts = [
 			verdict({
 				index: 0,
-				statuses: [{ id: "r2", status: "proven" }],
+				statuses: [{ id: pageId, status: "proven" }],
 			}),
 			verdict({
 				index: 1,
-				statuses: [{ id: "r2", status: "unproven" }],
+				statuses: [{ id: pageId, status: "unproven" }],
 			}),
 		];
 

@@ -1,20 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { resolveBuyer } from "@/core/people/buyer";
-import type { IcpDoc } from "@/core/synthesize";
-import { SENIOR_BANDS } from "@/core/synthesize";
+import { profileFixture } from "../support/icp";
 
-const capturedProfile: IcpDoc = {
-	description: "fintech companies at seed stage in San Francisco",
-	buyer: {
-		rubric: "The head of finance or the founder who owns the budget.",
-		bands: ["founder", "c-suite"],
-		keywordBands: [{ band: "manager", keywords: ["finance", "budget"] }],
-	},
-};
+const capturedProfile = profileFixture({
+	offer: "Finance workflow automation",
+	buyer: "The head of finance or the founder who owns the budget.",
+});
 
-const descriptionOnlyProfile: IcpDoc = {
-	description: "fintech companies at seed stage in San Francisco",
-};
+const descriptionOnlyProfile = profileFixture({ buyer: null });
 
 describe("resolveBuyer: request target rung", () => {
 	it("uses a request target without consulting the profile buyer", () => {
@@ -26,9 +19,9 @@ describe("resolveBuyer: request target rung", () => {
 		expect(resolved).toEqual({
 			mode: "target",
 			buyerSource: "target",
+			offer: capturedProfile.icp.offer,
+			instructions: capturedProfile.instructions,
 			rubric: "Titles to find:\n- VP Product\n- Head of Growth",
-			bands: SENIOR_BANDS,
-			keywordBands: [],
 		});
 	});
 
@@ -41,9 +34,9 @@ describe("resolveBuyer: request target rung", () => {
 		expect(resolved).toEqual({
 			mode: "target",
 			buyerSource: "target",
+			offer: capturedProfile.icp.offer,
+			instructions: capturedProfile.instructions,
 			rubric: "the marketing team",
-			bands: SENIOR_BANDS,
-			keywordBands: [],
 		});
 	});
 });
@@ -55,26 +48,26 @@ describe("resolveBuyer: captured buyer rung", () => {
 		expect(resolved).toEqual({
 			mode: "profile",
 			buyerSource: "captured",
-			rubric: capturedProfile.buyer?.rubric,
-			bands: capturedProfile.buyer?.bands,
-			keywordBands: capturedProfile.buyer?.keywordBands,
+			offer: capturedProfile.icp.offer,
+			instructions: capturedProfile.instructions,
+			rubric: capturedProfile.icp.buyer,
 		});
 	});
 });
 
-describe("resolveBuyer: profile description rung", () => {
-	it("falls through to the profile description when no buyer was captured", () => {
+describe("resolveBuyer: missing buyer", () => {
+	it("keeps a profile without a buyer in explicit roster mode", () => {
 		const resolved = resolveBuyer({
 			target: null,
 			profile: descriptionOnlyProfile,
 		});
 
 		expect(resolved).toEqual({
-			mode: "profile",
-			buyerSource: "description",
-			rubric: descriptionOnlyProfile.description,
-			bands: SENIOR_BANDS,
-			keywordBands: [],
+			mode: "roster",
+			buyerSource: "none",
+			offer: descriptionOnlyProfile.icp.offer,
+			instructions: descriptionOnlyProfile.instructions,
+			rubric: null,
 		});
 	});
 });
@@ -86,9 +79,9 @@ describe("resolveBuyer: roster rung", () => {
 		expect(resolved).toEqual({
 			mode: "roster",
 			buyerSource: "none",
+			offer: null,
+			instructions: null,
 			rubric: null,
-			bands: SENIOR_BANDS,
-			keywordBands: [],
 		});
 	});
 });

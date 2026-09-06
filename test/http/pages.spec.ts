@@ -5,6 +5,7 @@ import { organization } from "@/core/db/auth-schema";
 import { db, withConnection } from "@/core/db/client";
 import { createIcp, openRun, saveCompanies } from "@/core/db/queries";
 import { company, icp as icpTable, run } from "@/core/db/schema";
+import { draftIcp } from "@/core/icp";
 import app from "@/index";
 import { issueOrganizationKey } from "../support/db";
 
@@ -70,9 +71,10 @@ async function seedForeignRun(): Promise<ForeignRunSeed> {
 			createdAt: new Date(),
 		}),
 	);
+	const profileDomain = `pages-cross-org-${crypto.randomUUID()}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: "seed icp for cross-organization read test",
-		domain: `pages-cross-org-${crypto.randomUUID()}.internal`,
+		doc: draftIcp(profileDomain, "seed icp for cross-organization read test"),
+		domain: profileDomain,
 		organizationId: foreignOrganizationId,
 	});
 	const runId = `companies_cross-org-${crypto.randomUUID()}`;
@@ -143,9 +145,10 @@ async function waitForRunVisible(
 
 describe("GET /runs/:runId: run status shape", () => {
 	it("reports the run this engine keeps, and none of the engine's own working state", async () => {
+		const profileDomain = `pages-status-${crypto.randomUUID()}.internal`;
 		const icpRow = await createIcp(testEnv, {
-			description: "seed icp for run status shape test",
-			domain: `pages-status-${crypto.randomUUID()}.internal`,
+			doc: draftIcp(profileDomain, "seed icp for run status shape test"),
+			domain: profileDomain,
 			organizationId: CALLER_ORGANIZATION_ID,
 		});
 		const started = await app.fetch(

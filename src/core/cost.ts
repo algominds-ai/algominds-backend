@@ -124,9 +124,36 @@ export function addPartialSpend(
 	priorSpend: number,
 ): PartialSpendError {
 	if (error instanceof PartialSpendError) {
-		return new PartialSpendError(priorSpend + error.costDollars, error.cause);
+		return new PartialSpendError(
+			toDollars(toNanos(priorSpend) + toNanos(error.costDollars)),
+			error.cause,
+		);
 	}
 	return new PartialSpendError(priorSpend, error);
+}
+
+export type Purchase<T> = {
+	value: T | null;
+	costDollars: number;
+	error: string | null;
+};
+/** Carries failed purchases out of the durable step so their reported spend is banked before failure. */
+export async function purchase<T>(
+	buy: () => Promise<{ value: T; costDollars: number }>,
+): Promise<Purchase<T>> {
+	try {
+		return { ...(await buy()), error: null };
+	} catch (error) {
+		const cause = error instanceof PartialSpendError ? error.cause : error;
+		return {
+			value: null,
+			costDollars: error instanceof PartialSpendError ? error.costDollars : 0,
+			error:
+				cause instanceof Error
+					? cause.message
+					: "provider purchase failed; billing may be unknown",
+		};
+	}
 }
 
 /** True when the AI Gateway served this response from cache. */

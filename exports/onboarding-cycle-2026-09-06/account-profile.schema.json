@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "seller": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "customers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "domain",
+        "description",
+        "customers",
+        "sourceUrls"
+      ],
+      "additionalProperties": false
+    },
+    "icp": {
+      "type": "object",
+      "properties": {
+        "offer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "buyer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "required",
+                  "preferred"
+                ]
+              },
+              "anyOf": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "allOf": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string"
+                          },
+                          "window": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "amount": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "days",
+                                      "months",
+                                      "years"
+                                    ]
+                                  },
+                                  "appliesTo": {
+                                    "type": "string",
+                                    "enum": [
+                                      "event",
+                                      "publication",
+                                      "observation"
+                                    ]
+                                  },
+                                  "direction": {
+                                    "type": "string",
+                                    "enum": [
+                                      "past",
+                                      "future"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "amount",
+                                  "unit",
+                                  "appliesTo",
+                                  "direction"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "sourceRule": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "window",
+                          "sourceRule"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "allOf"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "anyOf"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "offer",
+        "buyer",
+        "requirements",
+        "unknowns"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "seller",
+    "icp"
+  ],
+  "additionalProperties": false
+}

@@ -146,30 +146,16 @@ describe("model: the request body the SDK sends", () => {
 });
 
 describe("model: a response that never matches the schema", () => {
-	it("retries once, then returns null rather than throwing", async () => {
+	it("returns null after one attempt rather than silently retrying", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
-			chatCompletionResponse({ content: "", finishReason: "length" }),
 		]);
 		globalThis.fetch = gateway.fetch;
 
 		const result = await callWorkerModel(new CostLedger());
 
-		expect(gateway.calls).toHaveLength(2);
+		expect(gateway.calls).toHaveLength(1);
 		expect(result).toBeNull();
-	});
-
-	it("returns the retry's result after one schema failure", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse({ content: "not json at all" }),
-			chatCompletionResponse(widgetReply()),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await callWorkerModel(new CostLedger());
-
-		expect(gateway.calls).toHaveLength(2);
-		expect(result?.widgetName).toBe("Acme Widget");
 	});
 });
 
@@ -198,6 +184,19 @@ describe("model: the abort timeout a structured call is given", () => {
 });
 
 describe("model: cost reporting", () => {
+	it("preserves the gateway cost when structured output is invalid", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse({ content: "not json at all", cost: 0.0000042 }),
+		]);
+		globalThis.fetch = gateway.fetch;
+		const spent = new CostLedger();
+
+		await expect(callWorkerModel(spent)).resolves.toBeNull();
+
+		expect(gateway.calls).toHaveLength(1);
+		expect(spent.total()).toBeCloseTo(0.0000042, 12);
+	});
+
 	it("records the cost the gateway returned onto the ledger, and zero on a cache hit", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(widgetReply({ cost: 0.0000042 })),

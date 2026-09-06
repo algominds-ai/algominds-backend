@@ -1,29 +1,34 @@
-import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
-import { WorkflowEntrypoint } from "cloudflare:workers";
+import {
+	WorkflowEntrypoint,
+	type WorkflowEvent,
+	type WorkflowStep,
+} from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { config } from "@/config";
+import { type Purchase, purchase } from "@/core/cost";
 import {
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	openRun,
 	recordRunSpend,
 	saveOnboardedIcp,
 } from "@/core/db/queries";
 import { publicDomain } from "@/core/db/schema";
-import type { SellerPage } from "@/core/onboard";
-import { readSellerPages, writeSellerProfile } from "@/core/onboard";
-import type { Requirement } from "@/core/requirements";
-import type { IcpBuyer, IcpSeller } from "@/core/synthesize";
+import type { IcpDoc } from "@/core/icp";
+import {
+	readSellerPages,
+	type SellerPage,
+	targetingNoteSchema,
+	writeSellerProfile,
+} from "@/core/onboard";
 
 const OnboardIcpPayloadSchema = z.object({
 	domain: z.string().min(1),
-	note: z.string().nullish(),
+	note: targetingNoteSchema.nullish(),
 	organizationId: z.string().min(1),
 });
-
 export type OnboardIcpPayload = z.infer<typeof OnboardIcpPayloadSchema>;
-
-/** The name of every durable step this workflow runs. A test mocking a paid step by hand would silently stop mocking it after a rename. */
 export const ONBOARD_STEPS = {
 	checkSpend: "check-spend",
 	openRun: "open-run",
@@ -33,106 +38,21 @@ export const ONBOARD_STEPS = {
 	bankProfile: "bank-profile",
 	saveIcp: "save-icp",
 } as const;
-
 export type OnboardIcpSummary = {
 	icpId: string;
 	costDollars: number;
 	wroteProfile: boolean;
 };
 
-/** `domain` as a public hostname, or a `NonRetryableError`. Both entry paths cross this, so it is the one place the refusal belongs. */
+/** Refuses a nonpublic seller at both automatic and explicit onboarding boundaries. */
 export function publicHostname(domain: string): string {
 	const host = publicDomain(domain);
-	if (host === null) {
+	if (host === null)
 		throw new NonRetryableError(`onboardIcp: not a public hostname: ${domain}`);
-	}
 	return host;
 }
 
-type ReadSellerStep = { pages: SellerPage[]; costDollars: number };
-
-/** The profile plus its cost as plain data. See `docs/solutions/onboarding-run-accounting.md`. */
-type BuiltIcp = {
-	description: string | null;
-	seller: IcpSeller;
-	buyer: IcpBuyer | null;
-	requirements: Requirement[];
-	wroteProfile: boolean;
-	costDollars: number;
-};
-
-type BuyProfileInput = {
-	env: Env;
-	step: WorkflowStep;
-	runId: string;
-	domain: string;
-	note: string | null;
-	alreadySpent: number;
-};
-
-/** Buys the seller's pages and then the profile, banking each purchase before the next, and returns the profile with everything the run has spent. */
-async function buyProfile(input: BuyProfileInput): Promise<BuiltIcp> {
-	const { env, step, runId, domain, note, alreadySpent } = input;
-	const read: ReadSellerStep = await step.do(
-		ONBOARD_STEPS.readSeller,
-		config.stepConfig.paidCall,
-		async () => {
-			const result = await readSellerPages(env, domain);
-			return { pages: result.pages, costDollars: result.ledger.total() };
-		},
-	);
-	await step.do(ONBOARD_STEPS.bankSearch, config.stepConfig.databaseCall, () =>
-		recordRunSpend(env, runId, alreadySpent + read.costDollars),
-	);
-
-	const written = await step.do(
-		ONBOARD_STEPS.writeProfile,
-		config.stepConfig.paidCall,
-		() =>
-			writeSellerProfile(env, domain, read.pages, note).then((result) => ({
-				description: result.description,
-				seller: result.seller,
-				buyer: result.buyer,
-				requirements: result.requirements,
-				wroteProfile: result.wroteProfile,
-				costDollars: result.ledger.total(),
-			})),
-	);
-	const costDollars = alreadySpent + read.costDollars + written.costDollars;
-	await step.do(ONBOARD_STEPS.bankProfile, config.stepConfig.databaseCall, () =>
-		recordRunSpend(env, runId, costDollars),
-	);
-	return { ...written, costDollars };
-}
-
-type PersistIcpInput = {
-	env: Env;
-	runId: string;
-	organizationId: string;
-	domain: string;
-	built: BuiltIcp & { description: string };
-};
-
-/** Writes the profile and closes the run against it in one transaction. Returns the new profile's id. */
-async function persistIcp(input: PersistIcpInput): Promise<string> {
-	const { env, runId, organizationId, domain, built } = input;
-	return saveOnboardedIcp(env, {
-		runId,
-		domain,
-		organizationId,
-		description: built.description,
-		seller: built.seller,
-		buyer: built.buyer,
-		requirements: built.requirements,
-		costDollars: built.costDollars,
-	});
-}
-
-/**
- * Reads a seller's own site into an ideal customer profile and stores it,
- * off the request path. Its spend counts against the account's daily
- * ceiling exactly as a companies or people run's does.
- */
+/** Reads seller facts, extracts explicit targeting, and stores the full versioned profile atomically. */
 export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 	Env,
 	OnboardIcpPayload
@@ -141,18 +61,29 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 		event: Readonly<WorkflowEvent<OnboardIcpPayload>>,
 		step: WorkflowStep,
 	): Promise<OnboardIcpSummary> {
+		try {
+			return await this.runToCompletion(event, step);
+		} catch (error) {
+			await step.do("close-errored", config.stepConfig.databaseCall, () =>
+				closeErroredRun(this.env, event.instanceId),
+			);
+			throw error;
+		}
+	}
+
+	private async runToCompletion(
+		event: Readonly<WorkflowEvent<OnboardIcpPayload>>,
+		step: WorkflowStep,
+	): Promise<OnboardIcpSummary> {
 		const payload = OnboardIcpPayloadSchema.parse(event.payload);
 		const domain = publicHostname(payload.domain);
-
 		const runId = event.instanceId;
-
 		await step.do(
 			ONBOARD_STEPS.checkSpend,
 			config.stepConfig.databaseCall,
 			() => assertUnderDailyCeiling(this.env, payload.organizationId),
 		);
-
-		const alreadySpent = await step.do(
+		const opened = await step.do(
 			ONBOARD_STEPS.openRun,
 			config.stepConfig.databaseCall,
 			async () => {
@@ -165,40 +96,61 @@ export class OnboardIcpWorkflow extends WorkflowEntrypoint<
 				return { alreadySpent: row.costDollars };
 			},
 		);
-
-		const written = await buyProfile({
-			env: this.env,
-			step,
-			runId,
-			domain,
-			note: payload.note ?? null,
-			alreadySpent: alreadySpent.alreadySpent,
-		});
-
-		const description = written.description;
-		if (description === null) {
+		const read: Purchase<SellerPage[]> = await step.do(
+			ONBOARD_STEPS.readSeller,
+			config.stepConfig.paidCall,
+			() =>
+				purchase(async () => {
+					const result = await readSellerPages(this.env, domain);
+					return { value: result.pages, costDollars: result.ledger.total() };
+				}),
+		);
+		let costDollars = opened.alreadySpent + read.costDollars;
+		await step.do(
+			ONBOARD_STEPS.bankSearch,
+			config.stepConfig.databaseCall,
+			() => recordRunSpend(this.env, runId, costDollars),
+		);
+		if (read.error) throw new NonRetryableError(`onboardIcp: ${read.error}`);
+		const written: Purchase<IcpDoc | null> = await step.do(
+			ONBOARD_STEPS.writeProfile,
+			config.stepConfig.paidCall,
+			() =>
+				purchase(async () => {
+					const result = await writeSellerProfile(
+						this.env,
+						domain,
+						read.value ?? [],
+						payload.note ?? null,
+					);
+					return { value: result.profile, costDollars: result.ledger.total() };
+				}),
+		);
+		costDollars += written.costDollars;
+		await step.do(
+			ONBOARD_STEPS.bankProfile,
+			config.stepConfig.databaseCall,
+			() => recordRunSpend(this.env, runId, costDollars),
+		);
+		if (written.error)
+			throw new NonRetryableError(`onboardIcp: ${written.error}`);
+		const doc = written.value;
+		if (!doc)
 			throw new NonRetryableError(
-				`onboardIcp: no profile written and no note given for ${domain}`,
+				`onboardIcp: no profile written for ${domain}`,
 			);
-		}
-
 		const icpId = await step.do(
 			ONBOARD_STEPS.saveIcp,
 			config.stepConfig.databaseCall,
 			() =>
-				persistIcp({
-					env: this.env,
+				saveOnboardedIcp(this.env, {
 					runId,
 					organizationId: payload.organizationId,
 					domain,
-					built: { ...written, description },
+					doc,
+					costDollars,
 				}),
 		);
-
-		return {
-			icpId,
-			costDollars: written.costDollars,
-			wroteProfile: written.wroteProfile,
-		};
+		return { icpId, costDollars, wroteProfile: true };
 	}
 }

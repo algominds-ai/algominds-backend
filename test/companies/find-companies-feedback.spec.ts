@@ -11,12 +11,14 @@ import type {
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
+import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeInput } from "@/core/synthesize";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = {
-	description:
-		"fintech companies at seed stage in San Francisco with a small team",
-};
+const icp: IcpDoc = profileFixture(
+	{ offer: "Fintech software", buyer: "Revenue leaders" },
+	"Find fintech companies at seed stage in San Francisco with a small team.",
+);
 
 function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
 	return {
@@ -75,15 +77,7 @@ function testOptions(
 		organizationId: "org-1",
 		env: testEnv,
 		today: "2026-08-30",
-		requirements: [
-			{
-				id: "r1",
-				text: "the company fits the profile",
-				kind: "hard",
-				proof: "record",
-				windowDays: null,
-			},
-		],
+		requirements: [requirementFixture("the company fits the profile")],
 		...overrides,
 	};
 }
@@ -137,7 +131,7 @@ function scriptedSynthesize(planOverrides: Partial<SearchPlan> = {}) {
 			route: "search" as const,
 			plans: [
 				testPlan({
-					query: `${input.icp.description} round-${inputs.length}`,
+					query: `${input.icp.icp.offer ?? "companies"} round-${inputs.length}`,
 					angle: `angle-${inputs.length}`,
 					...planOverrides,
 				}),
@@ -155,15 +149,14 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 		call += 1;
 		const ledger = new CostLedger();
 		ledger.reported("reasoning-model", "judge", 0.002);
+		const refs = conditionRefs(requirements);
 		const verdicts: Verdict[] = rows.map((_row, index) => ({
 			index,
-			statuses: requirements
-				.filter((req) => req.kind === "hard")
-				.map((req) => ({
-					id: req.id,
-					status: rejects.includes(index) ? "contradicted" : "proven",
-					quote: "",
-				})),
+			statuses: refs.map((ref) => ({
+				id: ref.id,
+				status: rejects.includes(index) ? "contradicted" : "proven",
+				quote: "",
+			})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
 			sameOrganizationAs: null,
 		}));
@@ -230,9 +223,9 @@ describe("collapsing numeric reject reasons for the synthesizer's feedback", () 
 		});
 		expect(ungrouped.rejects[0]).toEqual({
 			domain: "wrong.com",
-			reason: "contradicts r1: does not fit icp",
+			reason: "contradicts r1.a1.c1: does not fit icp",
 			stage: "judge",
-			statuses: [{ id: "r1", status: "contradicted", quote: "" }],
+			statuses: [{ id: "r1.a1.c1", status: "contradicted", quote: "" }],
 		});
 	});
 });

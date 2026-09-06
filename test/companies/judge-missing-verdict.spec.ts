@@ -1,15 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { CompanyRow } from "@/core/companies/gate";
 import { decideRows } from "@/core/companies/judge";
-import type { Requirement } from "@/core/requirements";
+import { requirementFixture } from "../support/icp";
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement = requirementFixture("the company is a bank");
 
 const row: CompanyRow = {
 	name: "a.com",

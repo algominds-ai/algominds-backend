@@ -2,15 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { CompanyRow } from "@/core/companies/gate";
 import type { Verdict } from "@/core/companies/judge";
 import { decideRows } from "@/core/companies/judge";
-import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
+import { requirementFixture } from "../support/icp";
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement = requirementFixture("the company is a bank");
+const recordId = conditionRefs([recordRequirement])[0]?.id ?? "r1.a1.c1";
 
 function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
@@ -28,7 +24,7 @@ function provenVerdict(
 ): Verdict {
 	return verdict({
 		index,
-		statuses: [{ id: "r1", status: "proven" }],
+		statuses: [{ id: recordId, status: "proven" }],
 		...overrides,
 	});
 }

@@ -1,21 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { config } from "@/config";
 import type { CompanyRow } from "@/core/companies/gate";
-import type { Requirement } from "@/core/requirements";
 import type { SynthesizeInput } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";
 import { fakeGatewayEnv } from "../support/env";
 import { chatCompletionResponse } from "../support/fetch";
+import { profileFixture, requirementFixture } from "../support/icp";
 import { fakeRetryingWorkflowStep } from "../support/step";
 
-const requirements: Requirement[] = [
-	{
-		id: "r1",
-		text: "the company is a seed stage fintech in San Francisco",
-		kind: "hard",
-		proof: "record",
-		windowDays: null,
-	},
+const requirements = [
+	requirementFixture("the company is a seed stage fintech in San Francisco"),
 ];
 
 function row(name: string, domain: string): CompanyRow {
@@ -38,7 +32,7 @@ const rows: CompanyRow[] = [row("Acme", "acme.com")];
 
 function synthesizeInput(): SynthesizeInput {
 	return {
-		icp: { description: "seed stage fintech companies in San Francisco" },
+		icp: profileFixture({}, "seed stage fintech companies in San Francisco"),
 		requirements,
 		pastAngles: [],
 		feedback: [],
@@ -90,7 +84,7 @@ describe("a round whose judge gives up never re-runs the round's own synthesize"
 			step,
 			round,
 			today: "2026-09-05",
-			seller: null,
+			seller: profileFixture().seller,
 			timings: [],
 		});
 		const env = fakeGatewayEnv();

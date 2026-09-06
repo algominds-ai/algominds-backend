@@ -1,0 +1,94 @@
+{
+  "id": "future-event-final",
+  "status": "complete",
+  "output": {
+    "seller": {
+      "domain": "cloudflare.com",
+      "description": "Cloudflare Access is part of Cloudflare's SASE (secure access) product line, providing safe access to private applications.",
+      "customers": [],
+      "sourceUrls": [
+        "https://www.cloudflare.com/products/access/",
+        "https://www.cloudflare.com/"
+      ]
+    },
+    "icp": {
+      "offer": "Cloudflare Access (safe access to private applications)",
+      "buyer": "IT Manager, regardless of the person's location",
+      "requirements": [
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "remote company",
+                  "window": null,
+                  "sourceRule": null
+                },
+                {
+                  "text": "B2B software company",
+                  "window": null,
+                  "sourceRule": null
+                },
+                {
+                  "text": "serves US customers",
+                  "window": null,
+                  "sourceRule": null
+                },
+                {
+                  "text": "at least 20 employees, no maximum",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "preferred",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "company's public announcement was published",
+                  "window": {
+                    "amount": 30,
+                    "unit": "days",
+                    "appliesTo": "publication",
+                    "direction": "past"
+                  },
+                  "sourceRule": null
+                },
+                {
+                  "text": "announced office closure is scheduled to occur",
+                  "window": {
+                    "amount": 90,
+                    "unit": "days",
+                    "appliesTo": "event",
+                    "direction": "future"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "unknowns": []
+    }
+  },
+  "cost": {
+    "total": 0.019638,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.019638
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "onboard-profile-probe",
+        "dollars": 0.019638
+      }
+    ]
+  },
+  "seconds": 14.016
+}

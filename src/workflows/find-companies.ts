@@ -26,7 +26,7 @@ import { IcpDocSchema } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";
 import type { RoundReport } from "@/workflows/find-companies-persist";
 import {
-	loadRequirements,
+	extractProfile,
 	persistCompanies,
 	persistRound,
 	reportRound,
@@ -321,7 +321,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindCompaniesSummary> {
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
-		const { doc: icp, organizationId } = await step.do(
+		const loaded = await step.do(
 			"load-icp",
 			config.stepConfig.databaseCall,
 			async () => {
@@ -331,12 +331,19 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 						`findCompanies: unknown icp ${payload.icpId}`,
 					);
 				}
+				const parsed = IcpDocSchema.safeParse(icpRow.doc);
+				if (!parsed.success)
+					throw new NonRetryableError(
+						"findCompanies: legacy profile; onboard again with the original instructions",
+					);
 				return {
-					doc: IcpDocSchema.parse(icpRow.doc),
+					doc: parsed.data,
 					organizationId: icpRow.organizationId,
 				};
 			},
 		);
+		let icp = loaded.doc;
+		const { organizationId } = loaded;
 
 		const alreadySpent = await step.do(
 			"open-run",
@@ -354,12 +361,21 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
-		const requirements = await loadRequirements(
-			this.env,
-			step,
-			payload.icpId,
+		const extracted = await extractProfile({
+			env: this.env,
 			icp,
-		);
+			icpId: payload.icpId,
+			runId: event.instanceId,
+			step,
+			alreadySpent: alreadySpent.alreadySpent,
+		});
+		icp = extracted.icp;
+		const costDollars = extracted.costDollars;
+		const requirements = icp.icp.requirements;
+		if (requirements.length === 0)
+			throw new NonRetryableError(
+				"findCompanies: target companies are unspecified; add targeting instructions",
+			);
 
 		const result = await runFindCompaniesRounds(
 			{
@@ -369,7 +385,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				requirements,
 				runId: event.instanceId,
 				organizationId,
-				alreadySpent: alreadySpent.alreadySpent,
+				alreadySpent: costDollars,
 			},
 			step,
 		);

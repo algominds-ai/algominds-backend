@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CostLedger } from "@/core/cost";
+import { CostLedger, PartialSpendError, purchase } from "@/core/cost";
 
 describe("CostLedger.reported", () => {
 	it("maps a detail breakdown straight through, one line per key, or a flat figure under the provider when none is given", () => {
@@ -83,5 +83,19 @@ describe("CostLedger.merge", () => {
 			...a.toJSON().entries,
 			...b.toJSON().entries,
 		]);
+	});
+});
+
+it("carries failed purchases out of a durable step once with the reported spend intact", async () => {
+	let attempts = 0;
+	const outcome = await purchase(async () => {
+		attempts += 1;
+		throw new PartialSpendError(0.04, new Error("invalid provider response"));
+	});
+	expect(attempts).toBe(1);
+	expect(outcome).toEqual({
+		value: null,
+		costDollars: 0.04,
+		error: "invalid provider response",
 	});
 });

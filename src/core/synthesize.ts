@@ -1,53 +1,19 @@
 import { z } from "zod";
 import { CostLedger } from "@/core/cost";
+import type { IcpDoc, Requirement } from "@/core/icp";
 import { generateStructured, reasoningModel } from "@/core/model";
-import { CLAY_BANDS } from "@/core/providers/clay";
-import type { Requirement } from "@/core/requirements";
 import {
-	hardPageRequirements,
-	provingWindowDays,
-	RequirementSchema,
+	conditionRefs,
+	evidenceDemandConditions,
+	requirementLine,
 } from "@/core/requirements";
+
+export type { IcpDoc, IcpSeller, Requirement } from "@/core/icp";
+export { IcpDocSchema } from "@/core/icp";
 
 export const SEARCH_SOURCES = ["exa-search", "exa-agent"] as const;
 export const AGENT_EFFORTS = ["low", "medium"] as const;
 export const ROUND_ROUTES = ["search", "agent"] as const;
-
-/** The eight most senior bands, the default a buyer rubric searches with. */
-export const SENIOR_BANDS: readonly (typeof CLAY_BANDS)[number][] =
-	CLAY_BANDS.slice(0, 8);
-
-export const BandSchema = z.enum(CLAY_BANDS);
-
-export const IcpBuyerSchema = z.object({
-	rubric: z.string(),
-	bands: z.array(BandSchema),
-	keywordBands: z.array(
-		z.object({
-			band: BandSchema,
-			keywords: z.array(z.string()),
-		}),
-	),
-});
-
-export type IcpBuyer = z.infer<typeof IcpBuyerSchema>;
-
-export const IcpDocSchema = z.object({
-	description: z.string(),
-	seller: z
-		.object({
-			domain: z.string(),
-			customers: z.array(z.string()),
-			competitorTest: z.string(),
-		})
-		.nullish(),
-	buyer: IcpBuyerSchema.nullish(),
-	requirements: z.array(RequirementSchema).nullish(),
-});
-
-export type IcpDoc = z.infer<typeof IcpDocSchema>;
-
-export type IcpSeller = NonNullable<IcpDoc["seller"]>;
 
 /**
  * One round's Exa request plus the constraints applied to the returned
@@ -62,6 +28,7 @@ export type SearchPlan = {
 	recencyDays: number | null;
 	source: (typeof SEARCH_SOURCES)[number];
 	agentEffort: (typeof AGENT_EFFORTS)[number];
+	conditionIds?: string[];
 	userLocation: string | null;
 	countries: string[];
 	minWorkforce: number | null;
@@ -107,12 +74,12 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"`route` is `search` or `agent`. A `search` round asks Exa's company index, which",
 	"enumerates organisations by their record — headcount, country, founded year, revenue,",
 	"industry — a hundred at a time in under a second, and cannot see anything a page says,",
-	"so every requirement marked `page` is then proved by one cheap page lookup per",
+	"so every required condition with a date or source rule is then proved by one cheap page lookup per",
 	"candidate, and only companies that publish such a page survive. An `agent` round reads",
 	"the open web, so it finds the population through those pages themselves and returns",
-	"few companies per angle. Choose `search` when the requirements marked `record` already",
-	"name the population. Choose `agent` when a requirement marked `page` is what defines",
-	"who belongs, so no description of a record could enumerate them, or when the previous",
+	"few companies per angle. Choose `search` when the requirements already name the population.",
+	"Choose `agent` when a dated or source-bound condition defines who belongs, so no description",
+	"of a record could enumerate them, or when the previous",
 	"round's proven rate shows a search round could not prove that requirement.",
 	"Write one entry in `rounds` for each angle asked for. An `angle` names a slice of the",
 	"market, for example a vertical, a buyer or a product shape, and each entry carries its",
@@ -127,16 +94,23 @@ const SYNTHESIZE_INSTRUCTIONS = [
 	"`maxRevenueAnnual` and `minFundingTotal` and `maxFundingTotal` in whole US dollars,",
 	"`countries` as full country names written as Exa writes them, for example United",
 	"States, and `userLocation` as the matching two-letter country code.",
-	"Set a bound only when a requirement states it; every other bound is null, because a",
-	"limit nobody asked for refuses companies that fit.",
+	"Provider filters are ANDed. Set a bound only if every qualifying alternative must satisfy it.",
+	"Never put a preferred bound or one branch of an OR into a global filter. Leave it null and retain the condition in the query and judge.",
+	"Countries filter headquarters only: service markets and buyer locations must not set countries or userLocation.",
+	"Preserve required groups as AND, alternatives as OR and each alternative's conditions as AND. Preferences never exclude otherwise eligible companies.",
 	"Each reject reason from the previous round is a correction to make: write the next",
 	"angles so the same reason cannot apply again.",
 ].join(" ");
 
-function requirementBlock(requirements: readonly Requirement[]): string[] {
-	return requirements.map(
-		(req) => `${req.id} [${req.kind}/${req.proof}] ${req.text}`,
-	);
+function profileDescription(icp: IcpDoc): string {
+	return [
+		icp.seller.description,
+		icp.icp.offer,
+		icp.icp.buyer,
+		...conditionRefs(icp.icp.requirements).map((ref) => ref.condition.text),
+	]
+		.filter((value): value is string => value !== null && value.trim() !== "")
+		.join(" ");
 }
 
 function synthesizePrompt(input: SynthesizeInput): string {
@@ -144,8 +118,19 @@ function synthesizePrompt(input: SynthesizeInput): string {
 	const lines = [
 		`Today is ${input.today}.`,
 		`Write ${angles} ${angles === 1 ? "angle" : "different angles"}.`,
+		...(input.icp.instructions
+			? [
+					`The user's exact targeting instructions (authoritative): ${input.icp.instructions}`,
+				]
+			: []),
+		`Profile: ${profileDescription(input.icp)}`,
+		...(input.icp.seller.customers.length > 0
+			? [
+					`Seller customers for context; suppress only when targeting instructions explicitly require it: ${input.icp.seller.customers.join(", ")}`,
+				]
+			: []),
 		"Requirements:",
-		...requirementBlock(input.requirements),
+		JSON.stringify(input.requirements),
 	];
 	if (input.provenRate !== null) {
 		lines.push(
@@ -171,12 +156,14 @@ function synthesizePrompt(input: SynthesizeInput): string {
  */
 function templatePlans(input: SynthesizeInput): SynthesizeResult {
 	const route =
-		hardPageRequirements(input.requirements).length > 0 ? "agent" : "search";
+		evidenceDemandConditions(input.requirements).length > 0
+			? "agent"
+			: "search";
 	return {
 		route,
 		plans: [
 			{
-				query: input.icp.description,
+				query: profileDescription(input.icp),
 				angle: "the profile as written",
 				...evidenceDemand(input.requirements, route),
 				agentEffort: "low",
@@ -218,7 +205,7 @@ type PlanBounds = Omit<SearchPlan, "query" | "angle">;
 /** Every limit the profile put on the records a round keeps, plus the evidence demand the requirements imply. An absent limit is null, never zero. */
 type EvidenceDemand = Pick<
 	SearchPlan,
-	"recency" | "eventWindowDays" | "recencyDays" | "source"
+	"recency" | "eventWindowDays" | "recencyDays" | "source" | "conditionIds"
 >;
 
 /** What a round demands of the agent: the hard page requirement it must prove and the window it must prove it inside. A search round demands nothing, because it proves its own candidates instead. */
@@ -234,12 +221,33 @@ function evidenceDemand(
 			source: "exa-search",
 		};
 	}
-	const window = provingWindowDays(requirements);
+	const demands = evidenceDemandConditions(requirements);
+	const windows = demands
+		.map((ref) => ref.condition.window)
+		.filter((window): window is NonNullable<typeof window> => window !== null);
+	const publicationDays = windows
+		.filter(
+			(window) =>
+				window.unit === "days" &&
+				window.direction === "past" &&
+				window.appliesTo === "publication",
+		)
+		.map((window) => window.amount);
+	const firstPublicationWindow = publicationDays[0] ?? null;
+	const commonWindow =
+		firstPublicationWindow !== null &&
+		publicationDays.every((amount) => amount === firstPublicationWindow)
+			? firstPublicationWindow
+			: null;
 	return {
-		recency: hardPageRequirements(requirements)[0]?.text ?? null,
-		eventWindowDays: window,
-		recencyDays: window,
+		recency:
+			demands.length > 0
+				? demands.map((ref) => requirementLine(ref)).join("; ")
+				: null,
+		eventWindowDays: commonWindow,
+		recencyDays: commonWindow,
 		source: "exa-agent",
+		conditionIds: demands.map((ref) => ref.id),
 	};
 }
 
@@ -253,8 +261,8 @@ function toBounds(
 		agentEffort: "low",
 		userLocation: countryCode(output.userLocation),
 		countries: output.countries,
-		minWorkforce: output.minWorkforce,
-		maxWorkforce: output.maxWorkforce,
+		minWorkforce: output.minWorkforce ?? null,
+		maxWorkforce: output.maxWorkforce ?? null,
 		minFoundedYear: output.minFoundedYear ?? null,
 		maxFoundedYear: output.maxFoundedYear ?? null,
 		minRevenueAnnual: output.minRevenueAnnual ?? null,
@@ -274,7 +282,7 @@ function routeFor(
 	chosen: (typeof ROUND_ROUTES)[number] | null,
 	requirements: readonly Requirement[],
 ): (typeof ROUND_ROUTES)[number] {
-	if (hardPageRequirements(requirements).length === 0) return "search";
+	if (evidenceDemandConditions(requirements).length === 0) return "search";
 	return chosen ?? "agent";
 }
 

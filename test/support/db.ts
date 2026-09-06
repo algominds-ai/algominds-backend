@@ -36,6 +36,7 @@ import type {
 	RunCompanyExistsConnection,
 	RunPeopleConnection,
 } from "@/core/enrich";
+import { draftIcp } from "@/core/icp";
 import type { PersonData } from "@/core/people/rows";
 
 /** A real organization row seeded under a slug unique to this call, for a test to own and clean up. */
@@ -60,9 +61,10 @@ export async function seedIcpFor(
 	org: Organization,
 	label: string,
 ): Promise<Icp> {
+	const domain = `${label}-${crypto.randomUUID()}.internal`;
 	return createIcp(testEnv, {
-		description: `seed icp for ${label}`,
-		domain: `${label}-${crypto.randomUUID()}.internal`,
+		doc: draftIcp(domain, `seed icp for ${label}`),
+		domain,
 		organizationId: org.id,
 	});
 }

@@ -1,0 +1,11 @@
+{
+  "id": "form3-full-brief-final",
+  "status": "failed",
+  "cost": {
+    "total": 0,
+    "byProvider": {},
+    "entries": []
+  },
+  "seconds": 180.022,
+  "error": "Model call timed out twice"
+}

@@ -1,0 +1,80 @@
+{
+  "id": "aris-candidate-final",
+  "status": "complete",
+  "output": {
+    "seller": {
+      "domain": "arissearch.com",
+      "description": "Aris Search is a recruiting/staffing firm that places IT and sales talent, including technicians and service-delivery staff (helpdesk, cloud, network, security, project engineers, service-delivery leads) at managed service providers (MSPs), across industries such as MSPs, IT solutions firms, SaaS, healthcare, finance, manufacturing, engineering, accounting, entertainment, logistics and industrial sectors.",
+      "customers": [],
+      "sourceUrls": [
+        "https://arissearch.com/"
+      ]
+    },
+    "icp": {
+      "offer": "Recruiting/placement services for technicians and service-delivery staff (helpdesk, cloud, network, security, project engineers, service-delivery leads) at managed service providers (MSPs) — i.e., engaging an outside recruiter for technical hiring.",
+      "buyer": "The person who owns the decision to engage an outside recruiter for technical hiring, or who owns the headcount those hires fill. POSITIVE: Owner, founder, CEO, president, managing partner (at an MSP under ~150 people, the owner usually makes this call personally); COO, chief services officer, chief customer officer, VP/director of service delivery, VP/director of operations, VP/director of managed services, VP/director of professional services; head of people, HR director, VP people, director of talent acquisition, recruiting manager (at small MSPs an 'HR Manager' who is the only HR person counts); market president/regional president at a roll-up (owns a regional P&L and its hiring). INFLUENCER (not positive): service desk manager, NOC manager, engineering manager, team lead; CTO/CIO at an MSP — labeled INFLUENCER unless the company is small enough that the CTO is a founder. HARD NEGATIVE: CFO, controller, finance director; VP/director of sales, account executives, account managers, marketing; CISO/vCISO delivering security to clients; individual engineers, technicians, analysts, project managers, consultants; board members, investors, advisors; anyone at a parent PE firm rather than at the MSP itself.",
+      "requirements": [
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Company is a managed service provider (MSP)",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Buyer is employed at the MSP itself, not at a parent PE firm",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "preferred",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Company has fewer than ~150 employees",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "unknowns": [
+        "The note's exception that a CTO/CIO counts as positive 'if the company is small enough that the CTO is a founder' does not define a precise size threshold, leaving ambiguity for borderline cases.",
+        "The '~150 people' threshold for owner/founder decision authority is approximate and not a hard cutoff, so companies near that size are ambiguous."
+      ]
+    }
+  },
+  "cost": {
+    "total": 0.048632,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.048632
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "onboard-profile-probe",
+        "dollars": 0.048632
+      }
+    ]
+  },
+  "seconds": 41.306
+}

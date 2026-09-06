@@ -27,7 +27,7 @@ const FindPeopleSummarySchema = z.object({
 	unknownDomains: z.array(z.string()),
 	capped: z.boolean(),
 	mode: z.enum(["roster", "profile", "target"]),
-	buyerSource: z.enum(["target", "captured", "description", "none"]),
+	buyerSource: z.enum(["target", "captured", "none"]),
 });
 
 async function summaryOf(
@@ -42,6 +42,10 @@ type StepMocker = {
 
 async function primeRunLevelSteps(m: StepMocker): Promise<void> {
 	await m.mockStepResult({ name: "open-run" }, { alreadySpent: 0 });
+	await m.mockStepResult(
+		{ name: "derive-people-provider-hints" },
+		{ hints: { bands: [], keywords: [] }, costDollars: 0 },
+	);
 	await m.mockStepResult({ name: "close-run" }, { closed: true });
 }
 

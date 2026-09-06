@@ -3,19 +3,17 @@ import { z } from "zod";
 import type { CompanyRow } from "@/core/companies/gate";
 import type { RequirementEvidence } from "@/core/companies/judge";
 import { judge } from "@/core/companies/judge";
-import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
 import { fakeGatewayEnv } from "../support/env";
 import { chatCompletionResponse, fakeGateway } from "../support/fetch";
+import { requirementFixture } from "../support/icp";
 
-const requirements: Requirement[] = [
-	{
-		id: "r1",
-		text: "the company is a seed stage fintech in San Francisco with a small team",
-		kind: "hard",
-		proof: "record",
-		windowDays: null,
-	},
+const requirements = [
+	requirementFixture(
+		"the company is a seed stage fintech in San Francisco with a small team",
+	),
 ];
+const requirementId = conditionRefs(requirements)[0]?.id ?? "r1.a1.c1";
 
 const rows: CompanyRow[] = [
 	{
@@ -55,7 +53,7 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 	return {
 		verdicts: rowSet.map((_row, index) => ({
 			index,
-			statuses: [{ id: "r1", status: "proven", quote: "" }],
+			statuses: [{ id: requirementId, status: "proven", quote: "" }],
 			reason: "fits the profile",
 			sameOrganizationAs: null,
 		})),
@@ -89,7 +87,7 @@ describe("the judge reads a row's own homepage next to its record", () => {
 			],
 		]);
 
-		await judge(requirements, rows, fakeGatewayEnv(), evidenceByRow);
+		await judge(requirements, rows, fakeGatewayEnv(), { evidenceByRow });
 
 		const sent = userMessage(gateway.calls[0]);
 		expect(sent).toContain("homepage");

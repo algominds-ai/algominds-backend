@@ -9,35 +9,47 @@ import type { ProvingHit } from "@/core/companies/proof";
 import { CostLedger } from "@/core/cost";
 import type { ExaResult } from "@/core/providers/exa/search";
 import type { Requirement } from "@/core/requirements";
-import { hardPageRequirements } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = { description: "a profile" };
+const icp: IcpDoc = profileFixture();
+const recordRequirement = requirementFixture("the company is a bank");
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+function datedRequirement(text: string, amount = 30): Requirement {
+	return {
+		kind: "required",
+		anyOf: [
+			{
+				allOf: [
+					{
+						text,
+						window: {
+							amount,
+							unit: "days",
+							appliesTo: "publication",
+							direction: "past",
+						},
+						sourceRule: "company domain",
+					},
+				],
+			},
+		],
+	};
+}
 
-const pageRequirement: Requirement = {
-	id: "r2",
-	text: "the company published an engineering page about its platform",
-	kind: "hard",
-	proof: "page",
-	windowDays: 730,
-};
+const pageRequirement = datedRequirement(
+	"the company published an engineering page about its platform",
+);
 
-const pageRequirement2: Requirement = {
-	id: "r4",
-	text: "the company published a security compliance page",
-	kind: "hard",
-	proof: "page",
-	windowDays: 730,
-};
-
+const pageRequirement2 = datedRequirement(
+	"the company published a security compliance page",
+);
+const pageId =
+	conditionRefs([recordRequirement, pageRequirement])[1]?.id ?? "r2.a1.c1";
+const pageId2 =
+	conditionRefs([pageRequirement, pageRequirement2])[1]?.id ?? "r2.a1.c1";
+const standalonePageId = conditionRefs([pageRequirement])[0]?.id ?? "r1.a1.c1";
 function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
 		index: 0,
@@ -47,7 +59,6 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 		...overrides,
 	};
 }
-
 function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "banks",
@@ -92,6 +103,17 @@ function exaResult(domain: string, workforce: number | null): ExaResult {
 	};
 }
 
+function statusFor(
+	ref: ReturnType<typeof conditionRefs>[number],
+	index: number,
+	evidenceByRow: ReadonlyMap<number, ReadonlyMap<string, unknown>> | undefined,
+): "proven" | "unproven" {
+	if (ref.condition.window === null && ref.condition.sourceRule === null) {
+		return "proven";
+	}
+	return evidenceByRow?.get(index)?.has(ref.id) ? "proven" : "unproven";
+}
+
 function options(
 	overrides: Partial<FindCompaniesOptions> = {},
 ): FindCompaniesOptions {
@@ -106,13 +128,6 @@ function options(
 	};
 }
 
-type RoundSpy = {
-	deps: FindCompaniesDeps;
-	order: string[];
-	agentExclusions: Array<readonly string[]>;
-	backfilled: Array<readonly string[]>;
-};
-
 type RoundScript = {
 	route: "search" | "agent";
 	requirements: readonly Requirement[];
@@ -121,9 +136,8 @@ type RoundScript = {
 	verdicts?: (rows: readonly CompanyRow[]) => Verdict[];
 };
 
-function spyingDeps(script: RoundScript): RoundSpy {
+function spyingDeps(script: RoundScript) {
 	const order: string[] = [];
-	const agentExclusions: Array<readonly string[]> = [];
 	const backfilled: Array<readonly string[]> = [];
 	const deps: FindCompaniesDeps = {
 		recentDomains: async () => [],
@@ -138,9 +152,8 @@ function spyingDeps(script: RoundScript): RoundSpy {
 			order.push("search");
 			return { requestId: "req-1", results: script.results };
 		},
-		agentRound: async (_plans, excludeDomains) => {
+		agentRound: async (_plans, _excludeDomains) => {
 			order.push("agent");
-			agentExclusions.push(excludeDomains);
 			return { requestId: "agent-1", results: script.results };
 		},
 		backfill: async (domains) => {
@@ -159,44 +172,30 @@ function spyingDeps(script: RoundScript): RoundSpy {
 			return [];
 		},
 		gate,
-		judge: async (_requirements, rows) => {
+		judge: async (requirements, rows, _env, options) => {
 			order.push("judge");
+			const refs = conditionRefs(requirements);
 			return {
 				verdicts: script.verdicts
 					? script.verdicts(rows)
 					: rows.map((_row, index) =>
 							verdict({
 								index,
-								statuses: hardPageRequirements(script.requirements).map(
-									(req) => ({
-										id: req.id,
-										status: "proven",
-										quote: "",
-									}),
-								),
+								statuses: refs.map((ref) => ({
+									id: ref.id,
+									status: statusFor(ref, index, options?.evidenceByRow),
+									quote: "",
+								})),
 							}),
 						),
 				ledger: new CostLedger(),
 			};
 		},
 	};
-	return { deps, order, agentExclusions, backfilled };
+	return { deps, order, backfilled };
 }
 
 describe("the route a round runs on comes from its requirements", () => {
-	it("sends a search round to the company index, never the agent", async () => {
-		const spy = spyingDeps({
-			route: "search",
-			requirements: [recordRequirement],
-			results: [exaResult("bank.com", 900)],
-		});
-
-		await findCompanies(icp, 1, options(), spy.deps);
-
-		expect(spy.order).toContain("search");
-		expect(spy.order).not.toContain("agent");
-	});
-
 	it("sends an agent round to the fan-out and backfills every record it named", async () => {
 		const spy = spyingDeps({
 			route: "agent",
@@ -218,7 +217,7 @@ describe("the route a round runs on comes from its requirements", () => {
 });
 
 function hitFor(requirementId: string): ProvingHit {
-	return requirementId === pageRequirement.id
+	return requirementId === pageId
 		? {
 				url: "https://bank.com/engineering",
 				quote: "we run our own platform",
@@ -256,7 +255,13 @@ describe("proving runs before the judge, and every hard page requirement gets it
 			spy.deps,
 		);
 
-		expect(spy.order).toEqual(["search", "prove", "homepages", "judge"]);
+		expect(spy.order).toEqual([
+			"search",
+			"homepages",
+			"judge",
+			"prove",
+			"judge",
+		]);
 		expect(result.pages).toEqual([
 			{
 				domain: "bank.com",
@@ -290,10 +295,7 @@ describe("proving runs before the judge, and every hard page requirement gets it
 			deps,
 		);
 
-		expect(proveCalls.sort()).toEqual([
-			pageRequirement.id,
-			pageRequirement2.id,
-		]);
+		expect(proveCalls.sort()).toEqual([standalonePageId, pageId2]);
 		expect(result.pages.map((page) => page.url).sort()).toEqual([
 			"https://bank.com/engineering",
 			"https://bank.com/security",

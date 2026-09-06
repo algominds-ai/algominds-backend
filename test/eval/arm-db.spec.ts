@@ -1,6 +1,6 @@
 import { env as testEnv } from "cloudflare:workers";
 import { armDatabaseName, armDatabaseUrl, seedProfilesAt } from "@eval/arm-db";
-import { PROFILES } from "@eval/profiles";
+import { ARM_SEED_PROFILES } from "@eval/arm-seed";
 import postgres from "postgres";
 import { afterAll, describe, expect, it } from "vitest";
 
@@ -51,8 +51,8 @@ describe("seedProfilesAt", () => {
 			icpIds.push(trial.icpId);
 		}
 
-		expect(seeded.length).toBe(PROFILES.length * 2);
-		for (const profile of PROFILES) {
+		expect(seeded.length).toBe(ARM_SEED_PROFILES.length * 2);
+		for (const profile of ARM_SEED_PROFILES) {
 			const trials = seeded.filter((trial) => trial.slug === profile.slug);
 			expect(trials).toHaveLength(2);
 			const first = trials.find((trial) => trial.trialIndex === 0);

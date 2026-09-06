@@ -5,6 +5,7 @@ import type { z } from "zod";
 import { organization } from "@/core/db/auth-schema";
 import { db, withConnection } from "@/core/db/client";
 import { createIcp, openRun } from "@/core/db/queries";
+import { draftIcp } from "@/core/icp";
 import { buildRunId, domainsScopeId } from "@/http/jobs";
 import { peopleFindSchema } from "@/http/schemas";
 import app from "@/index";
@@ -52,9 +53,10 @@ async function terminateRun(runId: string | undefined): Promise<void> {
 }
 
 async function seedOwnedIcp(label: string): Promise<string> {
+	const profileDomain = `jobs-${label}-${crypto.randomUUID()}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: `seed icp for ${label}`,
-		domain: `jobs-${label}-${crypto.randomUUID()}.internal`,
+		doc: draftIcp(profileDomain, `seed icp for ${label}`),
+		domain: profileDomain,
 		organizationId: CALLER_ORGANIZATION_ID,
 	});
 	return icpRow.id;
@@ -82,9 +84,10 @@ async function seedForeignIcp(): Promise<string> {
 			createdAt: new Date(),
 		}),
 	);
+	const profileDomain = `jobs-foreign-${crypto.randomUUID()}.internal`;
 	const foreignIcp = await createIcp(testEnv, {
-		description: "a profile owned by another organization",
-		domain: `jobs-foreign-${crypto.randomUUID()}.internal`,
+		doc: draftIcp(profileDomain, "a profile owned by another organization"),
+		domain: profileDomain,
 		organizationId: foreignOrganizationId,
 	});
 	return foreignIcp.id;

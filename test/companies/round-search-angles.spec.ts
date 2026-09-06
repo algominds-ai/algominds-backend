@@ -5,18 +5,14 @@ import { findCompanies } from "@/core/companies";
 import { gate } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import type { ExaResult } from "@/core/providers/exa/search";
-import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = { description: "a profile" };
+const icp: IcpDoc = profileFixture();
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement = requirementFixture("the company is a bank");
+const recordId = conditionRefs([recordRequirement])[0]?.id ?? "r1.a1.c1";
 
 function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
@@ -80,7 +76,7 @@ function acceptAll(): FindCompaniesDeps["judge"] {
 	return async (_requirements, rows) => ({
 		verdicts: rows.map((_row, index) => ({
 			index,
-			statuses: [{ id: recordRequirement.id, status: "proven", quote: "" }],
+			statuses: [{ id: recordId, status: "proven", quote: "" }],
 			reason: "fits",
 			sameOrganizationAs: null,
 		})),

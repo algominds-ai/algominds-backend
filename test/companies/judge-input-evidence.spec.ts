@@ -8,8 +8,9 @@ import type {
 } from "@/core/companies/judge-evidence";
 import { db, withConnection } from "@/core/db/client";
 import { evidence as evidenceTable } from "@/core/db/schema";
-import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
 import { roundDeps } from "@/workflows/find-companies-agent";
+import { profileFixture, requirementFixture } from "../support/icp";
 import type { FakeWorkflowStep } from "../support/step";
 import { fakeWorkflowStep } from "../support/step";
 
@@ -31,29 +32,35 @@ function companyRow(domain: string): CompanyRow {
 	};
 }
 
-function requirements(): Requirement[] {
+function requirements() {
+	const page = requirementFixture(
+		"the company runs the technology in production",
+	);
 	return [
 		{
-			id: "r_page",
-			text: "the company runs the technology in production",
-			kind: "hard",
-			proof: "page",
-			windowDays: null,
+			...page,
+			anyOf: [
+				{
+					allOf: [
+						{
+							text: "the company runs the technology in production",
+							window: null,
+							sourceRule: "company website",
+						},
+					],
+				},
+			],
 		},
-		{
-			id: "r_record",
-			text: "the company sells to mid-market buyers",
-			kind: "hard",
-			proof: "record",
-			windowDays: null,
-		},
+		requirementFixture("the company sells to mid-market buyers"),
 	];
 }
+
+const requirementIds = conditionRefs(requirements()).map((ref) => ref.id);
 
 function evidenceByRowFor(domain: string): EvidenceByRow {
 	const perRow = new Map<string, RequirementEvidence>([
 		[
-			"r_page",
+			requirementIds[0] ?? "r1.a1.c1",
 			{
 				url: `https://${domain}/product`,
 				quote: `${domain} runs it in production.`,
@@ -72,7 +79,7 @@ function judgeDepsFor(
 		step: harness.step,
 		round: ROUND,
 		today: "2026-09-01",
-		seller: null,
+		seller: profileFixture().seller,
 		timings: [],
 		runId,
 	}).judge;
@@ -118,12 +125,9 @@ describe("the round saves the judge's exact input before it calls the model", ()
 		const judge = judgeDepsFor(runId, harness);
 
 		try {
-			await judge(
-				requirements(),
-				[companyRow(domain)],
-				testEnv,
-				evidenceByRowFor(domain),
-			);
+			await judge(requirements(), [companyRow(domain)], testEnv, {
+				evidenceByRow: evidenceByRowFor(domain),
+			});
 
 			expect(harness.calls).toContain(`round_${ROUND}-judge-input`);
 			const stored = await judgeInputRowsFor(runId);
@@ -133,10 +137,10 @@ describe("the round saves the judge's exact input before it calls the model", ()
 			expect(parsed.domain).toBe(domain);
 			expect(parsed.fields.name).toBe(`Co ${domain}`);
 			expect(parsed.requirements).toEqual([
-				{ id: "r_page", quoteRequired: true },
-				{ id: "r_record", quoteRequired: false },
+				{ id: requirementIds[0] ?? "r1.a1.c1", quoteRequired: true },
+				{ id: requirementIds[1] ?? "r2.a1.c1", quoteRequired: false },
 			]);
-			expect(parsed.evidence?.r_page?.quote).toBe(
+			expect(parsed.evidence?.[requirementIds[0] ?? ""]?.quote).toBe(
 				`${domain} runs it in production.`,
 			);
 		} finally {

@@ -14,6 +14,7 @@ import {
 	upsertPeople,
 } from "@/core/db/queries";
 import { company, icp as icpTable, person, run } from "@/core/db/schema";
+import { draftIcp } from "@/core/icp";
 import { domainsScopeId } from "@/http/jobs";
 import { loadTargetCompanies } from "@/workflows/find-people-target";
 import { seedOrganization } from "../support/db";
@@ -32,7 +33,7 @@ async function seedOrgWithCompany(
 ): Promise<SeededOrg> {
 	const org = await seedOrganization(`people-tenancy-${label}`);
 	const icpRow = await createIcp(testEnv, {
-		description: "seed icp for people tenancy tests",
+		doc: draftIcp(org.slug, "seed icp for people tenancy tests"),
 		domain: org.slug,
 		organizationId: org.id,
 	});
@@ -181,9 +182,10 @@ describe("domainsScopeId: tenancy", () => {
 });
 
 async function seedIcpAndRun(label: string, organizationId: string) {
+	const domain = `${label}-${crypto.randomUUID()}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: "seed icp for people target tenancy",
-		domain: `${label}-${crypto.randomUUID()}.internal`,
+		doc: draftIcp(domain, "seed icp for people target tenancy"),
+		domain,
 		organizationId,
 	});
 	const runId = `companies_${label}-${crypto.randomUUID()}`;

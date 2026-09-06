@@ -2,25 +2,20 @@ import { env as testEnv } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
 import type { FindCompaniesDeps, FindCompaniesOptions } from "@/core/companies";
+import { findCompanies } from "@/core/companies";
 import { gate } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import { closeErroredRun, findRun } from "@/core/db/queries";
 import type { ExaResult } from "@/core/providers/exa/search";
-import type { Requirement } from "@/core/requirements";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { runRoundBody } from "@/workflows/find-companies-persist";
 import { seedOrganization, seedRunFor, wipeOrganizations } from "../support/db";
+import { profileFixture, requirementFixture } from "../support/icp";
 import { fakeWorkflowStep } from "../support/step";
 
-const icp: IcpDoc = { description: "a profile" };
+const icp: IcpDoc = profileFixture();
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement = requirementFixture("the company is a bank");
 
 function plan(): SearchPlan {
 	return {
@@ -106,6 +101,35 @@ function options(env: Env): FindCompaniesOptions {
 }
 
 describe("a round that fails after it already spent something", () => {
+	it("retains the first judge's cost if targeted proving subsequently fails", async () => {
+		const requirements = [requirementFixture("public engineering page")];
+		const condition = requirements[0]?.anyOf[0]?.allOf[0];
+		if (!condition) throw new Error("missing fixture condition");
+		condition.sourceRule = "company website";
+		const deps = spendThenGiveUpDeps();
+		deps.judge = async () => {
+			const ledger = new CostLedger();
+			ledger.reported("test-model", "judge", 0.04);
+			return {
+				ledger,
+				verdicts: [
+					{
+						index: 0,
+						statuses: [{ id: "r1.a1.c1", status: "unproven" }],
+						reason: "needs proof",
+						sameOrganizationAs: null,
+					},
+				],
+			};
+		};
+		deps.prove = async (_rows, _demand, _env, ledger) => {
+			ledger.reported("exa", "prove", 0.05);
+			throw new Error("proof failed");
+		};
+		await expect(
+			findCompanies(icp, 1, { ...options(testEnv), requirements }, deps),
+		).rejects.toMatchObject({ costDollars: 0.15 });
+	});
 	let seededOrgId: string | null = null;
 
 	afterEach(async () => {

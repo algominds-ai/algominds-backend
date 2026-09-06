@@ -6,26 +6,36 @@ import { gate } from "@/core/companies/gate";
 import type { Verdict } from "@/core/companies/judge";
 import { CostLedger } from "@/core/cost";
 import type { ExaResult } from "@/core/providers/exa/search";
-import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = { description: "a profile" };
+const icp: IcpDoc = profileFixture();
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company is a bank",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
+const recordRequirement = requirementFixture("the company is a bank");
+
+const pageRequirement = {
+	...requirementFixture(
+		"the company published an engineering page about its platform",
+	),
+	anyOf: [
+		{
+			allOf: [
+				{
+					text: "the company published an engineering page about its platform",
+					window: {
+						amount: 30,
+						unit: "days" as const,
+						appliesTo: "publication" as const,
+						direction: "past" as const,
+					},
+					sourceRule: "company domain",
+				},
+			],
+		},
+	],
 };
-
-const pageRequirement: Requirement = {
-	id: "r2",
-	text: "the company published an engineering page about its platform",
-	kind: "hard",
-	proof: "page",
-	windowDays: 730,
-};
+const requirementIds = conditionRefs([recordRequirement, pageRequirement]);
 
 function verdict(overrides: Partial<Verdict> = {}): Verdict {
 	return {
@@ -133,8 +143,8 @@ function agentDeps(
 						verdict({
 							index,
 							statuses: [
-								{ id: "r1", status: "proven" },
-								{ id: "r2", status: "proven" },
+								{ id: requirementIds[0]?.id ?? "r1.a1.c1", status: "proven" },
+								{ id: requirementIds[1]?.id ?? "r2.a1.c1", status: "proven" },
 							],
 						}),
 					),
@@ -179,8 +189,8 @@ describe("a company this account already holds never comes back, on either route
 					verdict({
 						index,
 						statuses: [
-							{ id: "r1", status: "proven" },
-							{ id: "r2", status: "proven" },
+							{ id: requirementIds[0]?.id ?? "r1.a1.c1", status: "proven" },
+							{ id: requirementIds[1]?.id ?? "r2.a1.c1", status: "proven" },
 						],
 						sameOrganizationAs: candidate.domain === "jobs.barclays" ? 1 : null,
 					}),

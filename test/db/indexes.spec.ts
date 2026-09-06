@@ -58,10 +58,14 @@ describe("the indexes the read paths depend on exist in the real schema", () => 
 	});
 
 	it("finds an orphan company by organization and domain through company_organization_domain_orphan_unique", async () => {
-		const definition = await withConnection(testEnv, "direct", db, (connection) =>
-			connection.execute(
-				sql`select indexdef from pg_indexes where indexname = 'company_organization_domain_orphan_unique'`,
-			),
+		const definition = await withConnection(
+			testEnv,
+			"direct",
+			db,
+			(connection) =>
+				connection.execute(
+					sql`select indexdef from pg_indexes where indexname = 'company_organization_domain_orphan_unique'`,
+				),
 		);
 
 		expect(JSON.stringify(definition)).toContain(

@@ -5,6 +5,7 @@ import { organization } from "@/core/db/auth-schema";
 import { db, withConnection } from "@/core/db/client";
 import { createIcp, openRun, saveCompanies } from "@/core/db/queries";
 import { company, icp as icpTable, run } from "@/core/db/schema";
+import { draftIcp } from "@/core/icp";
 import { loadTargetCompanies } from "@/workflows/find-people-target";
 import { seedOrganization } from "../support/db";
 
@@ -14,9 +15,10 @@ async function seedIcpAndRun(
 	label: string,
 	organizationId: string,
 ): Promise<SeededRun> {
+	const domain = `${label}-${crypto.randomUUID()}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: "seed icp for people target tests",
-		domain: `${label}-${crypto.randomUUID()}.internal`,
+		doc: draftIcp(domain, "seed icp for people target tests"),
+		domain,
 		organizationId,
 	});
 	const runId = `companies_${label}-${crypto.randomUUID()}`;

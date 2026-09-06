@@ -1,48 +1,64 @@
-import aris from "@eval/arm-seed/aris.json";
-import carta from "@eval/arm-seed/carta.json";
-import dental from "@eval/arm-seed/dental.json";
-import form3 from "@eval/arm-seed/form3.json";
-import hvac from "@eval/arm-seed/hvac.json";
-import mstone from "@eval/arm-seed/mstone.json";
-import ondato from "@eval/arm-seed/ondato.json";
-import { IcpDocSchema } from "@eval/icp-doc";
 import { PROFILES } from "@eval/profiles";
+import { type IcpDoc, IcpDocSchema } from "@/core/icp";
+import arisOutput from "../exports/onboarding-cycle-2026-09-06/aris-candidate-final.json";
+import finalControlsInputs from "../exports/onboarding-cycle-2026-09-06/final-controls-inputs.json";
+import form3Output from "../exports/onboarding-cycle-2026-09-06/form3-candidate-final.json";
+import ondatoOutput from "../exports/onboarding-cycle-2026-09-06/original-final.json";
+import realAccountsInputs from "../exports/onboarding-cycle-2026-09-06/real-accounts-inputs.json";
 
-const RAW_DOC_BY_SLUG: ReadonlyMap<string, unknown> = new Map<string, unknown>([
-	["mstone", mstone],
-	["aris", aris],
-	["form3", form3],
-	["carta", carta],
-	["ondato", ondato],
-	["dental", dental],
-	["hvac", hvac],
-]);
+/** Historical arm JSON uses the removed pre-v1 schema and is unsupported. */
+export const UNSUPPORTED_LEGACY_ARM_SEEDS = Object.freeze(
+	PROFILES.map((profile) => profile.slug),
+);
 
 export type ArmSeedProfile = {
 	slug: string;
 	icpId: string;
 	organizationName: string;
-	doc: ReturnType<typeof IcpDocSchema.parse>;
+	doc: IcpDoc;
 };
 
-/**
- * The frozen profile document for every profile the eval measures, parsed
- * once at import time so a malformed seed file fails fast rather than mid
- * arm bootstrap. Fixed at this content regardless of what the shared dev
- * database currently holds for the same `icpId` — every arm searches
- * against the same six profiles.
- */
-export const ARM_SEED_PROFILES: readonly ArmSeedProfile[] = PROFILES.map(
+type CanonicalOutput = { output: unknown };
+
+const recordedInputs = [...realAccountsInputs, ...finalControlsInputs];
+
+function note(id: string): string {
+	const input = recordedInputs.find((entry) => entry.id === id);
+	if (!input?.note) throw new Error(`eval: missing exact note for ${id}`);
+	return input.note;
+}
+
+function canonical(input: CanonicalOutput, instructions: string): IcpDoc {
+	if (!input.output || typeof input.output !== "object") {
+		throw new Error("eval: recorded onboarding output is not an object");
+	}
+	return IcpDocSchema.parse({
+		...input.output,
+		version: 1,
+		extracted: true,
+		instructions,
+	});
+}
+
+const CANONICAL_BY_SLUG: ReadonlyMap<string, IcpDoc> = new Map([
+	["form3", canonical(form3Output, note("form3-candidate-final"))],
+	["aris", canonical(arisOutput, note("aris-candidate-final"))],
+	["ondato", canonical(ondatoOutput, note("original-final"))],
+]);
+
+/** Only recorded v1 outputs are runnable; legacy fixtures remain excluded. */
+export const ARM_SEED_PROFILES: readonly ArmSeedProfile[] = PROFILES.flatMap(
 	(profile) => {
-		const raw = RAW_DOC_BY_SLUG.get(profile.slug);
-		if (raw === undefined) {
-			throw new Error(`eval: no arm-seed document for profile ${profile.slug}`);
-		}
-		return {
-			slug: profile.slug,
-			icpId: profile.icpId,
-			organizationName: `eval-${profile.slug}`,
-			doc: IcpDocSchema.parse(raw),
-		};
+		const doc = CANONICAL_BY_SLUG.get(profile.slug);
+		return doc
+			? [
+					{
+						slug: profile.slug,
+						icpId: profile.icpId,
+						organizationName: `eval-${profile.slug}`,
+						doc,
+					},
+				]
+			: [];
 	},
 );

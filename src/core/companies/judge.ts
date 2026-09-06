@@ -15,13 +15,14 @@ import {
 import { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import { generateStructured, reasoningModel } from "@/core/model";
-import type { Requirement } from "@/core/requirements";
+import type { ConditionRef, Requirement } from "@/core/requirements";
 import {
-	hardPageRequirements,
-	hardRequirements,
-	mustBeProven,
+	evidenceDemandConditions,
+	requiredConditionRefs,
+	requiredSatisfied,
 	requirementLine,
 } from "@/core/requirements";
+import type { IcpDoc } from "@/core/synthesize";
 
 export type { RequirementEvidence, RequirementStatus, Verdict };
 export { REQUIREMENT_STATUSES };
@@ -32,6 +33,12 @@ const JUDGE_BATCH_SIZE = config.companies.judgeBatchSize;
 export type JudgeResult = {
 	verdicts: Verdict[];
 	ledger: CostLedger;
+};
+
+export type JudgeOptions = {
+	evidenceByRow?: EvidenceByRow;
+	today?: string;
+	profile?: IcpDoc;
 };
 
 const JUDGE_INSTRUCTIONS = [
@@ -61,14 +68,19 @@ const JUDGE_INSTRUCTIONS = [
 	"under another brand, country domain or subdomain, and to null otherwise.",
 ].join(" ");
 
-function judgePrompt(
-	requirements: readonly Requirement[],
-	rows: readonly CompanyRow[],
-	offset: number,
-	evidenceByRow: EvidenceByRow,
-): string {
-	const hard = hardRequirements(requirements);
+function judgePrompt(input: {
+	requirements: readonly Requirement[];
+	rows: readonly CompanyRow[];
+	offset: number;
+	evidenceByRow: EvidenceByRow;
+	today: string | undefined;
+	profile: IcpDoc | undefined;
+}): string {
+	const { requirements, rows, offset, evidenceByRow, today, profile } = input;
+	const hard = requiredConditionRefs(requirements);
 	const lines = [
+		...(today ? [`Today is ${today}.`] : []),
+		...(profile ? [`Full account profile: ${JSON.stringify(profile)}`] : []),
 		"Requirements needing a status:",
 		...hard.map(requirementLine),
 	];
@@ -106,7 +118,7 @@ function unjudgedSlice(
 	slice: JudgeSlice,
 	requirements: readonly Requirement[],
 ): Verdict[] {
-	const statuses = hardRequirements(requirements).map((req) => ({
+	const statuses = requiredConditionRefs(requirements).map((req) => ({
 		id: req.id,
 		status: "unproven" as const,
 	}));
@@ -122,14 +134,20 @@ function shiftVerdicts(
 	slice: JudgeSlice,
 	verdicts: readonly Verdict[],
 ): Verdict[] {
-	return verdicts.map((verdict) => ({
-		...verdict,
-		index: verdict.index + slice.offset,
-		sameOrganizationAs:
-			verdict.sameOrganizationAs === null
-				? null
-				: verdict.sameOrganizationAs + slice.offset,
-	}));
+	return verdicts.flatMap((verdict) => {
+		if (verdict.index >= slice.rows.length) return [];
+		const same = verdict.sameOrganizationAs;
+		return [
+			{
+				...verdict,
+				index: verdict.index + slice.offset,
+				sameOrganizationAs:
+					same !== null && same >= 0 && same < verdict.index
+						? same + slice.offset
+						: null,
+			},
+		];
+	});
 }
 
 type JudgeContext = {
@@ -138,6 +156,8 @@ type JudgeContext = {
 	model: Awaited<ReturnType<typeof reasoningModel>>;
 	ledger: CostLedger;
 	evidenceByRow: EvidenceByRow;
+	today: string | undefined;
+	profile: IcpDoc | undefined;
 };
 
 async function judgeSlice(
@@ -149,12 +169,14 @@ async function judgeSlice(
 			model: ctx.model,
 			configuredId: ctx.env.MODEL_ROUTE_REASONING,
 			instructions: JUDGE_INSTRUCTIONS,
-			prompt: judgePrompt(
-				ctx.requirements,
-				slice.rows,
-				slice.offset,
-				ctx.evidenceByRow,
-			),
+			prompt: judgePrompt({
+				requirements: ctx.requirements,
+				rows: slice.rows,
+				offset: slice.offset,
+				evidenceByRow: ctx.evidenceByRow,
+				today: ctx.today,
+				profile: ctx.profile,
+			}),
 			schema: JudgeModelSchema,
 			headers: { "cf-aig-cache-ttl": String(JUDGE_CACHE_TTL_SECONDS) },
 		},
@@ -181,8 +203,9 @@ export async function judge(
 	requirements: readonly Requirement[],
 	rows: readonly CompanyRow[],
 	env: Env,
-	evidenceByRow: EvidenceByRow = new Map(),
+	options: JudgeOptions = {},
 ): Promise<JudgeResult> {
+	const evidenceByRow = options.evidenceByRow ?? new Map();
 	const ledger = new CostLedger();
 	const ctx: JudgeContext = {
 		requirements,
@@ -190,6 +213,8 @@ export async function judge(
 		model: await reasoningModel(env),
 		ledger,
 		evidenceByRow,
+		today: options.today,
+		profile: options.profile,
 	};
 	const verdictsBySlice = await Promise.all(
 		judgeSlices(rows).map((slice) => judgeSlice(ctx, slice)),
@@ -212,9 +237,9 @@ function statusOf(verdict: Verdict | undefined, id: string): RequirementStatus {
 function contradictedRequirement(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
-): Requirement | null {
+): ConditionRef | null {
 	return (
-		hardRequirements(requirements).find(
+		requiredConditionRefs(requirements).find(
 			(req) => statusOf(verdict, req.id) === "contradicted",
 		) ?? null
 	);
@@ -224,9 +249,9 @@ function contradictedRequirement(
 function unprovenRequirement(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
-): Requirement | null {
+): ConditionRef | null {
 	return (
-		mustBeProven(requirements).find(
+		requiredConditionRefs(requirements).find(
 			(req) => statusOf(verdict, req.id) !== "proven",
 		) ?? null
 	);
@@ -242,8 +267,10 @@ function keepsRow(
 ): boolean {
 	return (
 		verdict !== undefined &&
-		contradictedRequirement(requirements, verdict) === null &&
-		unprovenRequirement(requirements, verdict) === null
+		requiredSatisfied(
+			requirements,
+			new Map(verdict.statuses.map((status) => [status.id, status.status])),
+		)
 	);
 }
 
@@ -258,10 +285,7 @@ function refusalReason(
 	const bad = contradictedRequirement(requirements, verdict);
 	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);
-	if (missing?.proof === "record") {
-		return `the record does not establish ${missing.id}: ${detail}`;
-	}
-	return `no page proved ${missing?.id ?? "a required signal"}: ${detail}`;
+	return `the required condition ${missing?.id ?? "a required condition"} was not proven: ${detail}`;
 }
 
 /**
@@ -359,9 +383,12 @@ export function provenRate(
 	requirements: readonly Requirement[],
 	verdicts: readonly Verdict[],
 ): string | null {
-	if (hardPageRequirements(requirements).length === 0) return null;
-	const proven = verdicts.filter(
-		(verdict) => unprovenRequirement(requirements, verdict) === null,
+	if (evidenceDemandConditions(requirements).length === 0) return null;
+	const proven = verdicts.filter((verdict) =>
+		requiredSatisfied(
+			requirements,
+			new Map(verdict.statuses.map((status) => [status.id, status.status])),
+		),
 	).length;
 	return `${proven} of ${verdicts.length}`;
 }

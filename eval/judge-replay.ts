@@ -18,32 +18,26 @@ import {
 	type Verdict,
 } from "@/core/companies/judge-evidence";
 import {
-	hardRequirements,
-	mustBeProven,
+	conditionRefs,
 	type Requirement,
+	requiredConditionRefs,
+	requiredSatisfied,
 	requirementLine,
 } from "@/core/requirements";
 
 const SLICE_TIMEOUT_MS = 90_000;
 const DEFAULT_COST_CAP_DOLLARS = 0.5;
 
-function statusOf(verdict: Verdict | undefined, id: string): string {
-	return (
-		verdict?.statuses.find((entry) => entry.id === id)?.status ?? "unproven"
-	);
-}
-
-/** The same keep decision `decideRows` applies in `src/core/companies/judge.ts`: no hard requirement contradicted, and every requirement needing a page or a strict record proven. */
 function keptRow(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): boolean {
-	const contradicted = hardRequirements(requirements).some(
-		(req) => statusOf(verdict, req.id) === "contradicted",
-	);
-	if (contradicted) return false;
-	return mustBeProven(requirements).every(
-		(req) => statusOf(verdict, req.id) === "proven",
+	return (
+		verdict !== undefined &&
+		requiredSatisfied(
+			requirements,
+			new Map(verdict.statuses.map((entry) => [entry.id, entry.status])),
+		)
 	);
 }
 
@@ -85,7 +79,10 @@ function printDryRun(cases: readonly ReplayCase[], batchSize: number): void {
 			`\n${replayCase.domain}  expected=${replayCase.expected}  database=${replayCase.database}`,
 		);
 		console.log(
-			`  hard requirements: ${hardRequirements(replayCase.requirements).map(requirementLine).join(" | ")}`,
+			`  hard requirements: ${conditionRefs(replayCase.requirements)
+				.filter((ref) => ref.kind === "required")
+				.map(requirementLine)
+				.join(" | ")}`,
 		);
 		const evidenceMap = new Map(Object.entries(replayCase.pageEvidence));
 		console.log(
@@ -134,7 +131,7 @@ function printMustBeProven(
 	replayCase: ReplayCase,
 	verdict: Verdict | undefined,
 ): void {
-	for (const req of mustBeProven(replayCase.requirements)) {
+	for (const req of requiredConditionRefs(replayCase.requirements)) {
 		const entry = verdict?.statuses.find((status) => status.id === req.id);
 		console.log(`    ${req.id}: ${entry?.status ?? "unproven"}`);
 	}
@@ -144,7 +141,9 @@ function printAllHardStatuses(
 	replayCase: ReplayCase,
 	verdict: Verdict | undefined,
 ): void {
-	for (const req of hardRequirements(replayCase.requirements)) {
+	for (const req of conditionRefs(replayCase.requirements).filter(
+		(ref) => ref.kind === "required",
+	)) {
 		const entry = verdict?.statuses.find((status) => status.id === req.id);
 		console.log(`    all: ${req.id}: ${entry?.status ?? "unproven"}`);
 	}
@@ -152,7 +151,7 @@ function printAllHardStatuses(
 
 type RowOutcome = { pass: boolean; actual: ExpectedVerdict };
 
-/** One row's line: kept or refused against `expected`, then every `mustBeProven` requirement's status, quote and whether that quote grounds in the row's own evidence. A mismatch also prints every hard requirement's status, since a refusal can turn on one this profile never marked `mustBeProven`. */
+/** One row's line: kept or refused against `expected`, then every `requiredConditionRefs` requirement's status, quote and whether that quote grounds in the row's own evidence. A mismatch also prints every hard requirement's status, since a refusal can turn on one this profile never marked `requiredConditionRefs`. */
 function printRowVerdict(
 	replayCase: ReplayCase,
 	verdict: Verdict | undefined,
@@ -226,7 +225,7 @@ async function judgeSlice(
 	const started = Date.now();
 	let result: Awaited<ReturnType<typeof judge>>;
 	try {
-		result = await judge(requirements, rows, env, evidenceByRow);
+		result = await judge(requirements, rows, env, { evidenceByRow });
 	} catch (error) {
 		return failedSliceOutcome(caseSlice, Date.now() - started, error);
 	}

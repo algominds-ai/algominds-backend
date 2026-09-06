@@ -17,6 +17,7 @@ import {
 	run,
 	runCompany,
 } from "@/core/db/schema";
+import { draftIcp } from "@/core/icp";
 import app from "@/index";
 import { issueOrganizationKey } from "../support/db";
 
@@ -48,9 +49,10 @@ async function seedRunWithCompanies(
 	label: string,
 	count: number,
 ): Promise<PageSeed> {
+	const profileDomain = `pages-test-${label}.internal`;
 	const icpRow = await createIcp(testEnv, {
-		description: "seed icp for run-page tests",
-		domain: `pages-test-${label}.internal`,
+		doc: draftIcp(profileDomain, "seed icp for run-page tests"),
+		domain: profileDomain,
 		organizationId: CALLER_ORGANIZATION_ID,
 	});
 	const runId = `companies_${label}`;

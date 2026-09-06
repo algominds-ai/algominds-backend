@@ -8,8 +8,10 @@ import {
 } from "@/core/companies/proof";
 import { CostLedger } from "@/core/cost";
 import type { Requirement } from "@/core/requirements";
+import { conditionRefs } from "@/core/requirements";
 import { fakeSecretEnv } from "../support/env";
 import { exaContentsFetch } from "../support/fetch";
+import { requirementFixture } from "../support/icp";
 
 function countingFetch(inner: typeof fetch): {
 	fetch: typeof fetch;
@@ -148,7 +150,14 @@ describe("verifyEvidenceRows tells a truly missing page from one merely absent f
 			new CostLedger(),
 		);
 
-		expect(result.kept).toHaveLength(1);
+		expect(result.kept).toHaveLength(0);
+		expect(result.rejects).toEqual([
+			{
+				index: 0,
+				reason: "evidence-not-on-page",
+				detail: "CRAWL_ABSENT_FROM_REPLY",
+			},
+		]);
 		expect(result.checks["ghost.example"]).toBe("CRAWL_ABSENT_FROM_REPLY");
 		expect(result.pages).toEqual([]);
 	});
@@ -215,11 +224,6 @@ describe("verifyEvidenceRows keeps the page it crawled as evidence", () => {
 				url: "https://a.example/careers",
 				text: "A Co is hiring now.",
 			},
-			{
-				domain: "b.example",
-				url: "https://b.example/careers",
-				text: "Nothing about hiring here.",
-			},
 		]);
 	});
 });
@@ -256,19 +260,45 @@ describe("verifyEvidenceRows bounds one exaContents call to a handful of urls", 
 });
 
 const windowed: Requirement = {
-	id: "r5",
-	text: "runs production Kubernetes",
-	kind: "hard",
-	proof: "page",
-	windowDays: 730,
+	kind: "required",
+	anyOf: [
+		{
+			allOf: [
+				{
+					text: "runs production Kubernetes",
+					window: {
+						amount: 2,
+						unit: "years",
+						appliesTo: "publication",
+						direction: "past",
+					},
+					sourceRule: "company domain",
+				},
+			],
+		},
+	],
 };
+
+function windowedRef() {
+	const ref = conditionRefs([windowed])[0];
+	if (!ref) throw new Error("expected windowed condition");
+	return ref;
+}
+
+function unwindowedRef() {
+	const ref = conditionRefs([
+		requirementFixture("runs production Kubernetes"),
+	])[0];
+	if (!ref) throw new Error("expected unwindowed condition");
+	return ref;
+}
 
 describe("a proving search is bounded by the requirement's window", () => {
 	it("dates the earliest acceptable page at today less the window, and leaves an unwindowed requirement unbounded", () => {
-		expect(provingDemand(windowed, "2026-09-03").notBefore).toBe("2024-09-03");
-		expect(
-			provingDemand({ ...windowed, windowDays: null }, "2026-09-03").notBefore,
-		).toBeNull();
+		expect(provingDemand(windowedRef(), "2026-09-03").notBefore).toBe(
+			"2024-09-03",
+		);
+		expect(provingDemand(unwindowedRef(), "2026-09-03").notBefore).toBeNull();
 	});
 
 	it("sends the window as startPublishedDate on every proving search", async () => {
@@ -284,7 +314,7 @@ describe("a proving search is bounded by the requirement's window", () => {
 
 		await proveRows(
 			[row({ domain: "bank.com", name: "Bank" })],
-			provingDemand(windowed, "2026-09-03"),
+			provingDemand(windowedRef(), "2026-09-03"),
 			env,
 			new CostLedger(),
 		);

@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { CostLedger } from "@/core/cost";
-import { seniorRoster } from "@/core/people/roster";
-import { SENIOR_BANDS } from "@/core/synthesize";
+import { type PeopleProviderHints, seniorRoster } from "@/core/people/roster";
 import { fakeSecretEnv } from "../support/env";
 import { jsonResponse, stubClayCreateCapture } from "../support/fetch";
 
@@ -17,13 +16,11 @@ function clayEnv(): Env {
 }
 
 describe("senior roster retrieval", () => {
-	it("retrieves only the buyer's captured slices", async () => {
+	it("retrieves only the ephemeral provider hint slices", async () => {
 		const calls = stubClayCreateCapture();
-		const buyer = {
-			bands: [...SENIOR_BANDS],
-			keywordBands: [
-				{ band: "manager" as const, keywords: ["HR", "recruiting"] },
-			],
+		const buyer: PeopleProviderHints = {
+			bands: ["founder", "head"],
+			keywords: ["growth", "product"],
 		};
 
 		const result = await seniorRoster(
@@ -33,18 +30,17 @@ describe("senior roster retrieval", () => {
 			new CostLedger(),
 		);
 
-		expect(calls.creates).toHaveLength(9);
-		expect(calls.runCalls).toBe(9);
+		expect(calls.creates).toHaveLength(3);
+		expect(calls.runCalls).toBe(3);
 		expect(
-			calls.creates.slice(0, 8).map((f) => f.job_title_seniority_levels_v2),
-		).toEqual(SENIOR_BANDS.map((band) => [band]));
+			calls.creates.slice(0, 2).map((f) => f.job_title_seniority_levels_v2),
+		).toEqual([["founder"], ["head"]]);
 		for (const filters of calls.creates) {
 			expect(filters.company_identifier).toEqual(["harborit.com"]);
 		}
-		expect(calls.creates[8]).toEqual({
+		expect(calls.creates[2]).toEqual({
 			company_identifier: ["harborit.com"],
-			job_title_seniority_levels_v2: ["manager"],
-			job_title_keywords: ["HR", "recruiting"],
+			job_title_keywords: ["growth", "product"],
 		});
 		expect(result.candidates).toEqual([]);
 	});
@@ -53,6 +49,7 @@ describe("senior roster retrieval", () => {
 const CreateFiltersSchema = z.object({
 	company_identifier: z.array(z.string()),
 	job_title_seniority_levels_v2: z.array(z.string()).optional(),
+	job_title_keywords: z.array(z.string()).optional(),
 });
 
 function createConcurrentSearch(
@@ -96,7 +93,7 @@ describe("senior roster retrieval under concurrent completion", () => {
 		const ledger = new CostLedger();
 		const resultPromise = seniorRoster(
 			"harborit.com",
-			{ bands: ["c-suite", "vp"], keywordBands: [] },
+			{ bands: ["c-suite", "vp"], keywords: [] },
 			fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
 			ledger,
 		);

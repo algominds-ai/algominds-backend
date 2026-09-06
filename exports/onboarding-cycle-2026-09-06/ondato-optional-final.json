@@ -1,0 +1,137 @@
+{
+  "id": "ondato-optional-final",
+  "status": "complete",
+  "output": {
+    "seller": {
+      "domain": "ondato.com",
+      "description": "Ondato is a SaaS-based KYC, AML and digital identity compliance platform offering identity verification, KYB, authentication, transaction monitoring, due diligence, virtual branch and age verification solutions for onboarding and lifecycle management of business and consumer customers.",
+      "customers": [
+        "OnlyFans",
+        "Fjord Bank",
+        "Saldo Bank",
+        "Ooredoo",
+        "Fansly",
+        "TonyBet",
+        "Guru Pay",
+        "7bet",
+        "Blue EMI",
+        "1stopVAT",
+        "Fintrust",
+        "InRento",
+        "LKU Group",
+        "HeavyFinance",
+        "TGS Baltic"
+      ],
+      "sourceUrls": [
+        "https://ondato.com/",
+        "https://ondato.com/about-us/",
+        "https://ondato.com/case-studies/",
+        "https://ondato.com/case-studies/onlyfans-case-study/",
+        "https://ondato.com/case-studies/fjord-bank-ondato-case-study/",
+        "https://ondato.com/case-studies/saldobank-ondato-case-study/",
+        "https://ondato.com/case-studies/ooredoo-case-study/"
+      ]
+    },
+    "icp": {
+      "offer": "Ondato's age assurance / age verification solution for age-gated platforms (excludes Ondato's other KYC, AML, KYB, authentication, transaction monitoring and due diligence products, which are out of scope for this campaign)",
+      "buyer": "Head of Growth, Chief Product Officer, or Founder/CEO, all equally eligible with no roster-dependent fallback; compliance, risk and legal roles are excluded",
+      "requirements": [
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "operates a private age-gated platform serving UK or US users",
+                  "window": null,
+                  "sourceRule": null
+                },
+                {
+                  "text": "has at least 20 employees, no upper size bound",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "is not a competing age-verification vendor",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "preferred",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "had a launch within 12 months",
+                  "window": {
+                    "amount": 12,
+                    "unit": "months",
+                    "appliesTo": "event",
+                    "direction": "past"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "text": "had user signup-verification complaints within 6 months",
+                  "window": {
+                    "amount": 6,
+                    "unit": "months",
+                    "appliesTo": "event",
+                    "direction": "past"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "text": "had growth funding within 120 days",
+                  "window": {
+                    "amount": 120,
+                    "unit": "days",
+                    "appliesTo": "event",
+                    "direction": "past"
+                  },
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "unknowns": []
+    }
+  },
+  "cost": {
+    "total": 0.070714,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.070714
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "onboard-profile-probe",
+        "dollars": 0.070714
+      }
+    ]
+  },
+  "seconds": 31.943
+}

@@ -10,6 +10,7 @@ import { findRun, loadIcp, openRun } from "@/core/db/queries";
 import { organizationSpendToday } from "@/core/db/runs";
 import { icp as icpTable, run } from "@/core/db/schema";
 import { ONBOARD_STEPS } from "@/workflows/onboard-icp";
+import { profileFixture } from "../support/icp";
 import { primeOnboardProfile } from "./fixtures";
 
 async function deleteIcpAndRun(runId: string): Promise<void> {
@@ -29,7 +30,11 @@ async function failWriteProfile(
 	await instance.modify(async (m) => {
 		await m.mockStepResult(
 			{ name: ONBOARD_STEPS.readSeller },
-			{ pages: [{ url: `https://${domain}/`, text: "" }], costDollars },
+			{
+				value: [{ url: `https://${domain}/`, text: "" }],
+				costDollars,
+				error: null,
+			},
 		);
 		await m.mockStepError(
 			{ name: ONBOARD_STEPS.writeProfile },
@@ -55,6 +60,7 @@ describe("OnboardIcpWorkflow: what a run that dies keeps and adds", () => {
 			await testEnv.ONBOARD_ICP.create({ id: runId, params });
 			await first.waitForStatus("errored");
 			expect((await findRun(testEnv, runId))?.costDollars).toBe(0.04);
+			expect((await findRun(testEnv, runId))?.status).toBe("errored");
 		} finally {
 			await first.dispose();
 		}
@@ -92,8 +98,7 @@ describe("OnboardIcpWorkflow: a model call that spends but writes no profile", (
 		);
 		try {
 			await primeOnboardProfile(instance, domain, {
-				description: null,
-				wroteProfile: false,
+				profile: null,
 				costDollars: 0.02,
 			});
 			await testEnv.ONBOARD_ICP.create({
@@ -129,21 +134,26 @@ describe("saveOnboardedIcp", () => {
 			runId,
 			domain: "acme.example",
 			organizationId: org.id,
-			description: "a stored profile",
-			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
+			doc: profileFixture({}, "a stored profile", "acme.example"),
 			costDollars: 0.05,
 		});
 
 		const stored = await loadIcp(testEnv, icpId);
 		const closed = await findRun(testEnv, runId);
-		expect(stored?.doc).toEqual({
-			description: "a stored profile",
-			seller: { domain: "acme.example", customers: [], competitorTest: "none" },
-			buyer: null,
-			requirements: null,
-		});
+		expect(stored?.doc).toEqual(
+			profileFixture({}, "a stored profile", "acme.example"),
+		);
 		expect(closed?.icpId).toBe(icpId);
 		expect(closed?.status).toBe("complete");
 		expect(closed?.finishedAt).not.toBeNull();
+		expect(
+			await saveOnboardedIcp(testEnv, {
+				runId,
+				domain: "acme.example",
+				organizationId: org.id,
+				doc: profileFixture({}, "a stored profile", "acme.example"),
+				costDollars: 0.05,
+			}),
+		).toBe(icpId);
 	});
 });

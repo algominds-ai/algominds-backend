@@ -10,7 +10,7 @@ import type {
 	GateOptions,
 	GateResult,
 } from "@/core/companies/gate";
-import type { JudgeResult, RequirementEvidence } from "@/core/companies/judge";
+import type { JudgeOptions, JudgeResult } from "@/core/companies/judge";
 import type { ProvenRow, ProvingDemand } from "@/core/companies/proof";
 import { toGateRejects } from "@/core/companies/proof";
 import type { BackfilledRecord } from "@/core/companies/record";
@@ -23,7 +23,7 @@ import type {
 	ExaSearchResult,
 } from "@/core/providers/exa/search";
 import type { Requirement } from "@/core/requirements";
-import { hardPageRequirements } from "@/core/requirements";
+import { evidenceDemandConditions } from "@/core/requirements";
 import type {
 	IcpDoc,
 	SearchPlan,
@@ -93,10 +93,7 @@ export type FindCompaniesDeps = {
 		requirements: readonly Requirement[],
 		rows: readonly CompanyRow[],
 		env: Env,
-		evidenceByRow?: ReadonlyMap<
-			number,
-			ReadonlyMap<string, RequirementEvidence>
-		>,
+		options?: JudgeOptions,
 	) => Promise<JudgeResult>;
 };
 
@@ -142,7 +139,7 @@ export function anglesForRound(
 	requirements: readonly Requirement[],
 	shortfall: number,
 ): number {
-	if (hardPageRequirements(requirements).length === 0) {
+	if (evidenceDemandConditions(requirements).length === 0) {
 		return clamp(Math.ceil(shortfall / 10), 1, MAX_ANGLES_PER_ROUND);
 	}
 	return clamp(shortfall * 2, 1, MAX_ANGLES_PER_ROUND);

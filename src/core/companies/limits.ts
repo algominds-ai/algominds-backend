@@ -60,23 +60,11 @@ function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
 	return clause === null ? null : `Every company must have a ${clause}.`;
 }
 
-/** The revenue-or-funding sentence when the plan bounds both, so a company only needs to satisfy one side. Null when the plan bounds at most one of them. */
-function moneyBandRule(plan: SearchPlan): string | null {
-	const revenue = limitClause(ANNUAL_REVENUE_LIMIT, plan);
-	const funding = limitClause(FUNDING_RAISED_LIMIT, plan);
-	if (revenue === null || funding === null) return null;
-	return `Every company must have a ${revenue} or ${funding}.`;
-}
-
 /** The plan's bounds and countries as sentences, appended to a query so the vendor's search and any agent both see them stated. */
 export function planConstraints(plan: SearchPlan): string {
-	const moneyBand = moneyBandRule(plan);
-	const limits =
-		moneyBand === null ? NUMERIC_LIMITS : [WORKFORCE_LIMIT, FOUNDED_YEAR_LIMIT];
-	const rules = limits
-		.map((limit) => limitRule(limit, plan))
-		.filter((rule): rule is string => rule !== null);
-	if (moneyBand !== null) rules.push(moneyBand);
+	const rules = NUMERIC_LIMITS.map((limit) => limitRule(limit, plan)).filter(
+		(rule): rule is string => rule !== null,
+	);
 	if (plan.countries.length > 0) {
 		rules.push(
 			`Every company must be based in ${plan.countries.join(" or ")}.`,
@@ -87,91 +75,42 @@ export function planConstraints(plan: SearchPlan): string {
 
 export type RejectDetail = { reason: string; group?: string };
 
-const STATED_HEADCOUNT = [
-	/(\d{1,3}(?:,\d{3})+|\d+)\s*\+?\s*(?:[a-z-]+\s+)?(?:employees|team members|staff|colleagues|professionals|workers|technicians)\b/i,
-	/\bemploys\s+(?:over|more than|about|nearly|around|some)?\s*(\d{1,3}(?:,\d{3})+|\d+)\b/i,
-];
-
-/** The headcount a company's own description states, or null when it states none. */
-export function statedHeadcount(entity: CompanyEntity): number | null {
-	if (entity.description === null) return null;
-	for (const pattern of STATED_HEADCOUNT) {
-		const match = entity.description.match(pattern);
-		if (match?.[1]) return Number(match[1].replace(/,/g, ""));
-	}
-	return null;
-}
-
-const STATED_HEADCOUNT_LIMIT: NumericLimit = {
-	label: "headcount stated in the description",
-	reading: statedHeadcount,
-	floor: (plan) => plan.minWorkforce,
-	ceiling: (plan) => plan.maxWorkforce,
-};
-
-type LimitReading = { present: boolean; detail: RejectDetail | null };
-
 function readLimit(
 	limit: NumericLimit,
 	entity: CompanyEntity,
 	plan: SearchPlan,
-): LimitReading {
+): RejectDetail | null {
 	const reading = limit.reading(entity);
-	if (reading === null) return { present: false, detail: null };
+	if (reading === null) return null;
 	const ceiling = limit.ceiling(plan);
 	if (ceiling !== null && reading > ceiling) {
 		const group = `${limit.label} above the limit of ${ceiling}`;
 		return {
-			present: true,
-			detail: {
-				reason: `${limit.label} ${reading} above the limit of ${ceiling}`,
-				group,
-			},
+			reason: `${limit.label} ${reading} above the limit of ${ceiling}`,
+			group,
 		};
 	}
 	const floor = limit.floor(plan);
 	if (floor !== null && reading < floor) {
 		const group = `${limit.label} below the floor of ${floor}`;
 		return {
-			present: true,
-			detail: {
-				reason: `${limit.label} ${reading} below the floor of ${floor}`,
-				group,
-			},
+			reason: `${limit.label} ${reading} below the floor of ${floor}`,
+			group,
 		};
 	}
-	return { present: true, detail: null };
+	return null;
 }
 
-function boundedOnPlan(limit: NumericLimit, plan: SearchPlan): boolean {
-	return limit.floor(plan) !== null || limit.ceiling(plan) !== null;
-}
-
-/** Rejects on revenue and funding together only when every reading present for a bounded side of the pair fails its bound. A side the plan does not bound is ignored, exactly like an absent reading. */
-function financialBandRejectReason(
-	entity: CompanyEntity,
-	plan: SearchPlan,
-): RejectDetail | null {
-	const readings = [ANNUAL_REVENUE_LIMIT, FUNDING_RAISED_LIMIT]
-		.filter((limit) => boundedOnPlan(limit, plan))
-		.map((limit) => readLimit(limit, entity, plan))
-		.filter((reading) => reading.present);
-	if (readings.length === 0) return null;
-	if (readings.some((reading) => reading.detail === null)) return null;
-	return readings[0]?.detail ?? null;
-}
-
+/** All populated provider bounds are conjunctive; alternatives stay in the ICP for the judge. */
 function numericRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
 ): RejectDetail | null {
-	const workforce = readLimit(WORKFORCE_LIMIT, entity, plan);
-	if (workforce.detail !== null) return workforce.detail;
-	const foundedYear = readLimit(FOUNDED_YEAR_LIMIT, entity, plan);
-	if (foundedYear.detail !== null) return foundedYear.detail;
-	const financial = financialBandRejectReason(entity, plan);
-	if (financial !== null) return financial;
-	return readLimit(STATED_HEADCOUNT_LIMIT, entity, plan).detail;
+	for (const limit of NUMERIC_LIMITS) {
+		const detail = readLimit(limit, entity, plan);
+		if (detail) return detail;
+	}
+	return null;
 }
 
 function countryRejectReason(

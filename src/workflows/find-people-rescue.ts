@@ -4,7 +4,7 @@ import { CostLedger } from "@/core/cost";
 import { appendEvidence } from "@/core/db/queries";
 import type { Candidate } from "@/core/people/candidate";
 import { dedupe } from "@/core/people/dedupe";
-import { seniorRoster } from "@/core/people/roster";
+import { EMPTY_PROVIDER_HINTS, seniorRoster } from "@/core/people/roster";
 import { rawEvidenceRow } from "@/core/people/rows";
 import { exaPeopleRoster } from "@/core/providers/exa/people-roster";
 import { getleadsDecisionMakers } from "@/core/providers/getleads";
@@ -114,7 +114,7 @@ export async function runRosterStep(
 			const ledger = new CostLedger();
 			const result = await seniorRoster(
 				target.identifier,
-				ctx.buyer,
+				ctx.providerHints ?? EMPTY_PROVIDER_HINTS,
 				ctx.env,
 				ledger,
 			);

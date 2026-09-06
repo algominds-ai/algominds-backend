@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { config } from "@/config";
 import { normalizeDomain, publicDomain } from "@/core/db/schema";
-import { NOTE_MAX_LENGTH, NOTE_MIN_LENGTH } from "@/core/onboard";
+import { targetingNoteSchema } from "@/core/onboard";
 
 export const icpRef = z.union([
 	z.object({ icpId: z.uuid() }),
-	z.object({ prompt: z.string().min(1) }),
+	z.object({ prompt: targetingNoteSchema }),
 ]);
 
 export function normalizedDomainValue(
@@ -91,7 +91,7 @@ export const enrichSchema = z.strictObject({
 
 export const onboardIcpSchema = z.strictObject({
 	domain: domainField,
-	note: z.string().min(NOTE_MIN_LENGTH).max(NOTE_MAX_LENGTH).optional(),
+	note: targetingNoteSchema.optional(),
 });
 
 export const pageQuerySchema = z.object({

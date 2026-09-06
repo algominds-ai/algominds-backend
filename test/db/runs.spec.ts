@@ -14,7 +14,7 @@ import {
 	saveRound,
 } from "@/core/db/queries";
 import { round, run } from "@/core/db/schema";
-import type { IcpSeller } from "@/core/synthesize";
+import { draftIcp } from "@/core/icp";
 import { seedOrganization, seedRunFor, wipeOrganizations } from "../support/db";
 
 describe("organizationForSlug and openRun: idempotent creation", () => {
@@ -166,41 +166,18 @@ describe("saveRound", () => {
 });
 
 describe("createIcp and loadIcp", () => {
-	it("stores the whole document, reads it back, and defaults an omitted seller, buyer and requirements to null", async () => {
+	it("stores and reloads the versioned profile without rewriting its instructions", async () => {
 		const org = await seedOrganization("runs-icp-create");
-		const seller: IcpSeller = {
-			domain: "acme.com",
-			customers: ["Acme Corp"],
-			competitorTest: "A competitor sells the same tooling to other vendors.",
-		};
-
+		const doc = draftIcp("acme.com", "Trust Fabric only. No revenue gate.");
+		doc.seller.customers = ["Acme Corp"];
 		try {
-			const withSeller = await createIcp(testEnv, {
+			const saved = await createIcp(testEnv, {
 				domain: "acme.com",
 				organizationId: org.id,
-				description: "an ideal customer profile",
-				seller,
+				doc,
 			});
-			expect(withSeller.doc).toEqual({
-				description: "an ideal customer profile",
-				seller,
-				buyer: null,
-				requirements: null,
-			});
-			const reloaded = await loadIcp(testEnv, withSeller.id);
-			expect(reloaded?.doc).toEqual(withSeller.doc);
-
-			const withoutSeller = await createIcp(testEnv, {
-				domain: "acme.com",
-				organizationId: org.id,
-				description: "a prompt-only profile",
-			});
-			expect(withoutSeller.doc).toEqual({
-				description: "a prompt-only profile",
-				seller: null,
-				buyer: null,
-				requirements: null,
-			});
+			expect(saved.doc).toEqual(doc);
+			expect((await loadIcp(testEnv, saved.id))?.doc).toEqual(doc);
 		} finally {
 			await wipeOrganizations([org.id]);
 		}

@@ -63,18 +63,15 @@ function costFromResponseBody(body: unknown): number {
 }
 
 function isTimeoutError(error: unknown): boolean {
-	return (
+	if (
 		error instanceof DOMException &&
 		(error.name === "AbortError" || error.name === "TimeoutError")
-	);
-}
-
-function isRetryableModelError(error: unknown): boolean {
-	return (
-		NoObjectGeneratedError.isInstance(error) ||
-		NoOutputGeneratedError.isInstance(error) ||
-		isTimeoutError(error)
-	);
+	) {
+		return true;
+	}
+	return error instanceof Error && error.cause !== undefined
+		? isTimeoutError(error.cause)
+		: false;
 }
 
 export type StructuredCallParams<T> = {
@@ -100,6 +97,7 @@ async function attemptStructured<T>(
 			headers: params.headers,
 			providerOptions: STRUCTURED_ROUTING,
 			include: { responseBody: true },
+			maxRetries: 0,
 			abortSignal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
 		});
 		recordModelCall(ledger, op, params.configuredId, {
@@ -121,11 +119,10 @@ async function attemptStructured<T>(
 }
 
 /**
- * Runs one structured model call and retries once when the model returns
- * nothing usable. A second empty reply resolves `null`, so the caller can
- * fall back to a safe default; a second timeout throws
- * `RetryableProviderError` instead, since a timeout means unknown, never
- * empty, and the durable step's own retry must own it.
+ * Runs one structured model call. Invalid or absent structured output resolves
+ * `null`, so the caller can fall back to a safe default. A timeout throws
+ * `RetryableProviderError`, since it means unknown, never empty, and the
+ * durable step's own retry must own it.
  */
 export async function generateStructured<T>(
 	params: StructuredCallParams<T>,
@@ -134,16 +131,16 @@ export async function generateStructured<T>(
 ): Promise<T | null> {
 	try {
 		return await attemptStructured(params, ledger, op);
-	} catch (firstError) {
-		if (!isRetryableModelError(firstError)) throw firstError;
-	}
-	try {
-		return await attemptStructured(params, ledger, op);
-	} catch (secondError) {
-		if (!isRetryableModelError(secondError)) throw secondError;
-		if (isTimeoutError(secondError)) {
-			throw new RetryableProviderError("Model call timed out twice");
+	} catch (error) {
+		if (isTimeoutError(error)) {
+			throw new RetryableProviderError("Model call timed out");
 		}
-		return null;
+		if (
+			NoObjectGeneratedError.isInstance(error) ||
+			NoOutputGeneratedError.isInstance(error)
+		) {
+			return null;
+		}
+		throw error;
 	}
 }

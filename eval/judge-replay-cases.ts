@@ -7,7 +7,7 @@ import type { CompanyRow } from "@/core/companies/gate";
 import type { RequirementEvidence } from "@/core/companies/judge-evidence";
 import { company, evidence, icp, run } from "@/core/db/schema";
 import {
-	hardPageRequirements,
+	evidenceDemandConditions,
 	type Requirement,
 	RequirementSchema,
 } from "@/core/requirements";
@@ -122,7 +122,7 @@ export function pageEvidenceFor(
 	requirements: readonly Requirement[],
 	row: CompanyRow,
 ): Record<string, RequirementEvidence> {
-	const primary = hardPageRequirements(requirements)[0];
+	const primary = evidenceDemandConditions(requirements)[0];
 	if (!primary || !row.evidenceUrl || !row.evidenceQuote) return {};
 	return { [primary.id]: { url: row.evidenceUrl, quote: row.evidenceQuote } };
 }

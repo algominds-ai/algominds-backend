@@ -173,7 +173,8 @@ describe("what one angle's request tells the vendor", () => {
 		const fanout = fanoutFor(fakeWorkflowStep().step, {
 			domain: "form3.tech",
 			customers: ["Klarna"],
-			competitorTest: "A competitor sells payment infrastructure to banks.",
+			description: "payment infrastructure for banks",
+			sourceUrls: [],
 		});
 
 		await fanout(

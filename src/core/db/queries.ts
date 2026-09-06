@@ -337,7 +337,7 @@ export {
 	createIcp,
 	loadIcp,
 	type NewIcpInput,
-	saveIcpRequirements,
+	saveIcpProfile,
 	saveOnboardedIcp,
 } from "@/core/db/icp";
 export {

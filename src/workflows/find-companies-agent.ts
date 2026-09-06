@@ -8,6 +8,7 @@ import {
 import type { CompanyRow } from "@/core/companies/gate";
 import { gate } from "@/core/companies/gate";
 import { fetchHomepages } from "@/core/companies/homepages";
+import type { JudgeOptions } from "@/core/companies/judge";
 import { judge } from "@/core/companies/judge";
 import type { EvidenceByRow } from "@/core/companies/judge-evidence";
 import { proveRows } from "@/core/companies/proof";
@@ -315,7 +316,8 @@ function steppedJudge(
 	round: number,
 	runId: string,
 ): FindCompaniesDeps["judge"] {
-	return async (requirements, rows, env, evidenceByRow) => {
+	return async (requirements, rows, env, options: JudgeOptions = {}) => {
+		const evidenceByRow = options.evidenceByRow ?? new Map();
 		await saveJudgeInput({
 			step,
 			round,
@@ -329,7 +331,7 @@ function steppedJudge(
 			`round_${round}-judge`,
 			config.stepConfig.judgeCall,
 			async () => {
-				const result = await judge(requirements, rows, env, evidenceByRow);
+				const result = await judge(requirements, rows, env, options);
 				return {
 					verdicts: result.verdicts,
 					costEntries: result.ledger.toJSON().entries,

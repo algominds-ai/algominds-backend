@@ -5,11 +5,15 @@ import type { IcpDoc, SynthesizeInput } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { fakeGatewayEnv } from "../support/env";
 import { chatCompletionResponse, fakeGateway } from "../support/fetch";
+import { profileFixture, requirementFixture } from "../support/icp";
 
-const icp: IcpDoc = {
-	description:
-		"fintech companies at seed stage in San Francisco with a small team",
-};
+const icp: IcpDoc = profileFixture(
+	{
+		offer: "Fintech software",
+		buyer: "Revenue leaders",
+	},
+	"Find fintech companies at seed stage in San Francisco with a small team.",
+);
 
 const RequestBodySchema = z.object({
 	model: z.string(),
@@ -69,20 +73,28 @@ function planReply(overrides: Partial<PlanShape> = {}, cost?: number | null) {
 	);
 }
 
-const recordRequirement: Requirement = {
-	id: "r1",
-	text: "the company has twenty employees or fewer and is based in the United States",
-	kind: "hard",
-	proof: "record",
-	windowDays: null,
-};
+const recordRequirement: Requirement = requirementFixture(
+	"the company has twenty employees or fewer and is based in the United States",
+);
 
 const pageRequirement: Requirement = {
-	id: "r2",
-	text: "the company published an engineering page showing it runs the platform itself",
-	kind: "hard",
-	proof: "page",
-	windowDays: 30,
+	kind: "required",
+	anyOf: [
+		{
+			allOf: [
+				{
+					text: "the company published an engineering page showing it runs the platform itself",
+					window: {
+						amount: 30,
+						unit: "days",
+						appliesTo: "publication",
+						direction: "past",
+					},
+					sourceRule: "company domain",
+				},
+			],
+		},
+	],
 };
 
 function recordOnlyInput(): SynthesizeInput {
@@ -137,16 +149,13 @@ describe("synthesize: gateway wiring", () => {
 		expect(modelOf(call)).not.toBe(env.MODEL_ROUTE_WORKER);
 	});
 
-	it("sends cf-aig-skip-cache on every call, including a retry", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse({ content: "not json at all" }),
-			chatCompletionResponse(planReply()),
-		]);
+	it("sends cf-aig-skip-cache on the single paid call", async () => {
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = gateway.fetch;
 
 		await runSynthesize();
 
-		expect(gateway.calls).toHaveLength(2);
+		expect(gateway.calls).toHaveLength(1);
 		for (const call of gateway.calls) {
 			expect(call.headers.get("cf-aig-skip-cache")).toBe("true");
 		}
@@ -221,24 +230,22 @@ describe("synthesize: prompt drift and retries", () => {
 
 		const roundTwoPrompt = userContent(gateway.calls[1]);
 		expect(roundTwoPrompt).not.toBe(userContent(gateway.calls[0]));
-		expect(roundTwoPrompt).toContain(recordRequirement.text);
+		expect(roundTwoPrompt).toContain(
+			recordRequirement.anyOf[0]?.allOf[0]?.text,
+		);
 		expect(roundTwoPrompt).toContain("headcount too high");
 	});
 
-	it("retries once after a schema failure and returns the retry's result", async () => {
+	it("falls back after a schema failure without a second paid call", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
-			chatCompletionResponse(
-				planReply({ query: "retry-query", angle: "retry-angle" }),
-			),
 		]);
 		globalThis.fetch = gateway.fetch;
 
 		const result = await runSynthesize();
 
-		expect(gateway.calls).toHaveLength(2);
-		expect(result.plans[0]?.query).toBe("retry-query");
-		expect(result.plans[0]?.angle).toBe("retry-angle");
+		expect(gateway.calls).toHaveLength(1);
+		expect(result.plans[0]?.query).toContain(icp.icp.offer ?? "");
 	});
 
 	it("falls back to a template query on the profile's own route after two consecutive failures", async () => {
@@ -248,7 +255,7 @@ describe("synthesize: prompt drift and retries", () => {
 		]);
 		globalThis.fetch = searchGateway.fetch;
 		const searchResult = await runSynthesize();
-		expect(searchResult.plans[0]?.query).toBe(icp.description);
+		expect(searchResult.plans[0]?.query).toContain(icp.icp.offer ?? "");
 		expect(searchResult.plans[0]?.maxWorkforce).toBeNull();
 
 		const agentGateway = fakeGateway([
@@ -259,7 +266,9 @@ describe("synthesize: prompt drift and retries", () => {
 		const agentResult = await synthesize(pageGatedInput(), fakeGatewayEnv());
 		expect(agentResult.route).toBe("agent");
 		expect(agentResult.plans[0]?.source).toBe("exa-agent");
-		expect(agentResult.plans[0]?.recency).toBe(pageRequirement.text);
+		expect(agentResult.plans[0]?.recency).toContain(
+			"the company published an engineering page",
+		);
 		expect(agentResult.plans[0]?.recencyDays).toBe(30);
 	});
 });

@@ -1,4 +1,5 @@
 import type { WorkflowStep } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { config } from "@/config";
 import type {
 	FindCompaniesDeps,
@@ -20,17 +21,16 @@ import {
 	roundTimingsEvidenceRow,
 	toNewCompany,
 } from "@/core/companies/rows";
-import { PartialSpendError } from "@/core/cost";
+import { PartialSpendError, purchase } from "@/core/cost";
 import {
 	appendEvidence,
 	recordRunSpend,
 	saveCompanies,
-	saveIcpRequirements,
+	saveIcpProfile,
 	saveRound,
 } from "@/core/db/queries";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
-import type { Requirement } from "@/core/requirements";
-import { readRequirements } from "@/core/requirements";
+import { writeSellerProfile } from "@/core/onboard";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 
 /** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
@@ -231,32 +231,48 @@ export async function persistCompanies(
 	await appendEvidence(env, evidenceRows);
 }
 
-/**
- * The requirements this profile insists on. A profile onboarded before the
- * reader existed has none stored, so they are read once from its description
- * and written back onto the document, and every later run reads them from
- * there rather than paying again.
- */
-export async function loadRequirements(
-	env: Env,
-	step: WorkflowStep,
-	icpId: string,
-	icp: IcpDoc,
-): Promise<Requirement[]> {
-	const stored = icp.requirements ?? [];
-	if (stored.length > 0) return stored;
-	const read = await step.do(
-		"read-requirements",
-		config.stepConfig.paidCall,
-		async () => {
-			const result = await readRequirements(icp.description, env);
-			return {
-				requirements: result.requirements,
-				costDollars: result.ledger.total(),
-			};
-		},
-	);
-	return step.do("save-requirements", config.stepConfig.databaseCall, () =>
-		saveIcpRequirements(env, icpId, read.requirements),
-	);
+/** Extracts free-text requests once and banks their reported cost before proceeding. */
+export async function extractProfile(input: {
+	env: Env;
+	step: WorkflowStep;
+	icp: IcpDoc;
+	icpId: string;
+	runId: string;
+	alreadySpent: number;
+}): Promise<{ icp: IcpDoc; costDollars: number }> {
+	const { env, step, icpId, runId, alreadySpent } = input;
+	let icp = input.icp;
+	let costDollars = alreadySpent;
+	if (!icp.extracted) {
+		const extracted = await step.do(
+			"extract-profile",
+			config.stepConfig.paidCall,
+			() =>
+				purchase(async () => {
+					const result = await writeSellerProfile(
+						env,
+						icp.seller.domain,
+						[],
+						icp.instructions,
+					);
+					return {
+						value: result.profile,
+						costDollars: result.ledger.total(),
+					};
+				}),
+		);
+		costDollars += extracted.costDollars;
+		await step.do("bank-extraction", config.stepConfig.databaseCall, () =>
+			recordRunSpend(env, runId, costDollars),
+		);
+		if (extracted.error || !extracted.value)
+			throw new NonRetryableError(
+				`findCompanies: ${extracted.error ?? "profile extraction failed"}`,
+			);
+		const profile = extracted.value;
+		icp = await step.do("save-profile", config.stepConfig.databaseCall, () =>
+			saveIcpProfile(env, icpId, profile),
+		);
+	}
+	return { icp, costDollars };
 }

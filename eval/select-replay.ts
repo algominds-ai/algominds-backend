@@ -190,15 +190,14 @@ function buildReplayInput(raw: RawReplay, deps: ReplayDeps): ReplayInput {
 	const buyer = deps.parseResolvedBuyer({
 		mode: raw.buyerMode,
 		buyerSource: raw.buyerSource,
-		rubric: icpDoc.buyer?.rubric ?? null,
-		bands: icpDoc.buyer?.bands ?? [],
-		keywordBands: icpDoc.buyer?.keywordBands ?? [],
+		offer: icpDoc.icp.offer,
+		instructions: icpDoc.instructions,
+		rubric: icpDoc.icp.buyer,
 	});
 	const candidates = deps.dedupe(candidateRows(raw, deps.canonicalPersonUrl));
 	return {
 		candidates,
 		input: {
-			description: icpDoc.description,
 			buyer,
 			candidates,
 			company: {
@@ -260,7 +259,9 @@ function printDryRun(replay: ReplayInput): void {
 		`buyer mode=${input.buyer.mode} source=${input.buyer.buyerSource}`,
 	);
 	console.log(`rubric: ${input.buyer.rubric}`);
-	console.log(`description: ${input.description?.slice(0, 160)}...`);
+	console.log(
+		`instructions: ${input.buyer.instructions?.slice(0, 160) ?? "(none)"}...`,
+	);
 	console.log(`\nroster: ${candidates.length} candidate(s)`);
 	for (const candidate of candidates) console.log(`  ${rosterLine(candidate)}`);
 	console.log("\nexpected labels resolved against this roster:");
