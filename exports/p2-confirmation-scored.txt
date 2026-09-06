@@ -1,0 +1,10 @@
+See results at https://www.braintrust.dev/app/Algominds%20AI/p/algo-backend/experiments/64d0fbe5536e-p2combo-rescored
+mstone: score 0.80 yield 5 coverage 4 buyer-precision 14/14 gates ok $0.82 236.061s
+aris: score 1.00 yield 5 coverage 5 buyer-precision 10/10 gates ok $0.46 82.793s
+form3: score 0.00 yield 5 coverage 4 buyer-precision 18/18 gates FAIL $1.14 612.851s
+carta: score 0.20 yield 5 coverage 1 buyer-precision 1/1 gates ok $0.64 137.841s
+ondato: score 0.40 yield 5 coverage 2 buyer-precision 3/3 gates ok $0.38 134.21s
+dental: score 0.00 yield 5 coverage 5 buyer-precision 60/64 gates FAIL $1.83 278.348s
+hvac: score 0.00 yield 2 coverage 1 buyer-precision 1/1 gates FAIL $0.46 144.579s
+rating 3.43
+eval: experiment https://www.braintrust.dev/app/Algominds%20AI/p/algo-backend/experiments/64d0fbe5536e-p2combo-rescored

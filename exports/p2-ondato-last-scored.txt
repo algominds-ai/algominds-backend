@@ -1,0 +1,2 @@
+ondato: score 0.00 yield 4 coverage 3 buyer-precision 4/5 gates FAIL $0.56 156.552s
+rating 0.00

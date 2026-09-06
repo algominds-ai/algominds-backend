@@ -1,0 +1,78 @@
+company_domain,company_name,name,title,linkedin_url,key_label,location,status,sources
+draftkings.com,DraftKings Inc.,Alexei Krasner,"SVP Engineering, Chief Architect",https://linkedin.com/in/alexeikrasner,accept,"Boston, United States",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Alexis L.,Co-founder & CTO,https://linkedin.com/in/alexislequoc,accept,"New York, United States",verified,eval_proof-form3-p
+athenahealth.com,athenahealth,Anusha Dharmalingam,Vice President of Engineering,https://linkedin.com/in/anushadharmalingam,accept,"Winchester, United States",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Ashley Miller,"VP, Application Infrastructure",https://linkedin.com/in/ashley-miller-1905757,accept,"Brooklyn, United States",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Babak Moghimi,Head of Engineering Tools & Services,https://linkedin.com/in/babak-moghimi,accept,"Barcelona, Spain",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Brian Harris,CISO/SVP of Technical Operations,https://linkedin.com/in/brian-harris-a4731018,accept,"Boston, United States",verified,eval_proof-form3-p
+edreamsodigeo.com,eDreams ODIGEO,Carsten Bernhard,Group CTO,https://linkedin.com/in/carsten-bernhard-4261293,accept,"Barcelona, Spain",verified,eval_proof-form3-p
+adyen.com,Adyen,Catherine Ye,SVP of Engineering,https://linkedin.com/in/catherine-ye-651224b8,accept,"Palo Alto, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Chad Yancey,"Director, Customer Trust & Security Governance",https://linkedin.com/in/chadyancey,reject:not-buyer,"Bothell, United States",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Christoph Springer,Head of Platform,https://linkedin.com/in/christoph-springer-67822096,accept,"Berlin, Germany",verified,eval_proof-form3-p
+gitlab.com,GitLab,Chaim Mazal,Chief Information Security Officer,https://linkedin.com/in/cmazal,accept,"Chicago, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Cynthia Miller,"Vice President, Security Assurance",https://linkedin.com/in/cynthia-miller-0a4b002,accept,"Mountain View, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Dennis van Rooijen,Director Data Platform,https://linkedin.com/in/dennisvanrooijen,accept,"Veenendaal, Netherlands",verified,eval_proof-form3-p
+adyen.com,Adyen,Dino Dai Zovi,"Senior Vice President, Head of Security",https://linkedin.com/in/dino-dai-zovi-2043932,accept,"New York, United States",verified,eval_proof-form3-p
+athenahealth.com,athenahealth,"Don Stearns, MBA, PMP",Vice President & CIO,https://linkedin.com/in/don-stearns-mba-pmp-4701b6a,accept,United States,verified,eval_proof-form3-p
+adevinta.com,Adevinta,Donato Emma,Head of Engineering,https://linkedin.com/in/donato-emma-3753a77,accept,"Kleinmachnow, Germany",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Emilio E.,Chief Information Security Officer,https://linkedin.com/in/emilioesc,accept,"Los Angeles, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Florbela Viegas,Director Dedicated Infrastructure,https://linkedin.com/in/florbela-viegas,accept,"Zurich, Switzerland",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Gustavo Foncea,Head Of Technology,https://linkedin.com/in/gustavo-foncea,accept,"Berlin, Germany",verified,eval_proof-form3-p
+datadoghq.com,Datadog,David Mitchell,SVP of Engineering,https://linkedin.com/in/hazrac,accept,"New York, United States",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Hemant Garg,VP Engineering Frontend Platforms & Technology Transformation,https://linkedin.com/in/hgarg81,accept,"Sunnyvale, United States",verified,eval_proof-form3-p
+elisa.com,Elisa,Matti Hiljanen,Head of SRE & Security,https://linkedin.com/in/hiljanen,accept,"Helsinki, Finland",verified,eval_proof-form3-p
+dexcom.com,Dexcom,Ian Hanson,Senior Vice President of Engineering,https://linkedin.com/in/ian-hanson-1085466,accept,"San Diego, United States",verified,eval_proof-form3-p
+elisa.com,Elisa,Ian Kurtén,Head of High Security,https://linkedin.com/in/ian-kurtén-55456,accept,"Helsinki, Finland",verified,eval_proof-form3-p
+adyen.com,Adyen,Ignacio Jiménez Pi,SVP Platform Engineering,https://linkedin.com/in/ignacio-jim%c3%a9nez-pi-970383141,accept,"Amsterdam, Netherlands",verified,eval_proof-form3-p
+dexcom.com,Dexcom,Iván Lugo,Vice President of Global Engineering,https://linkedin.com/in/iv%c3%a1n-lugo-ab098a12,accept,"Irvine, United States",verified,eval_proof-form3-p
+elisa.com,Elisa,Jarno Vainio,Head of Platform Services,https://linkedin.com/in/jarno-vainio-32a46243,accept,"Finland, Finland",verified,eval_proof-form3-p
+dexcom.com,Dexcom,Jason Borinski,"VP IT Infrastructure, Information Security, and Operations",https://linkedin.com/in/jason-borinski-922a969b,accept,"San Diego County, United States",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Jeff Singer,Vice President of Engineering,https://linkedin.com/in/jeff-singer-b9a5b919,accept,"Boston, United States",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Jesus Choliz,Global CISO,https://linkedin.com/in/jesuscholiz,accept,"Barcelona, Spain",verified,eval_proof-form3-p
+gitlab.com,GitLab,joe nuts,Head of Software Engineering,https://linkedin.com/in/joe-nuts-974903223,accept,"Colorado Springs, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,John Hope,Director of Engineering,https://linkedin.com/in/jonhope,reject:not-buyer,"Ireland, Ireland",verified,eval_proof-form3-p
+elisa.com,Elisa,Joni Oksanen,"Vice President, Networks & Security",https://linkedin.com/in/joni-oksanen-36640b127,accept,"Helsinki, Finland",verified,eval_proof-form3-p
+edreamsodigeo.com,eDreams ODIGEO,Jordi P.,Director of Engineering,https://linkedin.com/in/jordipreixens,reject:not-buyer,"Italy, Italy",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Julien Conan,Head of Infrastructure and Data Platform,https://linkedin.com/in/julien-conan-450aa325,accept,"France, France",verified,eval_proof-form3-p
+athenahealth.com,athenahealth,Karl Salnoske,SVP Cloud Engineering and Operations,https://linkedin.com/in/karl-salnoske-96286,accept,"McLean, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Kimberly Wolk,Vice President of Engineering,https://linkedin.com/in/kimberly-wolk-50297a1,accept,"Sammamish, United States",verified,eval_proof-form3-p
+elisa.com,Elisa,Kim T.,"Chief Security Officer, VP Security",https://linkedin.com/in/kimjtikkanen,accept,"Finland, Finland",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Laurent Paris,SVP Engineering  / Core Engineering Team,https://linkedin.com/in/laurent-paris-a977b5,accept,"San Francisco, United States",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Leo Shemesh,VP of Lottery Engineering,https://linkedin.com/in/leo-shemesh-6620a15,accept,"Boston, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Jorge G. Lopez,"VP, Security Operations, Trust, and Safety",https://linkedin.com/in/lopez1,accept,"Alpharetta, United States",verified,eval_proof-form3-p
+adyen.com,Adyen,Luca Canducci,Head of Engineering,https://linkedin.com/in/lucacanducci,accept,"Amsterdam, Netherlands",verified,eval_proof-form3-p
+athenahealth.com,athenahealth,Luke Hargrove,Vice President of Engineering,https://linkedin.com/in/luke-hargrove-9849a1151,accept,"Travis County, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Mani Sundaram,VP of Engineering,https://linkedin.com/in/manilinkedin,accept,"Seattle, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Manu Narayan,Chief Information Officer,https://linkedin.com/in/manunarayan,accept,"Los Angeles, United States",verified,eval_proof-form3-p
+gitlab.com,GitLab,Marin Jankovski,Vice President of Engineering,https://linkedin.com/in/marin-jankovski,accept,"United Kingdom, United Kingdom",verified,eval_proof-form3-p
+elisa.com,Elisa,Markus Kinnunen,Vice President and CIO,https://linkedin.com/in/markus-kinnunen-3388b63,accept,"Helsinki, Finland",verified,eval_proof-form3-p
+gitlab.com,GitLab,Michael Wildpaner,VP of Engineering — Security,https://linkedin.com/in/michael-wildpaner-b9b8591,accept,"Zurich, Switzerland",verified,eval_proof-form3-p
+dexcom.com,Dexcom,Naveen Aerrabotu,VP of Engineering,https://linkedin.com/in/naveenaerrabotu,accept,"San Francisco, United States",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Nuno Antunes,Vice President of Engineering,https://linkedin.com/in/nuno-antunes-7746a41,accept,"Lisbon, Portugal",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Oleg Mezhvynskiy,"SVP Engineering, Sports",https://linkedin.com/in/olegmezhvynskyi,accept,"Boston, United States",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Olivier Bonnet,VP of Engineering,https://linkedin.com/in/olivier-bonnet-6593652,accept,"Paris, France",verified,eval_proof-form3-p
+gitlab.com,GitLab,Siva Padisetty,Chief Technology Officer,https://linkedin.com/in/padisetty,accept,"Bellevue, United States",verified,eval_proof-form3-p
+dexcom.com,Dexcom,Paul Stapleton,"CPSO, Vice President Cyber Security Engineering",https://linkedin.com/in/paul-stapleton-a17b356,accept,"Cincinnati, United States",verified,eval_proof-form3-p
+adyen.com,Adyen,Pedro M. S. Oliveira,Vice President of Infrastructure,https://linkedin.com/in/pedromsoliveira,accept,"Amsterdam, Netherlands",verified,eval_proof-form3-p
+edreamsodigeo.com,eDreams ODIGEO,Pello Olaskoaga,IT operations & Security Office Director,https://linkedin.com/in/pello-olaskoaga-9048288,reject:not-buyer,"Barcelona, Spain",verified,eval_proof-form3-p
+adyen.com,Adyen,Pieter Huibers,SVP of Engineering - Platforms and Financial Services,https://linkedin.com/in/pieterhuibers,accept,"The Randstad, Netherlands",verified,eval_proof-form3-p
+athenahealth.com,athenahealth,Riley White,"Head of Engineering, epocrates",https://linkedin.com/in/riley-white-6747958,accept,"Charlton, United States",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Robin Mohseni,Vice President of Engineering,https://linkedin.com/in/robin-mohseni-72375080,accept,"London, United Kingdom",verified,eval_proof-form3-p
+adyen.com,Adyen,Sam Bulder,VP of Engineering,https://linkedin.com/in/sam-bulder-5a971aa,accept,"The Randstad, Netherlands",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Sam Bisbee,"VP, Information Security",https://linkedin.com/in/sambisbee,accept,"Boston, United States",verified,eval_proof-form3-p
+elisa.com,Elisa,Sami Komulainen,Chief Operating Officer & EVP - Technology and Operations,https://linkedin.com/in/sami-komulainen-7946273,reject:not-buyer,"Finland, Finland",verified,eval_proof-form3-p
+adyen.com,Adyen,Sarah Pimentel Abrantes,VP of Engineering,https://linkedin.com/in/sarahpimentel,accept,"Netherlands, Netherlands",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Sean Flanagan,Head of Global Engineering Operations at DraftKings,https://linkedin.com/in/sean-flanagan-cspo-csm-40983a94,accept,"Boston, United States",verified,eval_proof-form3-p
+datadoghq.com,Datadog,Sesh Nalla,VP of Engineering,https://linkedin.com/in/seshendranalla,accept,"New York City, United States",verified,eval_proof-form3-p
+dexcom.com,Dexcom,Stacey Stewart,"Senior Vice President, Chief Information Officer, Dexcom",https://linkedin.com/in/stacey-stewart-90495b4,accept,"San Diego, United States",verified,eval_proof-form3-p
+adyen.com,Adyen,Stijn van Esveld,Head of Platform Reliability,https://linkedin.com/in/stijnvanesveld,accept,Netherlands,verified,eval_proof-form3-p
+gitlab.com,GitLab,Tim Zallmann,VP of Engineering,https://linkedin.com/in/tim-zallmann-505b2b4b,accept,"Austria, Austria",verified,eval_proof-form3-p
+elisa.com,Elisa,Timo Hänninen,"Business Lead, Head of Cloud and Infrastructure services",https://linkedin.com/in/timo-hänninen-0b899071,accept,"Helsinki, Finland",verified,eval_proof-form3-p
+adyen.com,Adyen,Tom Adams,Chief Technology Officer,https://linkedin.com/in/tom-adams-7b586a1,accept,"San Francisco, United States",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Tuan Kha,Group Chief Information Officer (CIO),https://linkedin.com/in/tuan-kha-87910b2,accept,"Amsterdam, Netherlands",verified,eval_proof-form3-p
+elisa.com,Elisa,Veiko Koort,Head of Telco Cloud and Communication services,https://linkedin.com/in/veiko-koort-405737a4,reject:wrong-country,Estonia,verified,eval_proof-form3-p
+elisa.com,Elisa,Ville Rautio,"Chief Technology and AI Officer, Elisa Corporate Customers",https://linkedin.com/in/villerautio,accept,"Helsinki, Finland",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Xi Wang,Head of Engineering,https://linkedin.com/in/wangxity,accept,"Netherlands, Netherlands",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Albert Sellarès,CTO / Global VP of Engineering (entire Adevinta group),https://linkedin.com/in/whats,accept,"Barcelona, Spain",verified,eval_proof-form3-p
+draftkings.com,DraftKings Inc.,Zach Maybury,Chief Technology Officer,https://linkedin.com/in/zacharymaybury,accept,"Boston, United States",verified,eval_proof-form3-p
+adevinta.com,Adevinta,Àngel Puigventós,Head of Security Operations,https://linkedin.com/in/àngel-puigventós-76a35147,accept,"Barcelona, Spain",verified,eval_proof-form3-p

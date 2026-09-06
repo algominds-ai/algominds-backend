@@ -1,0 +1,2 @@
+p2combo2-form3  form3: score 0.00 yield 4 coverage 4 buyer-precision 15/19 gates FAIL $2.30 450.269s
+p2combo2-hvac  hvac: score 0.80 yield 5 coverage 4 buyer-precision 6/6 gates ok $0.76 214.036s

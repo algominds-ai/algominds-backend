@@ -1,0 +1,8 @@
+mstone  stored 5 A 5 rejC 0 unlC 0 | P 13 T 13 B 4 rejP 0 unlP 0 | cov 0.80 bp 1.00 gates ok score 0.80 | $0.78 314s
+aris    stored 5 A 5 rejC 0 unlC 0 | P 6 T 6 B 4 rejP 0 unlP 0 | cov 0.80 bp 1.00 gates ok score 0.80 | $0.44 94s
+form3   stored 5 A 5 rejC 0 unlC 0 | P 35 T 31 B 5 rejP 4 unlP 0 | cov 1.00 bp 0.89 gates FAIL score 0.00 | $1.74 916s
+carta   stored 5 A 5 rejC 0 unlC 0 | P 7 T 4 B 4 rejP 3 unlP 0 | cov 0.80 bp 0.57 gates FAIL score 0.00 | $0.81 210s
+ondato  stored 5 A 5 rejC 0 unlC 0 | P 4 T 4 B 2 rejP 0 unlP 0 | cov 0.40 bp 1.00 gates ok score 0.40 | $0.72 278s
+dental  stored 5 A 5 rejC 0 unlC 0 | P 36 T 33 B 5 rejP 3 unlP 0 | cov 1.00 bp 0.92 gates FAIL score 0.00 | $1.14 270s
+hvac    stored 5 A 4 rejC 0 unlC 1 | P 5 T 3 B 2 rejP 0 unlP 0 | cov 0.40 bp 0.60 gates FAIL score 0.00 | $0.40 73s
+rating 2.86

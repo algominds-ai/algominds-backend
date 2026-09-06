@@ -1,0 +1,1 @@
+ondato: score 0.40 yield 5 coverage 2 buyer-precision 2/2 gates ok $1.57 328.405s

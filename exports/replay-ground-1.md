@@ -1,0 +1,8 @@
+# Judge replay 1 on p2/ground a4ed7db (11 saved rows, $0.106, 3 slices 21/37/34 s, no retry)
+PASS: steadypay.co reject (r2 contradicted, quote = the LaaS sentence), gettongo.com reject (nothing quotable), hioscar.com reject, skyscanner.net retain (r5 quoted), dexcom.com retain (r5 quoted).
+FAIL: algbra.com refused (r2 unproven, no quote; r4 proven with quote). kontigo.lat, paymiq.com, ziglu.io, peymo.com refused: r2 AND r4 unproven, NO quote at all for the whole slice, although r4 (funding band) is quotable from the record line (kontigo fundingTotal 27.2M). sennder.com retained: r1 unproven instead of contradicted this time (prompt rule did not fire), r5 proven with a real EKS quote.
+Fidelity gaps of the replay: the homepage passage attached just before judging is not persisted, so the replay judge sees less than the live judge; only the first page requirement is grounded.
+Reading: the model omitted `quote` (optional in the schema) for an entire slice, and the grounding rule then refused every strict requirement. Optional quote = fragile.
+
+## Timeout screen (rows of eval_p2form3-log form3, batch 4, a4ed7db): $0.074
+Slice of 4 rows: 33.0 s, 1 call. Slice of 1 row: 7.9 s. Both under 90 s, no retry. konghq.com refused today (r5 quote "Kong Gateway Operator 1.4 ... Konnect entities" not verbatim in stored evidence; the labeller also left konghq null for the same product-vs-own-infra reason). harness, appdirect, traderepublic, monzo retained with verbatim r5 quotes. Note: identical inputs on the same commit are served from the AI Gateway cache (cf-aig-cache-ttl), $0, bit-identical verdicts.

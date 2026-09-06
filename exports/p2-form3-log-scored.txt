@@ -1,0 +1,2 @@
+form3: score 0.00 yield 4 coverage 3 buyer-precision 10/12 gates FAIL $1.59 638.767s
+rating 0.00

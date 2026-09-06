@@ -1,0 +1,2 @@
+form3: score 0.00 yield 4 coverage 4 buyer-precision 14/18 gates FAIL $2.52 334.784s
+rating 0.00
