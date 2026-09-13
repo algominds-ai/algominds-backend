@@ -91,6 +91,8 @@ describe("loadTargetCompanies: domain resolution with no icpId given", () => {
 				linkedinUrl: null,
 				icpId: null,
 				workforceTotal: null,
+				exaId: null,
+				description: null,
 			},
 		]);
 	});
@@ -114,6 +116,8 @@ describe("loadTargetCompanies: domain resolution with no icpId given", () => {
 				linkedinUrl: null,
 				icpId: null,
 				workforceTotal: null,
+				exaId: null,
+				description: null,
 			},
 		]);
 	});

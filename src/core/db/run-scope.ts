@@ -64,8 +64,8 @@ export interface RunCompanyScopeConnection {
 const PERSON_STATUS_COLUMN = sql`${person.data}->>'status'`;
 
 const STATUSES_STORED_BY_MODE: Record<string, readonly PersonStatus[]> = {
-	target: ["verified"],
-	profile: ["verified"],
+	target: ["verified", "pending"],
+	profile: ["verified", "pending"],
 	roster: ["roster", "verified"],
 };
 
@@ -84,7 +84,7 @@ function statusScopeForMode(mode: string | null): SQL {
  * The condition selecting the people a people run's own pipeline stored, read
  * from its `run_company` rows in one query: the companies it resolved to,
  * narrowed to the statuses that run's mode ever writes (`target` and
- * `profile` write only `verified`; `roster` writes `roster` or `verified`).
+ * `profile` write `verified` or `pending`; `roster` writes `roster` or `verified`).
  */
 export async function peopleStoredScope(
 	env: DbEnv,

@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { toBatches } from "@/core/batches";
 import type { DbEnv } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
 import type {
@@ -10,12 +11,13 @@ import type {
 } from "@/core/db/queries";
 import type { NewPerson, Person } from "@/core/db/schema";
 import { person } from "@/core/db/schema";
-import { nameKey } from "@/core/people/dedupe";
 import { PersonDataSchema } from "@/core/people/rows";
 
 export type PersonUpdateConnection = UpdateWhereConnection<
 	typeof person,
-	Partial<Pick<NewPerson, "companyId" | "title" | "data" | "linkedinUrl">>
+	Partial<
+		Pick<NewPerson, "companyId" | "name" | "title" | "data" | "linkedinUrl">
+	>
 >;
 export type PersonReadConnection = SelectAllWhereConnection<
 	typeof person,
@@ -38,16 +40,28 @@ function personIdentityCondition(row: NewPerson): SQL | undefined {
 	return and(eq(person.organizationId, row.organizationId), identity);
 }
 
-async function updateVerifiedRows(
+async function refreshPeopleRows(
 	connection: PersonUpdateConnection,
 	rows: NewPerson[],
 ): Promise<void> {
 	for (const row of rows) {
-		if (!isVerifiedRow(row)) continue;
+		const status = PersonDataSchema.safeParse(row.data).data?.status;
+		if (status !== "verified" && status !== "pending") continue;
+		const verified = status === "verified";
 		await connection
 			.update(person)
-			.set({ companyId: row.companyId, title: row.title, data: row.data })
-			.where(personIdentityCondition(row));
+			.set({
+				companyId: row.companyId,
+				name: row.name,
+				title: row.title,
+				data: row.data,
+			})
+			.where(
+				and(
+					personIdentityCondition(row),
+					verified ? undefined : sql`${person.data}->>'status' <> 'verified'`,
+				),
+			);
 	}
 }
 
@@ -59,33 +73,33 @@ function matchRow(existing: Person[], row: NewPerson): Person | undefined {
 	);
 }
 
-function companyCondition(row: NewPerson): SQL | undefined {
+function aliasCondition(row: NewPerson): SQL | undefined {
+	const aliases = PersonDataSchema.safeParse(row.data).data?.aliases ?? [];
+	if (!isVerifiedRow(row) || aliases.length === 0) return undefined;
 	return and(
 		eq(person.organizationId, row.organizationId),
 		eq(person.companyId, row.companyId),
+		inArray(person.linkedinUrl, aliases),
 	);
 }
 
 function findRenamedRow(existing: Person[], row: NewPerson): Person | null {
-	if (!row.linkedinUrl) return null;
+	if (!row.linkedinUrl || !isVerifiedRow(row)) return null;
 	if (matchRow(existing, row)) return null;
-	const key = nameKey(row.name ?? null);
-	if (!key) return null;
-	return (
-		existing.find(
-			(found) =>
-				found.organizationId === row.organizationId &&
-				found.companyId === row.companyId &&
-				found.linkedinUrl !== row.linkedinUrl &&
-				nameKey(found.name) === key,
-		) ?? null
+	const aliases = PersonDataSchema.safeParse(row.data).data?.aliases ?? [];
+	const matches = existing.filter(
+		(found) =>
+			found.organizationId === row.organizationId &&
+			found.companyId === row.companyId &&
+			found.linkedinUrl !== null &&
+			aliases.includes(found.linkedinUrl),
 	);
+	return matches.length === 1 ? (matches[0] ?? null) : null;
 }
 
 /**
- * Relinks a person to their new linkedin URL. A verified incoming row also
- * refreshes title and data; a roster row only corrects the URL. Returns the
- * rows that still need inserting.
+ * Relinks only a source-proven profile alias and refreshes verified fields.
+ * Returns the rows that still need inserting.
  */
 async function relinkRenamedRows(
 	connection: PersonUpdateConnection,
@@ -101,11 +115,12 @@ async function relinkRenamedRows(
 		}
 		await connection
 			.update(person)
-			.set(
-				isVerifiedRow(row)
-					? { linkedinUrl: row.linkedinUrl, title: row.title, data: row.data }
-					: { linkedinUrl: row.linkedinUrl },
-			)
+			.set({
+				linkedinUrl: row.linkedinUrl,
+				name: row.name,
+				title: row.title,
+				data: row.data,
+			})
 			.where(eq(person.id, renamed.id));
 	}
 	return toInsert;
@@ -124,21 +139,12 @@ async function readBackRows(
 		.filter((found): found is Person => found !== undefined);
 }
 
-/**
- * Relinks a row whose company and name key match an existing person under a
- * changed linkedin URL, inserts every other new person row, then for every
- * incoming verified row updates the existing row's company, title and data
- * by `(organizationId, linkedinUrl)`. A roster row never overwrites a
- * verified one by that match. Returns the current row for every incoming
- * linkedin URL, inserted, relinked, or already on record.
- */
-export async function upsertPeople(
+async function existingPeople(
 	env: DbEnv,
 	rows: NewPerson[],
-	buildDb: DbFactory<PersonUpsertConnection> = db,
+	buildDb: DbFactory<PersonUpsertConnection>,
 ): Promise<Person[]> {
-	if (rows.length === 0) return [];
-	const existing = await withConnection(env, "direct", buildDb, (connection) =>
+	return withConnection(env, "direct", buildDb, (connection) =>
 		connection
 			.select()
 			.from(person)
@@ -146,25 +152,48 @@ export async function upsertPeople(
 				or(
 					...rows.flatMap((row) => [
 						personIdentityCondition(row),
-						companyCondition(row),
+						aliasCondition(row),
 					]),
 				),
 			),
 	);
+}
+
+/** Persists people in bounded SQL batches, preserving input order, verified fields and source-proven profile aliases. */
+export async function upsertPeople(
+	env: DbEnv,
+	rows: NewPerson[],
+	buildDb: DbFactory<PersonUpsertConnection> = db,
+): Promise<Person[]> {
+	if (rows.length === 0) return [];
+	const batches = toBatches(rows, 1000);
+	const existing = new Map<string, Person>();
+	for (const batch of batches)
+		for (const row of await existingPeople(env, batch, buildDb))
+			existing.set(row.id, row);
+	const originalRows = [...existing.values()];
 	await withConnection(env, "cached", buildDb, async (connection) => {
-		const toInsert = await relinkRenamedRows(connection, existing, rows);
-		if (toInsert.length > 0) {
+		const toInsert: NewPerson[] = [];
+		for (const batch of batches)
+			toInsert.push(
+				...(await relinkRenamedRows(connection, originalRows, batch)),
+			);
+		for (const batch of toBatches(toInsert, 1000))
 			await connection
 				.insert(person)
-				.values(toInsert)
+				.values(batch)
 				.onConflictDoNothing({
 					target: [person.organizationId, person.linkedinUrl],
 				})
 				.returning();
-		}
-		await updateVerifiedRows(connection, toInsert);
+		await refreshPeopleRows(connection, toInsert);
 	});
-	return withConnection(env, "direct", buildDb, (connection) =>
-		readBackRows(connection, rows),
-	);
+	const saved: Person[] = [];
+	for (const batch of batches)
+		saved.push(
+			...(await withConnection(env, "direct", buildDb, (connection) =>
+				readBackRows(connection, batch),
+			)),
+		);
+	return saved;
 }

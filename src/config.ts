@@ -33,12 +33,10 @@ export const config = {
 	},
 	people: {
 		exaAgentPollIntervalSeconds: 5,
-		exaAgentMaxPollAttempts: 24,
+		exaAgentMaxPollAttempts: 60,
 		clayFetchTimeoutMs: 30000,
 		clayRetryAfterMaxMs: 5000,
-		companyConcurrency: 5,
-		maxVerifyPerCompany: 25,
-		verifyConcurrency: 5,
+		researchBatchSize: 10,
 	},
 	enrich: {
 		batchSize: 5,

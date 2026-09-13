@@ -17,6 +17,8 @@ export function bareCompany(domain: string): TargetCompany {
 		linkedinUrl: null,
 		icpId: null,
 		workforceTotal: null,
+		exaId: null,
+		description: null,
 	};
 }
 
@@ -132,50 +134,3 @@ export function verifyCandidate(
 		seenBy: ["clay:c-suite"],
 	};
 }
-
-export const CONFIRMED_VERDICT = {
-	verdict: "CONFIRMED",
-	evidence_url: "https://news.example/jordan-blake-joins-as-vp-sales",
-	evidence_quote: "Jordan Blake leads sales as VP Sales.",
-	evidence_kind: "press",
-	confidence: 0.9,
-};
-
-export const UNKNOWN_VERDICT = {
-	verdict: "UNKNOWN",
-	evidence_url: null,
-	evidence_quote: null,
-	evidence_kind: null,
-	confidence: 0.1,
-};
-
-export const CONTRADICTED_VERDICT = {
-	verdict: "CONTRADICTED",
-	evidence_url: null,
-	evidence_quote: null,
-	evidence_kind: null,
-	confidence: 0.2,
-};
-
-export const AGGREGATOR_CONFIRMED_VERDICT = {
-	verdict: "CONFIRMED",
-	evidence_url: "https://peoplesite.example/jordan-blake",
-	evidence_quote: "Jordan Blake — VP Sales",
-	evidence_kind: "aggregator",
-	confidence: 0.5,
-};
-
-export const UNKNOWN_VERDICT_WITH_URL = {
-	verdict: "UNKNOWN",
-	evidence_url: "https://verifytarget.example/unclear",
-	evidence_quote: "an ambiguous mention of the role",
-	evidence_kind: null,
-	confidence: 0.3,
-};
-
-export const JORDAN_BLAKE_ROSTER_ROW = {
-	name: "Jordan Blake",
-	url: "https://linkedin.com/in/jordan-blake",
-	title: "VP Sales",
-	company: "Verify Target Co",
-};

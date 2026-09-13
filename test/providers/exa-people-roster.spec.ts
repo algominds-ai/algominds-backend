@@ -103,7 +103,7 @@ describe("exaOrganizationId", () => {
 });
 
 describe("exaPeopleRoster", () => {
-	it("sends a people-category search naming the company and its senior titles", async () => {
+	it("sends an unfiltered people-category search naming the company", async () => {
 		let body: { query?: string; category?: string } = {};
 		globalThis.fetch = async (_input, init) => {
 			body = JSON.parse(String(init?.body));
@@ -112,14 +112,19 @@ describe("exaPeopleRoster", () => {
 
 		await exaPeopleRoster(
 			exaEnv(),
-			{ domain: "acme.com", name: "Acme" },
+			{
+				domain: "acme.com",
+				name: "Acme",
+				linkedinUrl: null,
+			},
 			ORG_ID,
 			new CostLedger(),
 		);
 
 		expect(body.category).toBe("people");
-		expect(body.query).toContain("Acme");
-		expect(body.query).toContain("founder");
+		expect(body.query).toBe(
+			"People currently working at Acme, acme.com, official company acme.com",
+		);
 	});
 
 	it("drops a person whose current employer is a different organization id", async () => {
@@ -136,7 +141,11 @@ describe("exaPeopleRoster", () => {
 
 		const result = await exaPeopleRoster(
 			exaEnv(),
-			{ domain: "acme.com", name: "Acme" },
+			{
+				domain: "acme.com",
+				name: "Acme",
+				linkedinUrl: null,
+			},
 			ORG_ID,
 			new CostLedger(),
 		);
@@ -159,7 +168,11 @@ describe("exaPeopleRoster", () => {
 
 		const result = await exaPeopleRoster(
 			exaEnv(),
-			{ domain: "acme.com", name: "Acme" },
+			{
+				domain: "acme.com",
+				name: "Acme",
+				linkedinUrl: null,
+			},
 			ORG_ID,
 			new CostLedger(),
 		);

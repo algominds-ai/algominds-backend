@@ -11,6 +11,8 @@ export type TargetCompany = {
 	linkedinUrl: string | null;
 	icpId: string | null;
 	workforceTotal: number | null;
+	exaId: string | null;
+	description: string | null;
 };
 
 export type TargetCompanies = {
@@ -37,6 +39,8 @@ async function targetByRun(
 			linkedinUrl: row.linkedinUrl,
 			icpId: row.icpId,
 			workforceTotal: row.workforceTotal,
+			exaId: row.exaId,
+			description: row.description,
 		})),
 		icpId: runRow.icpId,
 		unknownDomains: [],
@@ -85,6 +89,8 @@ function toTargetCompany(
 			linkedinUrl: null,
 			icpId: profileId,
 			workforceTotal: null,
+			exaId: null,
+			description: null,
 		};
 	}
 	return {
@@ -94,6 +100,8 @@ function toTargetCompany(
 		linkedinUrl: row.linkedinUrl,
 		icpId: profileId,
 		workforceTotal: row.workforceTotal,
+		exaId: row.exaId,
+		description: row.description,
 	};
 }
 

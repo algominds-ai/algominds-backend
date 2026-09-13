@@ -8,7 +8,6 @@ interface __BaseEnv_Env {
 	FINDYMAIL_API_KEY: SecretsStoreSecret;
 	CF_AIG_TOKEN: SecretsStoreSecret;
 	CLAY_API_KEY: SecretsStoreSecret;
-	GL_API_KEY: SecretsStoreSecret;
 	AI_GATEWAY_BASE_URL: string;
 	CF_ACCOUNT_ID: string;
 	CF_GATEWAY_ID: string;
@@ -19,7 +18,6 @@ interface __BaseEnv_Env {
 	EXA_API_KEY: string;
 	BRIGHTDATA_API_TOKEN: string;
 	CLAY_API_KEY: string;
-	GL_API_KEY: string;
 	APOLLO_API_KEY: string;
 	FINDYMAIL_API_KEY: string;
 	DATABASE_URL: string;
@@ -47,7 +45,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "AI_GATEWAY_BASE_URL" | "CF_ACCOUNT_ID" | "CF_GATEWAY_ID" | "MODEL_ROUTE_REASONING" | "MODEL_ROUTE_WORKER" | "CF_AIG_TOKEN" | "OPENROUTER_API_KEY" | "EXA_API_KEY" | "BRIGHTDATA_API_TOKEN" | "CLAY_API_KEY" | "GL_API_KEY" | "APOLLO_API_KEY" | "FINDYMAIL_API_KEY" | "DATABASE_URL" | "PORT" | "API_BEARER_TOKEN" | "EVAL_API_KEY_MSTONE" | "EVAL_API_KEY_FORM3" | "EVAL_API_KEY_ARIS" | "EVAL_API_KEY_CARTA" | "BRAINTRUST_API_KEY" | "EVAL_API_KEY_ONDATO">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "AI_GATEWAY_BASE_URL" | "CF_ACCOUNT_ID" | "CF_GATEWAY_ID" | "MODEL_ROUTE_REASONING" | "MODEL_ROUTE_WORKER" | "CF_AIG_TOKEN" | "OPENROUTER_API_KEY" | "EXA_API_KEY" | "BRIGHTDATA_API_TOKEN" | "CLAY_API_KEY" | "APOLLO_API_KEY" | "FINDYMAIL_API_KEY" | "DATABASE_URL" | "PORT" | "API_BEARER_TOKEN" | "EVAL_API_KEY_MSTONE" | "EVAL_API_KEY_FORM3" | "EVAL_API_KEY_ARIS" | "EVAL_API_KEY_CARTA" | "BRAINTRUST_API_KEY" | "EVAL_API_KEY_ONDATO">> {}
 }
 
 // Begin runtime types

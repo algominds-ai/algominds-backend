@@ -44,7 +44,7 @@ describe("Clay's two-call search contract", () => {
 
 		const result = await claySearch(
 			clayEnv(),
-			{ identifier: "harborit.com", bands: ["c-suite"], keywords: ["revenue"] },
+			{ identifier: "harborit.com" },
 			ledger,
 		);
 
@@ -54,8 +54,6 @@ describe("Clay's two-call search contract", () => {
 			source_type: "people",
 			filters: {
 				company_identifier: ["harborit.com"],
-				job_title_seniority_levels_v2: ["c-suite"],
-				job_title_keywords: ["revenue"],
 			},
 		});
 		expect(JSON.parse(String(calls.inits[1]?.body))).toEqual({ limit: 500 });
@@ -140,6 +138,7 @@ describe("Clay failure modes", () => {
 			],
 			quotaUsed: 0,
 			rejected: true,
+			capped: false,
 		});
 		expect(calls.runCalls).toBe(1);
 	});

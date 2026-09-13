@@ -182,29 +182,3 @@ function queryText(
 		? selected.join("\n...\n")
 		: text.slice(0, textMaxCharacters);
 }
-
-/** `"found"` or `"missing"` when the page fetched cleanly, else the vendor's error tag for that URL. */
-export type QuoteCheckReason = string;
-
-export type QuoteCheckOutcome = { found: boolean; reason: QuoteCheckReason };
-
-/**
- * Confirms a quote appears on a page, over Exa's `/contents` crawl rather
- * than a direct fetch. A crawl failure reports its vendor tag as the reason;
- * otherwise the reason is `"found"` or `"missing"`.
- */
-export async function quoteOnPage(
-	url: string,
-	quote: string,
-	env: Env,
-	ledger: CostLedger,
-): Promise<QuoteCheckOutcome> {
-	const contents = await exaContents([url], env, ledger);
-	const status = contents.statuses[0];
-	if (status?.status === "error") {
-		return { found: false, reason: status.tag ?? "CRAWL_UNKNOWN_ERROR" };
-	}
-	const text = contents.results[0]?.text ?? "";
-	const found = quoteFoundInText(text, quote);
-	return { found, reason: found ? "found" : "missing" };
-}

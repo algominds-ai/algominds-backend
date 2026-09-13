@@ -92,7 +92,7 @@ const companyRow = storedRow(
 
 const personRow = storedRow(
 	"Person",
-	"One person row as stored, with its id, the company it belongs to, and its LinkedIn URL, name and title where known. `data.status` is verified or roster.",
+	"One person row as stored, with its id, company, LinkedIn URL, name and title where known. `data.status` is verified, pending or roster. Pending means current identity, employment, role or fit remains unresolved. `data.basis` explains the decision; `data.buyerFit` distinguishes direct and adjacent matches when evaluated.",
 );
 
 function pageResponse<Row extends z.ZodTypeAny>(row: Row) {

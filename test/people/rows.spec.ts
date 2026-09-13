@@ -38,6 +38,7 @@ describe("toNewPerson", () => {
 				seenBy: ["clay"],
 				since: "2022-01",
 				location: "Austin, TX",
+				aliases: [],
 			},
 		});
 	});
@@ -56,6 +57,7 @@ describe("toNewPerson", () => {
 			seenBy: ["clay"],
 			since: "2022-01",
 			location: "Austin, TX",
+			aliases: [],
 		});
 	});
 

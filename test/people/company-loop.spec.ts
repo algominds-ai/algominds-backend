@@ -1,246 +1,306 @@
-import { describe, expect, it } from "vitest";
+import { env as testEnv } from "cloudflare:workers";
+import { afterEach, describe, expect, it } from "vitest";
+import { CostLedger } from "@/core/cost";
+import { findRun, saveRunCompanies } from "@/core/db/queries";
 import { resolveBuyer } from "@/core/people/buyer";
-import type { CompanyLoopContext } from "@/workflows/find-people-company";
-import { runCompanies, runOneCompany } from "@/workflows/find-people-company";
-import { rescueUnresolved } from "@/workflows/find-people-rescue";
-import { fakeSecretEnv } from "../support/env";
 import {
-	exaPeopleSearchResponse,
-	fakeVendors,
-	jsonResponse,
-	stubClayRejectFetch,
-	stubGetleadsFetch,
-} from "../support/fetch";
+	type CompanyLoopContext,
+	type CompanyProgress,
+	runCompanies,
+	runOneCompany,
+} from "@/workflows/find-people-company";
+import { buyPeopleStep } from "@/workflows/find-people-spend";
+import { fakeModelEnv, fakeSecretEnv } from "../support/env";
+import { fakePeopleVendors } from "../support/people";
 import { fakeWorkflowStep } from "../support/step";
 import {
 	bareCompany,
 	cleanupPeopleRun,
-	companyRowsFor,
 	evidenceRowsFor,
+	personRowsFor,
 	runCompanyRowsFor,
 	type SeededPeopleRun,
 	seedPeopleRun,
 } from "./support";
 
-function contextFor(
-	seed: SeededPeopleRun,
-	overrides: Map<string, unknown>,
-): CompanyLoopContext {
+const originalFetch = globalThis.fetch;
+const seeds: SeededPeopleRun[] = [];
+afterEach(async () => {
+	globalThis.fetch = originalFetch;
+	for (const seed of seeds) await cleanupPeopleRun(seed);
+	seeds.length = 0;
+});
+
+async function context(label: string): Promise<CompanyLoopContext> {
+	const seed = await seedPeopleRun(label);
+	seeds.push(seed);
 	return {
-		env: fakeSecretEnv({ CLAY_API_KEY: "test-clay-key" }),
-		step: fakeWorkflowStep(overrides).step,
+		env: fakeModelEnv(
+			{},
+			fakeSecretEnv({ EXA_API_KEY: "test", CLAY_API_KEY: "test" }),
+		),
+		step: fakeWorkflowStep().step,
 		runId: seed.runId,
 		organizationId: seed.org.id,
-		buyer: resolveBuyer({ target: "the sales leaders", profile: null }),
-		profile: null,
+		buyer: resolveBuyer({ target: "Founder/CEO", profile: null }),
 	};
 }
-
-describe("runOneCompany: an unresolved domain's Clay spend", () => {
-	it("banks the identity step's clay records and spend on the run_company row", async () => {
-		const domain = `unresolved-spend-${crypto.randomUUID()}.example`;
-		const seed = await seedPeopleRun("unresolved-spend");
-		try {
-			const overrides = new Map<string, unknown>([
-				[
-					`people-${domain}-identity`,
-					{
-						how: "unresolved",
-						clayRecords: 7,
-						costEntries: [{ provider: "clay", op: "search", dollars: 0.03 }],
-					},
-				],
-				[`people-${domain}-rescue`, null],
-			]);
-
-			const result = await runOneCompany(
-				contextFor(seed, overrides),
-				bareCompany(domain),
-				0,
-			);
-
-			expect(result.outcome.unresolvedDomain).toBe(domain);
-			expect(result.costDollars).toBeCloseTo(0.03);
-			const rows = await runCompanyRowsFor(seed.runId);
-			expect(rows[0]?.clayRecords).toBe(7);
-			expect(rows[0]?.spendDollars).toBeCloseTo(0.03);
-		} finally {
-			await cleanupPeopleRun(seed);
-		}
-	});
-});
-
-describe("FindPeopleWorkflow: a Clay-rejected domain", () => {
-	it("writes identity: unresolved and lists the domain as unknown, with no roster call", async () => {
-		const domain = "notacompany.example";
-		const seed = await seedPeopleRun("reject");
-		try {
-			const calls = stubClayRejectFetch();
-
-			const result = await runCompanies(
-				contextFor(seed, new Map()),
-				[bareCompany(domain)],
-				0,
-			);
-
-			expect(result.unknownDomains).toEqual([domain]);
-			expect(result.peopleVerified).toBe(0);
-			expect(result.peopleRoster).toBe(0);
-			expect(calls.runCalls).toBe(1);
-
-			const runCompanyRows = await runCompanyRowsFor(seed.runId);
-			expect(runCompanyRows[0]?.identity).toBe("unresolved");
-			expect(runCompanyRows[0]?.companyId).toBeNull();
-			expect(await companyRowsFor(seed.org.id)).toHaveLength(0);
-		} finally {
-			await cleanupPeopleRun(seed);
-		}
-	});
-});
-
-const STEVE = {
-	first_name: "Steve",
-	last_name: "Apostolopoulos",
-	job_title: "Co Founder and President",
-	person_linkedin_url: "https://www.linkedin.com/in/steve-a",
-	person_city: "Toronto",
-	person_country_name: "Canada",
+const company = {
+	...bareCompany("example.com"),
+	name: "Example",
+	exaId: "exact-employer",
 };
+const rows = [
+	{
+		name: "Alex Doe",
+		title: "Founder",
+		company: "Example",
+		url: "https://linkedin.com/in/alex",
+		location: null,
+		since: null,
+	},
+];
 
-const TEST_ORGANIZATION_ID = "https://exa.ai/library/organization/test";
-
-async function rescue(
-	seed: SeededPeopleRun,
-	domain: string,
-	organizationId: string | null = TEST_ORGANIZATION_ID,
-) {
-	const ctx: CompanyLoopContext = {
-		...contextFor(seed, new Map()),
-		env: fakeSecretEnv({
-			GL_API_KEY: "test-gl-key",
-			EXA_API_KEY: "test-exa-key",
-		}),
-	};
-	return rescueUnresolved(
-		ctx,
-		bareCompany(domain),
-		{ runCompanyId: crypto.randomUUID(), organizationId },
-		{ how: "unresolved", clayRecords: 2, costEntries: [] },
-	);
-}
-
-describe("a domain Clay cannot resolve is rescued from GetLeads", () => {
-	const originalFetch = globalThis.fetch;
-
-	it("returns the GetLeads decision makers as the roster", async () => {
-		const seed = await seedPeopleRun("rescue");
-		try {
-			stubGetleadsFetch([STEVE]);
-			const rescued = await rescue(seed, "caary.com");
-			expect(rescued.candidates.map((c) => c.name)).toEqual([
-				"Steve Apostolopoulos",
-			]);
-			expect(rescued.clayRecords).toBe(2);
-		} finally {
-			globalThis.fetch = originalFetch;
-			await cleanupPeopleRun(seed);
-		}
+describe("people company flow", () => {
+	it("persists Search's corrected title and evidence without starting an agent", async () => {
+		const ctx = await context("sources");
+		const vendors = fakePeopleVendors(rows, {
+			correctedTitle: "Founder and CEO",
+		});
+		globalThis.fetch = vendors.fetch;
+		const result = await runOneCompany(ctx, company, 0);
+		expect(result.outcome).toMatchObject({ verified: 1, capped: false });
+		const [person] = await personRowsFor(ctx.organizationId);
+		expect(person?.title).toBe("Founder and CEO");
+		expect(person?.linkedinUrl).toBe("https://linkedin.com/in/alex");
+		const evidence = await evidenceRowsFor(person?.id ?? "");
+		expect(
+			evidence.some(
+				(row) =>
+					row.kind === "verify-search" &&
+					row.source === "exa" &&
+					row.value.includes('"decision":"verified"'),
+			),
+		).toBe(true);
+		expect(
+			vendors.calls.filter((url) => url.endsWith("/agent/runs")),
+		).toHaveLength(0);
+		expect(
+			vendors.calls.filter((url) => url.endsWith("/chat/completions")),
+		).toHaveLength(0);
+		expect(vendors.calls.some((url) => url.endsWith("/contents"))).toBe(false);
 	});
-
-	it("returns an empty roster, with its cost entries, when GetLeads and the Exa people index both hold nobody", async () => {
-		const seed = await seedPeopleRun("rescue-nobody");
-		try {
-			globalThis.fetch = fakeVendors(
-				{
-					"/api/v1/contacts/lookup/decision-makers": () =>
-						jsonResponse({ ok: "True", contacts: [], query_credits_used: "0" }),
-				},
-				{ "/search": () => exaPeopleSearchResponse([], 0) },
-			);
-			const rescued = await rescue(seed, "nobody.example");
-			expect(rescued.candidates).toEqual([]);
-			expect(rescued.clayRecords).toBe(2);
-			expect(rescued.costEntries).toEqual([
-				{ provider: "exa", op: "search", dollars: 0 },
-			]);
-		} finally {
-			globalThis.fetch = originalFetch;
-			await cleanupPeopleRun(seed);
-		}
+	it("retrieves a company roster without seniority or title filters", async () => {
+		const ctx = await context("unfiltered");
+		const vendors = fakePeopleVendors(rows);
+		let rosterRequest: unknown;
+		globalThis.fetch = async (input, init) => {
+			if (String(input).endsWith("/search/filters-mode"))
+				rosterRequest = JSON.parse(String(init?.body));
+			return vendors.fetch(input, init);
+		};
+		await runOneCompany(ctx, company, 0);
+		expect(rosterRequest).toEqual({
+			source_type: "people",
+			filters: { company_identifier: ["example.com"] },
+		});
+		expect(
+			vendors.calls.filter((url) => url.endsWith("/search/filters-mode")),
+		).toHaveLength(1);
 	});
 });
 
-describe("one company's failure never ends the run", () => {
-	it("records the failed company as run evidence, reports it unresolved, and runs the next company", async () => {
-		const broken = `broken-${crypto.randomUUID()}.example`;
-		const next = `next-${crypto.randomUUID()}.example`;
-		const seed = await seedPeopleRun("skip-failed");
-		try {
-			const overrides = new Map<string, unknown>([
-				[`people-${broken}-open`, new Error("Model call timed out twice")],
-				[
-					`people-${next}-identity`,
-					{ how: "unresolved", clayRecords: 0, costEntries: [] },
-				],
-				[`people-${next}-rescue`, null],
-			]);
-
-			const result = await runCompanies(
-				contextFor(seed, overrides),
-				[bareCompany(broken), bareCompany(next)],
-				0,
-			);
-
-			expect(result.companiesSearched).toBe(2);
-			expect(result.unknownDomains).toEqual(
-				expect.arrayContaining([broken, next]),
-			);
-			const evidence = await evidenceRowsFor(seed.runId);
-			const failure = evidence.find((row) => row.kind === "company-error");
-			expect(failure?.value).toContain(broken);
-			expect(failure?.value).toContain("Model call timed out twice");
-		} finally {
-			await cleanupPeopleRun(seed);
-		}
+it("researches ICP bands separately and retains every small-roster candidate", async () => {
+	const ctx = await context("grouped");
+	const roster = ["Founder", "VP", "Founder", "VP"].map((title, id) => ({
+		name: `Person ${id}`,
+		title,
+		company: "Example",
+		url: `https://linkedin.com/in/person-${id}`,
+		location: null,
+		since: null,
+	}));
+	const vendors = fakePeopleVendors(roster, {
+		filterRejectedIds: [0],
+		searchUnresolvedIds: [0, 1, 2, 3],
 	});
-
-	it("still counts the paid identity step's spend when the roster step then throws", async () => {
-		const domain = `roster-throws-${crypto.randomUUID()}.example`;
-		const seed = await seedPeopleRun("roster-throws");
-		try {
-			const overrides = new Map<string, unknown>([
-				[
-					`people-${domain}-identity`,
-					{
-						how: "domain",
-						identifier: domain,
-						name: "Failing Co",
-						clayRecords: 3,
-						costEntries: [{ provider: "clay", op: "search", dollars: 0.05 }],
-					},
-				],
-				[
-					`people-${domain}-organization`,
-					{ organizationId: null, workforceTotal: null, costEntries: [] },
-				],
-				[`people-${domain}-roster`, new Error("roster step blew up")],
-			]);
-
-			const result = await runCompanies(
-				contextFor(seed, overrides),
-				[bareCompany(domain)],
-				0,
-			);
-
-			expect(result.companiesSearched).toBe(1);
-			expect(result.unknownDomains).toEqual([domain]);
-			expect(result.costDollars).toBeCloseTo(0.05);
-			const evidence = await evidenceRowsFor(seed.runId);
-			const failure = evidence.find((row) => row.kind === "company-error");
-			expect(failure?.value).toContain(domain);
-			expect(failure?.value).toContain("roster step blew up");
-		} finally {
-			await cleanupPeopleRun(seed);
+	const batches: number[][] = [];
+	globalThis.fetch = async (input, init) => {
+		if (String(input).endsWith("/agent/runs")) {
+			const request = JSON.parse(String(init?.body));
+			batches.push(request.input.data.map((row: { id: number }) => row.id));
 		}
+		return vendors.fetch(input, init);
+	};
+	const result = await runOneCompany(ctx, company, 0);
+	expect(batches).toEqual([
+		[0, 2],
+		[1, 3],
+	]);
+	expect(result.outcome).toMatchObject({ verified: 4, capped: false });
+	expect(await personRowsFor(ctx.organizationId)).toHaveLength(4);
+});
+
+describe("people partial results", () => {
+	it("retains valid research output and caps a batch with missing subjects", async () => {
+		const ctx = await context("missing");
+		globalThis.fetch = fakePeopleVendors(
+			[
+				...rows,
+				{
+					...rows[0],
+					name: "Other Person",
+					title: "CEO",
+					company: "Example",
+					url: "https://linkedin.com/in/other",
+					location: null,
+					since: null,
+				},
+			],
+			{ omittedIds: [1], searchUnresolvedIds: [1] },
+		).fetch;
+		const result = await runOneCompany(ctx, company, 0);
+		expect(result.outcome.verified).toBe(1);
+		expect(result.outcome.capped).toBe(true);
+		const [stored] = await runCompanyRowsFor(ctx.runId);
+		expect(
+			(await evidenceRowsFor(stored?.id ?? "")).some(
+				(row) =>
+					row.kind.includes("coverage") && row.value.includes('"missing":[1]'),
+			),
+		).toBe(true);
 	});
+	it("runs one fallback for an empty company roster and reports no invented people", async () => {
+		const ctx = await context("fallback");
+		const vendors = fakePeopleVendors([], {
+			emptyClay: true,
+		});
+		globalThis.fetch = vendors.fetch;
+		const result = await runOneCompany(ctx, company, 0);
+		expect(vendors.calls.filter((url) => url.endsWith("/search"))).toHaveLength(
+			1,
+		);
+		expect(result.outcome.verified).toBe(0);
+		expect(result.outcome.capped).toBe(false);
+	});
+});
+
+describe("people company settlement", () => {
+	it("cancels a timed-out medium run and retains its fee before surfacing incomplete work", async () => {
+		const ctx = await context("settle");
+		const vendors = fakePeopleVendors(rows, {
+			pending: true,
+			searchUnresolvedIds: [0],
+		});
+		globalThis.fetch = vendors.fetch;
+		const result = await runOneCompany(ctx, company, 0);
+		expect(result.outcome.capped).toBe(true);
+		expect(result.costDollars).toBeCloseTo(0.042);
+		expect(vendors.calls.some((url) => url.endsWith("/cancel"))).toBe(true);
+		expect((await findRun(testEnv, ctx.runId))?.costDollars).toBeCloseTo(
+			result.costDollars,
+		);
+	});
+	it("errors an unbilled settlement and retains its nonzero reservation evidence", async () => {
+		const ctx = await context("unknown-bill");
+		globalThis.fetch = fakePeopleVendors(rows, {
+			pending: true,
+			unknownBill: true,
+			searchUnresolvedIds: [0],
+		}).fetch;
+		await expect(runOneCompany(ctx, company, 0)).rejects.toThrow(
+			"billing remains unknown",
+		);
+		const [stored] = await runCompanyRowsFor(ctx.runId);
+		expect(
+			(await evidenceRowsFor(stored?.id ?? "")).some((row) =>
+				row.value.includes('"reservedDollars":0.1'),
+			),
+		).toBe(true);
+	});
+	it("stops admitting companies at the existing spend ceiling", async () => {
+		const ctx = await context("ceiling");
+		const vendors = fakePeopleVendors(rows);
+		globalThis.fetch = vendors.fetch;
+		const result = await runCompanies(ctx, [company], 2);
+		expect(result.companiesSearched).toBe(0);
+		expect(result.capped).toBe(true);
+		expect(vendors.calls).toHaveLength(0);
+	});
+});
+
+async function progressFor(ctx: CompanyLoopContext): Promise<CompanyProgress> {
+	const [row] = await saveRunCompanies(ctx.env, [
+		{
+			runId: ctx.runId,
+			domain: company.domain,
+			companyId: null,
+			identity: null,
+			mode: "target",
+			buyerSource: "target",
+		},
+	]);
+	if (!row) throw new Error("Missing company run");
+	return {
+		company,
+		companyId: "",
+		runCompanyId: row.id,
+		spentSoFar: 0,
+		ledger: new CostLedger(),
+		clayRecords: 0,
+		discovered: 0,
+		eligible: 0,
+		researched: 0,
+		checked: 0,
+		verified: 0,
+		roster: 0,
+		capped: false,
+		billingUnknown: false,
+		unresolved: false,
+		contextResolved: false,
+	};
+}
+
+it("banks a failed purchase's reported fee and error before surfacing the failure", async () => {
+	const ctx = await context("partial-cost");
+	const progress = await progressFor(ctx);
+	await expect(
+		buyPeopleStep(ctx, progress, "partial", async (ledger) => {
+			ledger.reported("exa", "contents", 0.017);
+			throw new Error("Output unreadable");
+		}),
+	).rejects.toThrow("Output unreadable");
+	expect((await findRun(testEnv, ctx.runId))?.costDollars).toBeCloseTo(0.017);
+	const evidence = await evidenceRowsFor(progress.runCompanyId);
+	expect(
+		evidence.some(
+			(row) =>
+				row.value.includes('"costDollars":0.017') &&
+				row.value.includes("Output unreadable"),
+		),
+	).toBe(true);
+});
+
+it("researches every plausible buyer beyond the old first-twenty-five limit", async () => {
+	const ctx = await context("large-roster");
+	const roster = Array.from({ length: 30 }, (_, id) => ({
+		name: `Person ${id}`,
+		title: "Founder",
+		company: "Example",
+		url: `https://linkedin.com/in/person-${id}`,
+		location: null,
+		since: null,
+	}));
+	const vendors = fakePeopleVendors(roster);
+	globalThis.fetch = vendors.fetch;
+	const result = await runOneCompany(ctx, company, 0);
+	expect(result.outcome).toMatchObject({ verified: 30, capped: false });
+	expect(
+		vendors.calls.filter((url) => url.endsWith("/agent/runs")),
+	).toHaveLength(0);
+	expect(
+		vendors.calls.filter((url) => url.endsWith("/chat/completions")),
+	).toHaveLength(1);
+	expect(vendors.calls.some((url) => url.endsWith("/contents"))).toBe(false);
+	expect(await personRowsFor(ctx.organizationId)).toHaveLength(30);
 });

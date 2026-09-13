@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { NewEvidence, NewPerson } from "@/core/db/schema";
 import type { Candidate } from "@/core/people/candidate";
 
-export const PersonStatusSchema = z.enum(["verified", "roster"]);
+export const PersonStatusSchema = z.enum(["verified", "pending", "roster"]);
 export type PersonStatus = z.infer<typeof PersonStatusSchema>;
 
 export const PersonDataSchema = z.object({
@@ -11,6 +11,10 @@ export const PersonDataSchema = z.object({
 	seenBy: z.array(z.string()),
 	since: z.string().nullable(),
 	location: z.string().nullable(),
+	aliases: z.array(z.string()).optional(),
+	buyerFit: z
+		.enum(["direct", "adjacent", "unrelated", "unresolved"])
+		.optional(),
 });
 export type PersonData = z.infer<typeof PersonDataSchema>;
 
@@ -39,6 +43,7 @@ export function toNewPerson(
 			seenBy: candidate.seenBy,
 			since: candidate.since,
 			location: candidate.location,
+			aliases: [],
 		}),
 	};
 }

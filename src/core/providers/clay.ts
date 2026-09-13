@@ -8,32 +8,8 @@ const CLAY_BASE_URL = "https://api.clay.com/public/v0";
 const CLAY_MAX_PAGES = 5;
 const CLAY_RUN_LIMIT = 500;
 
-/** Clay's closed set of fourteen seniority bands, in Clay's own order. */
-export const CLAY_BANDS = [
-	"founder",
-	"owner",
-	"board-member",
-	"partner",
-	"c-suite",
-	"vp",
-	"director",
-	"head",
-	"manager",
-	"senior",
-	"mid-level",
-	"entry",
-	"intern",
-	"unknown",
-] as const;
-
-const ClayBandSchema = z.enum(CLAY_BANDS);
-
-export type ClayBand = z.infer<typeof ClayBandSchema>;
-
 export type ClaySearchInput = {
 	identifier: string;
-	bands?: ClayBand[];
-	keywords?: string[];
 };
 
 export type ClayRow = {
@@ -50,17 +26,13 @@ export type ClaySearchResult = {
 	raw: string[];
 	quotaUsed: number;
 	rejected: boolean;
-};
-
-type ClayFilters = {
-	company_identifier: string[];
-	job_title_seniority_levels_v2?: ClayBand[];
-	job_title_keywords?: string[];
+	capped: boolean;
+	error?: string;
 };
 
 type ClaySearchCreateRequest = {
 	source_type: "people";
-	filters: ClayFilters;
+	filters: { company_identifier: string[] };
 };
 
 const ClaySearchCreateResponseSchema = z
@@ -74,6 +46,14 @@ const ClaySearchRowSchema = z
 		latest_experience_title: z.string().nullish(),
 		latest_experience_company: z.string().nullish(),
 		latest_experience_start_date: z.string().nullish(),
+		matched_experience: z
+			.object({
+				job_title: z.string().nullish(),
+				company_name: z.string().nullish(),
+				start_date: z.string().nullish(),
+			})
+			.nullish()
+			.catch(null),
 		location: z.string().nullish(),
 		structured_location: z
 			.object({ city: z.string().nullish(), country: z.string().nullish() })
@@ -91,15 +71,29 @@ const ClaySearchRunResponseSchema = z
 
 type ClayFetchContext = { apiKey: string; timeoutMs: number };
 
-const LINKEDIN_PERSON_URL_PATTERN = /linkedin\.com\/in\/([^/?#]+)/i;
-
-/** Canonical LinkedIn person URL: `https://linkedin.com/in/<slug>`, or null when `raw` names no profile. */
+/** Canonical LinkedIn profile URL after validating the actual host and profile path. */
 export function canonicalPersonUrl(
 	raw: string | null | undefined,
 ): string | null {
 	if (!raw) return null;
-	const match = raw.toLowerCase().match(LINKEDIN_PERSON_URL_PATTERN);
-	return match ? `https://linkedin.com/in/${match[1]}` : null;
+	try {
+		const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
+		const host = url.hostname.toLowerCase();
+		if (
+			!["https:", "http:"].includes(url.protocol) ||
+			url.username ||
+			url.password ||
+			url.port
+		)
+			return null;
+		if (host !== "linkedin.com" && !host.endsWith(".linkedin.com")) return null;
+		const parts = url.pathname.split("/").filter(Boolean);
+		return parts.length === 2 && parts[0] === "in" && parts[1]
+			? `https://linkedin.com/in/${parts[1].toLowerCase()}`
+			: null;
+	} catch {
+		return null;
+	}
 }
 
 function structuredLocation(
@@ -114,19 +108,19 @@ function structuredLocation(
 function toClayRow(row: z.infer<typeof ClaySearchRowSchema>): ClayRow {
 	return {
 		name: row.name ?? null,
-		title: row.latest_experience_title ?? null,
-		company: row.latest_experience_company ?? null,
+		title:
+			row.matched_experience?.job_title ?? row.latest_experience_title ?? null,
+		company:
+			row.matched_experience?.company_name ??
+			row.latest_experience_company ??
+			null,
 		url: canonicalPersonUrl(row.url),
 		location: row.location ?? structuredLocation(row.structured_location),
-		since: row.latest_experience_start_date ?? null,
+		since:
+			row.matched_experience?.start_date ??
+			row.latest_experience_start_date ??
+			null,
 	};
-}
-
-function buildFilters(input: ClaySearchInput): ClayFilters {
-	const filters: ClayFilters = { company_identifier: [input.identifier] };
-	if (input.bands) filters.job_title_seniority_levels_v2 = input.bands;
-	if (input.keywords) filters.job_title_keywords = input.keywords;
-	return filters;
 }
 
 type PostClayOutcome = { text: string; rejected: boolean };
@@ -228,7 +222,7 @@ async function createSearch(
 ): Promise<{ searchId: string; raw: string }> {
 	const request: ClaySearchCreateRequest = {
 		source_type: "people",
-		filters: buildFilters(input),
+		filters: { company_identifier: [input.identifier] },
 	};
 	const { text } = await postClay("/search/filters-mode", request, ctx);
 	const parsed = ClaySearchCreateResponseSchema.safeParse(
@@ -281,6 +275,14 @@ function quotaDelta(
 	return Math.max(end - start, rows);
 }
 
+function partialPageError(
+	error: unknown,
+	priorRows: number,
+): { error: string } {
+	if (priorRows === 0) throw error;
+	return { error: error instanceof Error ? error.message : String(error) };
+}
+
 /**
  * Runs Clay's two-step people search over `input.identifier`, paging the
  * created search until `has_more` is false or the code-level page ceiling is
@@ -301,26 +303,44 @@ export async function claySearch(
 	const raw = [created.raw];
 	let rows: ClayRow[] = [];
 	let quotaStart: number | null = null;
+	let capped = false;
 	let quotaEnd: number | null = null;
 	for (let page = 0; page < CLAY_MAX_PAGES; page++) {
-		const result = await runPage(created.searchId, ctx);
+		const result = await runPage(created.searchId, ctx).catch(
+			(error: unknown) => partialPageError(error, rows.length),
+		);
+		if ("error" in result)
+			return {
+				rows,
+				raw,
+				quotaUsed: quotaDelta(quotaStart, quotaEnd, rows.length),
+				rejected: false,
+				capped: true,
+				error: result.error,
+			};
 		raw.push(result.raw);
 		if (result.rejected) {
-			return { rows: [], raw, quotaUsed: 0, rejected: true };
+			return {
+				rows,
+				raw,
+				quotaUsed: rows.length,
+				rejected: true,
+				capped: rows.length > 0,
+			};
 		}
 		rows = rows.concat(result.page.data.map(toClayRow));
+		ledger.metered("clay", "search", result.page.data.length, "records");
+		capped = result.page.has_more;
 		const used = result.page.period_quota?.used;
-		if (used !== undefined) {
-			quotaStart = quotaStart ?? used;
-			quotaEnd = used;
-		}
-		if (!result.page.has_more) break;
+		quotaStart ??= used ?? null;
+		quotaEnd = used ?? quotaEnd;
+		if (!result.page.has_more || result.page.data.length === 0) break;
 	}
-	ledger.metered("clay", "search", rows.length, "records");
 	return {
 		rows,
 		raw,
 		quotaUsed: quotaDelta(quotaStart, quotaEnd, rows.length),
 		rejected: false,
+		capped,
 	};
 }

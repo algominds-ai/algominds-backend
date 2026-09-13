@@ -372,11 +372,7 @@ export function stubClayRejectFetch(): { runCalls: number } {
 	return calls;
 }
 
-export type ClayCreateFilters = {
-	company_identifier: string[];
-	job_title_seniority_levels_v2?: string[];
-	job_title_keywords?: string[];
-};
+export type ClayCreateFilters = { company_identifier: string[] };
 
 function clayCreateFilters(init: RequestInit | undefined): ClayCreateFilters {
 	const body: { filters?: ClayCreateFilters } = JSON.parse(
@@ -385,25 +381,6 @@ function clayCreateFilters(init: RequestInit | undefined): ClayCreateFilters {
 	if (!body.filters)
 		throw new Error("expected a Clay create body with filters");
 	return body.filters;
-}
-
-/** Stubs `globalThis.fetch` as Clay's create-then-run search, recording every create call's filters and answering every run with an empty page. */
-export function stubClayCreateCapture(): {
-	creates: ClayCreateFilters[];
-	runCalls: number;
-} {
-	const creates: ClayCreateFilters[] = [];
-	const state = { creates, runCalls: 0 };
-	globalThis.fetch = async (input, init) => {
-		const path = new URL(String(input)).pathname;
-		if (path === "/public/v0/search/filters-mode") {
-			state.creates.push(clayCreateFilters(init));
-			return clayResponse({ search_id: `search-${state.creates.length}` });
-		}
-		state.runCalls += 1;
-		return clayResponse({ data: [], has_more: false });
-	};
-	return state;
 }
 
 export type CapturedRequest = { url: string; headers: Headers; body: unknown };
@@ -588,10 +565,4 @@ export function deferredGateway(): {
 		});
 	};
 	return { fetch: handler, calls, resolvers };
-}
-
-/** Points `fetch` at a GetLeads decision-makers reply carrying `contacts`. */
-export function stubGetleadsFetch(contacts: unknown[]): void {
-	globalThis.fetch = async () =>
-		jsonResponse({ ok: "True", contacts, query_credits_used: "1" });
 }

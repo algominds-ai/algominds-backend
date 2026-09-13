@@ -86,27 +86,11 @@ companies:
   exaPollBudgetPerSecond: 2
 
 people:
-  # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
-  # Polls allowed before a stuck exa-agent run is treated as failed. 24 polls
-  # at 5 seconds is 2 minutes, well past the measured 5-second completion time.
-  exaAgentMaxPollAttempts: 24
-  # Milliseconds before a Clay create or run fetch is treated as timed out.
+  exaAgentMaxPollAttempts: 60
   clayFetchTimeoutMs: 30000
-  # Cap on the single wait after a Clay 429, whether from Retry-After or the
-  # one-second default used when Clay sends no header.
   clayRetryAfterMaxMs: 5000
-  # Companies run at once in one batch. Each company mostly waits on vendors
-  # (Clay, the Exa agent), so batching companies overlaps that wait time
-  # instead of paying it once per company.
-  companyConcurrency: 5
-  # Safety bound on picks verified per company, applied in request order after
-  # selection. Every rubric match up to this count is verified; the rubric and
-  # the spend ceiling are the real limits.
-  maxVerifyPerCompany: 25
-  # Picks verified at once per company. Exa allows ten requests a second across the whole
-  # run, and a batch of five companies starting every pick together bursts far past it.
-  verifyConcurrency: 5
+  researchBatchSize: 10
 
 enrich:
   batchSize: 5

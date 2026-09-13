@@ -12,7 +12,6 @@ type SecretKey =
 	| "EXA_API_KEY"
 	| "FINDYMAIL_API_KEY"
 	| "CLAY_API_KEY"
-	| "GL_API_KEY"
 	| "CF_AIG_TOKEN";
 
 /** The worker `Env`, with only the named secret bindings replaced by a fake `get` returning the given value. */
@@ -23,7 +22,6 @@ export function fakeSecretEnv(
 	const findymail = secrets.FINDYMAIL_API_KEY;
 	const clay = secrets.CLAY_API_KEY;
 	const aig = secrets.CF_AIG_TOKEN;
-	const gl = secrets.GL_API_KEY;
 	return {
 		...testEnv,
 		...(exa !== undefined ? { EXA_API_KEY: { get: async () => exa } } : {}),
@@ -32,7 +30,6 @@ export function fakeSecretEnv(
 			: {}),
 		...(clay !== undefined ? { CLAY_API_KEY: { get: async () => clay } } : {}),
 		...(aig !== undefined ? { CF_AIG_TOKEN: { get: async () => aig } } : {}),
-		...(gl !== undefined ? { GL_API_KEY: { get: async () => gl } } : {}),
 	};
 }
 

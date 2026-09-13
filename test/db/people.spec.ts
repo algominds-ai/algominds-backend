@@ -53,7 +53,7 @@ describe("upsertPeople: the verified employer wins and sticks", () => {
 					organizationId: fixture.org.id,
 					companyId: fixture.companyA.id,
 					linkedinUrl: fixture.linkedinUrl,
-					name: "Jordan Blake",
+					name: "Jordan B.",
 					title: "Manager",
 					data: rosterPersonData(),
 				},
@@ -70,6 +70,7 @@ describe("upsertPeople: the verified employer wins and sticks", () => {
 			]);
 
 			expect(verified[0]?.companyId).toBe(fixture.companyB.id);
+			expect(verified[0]?.name).toBe("Jordan Blake");
 
 			const afterRoster = await upsertPeople(testEnv, [
 				{
@@ -91,7 +92,7 @@ describe("upsertPeople: the verified employer wins and sticks", () => {
 });
 
 describe("upsertPeople: renamed linkedin url", () => {
-	it("corrects the url without touching a verified person's title or data", async () => {
+	it("keeps separately verified profiles separate without a proven alias", async () => {
 		const fixture = await seedPeopleFixture("upsert-relink");
 		const oldSlugUrl = `${fixture.linkedinUrl}-old`;
 		const newSlugUrl = `${fixture.linkedinUrl}-new`;
@@ -115,15 +116,50 @@ describe("upsertPeople: renamed linkedin url", () => {
 					linkedinUrl: newSlugUrl,
 					name: "Ettienne Gous",
 					title: "Someone Else",
-					data: rosterPersonData(),
+					data: verifiedPersonData(),
 				},
 			]);
 
 			expect(result[0]?.linkedinUrl).toBe(newSlugUrl);
-			expect(result[0]?.title).toBe("Sales Manager");
-			expect(result[0]?.data).toEqual(verified);
-			const stored = await namedPeople(fixture.org, "Ettienne Gous");
-			expect(stored).toHaveLength(1);
+			expect(result[0]?.title).toBe("Someone Else");
+			expect(await namedPeople(fixture.org, "Ettienne Gous")).toHaveLength(2);
+		} finally {
+			await wipeOrganizations([fixture.org.id]);
+		}
+	});
+	it("relinks a verified alias while leaving the namesake untouched", async () => {
+		const fixture = await seedPeopleFixture("upsert-alias");
+		const oldSlugUrl = `${fixture.linkedinUrl}-old`;
+		const newSlugUrl = `${fixture.linkedinUrl}-namesake`;
+		try {
+			await upsertPeople(
+				testEnv,
+				[oldSlugUrl, newSlugUrl].map((linkedinUrl) => ({
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl,
+					name: "Ettienne Gous",
+					title: "Sales Manager",
+					data: verifiedPersonData(),
+				})),
+			);
+			const correctedUrl = `${fixture.linkedinUrl}-canonical`;
+			const corrected = await upsertPeople(testEnv, [
+				{
+					organizationId: fixture.org.id,
+					companyId: fixture.companyA.id,
+					linkedinUrl: correctedUrl,
+					name: "Etienne Gous",
+					title: "Sales Director",
+					data: verifiedPersonData({ aliases: [oldSlugUrl] }),
+				},
+			]);
+			expect(corrected[0]?.linkedinUrl).toBe(correctedUrl);
+			expect(corrected[0]?.name).toBe("Etienne Gous");
+			expect(corrected[0]?.title).toBe("Sales Director");
+			expect(
+				(await namedPeople(fixture.org, "Ettienne Gous"))[0]?.linkedinUrl,
+			).toBe(newSlugUrl);
 		} finally {
 			await wipeOrganizations([fixture.org.id]);
 		}
@@ -207,4 +243,47 @@ describe("upsertPeople: exact url beats a namesake", () => {
 			await wipeOrganizations([fixture.org.id]);
 		}
 	});
+});
+
+describe("upsertPeople: large rosters", () => {
+	it("persists a large roster in order and returns final verified fields across batches", async () => {
+		const fixture = await seedPeopleFixture("upsert-large");
+		try {
+			const rows = Array.from({ length: 11000 }, (_, index) => ({
+				organizationId: fixture.org.id,
+				companyId: fixture.companyA.id,
+				linkedinUrl: `${fixture.linkedinUrl}-${index}`,
+				name: `Buyer ${index}`,
+				title: "Engineer",
+				data: rosterPersonData(),
+			}));
+			const repeated = {
+				organizationId: fixture.org.id,
+				companyId: fixture.companyA.id,
+				linkedinUrl: fixture.linkedinUrl,
+				name: "Repeated buyer",
+				title: "Old title",
+				data: rosterPersonData(),
+			};
+			const oldUrl = `${fixture.linkedinUrl}-old`;
+			const [original] = await upsertPeople(testEnv, [
+				{ ...repeated, linkedinUrl: oldUrl },
+			]);
+			rows.unshift(repeated);
+			rows.push({
+				...repeated,
+				title: "Current title",
+				data: verifiedPersonData({ aliases: [oldUrl] }),
+			});
+			const saved = await upsertPeople(testEnv, rows);
+			expect(saved.map((row) => row.linkedinUrl)).toEqual(
+				rows.map((row) => row.linkedinUrl),
+			);
+			expect(saved[0]?.title).toBe("Current title");
+			expect(saved.at(-1)?.id).toBe(saved[0]?.id);
+			expect(saved[0]?.id).toBe(original?.id);
+		} finally {
+			await wipeOrganizations([fixture.org.id]);
+		}
+	}, 10_000);
 });
