@@ -1,6 +1,6 @@
 import { PROFILES } from "@eval/profiles";
 import { type IcpDoc, IcpDocSchema } from "@/core/icp";
-import arisOutput from "../exports/onboarding-cycle-2026-09-06/aris-candidate-final.json";
+import arisOutput from "../exports/onboarding-cycle-2026-09-06/aris-company-boundary.json";
 import finalControlsInputs from "../exports/onboarding-cycle-2026-09-06/final-controls-inputs.json";
 import form3Output from "../exports/onboarding-cycle-2026-09-06/form3-candidate-final.json";
 import ondatoOutput from "../exports/onboarding-cycle-2026-09-06/original-final.json";

@@ -1,0 +1,52 @@
+{
+  "id": "aris-company-boundary",
+  "status": "complete",
+  "output": {
+    "seller": {
+      "domain": "arissearch.com",
+      "description": "Aris Search, LLC is an IT and sales recruiting/staffing firm that has helped businesses and careers across many industries for over 50 years, providing IT staffing services including placements for managed service providers, IT solutions firms, SaaS companies, healthcare, finance, manufacturing, engineering, accounting, entertainment, logistics, and industrial sectors.",
+      "customers": [],
+      "sourceUrls": [
+        "https://arissearch.com/"
+      ]
+    },
+    "icp": {
+      "offer": "Recruiting/placement services for technicians and service-delivery staff (helpdesk, cloud, network, security, project engineers, service-delivery leads) specifically for managed service providers (MSPs).",
+      "buyer": "The buyer is the person who owns the decision to engage an outside recruiter for technical hiring, or who owns the headcount those hires fill. POSITIVE (would own the budget or decision): Owner, founder, CEO, president, managing partner — at an MSP under ~150 people the owner usually makes this call personally; COO, chief services officer, chief customer officer, VP/director of service delivery, VP/director of operations, VP/director of managed services, VP/director of professional services — they own the technical headcount; head of people, HR director, VP people, director of talent acquisition, recruiting manager — they own the recruiting relationship, and at small MSPs an 'HR Manager' who is the only HR person counts; market president / regional president at a roll-up — owns a regional P&L and its hiring. INFLUENCER (not positive): service desk manager, NOC manager, engineering manager, team lead — feel the pain, rarely sign a recruiter; chief technology officer / CIO at an MSP — often owns technical strategy, sometimes owns hiring; label INFLUENCER unless the company is small enough that the CTO is a founder. HARD NEGATIVE (not a buyer for this purchase): CFO, controller, finance director — approve spend, do not choose recruiters; VP/director of sales, account executives, account managers, marketing — revenue side; chief information security officer / vCISO delivering security to clients — a delivered service role, not a hiring owner; individual engineers, technicians, analysts, project managers, consultants; board members, investors, advisors; anyone at a PARENT PE firm rather than at the MSP itself.",
+      "requirements": [
+        {
+          "kind": "required",
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "text": "Company is a managed service provider (MSP)",
+                  "window": null,
+                  "sourceRule": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "unknowns": []
+    },
+    "version": 1,
+    "extracted": true,
+    "instructions": "Aris Search is a recruiting firm that places technicians and service-delivery staff\n(helpdesk, cloud, network, security, project engineers, service-delivery leads) at managed\nservice providers. The buyer is the person who OWNS THE DECISION TO ENGAGE AN OUTSIDE\nRECRUITER for technical hiring, or who owns the headcount those hires fill.\n\n## POSITIVE (would own the budget or the decision)\n- Owner, founder, CEO, president, managing partner — at an MSP under ~150 people the owner\n  usually makes this call personally.\n- COO, chief services officer, chief customer officer, VP/director of service delivery,\n  VP/director of operations, VP/director of managed services, VP/director of professional\n  services — they own the technical headcount.\n- Head of people, HR director, VP people, director of talent acquisition, recruiting\n  manager — they own the recruiting relationship. At small MSPs an \"HR Manager\" who is the\n  only HR person counts.\n- Market president / regional president at a roll-up — owns a regional P&L and its hiring.\n\n## CHAMPION (influences, does not own) — label INFLUENCER, not positive\n- Service desk manager, NOC manager, engineering manager, team lead — feel the pain, rarely\n  sign a recruiter.\n- Chief technology officer / CIO at an MSP — often owns technical strategy, sometimes owns\n  hiring; label INFLUENCER unless the company is small enough that the CTO is a founder.\n\n## HARD NEGATIVE (looks senior, is not a buyer for THIS purchase)\n- CFO, controller, finance director — approve spend, do not choose recruiters.\n- VP/director of sales, account executives, account managers, marketing — revenue side.\n- Chief information security officer / vCISO delivering security to clients — a delivered\n  service role, not a hiring owner.\n- Individual engineers, technicians, analysts, project managers, consultants.\n- Board members, investors, advisors.\n- Anyone at a PARENT PE firm rather than at the MSP itself."
+  },
+  "cost": {
+    "total": 0.034198,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.034198
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "onboard",
+        "dollars": 0.034198
+      }
+    ]
+  },
+  "seconds": 29.574
+}
