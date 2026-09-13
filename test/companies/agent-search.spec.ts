@@ -8,16 +8,14 @@ import { AGENT_EFFORTS } from "@/core/synthesize";
 import { agentFanout } from "@/workflows/find-companies-agent";
 import { fakeSecretEnv } from "../support/env";
 import { fakeExaAgentRun } from "../support/fetch";
+import { profileFixture } from "../support/icp";
 import { fakeWorkflowStep } from "../support/step";
 
 function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
-		source: "exa-search",
+		source: "exa-agent",
 		agentEffort: "low",
 		userLocation: null,
 		countries: [],
@@ -35,13 +33,14 @@ function planFor(query: string, band?: Partial<SearchPlan>): SearchPlan {
 
 function fanoutFor(
 	step: ReturnType<typeof fakeWorkflowStep>["step"],
-	seller: Parameters<typeof agentFanout>[0]["seller"] = null,
+	icp: Parameters<typeof agentFanout>[0]["icp"] = profileFixture(),
 ) {
 	return agentFanout({
 		step,
 		round: 1,
+		remaining: 15,
 		today: "2026-08-30",
-		seller,
+		icp,
 		runId: "test-run-1",
 	});
 }
@@ -49,9 +48,13 @@ function fanoutFor(
 const AgentRunBodySchema = z.object({
 	query: z.string(),
 	systemPrompt: z.string(),
+	input: z.object({ exclusion: z.array(z.object({ website: z.string() })) }),
 	outputSchema: z.object({
 		properties: z.object({
-			companies: z.object({ minItems: z.number(), maxItems: z.number() }),
+			companies: z.object({
+				minItems: z.number().optional(),
+				maxItems: z.number(),
+			}),
 		}),
 	}),
 });
@@ -61,6 +64,7 @@ function startedRequests(started: { body: unknown }[]) {
 		const body = AgentRunBodySchema.parse(entry.body);
 		return {
 			query: body.query,
+			exclusion: body.input.exclusion,
 			systemPrompt: body.systemPrompt,
 			minItems: body.outputSchema.properties.companies.minItems,
 			maxItems: body.outputSchema.properties.companies.maxItems,
@@ -96,6 +100,7 @@ describe("one agent round fans out across the angles the planner wrote", () => {
 		expect(requests).toHaveLength(2);
 		expect(requests[0]?.query).toContain("US managed service providers");
 		expect(requests[1]?.query).toContain("EU payment platforms");
+		expect(requests[0]?.query).toContain("angle-1");
 	});
 
 	it("asks each angle for the configured companies per angle, never the whole count", async () => {
@@ -112,10 +117,10 @@ describe("one agent round fans out across the angles the planner wrote", () => {
 			new CostLedger(),
 		);
 
-		const perAngle = config.companies.companiesPerAngle;
+		const perAngle = 15;
 		const request = startedRequests(started)[0];
 		expect(request?.query).toContain(`Return up to ${perAngle} distinct`);
-		expect(request?.minItems).toBe(1);
+		expect(request?.minItems).toBeUndefined();
 		expect(request?.maxItems).toBe(perAngle);
 	});
 
@@ -139,7 +144,7 @@ describe("one agent round fans out across the angles the planner wrote", () => {
 });
 
 describe("what one angle's request tells the vendor", () => {
-	it("names the account's excluded companies and the headcount band in every angle's request", async () => {
+	it("carries exclusions without adding the plan's flat record bounds to research", async () => {
 		const { fetch, started } = fakeExaAgentRun({
 			structured: { companies: [] },
 		});
@@ -160,22 +165,29 @@ describe("what one angle's request tells the vendor", () => {
 		);
 
 		const request = startedRequests(started)[0];
-		expect(request?.query).toContain("seen.com");
-		expect(request?.query).toContain("known.io");
-		expect(request?.query).toContain("headcount between 10 and 300");
+		expect(request?.exclusion).toEqual([
+			{ website: "seen.com" },
+			{ website: "known.io" },
+		]);
+		expect(request?.query).not.toContain("Every company must");
 	});
 
-	it("carries the profile's seller into the started run", async () => {
+	it("carries only scoped seller context and intact company requirements into the started run", async () => {
 		const { fetch, started } = fakeExaAgentRun({
 			structured: { companies: [] },
 		});
 		globalThis.fetch = fetch;
-		const fanout = fanoutFor(fakeWorkflowStep().step, {
+		const profile = profileFixture(
+			{ offer: "Trust Fabric workload identity" },
+			"Target platform engineers, not payments buyers",
+		);
+		profile.seller = {
 			domain: "form3.tech",
 			customers: ["Klarna"],
 			description: "payment infrastructure for banks",
 			sourceUrls: [],
-		});
+		};
+		const fanout = fanoutFor(fakeWorkflowStep().step, profile);
 
 		await fanout(
 			[planFor("large European platform teams")],
@@ -186,7 +198,15 @@ describe("what one angle's request tells the vendor", () => {
 
 		const request = startedRequests(started)[0];
 		expect(request?.systemPrompt).toContain("form3.tech");
-		expect(request?.systemPrompt).toContain("Klarna");
+		expect(request?.systemPrompt).toContain(profile.seller.description);
+		expect(request?.systemPrompt).toContain(profile.icp.offer ?? "");
+		expect(request?.systemPrompt).toContain(
+			JSON.stringify(profile.icp.requirements),
+		);
+		expect(request?.systemPrompt).not.toContain(
+			"Target platform engineers, not payments buyers",
+		);
+		expect(request?.systemPrompt).not.toContain("Klarna");
 	});
 });
 
@@ -253,13 +273,13 @@ describe("a round whose agent finds nothing counts as an empty round, not a fail
 });
 
 describe("the request schema Exa's agent actually accepts", () => {
-	it("sends an output schema with no $schema key and no pattern anywhere, and effort only low or medium", () => {
+	it("sends an output schema with no $schema key and no pattern anywhere, and the configured effort", () => {
 		for (const agentEffort of AGENT_EFFORTS) {
 			const request = buildAgentRunRequest({
 				plan: planFor("US managed service providers", { agentEffort }),
 				count: 15,
 				today: "2026-09-02",
-				seller: null,
+				icp: profileFixture(),
 				excludeDomains: [],
 			});
 			const schema = JSON.parse(JSON.stringify(request.outputSchema));
@@ -272,17 +292,31 @@ describe("the request schema Exa's agent actually accepts", () => {
 			plan: planFor("US managed service providers"),
 			count: 15,
 			today: "2026-09-02",
-			seller: null,
+			icp: profileFixture(),
 			excludeDomains: [],
 		});
 		const schema = JSON.parse(JSON.stringify(request.outputSchema));
+		expect(request.dataSources).toBeUndefined();
 		expect(schema.properties.companies.maxItems).toBe(15);
+		expect(Object.keys(schema.properties.companies.items.properties)).toEqual([
+			"name",
+			"website",
+			"linkedinUrl",
+			"description",
+			"evidence",
+		]);
+		expect(schema.properties.companies.items.properties).not.toHaveProperty(
+			"workforceTotal",
+		);
+		expect(schema.properties.companies.items.properties).not.toHaveProperty(
+			"fundingTotal",
+		);
 	});
 });
 
 describe("the judge step's own retry budget", () => {
-	it("never retries a timed-out judge call, since a retry reruns every slice", () => {
-		expect(config.stepConfig.judgeCall.retries.limit).toBe(0);
+	it("uses the configured retry budget for a failed judge step", () => {
+		expect(config.stepConfig.judgeCall.retries.limit).toBe(1);
 	});
 });
 

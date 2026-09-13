@@ -5,6 +5,7 @@ import { findCompanies } from "@/core/companies";
 import { gate } from "@/core/companies/gate";
 import { CostLedger } from "@/core/cost";
 import type { IcpDoc } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture();
@@ -13,9 +14,6 @@ function searchPlan() {
 	return {
 		query: "banks",
 		angle: "banking",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search" as const,
 		agentEffort: "low" as const,
 		userLocation: null,
@@ -40,13 +38,12 @@ function options(
 		env: testEnv,
 		today: "2026-09-03",
 		requirements: [requirementFixture("the company is a bank")],
-		maxRounds: 1,
 		...overrides,
 	};
 }
 
-describe("the round loop stays bounded", () => {
-	it("never runs more rounds than it was given, even when every round falls short", async () => {
+describe("findCompanies runs one round", () => {
+	it("returns the current round without retrying", async () => {
 		let rounds = 0;
 		const deps: FindCompaniesDeps = {
 			recentDomains: async () => [],
@@ -63,21 +60,18 @@ describe("the round loop stays bounded", () => {
 				throw new Error("should not reach the agent");
 			},
 			backfill: async () => [],
-			prove: async () => [],
-			homepages: async () => [],
+			retrieveEvidence: async ({ rows }) => ({
+				evidenceByRow: companyIdentityEvidence(rows),
+				pages: [],
+			}),
 			gate,
 			judge: async () => ({ verdicts: [], ledger: new CostLedger() }),
 		};
 
-		const result = await findCompanies(
-			icp,
-			10,
-			options({ maxRounds: 3 }),
-			deps,
-		);
+		const result = await findCompanies(icp, 10, options(), deps);
 
-		expect(rounds).toBe(3);
-		expect(result.rounds).toBe(3);
+		expect(rounds).toBe(1);
+		expect(result.rounds).toBe(1);
 		expect(result.status).toBe("empty");
 	});
 });

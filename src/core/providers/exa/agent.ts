@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
 import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 import {
+	CompanyEvidenceSchema,
 	CompanyRecordSchema,
 	nullableString,
 } from "@/core/providers/exa/search";
@@ -31,6 +32,12 @@ const EXA_AGENT_PROVIDERS = [
 
 const ExaAgentRunRequestSchema = z.object({
 	query: z.string(),
+	input: z
+		.object({
+			exclusion: z.array(z.record(z.string(), JsonValueSchema)).optional(),
+			data: z.array(z.record(z.string(), JsonValueSchema)).optional(),
+		})
+		.optional(),
 	systemPrompt: z.string().optional(),
 	outputSchema: JsonValueSchema,
 	effort: z.enum(EXA_AGENT_EFFORTS).optional(),
@@ -49,7 +56,7 @@ const ExaAgentStartResponseSchema = z.object({
 });
 
 const ExaAgentCostSchema = z.object({
-	total: z.number(),
+	total: z.number().finite().nonnegative(),
 	agentCompute: z.number().nullish(),
 	search: z.number().nullish(),
 	emails: z.number().nullish(),
@@ -73,12 +80,7 @@ const linkedinCompanyUrl = z
 export const ExaAgentCompanySchema = CompanyRecordSchema.extend({
 	website: nullableString,
 	linkedinUrl: linkedinCompanyUrl,
-	signal: nullableString,
-	evidenceUrl: nullableString,
-	evidenceDate: nullableString,
-	evidenceQuote: nullableString,
-	evidencePublisher: nullableString,
-	evidenceKind: nullableString,
+	evidence: z.array(CompanyEvidenceSchema),
 });
 
 /** One company as Exa's agent reports it, matching the `outputSchema` a caller sent to `startAgentRun`. */
@@ -122,6 +124,11 @@ const TERMINAL_FAILURE_STATUSES: string[] = [
 	"cancelled",
 ];
 
+const RawTerminalRunSchema = z.object({
+	status: z.string().optional(),
+	costDollars: ExaAgentCostSchema.nullish(),
+});
+
 const EXA_AGENT_COST_KEYS = [
 	"agentCompute",
 	"search",
@@ -138,6 +145,24 @@ function agentCostDetail(
 		if (typeof value === "number") detail[key] = value;
 	}
 	return detail;
+}
+
+function reportAgentCost(
+	cost: z.infer<typeof ExaAgentCostSchema>,
+	ledger: CostLedger,
+): void {
+	const { total, ...rest } = cost;
+	ledger.reported("exa", "agent", total, agentCostDetail(rest));
+}
+
+function reportMalformedTerminalCost(body: unknown, ledger: CostLedger): void {
+	const parsed = RawTerminalRunSchema.safeParse(body);
+	if (!parsed.success || !parsed.data.costDollars) return;
+	const terminal =
+		parsed.data.status === "completed" ||
+		(parsed.data.status !== undefined &&
+			TERMINAL_FAILURE_STATUSES.includes(parsed.data.status));
+	if (terminal) reportAgentCost(parsed.data.costDollars, ledger);
 }
 
 async function exaAgentFetch(path: string, env: Env, init?: RequestInit) {
@@ -198,13 +223,15 @@ export async function getAgentRunOutput<T>(
 	ledger: CostLedger,
 	structuredSchema: z.ZodType<T>,
 ): Promise<ExaAgentRunOutput<T>> {
-	const body = await exaAgentFetch(`/${id}`, env);
+	const body = await exaAgentFetch(`/${encodeURIComponent(id)}`, env);
 	const parsed = AgentRunEnvelopeSchema.safeParse(body);
 	if (!parsed.success) {
+		reportMalformedTerminalCost(body, ledger);
 		throw new NonRetryableError(shapeMismatchDetail(body, parsed.error));
 	}
 	const run = parsed.data;
 	if (TERMINAL_FAILURE_STATUSES.includes(run.status)) {
+		if (run.costDollars) reportAgentCost(run.costDollars, ledger);
 		throw new NonRetryableError(
 			`Exa agent run ${id} ended with status "${run.status}"`,
 		);
@@ -218,12 +245,11 @@ export async function getAgentRunOutput<T>(
 	) {
 		return { status: "running" };
 	}
+	reportAgentCost(run.costDollars, ledger);
 	const payload = structuredSchema.safeParse(structured);
 	if (!payload.success) {
 		throw new NonRetryableError(shapeMismatchDetail(body, payload.error));
 	}
-	const { total, ...rest } = run.costDollars;
-	ledger.reported("exa", "agent", total, agentCostDetail(rest));
 	return { status: "completed", output: payload.data };
 }
 

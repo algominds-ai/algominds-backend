@@ -12,6 +12,7 @@ import type {
 } from "@/core/providers/exa/search";
 import { requiredConditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeInput } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture(
@@ -58,8 +59,10 @@ function testDeps(
 		backfill: async () => {
 			throw new Error("this round should not have backfilled a record");
 		},
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		...overrides,
 	};
 }
@@ -81,9 +84,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -147,10 +147,10 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 			statuses: requiredConditionRefs(requirements).map((req) => ({
 				id: req.id,
 				status: rejects.includes(index) ? "contradicted" : "proven",
-				quote: "",
+				sourceUrl: null,
+				date: null,
 			})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
-			sameOrganizationAs: null,
 		}));
 		return { verdicts, ledger: new CostLedger() };
 	};
@@ -189,27 +189,28 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 		),
 	};
 }
-describe("a round short of its count judges its next slice before a new round", () => {
-	it("judges the next slice instead of a new round, keeps a judged-and-refused domain seen, and forgets one it never judged", async () => {
+describe("a round judges one bounded candidate pass", () => {
+	it("does not spend a second judge pass, and leaves unjudged candidates retryable", async () => {
 		const round1 = Array.from({ length: 5 }, (_, i) =>
 			goodResult(`cand${i}.com`),
 		);
-		const { calls, result } = run(1, [round1, [goodResult("final.com")]], {
-			rejectsByCall: [[0, 1], []],
+		const { calls, result } = run(1, [round1], {
+			rejectsByCall: [[0, 1]],
 		});
 
 		const outcome = await result;
 
 		expect(outcome.rounds).toBe(1);
 		expect(calls).toHaveLength(1);
-		expect(outcome.companies[0]?.domain).toBe("cand2.com");
-		expect(outcome.seenDomains).toEqual(
-			expect.arrayContaining(["cand0.com", "cand1.com"]),
-		);
-		expect(outcome.seenDomains).not.toContain("cand4.com");
+		expect(outcome.companies).toHaveLength(0);
+		expect(outcome.rejects.map((reject) => reject.domain)).toEqual([
+			"cand0.com",
+			"cand1.com",
+		]);
+		expect(outcome.seenDomains).not.toContain("cand2.com");
 	});
 
-	it("judges at most three slices in one round, however many candidates remain", async () => {
+	it("judges one candidate pass, however many candidates remain", async () => {
 		const round1 = Array.from({ length: 30 }, (_, i) =>
 			goodResult(`cand${i}.com`),
 		);
@@ -235,8 +236,24 @@ describe("a round short of its count judges its next slice before a new round", 
 			}),
 		);
 
-		expect(judgeCalls).toBe(3);
+		expect(judgeCalls).toBe(1);
 		expect(outcome.companies).toHaveLength(0);
+	});
+
+	it("returns every qualified company above the target within the 100-result round cap", async () => {
+		const { calls, result } = run(50, [
+			Array.from({ length: 100 }, (_, i) => goodResult(`cand${i}.com`)),
+		]);
+
+		const outcome = await result;
+
+		expect(calls[0]?.numResults).toBe(100);
+		expect(outcome.companies).toHaveLength(100);
+		expect(outcome.requested).toBe(50);
+		expect(outcome.found).toBe(100);
+		expect(outcome.status).toBe("complete");
+		expect(outcome.seenDomains).toContain("cand99.com");
+		expect(outcome.feedback[0]).toContain("0 companies still needed");
 	});
 });
 

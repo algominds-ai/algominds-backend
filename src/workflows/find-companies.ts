@@ -61,7 +61,11 @@ type RoundOptionsInput = {
 	organizationId: string;
 	env: Env;
 	today: string;
-	history: { pastAngles: readonly string[]; feedback: readonly string[] };
+	history: {
+		pastAngles: readonly string[];
+		feedback: readonly string[];
+		provenRate: string | null;
+	};
 	requirements: readonly Requirement[];
 };
 
@@ -73,9 +77,9 @@ function roundOptions(input: RoundOptionsInput): FindCompaniesOptions {
 		env,
 		today,
 		requirements: input.requirements,
-		maxRounds: 1,
 		pastAngles: history.pastAngles,
 		feedback: history.feedback,
+		provenRate: history.provenRate,
 		excludeDomains: payload.excludeDomains ?? [],
 	};
 }
@@ -121,6 +125,7 @@ type RoundLoopState = {
 	lastRoundStatus: FindCompaniesStatus;
 	pastAngles: string[];
 	feedback: string[];
+	provenRate: string | null;
 };
 
 /** Runs one round as its own durable step and folds its result into the loop's state. Returns `"stop"` once the run has covered the market it can, or crossed its own spend ceiling. */
@@ -136,20 +141,25 @@ async function runOneRound(
 		organizationId,
 		env,
 		today,
-		history: { pastAngles: state.pastAngles, feedback: state.feedback },
+		history: {
+			pastAngles: state.pastAngles,
+			feedback: state.feedback,
+			provenRate: state.provenRate,
+		},
 		requirements: target.requirements,
 	});
 	const timings: RoundTiming[] = [];
+	const remaining = payload.count - state.companies.length;
 	const deps = roundDeps({
 		accumulatedDomains: state.accumulatedDomains,
 		step,
 		round,
 		today,
-		seller: icp.seller,
+		icp,
 		timings,
 		runId: target.runId,
+		remaining,
 	});
-	const remaining = payload.count - state.companies.length;
 	const stepResult = await step.do(
 		`round_${round}`,
 		config.stepConfig.roundCall,
@@ -179,6 +189,7 @@ async function runOneRound(
 		}),
 	);
 	state.feedback = stepResult.feedback;
+	state.provenRate = stepResult.provenRate ?? null;
 	const report = reportRound(round, stepResult);
 	state.roundReports.push(report);
 	await persistRound({
@@ -202,7 +213,7 @@ async function runOneRound(
 	return "continue";
 }
 
-async function runFindCompaniesRounds(
+export async function runFindCompaniesRounds(
 	target: {
 		env: Env;
 		payload: FindCompaniesPayload;
@@ -234,6 +245,7 @@ async function runFindCompaniesRounds(
 		lastRoundStatus: "short",
 		pastAngles: [],
 		feedback: [],
+		provenRate: null,
 	};
 
 	for (
@@ -267,6 +279,7 @@ async function runFindCompaniesRounds(
 		seenDomains: [...state.accumulatedDomains],
 		feedback: state.feedback,
 		pages: state.pages,
+		provenRate: state.provenRate,
 		roundReports: state.roundReports,
 	};
 }

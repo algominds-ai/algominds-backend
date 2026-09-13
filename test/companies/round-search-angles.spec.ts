@@ -7,6 +7,7 @@ import { CostLedger } from "@/core/cost";
 import type { ExaResult } from "@/core/providers/exa/search";
 import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture();
@@ -18,9 +19,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "banks",
 		angle: "banking",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -67,7 +65,6 @@ function options(
 		env: testEnv,
 		today: "2026-09-03",
 		requirements: [recordRequirement],
-		maxRounds: 1,
 		...overrides,
 	};
 }
@@ -76,9 +73,10 @@ function acceptAll(): FindCompaniesDeps["judge"] {
 	return async (_requirements, rows) => ({
 		verdicts: rows.map((_row, index) => ({
 			index,
-			statuses: [{ id: recordId, status: "proven", quote: "" }],
+			statuses: [
+				{ id: recordId, status: "proven", sourceUrl: null, date: null },
+			],
 			reason: "fits",
-			sameOrganizationAs: null,
 		})),
 		ledger: new CostLedger(),
 	});
@@ -104,8 +102,10 @@ function twoPlanSearchDeps(searchedAngles: string[]): FindCompaniesDeps {
 			throw new Error("a search round should not reach the agent");
 		},
 		backfill: async () => [],
-		homepages: async () => [],
-		prove: async (rows) => rows.map((_row, index) => ({ index, hit: null })),
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		gate,
 		judge: acceptAll(),
 	};

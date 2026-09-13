@@ -3,13 +3,14 @@ import type { FindCompaniesDeps, FindCompaniesOptions } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
 import { toExaSearchResult } from "@/core/companies/agent-search";
 import { gate } from "@/core/companies/gate";
+import type { EvidenceByRow } from "@/core/companies/judge-evidence";
 import { CostLedger } from "@/core/cost";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
 import type { CompanyEntity, ExaResult } from "@/core/providers/exa/search";
 import { conditionRefs } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { fakeSecretEnv } from "../support/env";
-import { exaContentsFetch } from "../support/fetch";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 function goodResult(
@@ -37,14 +38,11 @@ function goodResult(
 	};
 }
 
-function agentRow(domain: string, quote: string): ExaResult {
+function agentRow(domain: string, _quote: string): ExaResult {
 	return {
 		...goodResult(domain),
-		evidenceUrl: `https://${domain}/careers`,
-		evidenceQuote: quote,
 	};
 }
-
 function exaOptions(): FindCompaniesOptions {
 	return {
 		icpId: "icp-1",
@@ -54,7 +52,6 @@ function exaOptions(): FindCompaniesOptions {
 		requirements: [requirementFixture("the company fits the profile")],
 	};
 }
-
 function scriptedAgentRound(rounds: ExaResult[][]) {
 	const calls: Array<readonly string[]> = [];
 	const agentRound: FindCompaniesDeps["agentRound"] = async (
@@ -70,14 +67,10 @@ function scriptedAgentRound(rounds: ExaResult[][]) {
 	};
 	return { agentRound, calls };
 }
-
 function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -93,14 +86,10 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		...overrides,
 	};
 }
-
 function agentPlan(
 	overrides: Partial<SearchPlan> = {},
 ): FindCompaniesDeps["synthesize"] {
 	const plan = testPlan({
-		recency: "a role posted in the last 30 days",
-		recencyDays: 30,
-		conditionIds: ["r1.a1.c1"],
 		source: "exa-agent",
 		...overrides,
 	});
@@ -110,7 +99,6 @@ function agentPlan(
 		ledger: new CostLedger(),
 	});
 }
-
 function searchPlan(
 	overrides: Partial<SearchPlan> = {},
 ): FindCompaniesDeps["synthesize"] {
@@ -121,17 +109,42 @@ function searchPlan(
 		ledger: new CostLedger(),
 	});
 }
-
 const noopJudge: FindCompaniesDeps["judge"] = async (requirements, rows) => ({
 	verdicts: rows.map((_row, index) => ({
 		index,
 		statuses: conditionRefs(requirements).map(({ id }) => ({
 			id,
 			status: "proven" as const,
+			sourceUrl: null,
+			date: null,
 		})),
 		reason: "fits icp",
-		sameOrganizationAs: null,
 	})),
+	ledger: new CostLedger(),
+});
+const sourceAwareJudge: FindCompaniesDeps["judge"] = async (
+	requirements,
+	rows,
+	_env,
+	options,
+) => ({
+	verdicts: rows.map((row, index) => {
+		const evidence = options?.evidenceByRow?.get(index);
+		const sourceUrl = `https://${row.domain}/careers`;
+		const proven = Boolean(evidence?.get(sourceUrl)?.text);
+		return {
+			index,
+			statuses: conditionRefs(requirements).map(({ id }) => ({
+				id,
+				status: proven ? ("proven" as const) : ("unproven" as const),
+				sourceUrl: proven ? sourceUrl : null,
+				date: null,
+			})),
+			reason: proven
+				? "source page established the requirement"
+				: "source evidence was absent",
+		};
+	}),
 	ledger: new CostLedger(),
 });
 
@@ -143,23 +156,41 @@ const icp = profileFixture(
 	"Find fintech companies.",
 );
 
-const originalFetch = globalThis.fetch;
+const goodEvidenceByRow: EvidenceByRow = new Map([
+	[
+		0,
+		new Map([
+			[
+				"https://good.com/careers",
+				{
+					url: "https://good.com/careers",
+					quote: "",
+					text: "Good Co is hiring now.",
+				},
+			],
+		]),
+	],
+]);
 
+const goodPages = [
+	{
+		domain: "good.com",
+		url: "https://good.com/careers",
+		text: "Good Co is hiring now.",
+	},
+];
+
+const originalFetch = globalThis.fetch;
 afterEach(() => {
 	globalThis.fetch = originalFetch;
 });
 
-describe("a round that demanded proof checks its own evidence before the judge sees it", () => {
-	it("keeps only a page whose quoted evidence is present on the crawled page", async () => {
+describe("a round passes retrieved source evidence to the judge", () => {
+	it("keeps only a row whose required source evidence was retrieved", async () => {
 		const good = agentRow("good.com", "Good Co is hiring now.");
-		const notFound = agentRow("missing404.com", "Missing Co is hiring now.");
-		const noQuote = agentRow("noquote.com", "No Quote Co is hiring now.");
-		globalThis.fetch = exaContentsFetch({
-			"https://good.com/careers": { text: "Good Co is hiring now." },
-			"https://missing404.com/careers": { errorTag: "CRAWL_NOT_FOUND" },
-			"https://noquote.com/careers": { text: "Nothing about hiring here." },
-		});
-		const { agentRound } = scriptedAgentRound([[good, notFound, noQuote]]);
+		const { agentRound } = scriptedAgentRound([
+			[good, agentRow("missing404.com", "")],
+		]);
 
 		const result = await findCompanies(icp, 3, exaOptions(), {
 			recentDomains: async () => [],
@@ -167,31 +198,36 @@ describe("a round that demanded proof checks its own evidence before the judge s
 			search: async () => ({ requestId: "req-1", results: [] }),
 			agentRound,
 			backfill: passthroughBackfill,
-			prove: async () => [],
-			homepages: async () => [],
+			retrieveEvidence: async ({ rows }) => {
+				const evidenceByRow = new Map(companyIdentityEvidence(rows));
+				rows.forEach((row, index) => {
+					if (row.domain === "good.com")
+						evidenceByRow.set(
+							index,
+							new Map([
+								...(evidenceByRow.get(index) ?? []),
+								...(goodEvidenceByRow.get(0) ?? []),
+							]),
+						);
+				});
+				return { evidenceByRow, pages: goodPages };
+			},
 			gate,
-			judge: noopJudge,
+			judge: sourceAwareJudge,
 		});
 
 		expect(result.companies.map((row) => row.domain)).toEqual(["good.com"]);
-		expect(result.captures["good.com"]?.result.evidenceCheck).toBe("found");
-		expect(result.captures["noquote.com"]?.result.evidenceCheck).toBe(
-			"missing",
-		);
 		expect(
-			result.rejects.some((reject) => reject.reason === "CRAWL_NOT_FOUND"),
+			result.rejects.some((reject) =>
+				reject.reason.includes("required condition"),
+			),
 		).toBe(true);
 	});
 });
-
-describe("a round that demanded proof but never had it to check", () => {
-	it("rejects a row with no evidence quote at all", async () => {
+describe("a round without retrieved source evidence", () => {
+	it("rejects a row whose required condition remains unproven", async () => {
 		const noQuoteAtAll: ExaResult = {
 			...goodResult("silent.com"),
-			evidenceUrl: "https://silent.com/careers",
-		};
-		globalThis.fetch = async () => {
-			throw new Error("no fetch should run for a row with no quote to check");
 		};
 		const { agentRound } = scriptedAgentRound([[noQuoteAtAll]]);
 
@@ -201,41 +237,19 @@ describe("a round that demanded proof but never had it to check", () => {
 			search: async () => ({ requestId: "req-1", results: [] }),
 			agentRound,
 			backfill: passthroughBackfill,
-			prove: async () => [],
-			homepages: async () => [],
+			retrieveEvidence: async ({ rows }) => ({
+				evidenceByRow: companyIdentityEvidence(rows),
+				pages: [],
+			}),
 			gate,
-			judge: noopJudge,
+			judge: sourceAwareJudge,
 		});
-
 		expect(result.companies).toHaveLength(0);
 		expect(
-			result.rejects.some((reject) => reject.reason === "missing-required"),
+			result.rejects.some((reject) =>
+				reject.reason.includes("required condition"),
+			),
 		).toBe(true);
-	});
-
-	it("never fetches a page for a round whose plan asked the agent for no proof", async () => {
-		globalThis.fetch = async () => {
-			throw new Error("no fetch should run when the plan asked for no proof");
-		};
-		const { agentRound } = scriptedAgentRound([[goodResult("plain.com")]]);
-
-		const result = await findCompanies(icp, 1, exaOptions(), {
-			recentDomains: async () => [],
-			synthesize: agentPlan({
-				recency: null,
-				recencyDays: null,
-				conditionIds: [],
-			}),
-			search: async () => ({ requestId: "req-1", results: [] }),
-			agentRound,
-			backfill: passthroughBackfill,
-			prove: async () => [],
-			homepages: async () => [],
-			gate,
-			judge: noopJudge,
-		});
-
-		expect(result.companies.map((row) => row.domain)).toEqual(["plain.com"]);
 	});
 });
 
@@ -252,15 +266,9 @@ function agentCoCompany(): ExaAgentCompany {
 		country: "United States",
 		revenueAnnual: null,
 		fundingTotal: null,
-		signal: "opened a platform engineering role",
-		evidenceUrl: "https://jobs.example.com/agent-co/platform",
-		evidenceDate: "2026-08-12",
-		evidenceQuote: "Agent Co is hiring a Platform Engineer.",
-		evidencePublisher: "Agent Co Careers",
-		evidenceKind: null,
+		evidence: [],
 	};
 }
-
 describe("captures across sources agree on shape", () => {
 	it("captures an agent-sourced company under the same shape as a search-sourced one", async () => {
 		const agentSearchResult = toExaSearchResult("req-1", [agentCoCompany()]);
@@ -273,8 +281,10 @@ describe("captures across sources agree on shape", () => {
 				throw new Error("should not reach the agent");
 			},
 			backfill: passthroughBackfill,
-			prove: async () => [],
-			homepages: async () => [],
+			retrieveEvidence: async ({ rows }) => ({
+				evidenceByRow: companyIdentityEvidence(rows),
+				pages: [],
+			}),
 			gate,
 			judge: noopJudge,
 		});

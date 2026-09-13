@@ -19,7 +19,6 @@ import {
 	run,
 } from "@/core/db/schema";
 import type { SearchPlan } from "@/core/synthesize";
-import { reportRound, roundPlan } from "@/workflows/find-companies-persist";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const storedRequirements = [requirementFixture("the company fits the profile")];
@@ -66,15 +65,9 @@ function companyRow(domain: string): CompanyRow {
 	return {
 		name: `Co ${domain}`,
 		domain,
-		linkedinUrl: null,
-		evidenceUrl: `https://${domain}`,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		linkedinUrl: `https://linkedin.com/company/${domain.replace(/[^a-z0-9]/gi, "-")}`,
+		record: null,
 		description: null,
-		signal: null,
-		evidenceDate: null,
 	};
 }
 
@@ -82,9 +75,6 @@ function planFor(): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -105,9 +95,6 @@ function reportFor(plan: SearchPlan, found: number) {
 		round: 1,
 		angle: plan.angle,
 		query: plan.query,
-		recency: plan.recency,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: plan.source,
 		agentEffort: plan.agentEffort,
 		found,
@@ -143,15 +130,13 @@ function roundResult(
 					id: null,
 					url: `https://${domain}/`,
 					title: domain,
-					signal: null,
-					quote: null,
-					publisher: null,
-					kind: null,
-					publishedDate: null,
-					score: null,
-					evidenceCheck: null,
-					fitReason: null,
+					qualification: {
+						index: 0,
+						statuses: [],
+						reason: "fits the profile",
+					},
 				},
+				evidence: [],
 				raw: JSON.stringify({ url: `https://${domain}/` }),
 				source: "exa-search",
 			},
@@ -174,10 +159,65 @@ function roundResult(
 }
 
 describe("what the workflow reports back for the whole run", () => {
-	it("returns a summary bounded whatever the number of companies found", async () => {
+	it("returns twelve when the first round finds five and the second finds seven for a target of ten", async () => {
+		const seed = await seedRun("round-continuity");
+		const instanceId = `companies_round_continuity_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.FIND_COMPANIES,
+			instanceId,
+		);
+		try {
+			const first = roundResult(["a.com", "b.com", "c.com", "d.com", "e.com"], {
+				requested: 10,
+				status: "short",
+				costDollars: 0.01,
+			});
+			const second = roundResult(
+				["f.com", "g.com", "h.com", "i.com", "j.com", "k.com", "l.com"],
+				{
+					requested: 5,
+					status: "complete",
+					costDollars: 0.01,
+				},
+			);
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "round_1" }, first);
+				await m.mockStepResult({ name: "round_2" }, second);
+			});
+			await testEnv.FIND_COMPANIES.create({
+				id: instanceId,
+				params: { icpId: seed.icpId, count: 10 },
+			});
+			await instance.waitForStatus("complete");
+
+			expect(await instance.getOutput()).toMatchObject({
+				requested: 10,
+				found: 12,
+				rounds: 2,
+				status: "complete",
+			});
+			expect(await savedCompanies(instanceId)).toHaveLength(12);
+		} finally {
+			await instance.dispose();
+			await cleanup({ ...seed, instanceId });
+		}
+	});
+});
+
+function savedCompanies(instanceId: string) {
+	return withConnection(testEnv, "direct", db, (connection) =>
+		connection
+			.select()
+			.from(companyTable)
+			.where(eq(companyTable.runId, instanceId)),
+	);
+}
+
+describe("what the workflow reports for one round", () => {
+	it("retains surplus companies and stops after the completed round reaches its target", async () => {
 		const seed = await seedRun("summary-bound");
-		const count = 50;
-		const domains = Array.from({ length: count }, (_, i) => `co-${i}.com`);
+		const count = 10;
+		const domains = Array.from({ length: 12 }, (_, i) => `co-${i}.com`);
 		const instanceId = `companies_summary_${crypto.randomUUID()}`;
 		const instance = await introspectWorkflowInstance(
 			testEnv.FIND_COMPANIES,
@@ -202,12 +242,13 @@ describe("what the workflow reports back for the whole run", () => {
 
 			expect(await instance.getOutput()).toEqual({
 				requested: count,
-				found: count,
+				found: domains.length,
 				rounds: 1,
 				status: "complete",
 				costDollars: 0.05,
-				roundReports: [reportFor(planFor(), count)],
+				roundReports: [reportFor(planFor(), domains.length)],
 			});
+			expect(await savedCompanies(instanceId)).toHaveLength(12);
 		} finally {
 			await instance.dispose();
 			await cleanup({ ...seed, instanceId });
@@ -251,35 +292,5 @@ describe("what the workflow reports back for the whole run", () => {
 			await instance.dispose();
 			await cleanup({ ...seed, instanceId });
 		}
-	});
-});
-
-describe("a round's stored plan keeps every angle it searched", () => {
-	it("keeps every angle a round searched, and is null for a round that found none", () => {
-		const plans = [planFor(), { ...planFor(), angle: "payroll" }];
-
-		expect(roundPlan(plans)).toEqual(plans);
-		expect(roundPlan([])).toBeNull();
-	});
-});
-
-describe("a round reports the freshness it demanded", () => {
-	it("shows the window the plan asked for, and null when it asked for none", () => {
-		const empty = roundResult([], {
-			requested: 1,
-			status: "complete",
-			costDollars: 0,
-		});
-		const withWindow = reportRound(1, {
-			...empty,
-			searches: [
-				{ ...planFor(), recency: "A role posted in the last 30 days." },
-			],
-		});
-		const without = reportRound(1, { ...empty, searches: [planFor()] });
-
-		expect(withWindow.recency).toBe("A role posted in the last 30 days.");
-		expect(without.recency).toBeNull();
-		expect(withWindow.source).toBe("exa-search");
 	});
 });

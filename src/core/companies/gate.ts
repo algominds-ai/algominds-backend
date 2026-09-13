@@ -1,28 +1,25 @@
 import { normalizeDomain } from "@/core/db/schema";
+import type { CompanyEntity } from "@/core/providers/exa/search";
 
 const FIELD_NAMES = [
 	"name",
 	"domain",
 	"linkedinUrl",
-	"evidenceUrl",
-	"evidenceQuote",
-	"evidencePublisher",
-	"evidenceKind",
-	"industry",
 	"description",
-	"signal",
-	"evidenceDate",
+	"record",
 ] as const;
 
 export type CompanyField = (typeof FIELD_NAMES)[number];
 
-export type CompanyRow = { [K in CompanyField]: string | null };
+export type CompanyRow = {
+	name: string | null;
+	domain: string | null;
+	linkedinUrl: string | null;
+	description: string | null;
+	record: CompanyEntity | null;
+};
 
-const REQUIRED_FIELDS: readonly CompanyField[] = [
-	"name",
-	"domain",
-	"evidenceUrl",
-];
+const REQUIRED_FIELDS: readonly CompanyField[] = ["name", "domain"];
 
 export type RejectReason =
 	| "missing-required"

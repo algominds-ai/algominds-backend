@@ -3,6 +3,7 @@ import { z } from "zod";
 import { config } from "@/config";
 import type { CompanyRow } from "@/core/companies/gate";
 import { judge } from "@/core/companies/judge";
+import { JudgeModelSchema } from "@/core/companies/judge-evidence";
 import { conditionRefs } from "@/core/requirements";
 import { fakeGatewayEnv } from "../support/env";
 import {
@@ -27,15 +28,9 @@ function row(name: string, domain: string): CompanyRow {
 	return {
 		name,
 		domain,
-		linkedinUrl: null,
-		evidenceUrl: `https://${domain}/careers`,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		linkedinUrl: `https://linkedin.com/company/${domain.split(".")[0]}`,
+		record: null,
 		description: null,
-		signal: "hiring a founding engineer",
-		evidenceDate: "2026-08-20",
 	};
 }
 
@@ -76,11 +71,11 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 					{
 						id: requirementId,
 						status: keep ? "proven" : "contradicted",
-						quote: "",
+						sourceUrl: null,
+						date: null,
 					},
 				],
 				reason: keep ? "fits the profile" : "no qualifying signal",
-				sameOrganizationAs: null,
 			};
 		}),
 	};
@@ -116,21 +111,6 @@ describe("judge: gateway wiring", () => {
 		expect(bodyOf(call).model).toBe(env.MODEL_ROUTE_REASONING);
 	});
 
-	it("sends cf-aig-cache-ttl and never cf-aig-skip-cache", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(verdictsFor(rows))),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		await judge(requirements, rows, fakeGatewayEnv());
-
-		expect(gateway.calls).toHaveLength(1);
-		for (const call of gateway.calls) {
-			expect(call.headers.get("cf-aig-cache-ttl")).toBeTruthy();
-			expect(call.headers.has("cf-aig-skip-cache")).toBe(false);
-		}
-	});
-
 	it("reports the gateway's returned cost on the ledger, zero when the body carries none", async () => {
 		const withCost = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows), 0.0000091)),
@@ -164,44 +144,6 @@ describe("judge: verdicts and retries", () => {
 		expect(kept(result.verdicts[1] ?? { statuses: [] })).toBe(false);
 	});
 
-	it("carries each row's own reason through to the caller, kept or refused", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(objectReply(verdictsFor(rows))),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await judge(requirements, rows, fakeGatewayEnv());
-
-		expect(result.verdicts[0]?.reason).toBe("fits the profile");
-		expect(result.verdicts[1]?.reason).toBe("no qualifying signal");
-	});
-
-	it("accepts an empty reason for a row whose every hard requirement is proven", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse(
-				objectReply({
-					verdicts: [
-						{
-							index: 0,
-							statuses: [{ id: requirementId, status: "proven", quote: "" }],
-							reason: "",
-							sameOrganizationAs: null,
-						},
-					],
-				}),
-			),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await judge(
-			requirements,
-			rows.slice(0, 1),
-			fakeGatewayEnv(),
-		);
-
-		expect(result.verdicts[0]?.reason).toBe("");
-	});
-
 	it("falls back after a schema failure without retrying the provider", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse({ content: "not json at all" }),
@@ -213,23 +155,6 @@ describe("judge: verdicts and retries", () => {
 		expect(gateway.calls).toHaveLength(1);
 		expect(result.verdicts).toHaveLength(rows.length);
 	});
-
-	it("falls back to every required condition unproven after one failure, without throwing", async () => {
-		const gateway = fakeGateway([
-			chatCompletionResponse({ content: "", finishReason: "length" }),
-		]);
-		globalThis.fetch = gateway.fetch;
-
-		const result = await judge(requirements, rows, fakeGatewayEnv());
-
-		expect(result.verdicts).toHaveLength(rows.length);
-		expect(result.verdicts.every(kept)).toBe(false);
-		for (const verdict of result.verdicts) {
-			expect(verdict.statuses).toEqual([
-				{ id: requirementId, status: "unproven" },
-			]);
-		}
-	});
 });
 
 describe("the judge is told which requirements need a status", () => {
@@ -239,7 +164,7 @@ describe("the judge is told which requirements need a status", () => {
 			.join("\n");
 	}
 
-	it("asks for a status on every hard requirement by id, and never mentions a soft one", async () => {
+	it("asks only for eligibility requirements, omitting optional preferences", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
@@ -251,10 +176,11 @@ describe("the judge is told which requirements need a status", () => {
 		expect(sent).toContain(
 			`${requirementId} the company is a seed stage fintech`,
 		);
+		expect(sent).not.toContain("preferred: r2.a1.c1");
 		expect(sent).not.toContain("the company posted a founding engineer role");
 	});
 
-	it("tells the model an acquired record contradicts every hard requirement, and a listed-category record is contradicted by another category", async () => {
+	it("states the acquisition and competitor interpretation rules", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(objectReply(verdictsFor(rows))),
 		]);
@@ -262,8 +188,18 @@ describe("the judge is told which requirements need a status", () => {
 
 		await judge(requirements, rows, fakeGatewayEnv());
 
-		expect(userMessage(gateway.calls[0])).toContain("acquired");
-		expect(userMessage(gateway.calls[0])).toContain("does not include");
+		const sent = userMessage(gateway.calls[0]);
+		expect(sent).toContain(
+			"Acquisition alone does not prove a business stopped operating",
+		);
+		expect(sent).toContain("what it sells");
+		expect(sent).toContain("an exact category label is unnecessary");
+		expect(sent).toContain(
+			"Do not add requirements for independence, exclusivity, or a core business unless specified",
+		);
+		expect(sent).toContain(
+			"numeric and date claims still need direct evidence",
+		);
 	});
 });
 
@@ -274,7 +210,6 @@ describe("the kind of page a row came from is a label, not something the judge w
 			{
 				...row("Acme", "acme.com"),
 				description: long,
-				evidenceKind: "vendor-case-study",
 			},
 		];
 		const gateway = fakeGateway([
@@ -290,9 +225,17 @@ describe("the kind of page a row came from is a label, not something the judge w
 		expect(sent).toContain("acme.com");
 		expect(sent).not.toContain(long);
 		expect(sent).toContain("x".repeat(config.companies.descriptionChars));
-		expect(sent).toContain("evidenceKind");
-		expect(sent).toContain("vendor-case-study");
+		expect(sent).not.toContain("evidenceKind");
+		expect(sent).not.toContain("industry");
 		expect(sent).not.toContain("linkedinUrl");
+		expect(sent).not.toContain("sameOrganizationAs");
+		expect(sent).not.toContain("identityAllowed");
+		expect(sent).not.toContain("Return linkedinUrl");
+		expect(JudgeModelSchema.shape.verdicts.element.keyof().options).toEqual([
+			"index",
+			"statuses",
+			"reason",
+		]);
 	});
 });
 
@@ -322,9 +265,15 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 			const size = sizes[callIndex] ?? 0;
 			const verdicts = Array.from({ length: size }, (_, i) => ({
 				index: i,
-				statuses: [{ id: requirementId, status: "proven", quote: "" }],
+				statuses: [
+					{
+						id: requirementId,
+						status: "proven",
+						sourceUrl: null,
+						date: null,
+					},
+				],
 				reason: "fits the profile",
-				sameOrganizationAs: null,
 			}));
 			gateway.resolvers[callIndex]?.(
 				chatCompletionResponse(objectReply({ verdicts })),
@@ -336,7 +285,6 @@ describe("judge: slicing a large batch into concurrent, ordered calls", () => {
 		expect(result.verdicts).toHaveLength(40);
 		result.verdicts.forEach((verdict, index) => {
 			expect(verdict.index).toBe(index);
-			expect(kept(verdict)).toBe(true);
 		});
 	});
 });

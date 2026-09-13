@@ -17,6 +17,10 @@ export type AgentPollContext = {
 	maxAttempts: number;
 };
 
+type PollStepResult<T> =
+	| { run: AgentRunState<T>; costEntries: CostEntry[] }
+	| { error: string; costEntries: CostEntry[] };
+
 /** Adds what a step reported spending into the caller's ledger. */
 export function applyCostEntries(
 	entries: readonly CostEntry[],
@@ -38,16 +42,25 @@ export async function pollAgentRun<T>(
 	fetchRun: (ledger: CostLedger) => Promise<AgentRunState<T>>,
 ): Promise<T> {
 	for (let attempt = 1; attempt <= ctx.maxAttempts; attempt++) {
-		const polled = await ctx.step.do(
+		const polled = await ctx.step.do<PollStepResult<T>>(
 			`${ctx.name}-poll-${attempt}`,
 			config.stepConfig.paidCall,
 			async () => {
 				const pollLedger = new CostLedger();
-				const run = await fetchRun(pollLedger);
-				return { run, costEntries: pollLedger.toJSON().entries };
+				try {
+					const run = await fetchRun(pollLedger);
+					return { run, costEntries: pollLedger.toJSON().entries };
+				} catch (error) {
+					if (!(error instanceof NonRetryableError)) throw error;
+					return {
+						error: error.message,
+						costEntries: pollLedger.toJSON().entries,
+					};
+				}
 			},
 		);
 		applyCostEntries(polled.costEntries, ledger);
+		if ("error" in polled) throw new NonRetryableError(polled.error);
 		if (polled.run.status === "completed") return polled.run.output;
 		await ctx.step.sleep(
 			`${ctx.name}-wait-${attempt}`,

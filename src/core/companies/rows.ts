@@ -4,15 +4,12 @@ import type {
 } from "@/core/companies/candidates";
 import { toCompanyData } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import { verifiedLinkedInCompanyUrl } from "@/core/companies/identity";
 import type { EvidenceByRow } from "@/core/companies/judge-evidence";
 import { judgedFields } from "@/core/companies/judge-evidence";
 import type { Company, NewCompany, NewEvidence } from "@/core/db/schema";
 import { normalizeDomain } from "@/core/db/schema";
 import type { Requirement } from "@/core/requirements";
-import {
-	evidenceDemandConditions,
-	requiredConditionRefs,
-} from "@/core/requirements";
 
 const EVIDENCE_SOURCE = "exa";
 const ENGINE_SOURCE = "engine";
@@ -26,21 +23,30 @@ export type NewCompanyContext = {
 	organizationId: string;
 };
 
-/** One judged row as the company row to store, or null when it lacks a name, a domain, or the vendor capture behind it. */
+/** One judged row as the company row to store, or null when its identity, LinkedIn proof, or vendor capture is missing. */
 export function toNewCompany(
 	row: CompanyRow,
 	context: NewCompanyContext,
 	capture: CompanyCapture | undefined,
 ): NewCompany | null {
-	if (row.name === null || row.domain === null || capture === undefined)
+	const linkedinUrl = verifiedLinkedInCompanyUrl(row.linkedinUrl);
+	const selectionReason = capture?.result.qualification?.reason.trim() ?? "";
+	if (
+		row.name === null ||
+		row.domain === null ||
+		linkedinUrl === null ||
+		selectionReason.length === 0 ||
+		capture === undefined
+	)
 		return null;
 	return {
 		icpId: context.icpId,
 		organizationId: context.organizationId,
 		domain: row.domain,
 		name: row.name,
-		linkedinUrl: row.linkedinUrl,
-		industry: row.industry,
+		linkedinUrl,
+		description: row.description,
+		selectionReason,
 		data: toCompanyData(capture),
 		runId: context.runId,
 	};
@@ -66,9 +72,6 @@ export function evidenceRowsFor(
 		["name", row.name],
 		["domain", row.domain],
 		["linkedinUrl", row.linkedinUrl],
-		["evidenceUrl", row.evidenceUrl],
-		["signal", row.signal],
-		["evidenceDate", row.evidenceDate],
 	];
 	return fields
 		.filter((entry): entry is [string, string] => entry[1] !== null)
@@ -184,21 +187,6 @@ export function roundRefusalsEvidenceRow(
 	};
 }
 
-type JudgeRequirementFlag = { id: string; quoteRequired: boolean };
-
-/** Every hard requirement the judge was told about, each carrying whether that requirement needed a quote for a `proven` status. */
-function judgeRequirementFlags(
-	requirements: readonly Requirement[],
-): JudgeRequirementFlag[] {
-	const grounded = new Set(
-		evidenceDemandConditions(requirements).map((req) => req.id),
-	);
-	return requiredConditionRefs(requirements).map((req) => ({
-		id: req.id,
-		quoteRequired: grounded.has(req.id),
-	}));
-}
-
 export type JudgeInputRowsInput = {
 	runId: string;
 	round: number;
@@ -216,7 +204,6 @@ export function judgeInputEvidenceRows(
 	input: JudgeInputRowsInput,
 ): NewEvidence[] {
 	const { runId, round, rows, evidenceByRow, requirements } = input;
-	const requirementFlags = judgeRequirementFlags(requirements);
 	return rows.map((row, index) => {
 		const evidence = evidenceByRow.get(index);
 		return {
@@ -228,7 +215,7 @@ export function judgeInputEvidenceRows(
 				domain: row.domain,
 				fields: judgedFields(row, evidence),
 				evidence: evidence ? Object.fromEntries(evidence) : null,
-				requirements: requirementFlags,
+				requirements,
 			}),
 			source: ENGINE_SOURCE,
 		};

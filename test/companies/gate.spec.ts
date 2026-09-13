@@ -11,14 +11,8 @@ function companyRow(overrides: Partial<CompanyRow> = {}): CompanyRow {
 		name: "Acme",
 		domain: "acme.com",
 		linkedinUrl: null,
-		evidenceUrl: "https://acme.com/",
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		record: null,
 		description: null,
-		signal: null,
-		evidenceDate: null,
 		...overrides,
 	};
 }
@@ -27,7 +21,7 @@ describe("gate — required fields", () => {
 	it("keeps a row with every required field present, drops one missing any of them", () => {
 		const rows = [
 			companyRow(),
-			companyRow({ evidenceUrl: null }),
+			companyRow({ name: null }),
 			companyRow({ domain: null }),
 		];
 
@@ -58,11 +52,11 @@ describe("gate — dedupe", () => {
 });
 
 describe("gate — no judgement of fit", () => {
-	it("keeps a row whatever its signal, evidence date, or vendor score say about fit", () => {
+	it("keeps a row whatever its description or vendor record say about fit", () => {
 		const query = "US B2B software companies with a small team";
 		const rows = [
-			companyRow({ signal: query }),
-			companyRow({ evidenceDate: "2019-01-01T00:00:00.000Z" }),
+			companyRow({ description: query }),
+			companyRow({ record: null }),
 			companyRow({ domain: "low-score.com" }),
 		];
 
@@ -149,6 +143,18 @@ describe("domains a round tells the vendor not to return", () => {
 		);
 
 		expect(excludedDomains(["caller.com"], seen)).toHaveLength(1200);
+	});
+
+	it("keeps the full persisted set at the deterministic gate after provider capping", () => {
+		const seen = new Set(
+			Array.from({ length: 1500 }, (_, i) => `seen-${i}.com`),
+		);
+		const candidate = companyRow({ domain: "seen-1499.com" });
+
+		const result = gate([candidate], { seenDomains: seen });
+
+		expect(result.kept).toEqual([]);
+		expect(result.rejects[0]?.reason).toBe("already-seen");
 	});
 });
 

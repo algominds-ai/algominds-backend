@@ -15,15 +15,12 @@ import {
 	filterEntities,
 } from "@/core/companies/candidates";
 import type { CompanyRow, Reject } from "@/core/companies/gate";
-import type { Verdict } from "@/core/companies/judge";
-import { decideRows, provenRate } from "@/core/companies/judge";
 import {
-	applyEvidenceChecks,
-	demandsEvidenceProof,
-	toEvidenceRejects,
-	verifyEvidenceRows,
-} from "@/core/companies/proof";
-import { proveAndJudge } from "@/core/companies/proving";
+	identifyCompanyRows,
+	verifiedLinkedInCompanyUrl,
+} from "@/core/companies/identity";
+import { decideRows, provenRate } from "@/core/companies/judge";
+import { applyJudgeReasons } from "@/core/companies/proof";
 import { applyRecords } from "@/core/companies/record";
 import { addPartialSpend, CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
@@ -31,8 +28,10 @@ import type { ExaResult, ExaSearchResult } from "@/core/providers/exa/search";
 import type { Requirement } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeResult } from "@/core/synthesize";
 
-const { judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE } = config.companies;
-const MAX_JUDGE_SLICES_PER_ROUND = 3;
+const {
+	judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE,
+	resultsPerRound: MAX_CANDIDATES,
+} = config.companies;
 
 export type RoundContext = {
 	icp: IcpDoc;
@@ -53,12 +52,10 @@ export type RoundOutcome = {
 	accepted: CompanyRow[];
 	judgeRejects: FindCompaniesReject[];
 	provenRate: string | null;
-	unseenCount: number;
 	resultCount: number;
 	ledger: CostLedger;
 	captures: Record<string, CompanyCapture>;
 	pages: RetrievedPage[];
-	unjudgedDomains: string[];
 };
 
 /** Every distinct company domain an agent round named that this run may still return, the list its record backfill is asked for. An excluded domain is never looked up, so a paid record never resurrects a company the account already holds. */
@@ -74,17 +71,23 @@ function agentDomains(
 	return [...domains];
 }
 
-/** The results of every plan a search round ran, kept once by domain: the first plan to name a domain wins. */
+/** Keep one candidate per domain and retain evidence supplied by every angle. */
 function dedupeByDomain(results: readonly ExaResult[]): ExaResult[] {
-	const seen = new Set<string>();
-	const deduped: ExaResult[] = [];
+	const deduped = new Map<string, ExaResult>();
 	for (const result of results) {
 		const domain = normalizeDomain(result.url);
-		if (seen.has(domain)) continue;
-		seen.add(domain);
-		deduped.push(result);
+		const prior = deduped.get(domain);
+		deduped.set(
+			domain,
+			prior
+				? {
+						...prior,
+						evidence: [...(prior.evidence ?? []), ...(result.evidence ?? [])],
+					}
+				: result,
+		);
 	}
-	return deduped;
+	return [...deduped.values()];
 }
 
 type SearchAllInput = {
@@ -131,12 +134,25 @@ async function gather(input: GatherInput): Promise<ExaSearchResult> {
 		return searchAllPlans({ plans, excluded, opts, deps, ledger });
 	}
 	const found = await deps.agentRound(plans, excluded, opts.env, ledger);
+	const results = dedupeByDomain(found.results);
 	const filled = await deps.backfill(
-		agentDomains(found.results, ctx.excluded),
+		agentDomains(results, ctx.excluded),
 		opts.env,
 		ledger,
 	);
-	return { ...found, results: applyRecords(found.results, filled) };
+	return { ...found, results: applyRecords(results, filled) };
+}
+
+function knownExcludedIdentities(
+	rows: readonly CompanyRow[],
+	excluded: ReadonlySet<string>,
+): Set<string> {
+	return new Set(
+		rows
+			.filter((row) => row.domain && excluded.has(normalizeDomain(row.domain)))
+			.map((row) => verifiedLinkedInCompanyUrl(row.linkedinUrl))
+			.filter((url): url is string => url !== null),
+	);
 }
 
 export async function runRound(
@@ -170,40 +186,55 @@ export async function runRound(
 			ledger: vendorLedger,
 		});
 		const filtered = filterEntities(searched.results, first, opts.today);
-		const unseenCount = filtered.rows.filter(
-			(row) => row.domain && !ctx.excluded.has(normalizeDomain(row.domain)),
-		).length;
 		const gated = deps.gate(filtered.rows, {
 			seenDomains: ctx.excluded,
 		});
-		const judged = await judgeSlices({
-			ctx,
-			opts,
-			deps,
-			route,
-			first,
-			gated: gated.kept,
-			captures: filtered.captures,
+		const candidateLimit = Math.min(
+			ctx.count * JUDGE_CANDIDATE_MULTIPLE,
+			MAX_CANDIDATES,
+		);
+		const judgedRows = gated.kept.slice(0, candidateLimit);
+		const evidence = await deps.retrieveEvidence(
+			{
+				rows: judgedRows,
+				captures: filtered.captures,
+				requirements: ctx.requirements,
+			},
+			opts.env,
+			vendorLedger,
+		);
+		const identified = identifyCompanyRows(judgedRows, evidence.evidenceByRow);
+		const judged = identified.rows.length
+			? await deps.judge(ctx.requirements, identified.rows, opts.env, {
+					evidenceByRow: identified.evidenceByRow,
+					today: opts.today,
+					profile: ctx.icp,
+				})
+			: { verdicts: [], ledger: new CostLedger() };
+		applyJudgeReasons(filtered.captures, identified.rows, judged.verdicts);
+		const decision = decideRows({
+			requirements: ctx.requirements,
+			rows: identified.rows,
+			verdicts: judged.verdicts,
+			excluded: ctx.excluded,
+			excludedLinkedInUrls: knownExcludedIdentities(
+				filtered.rows,
+				ctx.excluded,
+			),
 		});
-		const unjudgedDomains = gated.kept
-			.slice(judged.judgedCount)
-			.map((row) => row.domain)
-			.filter((domain) => domain !== null);
 		return {
 			plans: [...plans],
 			rows: filtered.rows,
 			filterRejects: filtered.rejects,
 			gateRejects: gated.rejects,
-			evidenceRejects: judged.evidenceRejects,
-			accepted: judged.accepted,
-			judgeRejects: judged.judgeRejects,
+			evidenceRejects: identified.rejects,
+			accepted: decision.stored,
+			judgeRejects: decision.rejects,
 			provenRate: provenRate(ctx.requirements, judged.verdicts),
-			unseenCount,
 			resultCount: searched.results.length,
 			ledger: CostLedger.merge(synthesized.ledger, vendorLedger, judged.ledger),
 			captures: filtered.captures,
-			pages: judged.pages,
-			unjudgedDomains,
+			pages: evidence.pages,
 		};
 	} catch (error) {
 		throw addPartialSpend(
@@ -211,103 +242,4 @@ export async function runRound(
 			synthesized.ledger.total() + vendorLedger.total(),
 		);
 	}
-}
-
-type SliceInput = {
-	ctx: RoundContext;
-	opts: FindCompaniesOptions;
-	deps: FindCompaniesDeps;
-	route: SynthesizeResult["route"];
-	first: SearchPlan;
-	gated: readonly CompanyRow[];
-	captures: Record<string, CompanyCapture>;
-};
-
-type SliceOutcome = {
-	accepted: CompanyRow[];
-	judgeRejects: FindCompaniesReject[];
-	evidenceRejects: FindCompaniesReject[];
-	verdicts: Verdict[];
-	pages: RetrievedPage[];
-	ledger: CostLedger;
-	judgedCount: number;
-};
-
-/** Checks, proves and judges one slice of the gated candidates. */
-async function judgeOneSlice(
-	input: SliceInput,
-	candidates: readonly CompanyRow[],
-): Promise<SliceOutcome> {
-	const { ctx, opts, deps, route, first, captures } = input;
-	const ledger = new CostLedger();
-	try {
-		const checked = demandsEvidenceProof(first)
-			? await verifyEvidenceRows(candidates, opts.env, ledger)
-			: { kept: candidates, rejects: [], checks: {}, pages: [] };
-		applyEvidenceChecks(captures, checked.checks);
-		const proved = await proveAndJudge({
-			route,
-			icp: ctx.icp,
-			deps,
-			requirements: ctx.requirements,
-			checked,
-			env: opts.env,
-			ledger,
-			captures,
-			today: opts.today,
-		});
-		const decision = decideRows({
-			requirements: ctx.requirements,
-			rows: proved.rows,
-			verdicts: proved.verdicts,
-			excluded: ctx.excluded,
-		});
-		return {
-			accepted: decision.stored,
-			judgeRejects: decision.rejects,
-			evidenceRejects: toEvidenceRejects(candidates, checked.rejects),
-			verdicts: [...proved.verdicts],
-			pages: proved.pages,
-			ledger: CostLedger.merge(ledger, proved.ledger),
-			judgedCount: candidates.length,
-		};
-	} catch (error) {
-		throw addPartialSpend(error, ledger.total());
-	}
-}
-
-/** Judges the gated candidates one slice at a time, at most `MAX_JUDGE_SLICES_PER_ROUND` slices, moving on only while the round is short of its count; brand collapse applies within a slice only. */
-async function judgeSlices(input: SliceInput): Promise<SliceOutcome> {
-	const size = input.ctx.count * JUDGE_CANDIDATE_MULTIPLE;
-	const total: SliceOutcome = {
-		accepted: [],
-		judgeRejects: [],
-		evidenceRejects: [],
-		verdicts: [],
-		pages: [],
-		ledger: new CostLedger(),
-		judgedCount: 0,
-	};
-	for (let slice = 0; slice < MAX_JUDGE_SLICES_PER_ROUND; slice++) {
-		const at = slice * size;
-		if (at >= input.gated.length || total.accepted.length >= input.ctx.count) {
-			break;
-		}
-		try {
-			const judged = await judgeOneSlice(
-				input,
-				input.gated.slice(at, at + size),
-			);
-			total.judgedCount = at + judged.judgedCount;
-			total.accepted.push(...judged.accepted);
-			total.judgeRejects.push(...judged.judgeRejects);
-			total.evidenceRejects.push(...judged.evidenceRejects);
-			total.verdicts.push(...judged.verdicts);
-			total.pages.push(...judged.pages);
-			total.ledger = CostLedger.merge(total.ledger, judged.ledger);
-		} catch (error) {
-			throw addPartialSpend(error, total.ledger.total());
-		}
-	}
-	return total;
 }

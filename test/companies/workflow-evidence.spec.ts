@@ -77,19 +77,17 @@ async function evidenceKinds(subjectIds: string[]): Promise<string[]> {
 	return rows.map((row) => row.kind);
 }
 
-function companyRow(domain: string, quote: string | null): CompanyRow {
+function linkedin(domain: string): string {
+	return `https://linkedin.com/company/${domain.replace(/[^a-z0-9]/gi, "-")}`;
+}
+
+function companyRow(domain: string): CompanyRow {
 	return {
 		name: `Co ${domain}`,
 		domain,
-		linkedinUrl: null,
-		evidenceUrl: `https://${domain}`,
-		evidenceQuote: quote,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		linkedinUrl: linkedin(domain),
+		record: null,
 		description: null,
-		signal: quote ? "hiring a founding engineer" : null,
-		evidenceDate: quote ? "2026-08-20" : null,
 	};
 }
 
@@ -110,15 +108,13 @@ function captureFor(domain: string, withPages: boolean): CompanyCapture {
 			id: null,
 			url: `https://${domain}/`,
 			title: domain,
-			signal: null,
-			quote: null,
-			publisher: null,
-			kind: null,
-			publishedDate: null,
-			score: null,
-			evidenceCheck: withPages ? "found" : null,
-			fitReason: null,
+			qualification: {
+				index: 0,
+				statuses: [],
+				reason: "fits the profile",
+			},
 		},
+		evidence: [],
 		raw: JSON.stringify({ url: `https://${domain}/` }),
 		source: withPages ? "exa-agent" : "exa-search",
 	};
@@ -128,10 +124,8 @@ function roundResultFor(
 	domains: string[],
 	withPages: boolean,
 ): FindCompaniesResult {
-	const quote = (domain: string) =>
-		withPages ? `${domain} is hiring now.` : null;
 	return {
-		companies: domains.map((domain) => companyRow(domain, quote(domain))),
+		companies: domains.map(companyRow),
 		requested: domains.length,
 		found: domains.length,
 		rounds: 1,

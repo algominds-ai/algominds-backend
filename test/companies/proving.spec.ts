@@ -1,327 +1,230 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { config } from "@/config";
+import { z } from "zod";
+import type { CompanyCapture } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
-import {
-	proveRows,
-	provingDemand,
-	verifyEvidenceRows,
-} from "@/core/companies/proof";
+import { retrieveCompanyEvidence } from "@/core/companies/proof";
 import { CostLedger } from "@/core/cost";
-import type { Requirement } from "@/core/requirements";
-import { conditionRefs } from "@/core/requirements";
+import recordedSource from "../../exports/company-cycle-2026-09-06/agent-source-check-1788681565740.json";
 import { fakeSecretEnv } from "../support/env";
-import { exaContentsFetch } from "../support/fetch";
-import { requirementFixture } from "../support/icp";
+import { fakeVendors, jsonResponse } from "../support/fetch";
 
-function countingFetch(inner: typeof fetch): {
-	fetch: typeof fetch;
-	calls: number;
-} {
-	const counter = { fetch: inner, calls: 0 };
-	counter.fetch = (input, init) => {
-		counter.calls += 1;
-		return inner(input, init);
+const urls = [
+	"https://opentelemetry.io/blog/2026/devex-skyscanner/",
+	"https://linkedin.com/company/skyscanner",
+];
+
+function row(): CompanyRow {
+	return {
+		name: "Skyscanner",
+		domain: "skyscanner.net",
+		linkedinUrl: urls[1] ?? null,
+		description: null,
+		record: null,
 	};
-	return counter;
 }
 
-function row(overrides: Partial<CompanyRow> & { domain: string }): CompanyRow {
+function capture(): CompanyCapture {
 	return {
-		name: null,
-		linkedinUrl: null,
-		evidenceUrl: null,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
-		description: null,
-		signal: null,
-		evidenceDate: null,
-		...overrides,
+		entity: {
+			name: "Skyscanner",
+			description: null,
+			industry: null,
+			foundedYear: null,
+			workforceTotal: 1313,
+			city: "Edinburgh",
+			country: "United Kingdom",
+			revenueAnnual: null,
+			fundingTotal: null,
+		},
+		result: {
+			id: null,
+			url: "https://www.skyscanner.net",
+			title: "Skyscanner",
+			qualification: null,
+		},
+		evidence: urls.flatMap((url, index) =>
+			Array.from({ length: index === 0 ? 2 : 1 }, (_, duplicate) => ({
+				conditionId: `r${index + duplicate + 1}.a1.c1`,
+				sourceUrl: url,
+				quote: duplicate ? "another guessed quote" : "guessed quote",
+				eventDate: null,
+				publishedDate: "2099-01-01",
+			})),
+		),
+		raw: "{}",
+		source: "exa-agent",
 	};
 }
 
 const originalFetch = globalThis.fetch;
-
 afterEach(() => {
 	globalThis.fetch = originalFetch;
 });
 
-describe("verifyEvidenceRows batches every checkable row into one exaContents call", () => {
-	it("sends one request for two rows citing different pages, never one per row", async () => {
-		const counting = countingFetch(
-			exaContentsFetch({
-				"https://a.example/careers": { text: "A Co is hiring now." },
-				"https://b.example/careers": { text: "B Co is hiring now." },
+function sourceResults() {
+	const raw = z
+		.object({
+			response: z.object({
+				results: z.array(
+					z.object({
+						url: z.string(),
+						text: z.string(),
+						publishedDate: z.string().nullish(),
+					}),
+				),
 			}),
-		);
-		globalThis.fetch = counting.fetch;
-		const rows = [
-			row({
-				domain: "a.example",
-				evidenceUrl: "https://a.example/careers",
-				evidenceQuote: "A Co is hiring now.",
-			}),
-			row({
-				domain: "b.example",
-				evidenceUrl: "https://b.example/careers",
-				evidenceQuote: "B Co is hiring now.",
-			}),
-		];
+		})
+		.parse(recordedSource);
+	return raw.response.results.filter((result) => urls.includes(result.url));
+}
 
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(counting.calls).toBe(1);
-		expect(result.kept.map((r) => r.domain)).toEqual([
-			"a.example",
-			"b.example",
-		]);
-	});
-
-	it("dedupes the url list when two rows cite the same page", async () => {
-		globalThis.fetch = exaContentsFetch({
-			"https://shared.example/about": {
-				text: "Alice runs sales. Bob runs ops.",
-			},
-		});
-		const rows = [
-			row({
-				domain: "shared-alice.example",
-				evidenceUrl: "https://shared.example/about",
-				evidenceQuote: "Alice runs sales.",
-			}),
-			row({
-				domain: "shared-bob.example",
-				evidenceUrl: "https://shared.example/about",
-				evidenceQuote: "Bob runs ops.",
-			}),
-		];
-
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(result.kept).toHaveLength(2);
-		expect(result.checks["shared-alice.example"]).toBe("found");
-		expect(result.checks["shared-bob.example"]).toBe("found");
-	});
-
-	it("never calls exaContents when every row is missing its url or quote", async () => {
-		globalThis.fetch = async () => {
-			throw new Error("no fetch should run when nothing needs checking");
-		};
-		const rows = [row({ domain: "silent.example" })];
-
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(result.kept).toHaveLength(0);
-		expect(result.rejects).toEqual([
-			{ index: 0, reason: "missing-required", detail: null },
-		]);
-	});
-});
-
-describe("verifyEvidenceRows tells a truly missing page from one merely absent from the reply", () => {
-	it("treats a url the vendor's reply never mentions as an error and keeps no page for it", async () => {
-		globalThis.fetch = exaContentsFetch({
-			"https://ghost.example/careers": { absent: true },
-		});
-		const rows = [
-			row({
-				domain: "ghost.example",
-				evidenceUrl: "https://ghost.example/careers",
-				evidenceQuote: "Ghost Co is hiring now.",
-			}),
-		];
-
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(result.kept).toHaveLength(0);
-		expect(result.rejects).toEqual([
-			{
-				index: 0,
-				reason: "evidence-not-on-page",
-				detail: "CRAWL_ABSENT_FROM_REPLY",
-			},
-		]);
-		expect(result.checks["ghost.example"]).toBe("CRAWL_ABSENT_FROM_REPLY");
-		expect(result.pages).toEqual([]);
-	});
-
-	it("rejects a row whose page truly does not exist, keeping the rest of the batch", async () => {
-		globalThis.fetch = exaContentsFetch({
-			"https://good.example/careers": { text: "Good Co is hiring now." },
-			"https://missing.example/careers": { errorTag: "CRAWL_NOT_FOUND" },
-		});
-		const rows = [
-			row({
-				domain: "good.example",
-				evidenceUrl: "https://good.example/careers",
-				evidenceQuote: "Good Co is hiring now.",
-			}),
-			row({
-				domain: "missing.example",
-				evidenceUrl: "https://missing.example/careers",
-				evidenceQuote: "Missing Co is hiring now.",
-			}),
-		];
-
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(result.kept.map((r) => r.domain)).toEqual(["good.example"]);
-		expect(result.rejects).toEqual([
-			{ index: 1, reason: "evidence-not-on-page", detail: "CRAWL_NOT_FOUND" },
-		]);
-	});
-});
-
-describe("verifyEvidenceRows keeps the page it crawled as evidence", () => {
-	it("keeps the crawled page as evidence for every row whose quote it checked", async () => {
-		globalThis.fetch = exaContentsFetch({
-			"https://a.example/careers": { text: "A Co is hiring now." },
-			"https://b.example/careers": { text: "Nothing about hiring here." },
-		});
-		const rows = [
-			row({
-				domain: "a.example",
-				evidenceUrl: "https://a.example/careers",
-				evidenceQuote: "A Co is hiring now.",
-			}),
-			row({
-				domain: "b.example",
-				evidenceUrl: "https://b.example/careers",
-				evidenceQuote: "B Co is hiring now.",
-			}),
-		];
-
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(result.pages).toEqual([
-			{
-				domain: "a.example",
-				url: "https://a.example/careers",
-				text: "A Co is hiring now.",
-			},
-		]);
-	});
-});
-
-describe("verifyEvidenceRows bounds one exaContents call to a handful of urls", () => {
-	it("splits a dozen urls into concurrent calls of the configured batch size, never one huge request", async () => {
-		const batchSize = config.companies.provingConcurrency;
-		const rows = Array.from({ length: batchSize * 2 + 2 }, (_, i) =>
-			row({
-				domain: `co${i}.example`,
-				evidenceUrl: `https://co${i}.example/careers`,
-				evidenceQuote: `Co ${i} is hiring now.`,
-			}),
-		);
-		const byUrl = Object.fromEntries(
-			rows.map((_r, i) => [
-				`https://co${i}.example/careers`,
-				{ text: `Co ${i} is hiring now.` },
-			]),
-		);
-		const counting = countingFetch(exaContentsFetch(byUrl));
-		globalThis.fetch = counting.fetch;
-
-		const result = await verifyEvidenceRows(
-			rows,
-			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
-			new CostLedger(),
-		);
-
-		expect(counting.calls).toBe(3);
-		expect(result.kept).toHaveLength(rows.length);
-		expect(Object.keys(result.checks)).toHaveLength(rows.length);
-	});
-});
-
-const windowed: Requirement = {
-	kind: "required",
-	anyOf: [
+function prepareContents(results: ReturnType<typeof sourceResults>) {
+	globalThis.fetch = fakeVendors(
+		{},
 		{
-			allOf: [
+			"/contents": (init) => {
+				const body = ContentsBodySchema.parse(JSON.parse(String(init?.body)));
+				expect(body.urls.length).toBeLessThanOrEqual(5);
+				const fetched = results.filter((page) => body.urls.includes(page.url));
+				return jsonResponse({
+					requestId: "recorded-source-check",
+					costDollars: { total: 0 },
+					results: fetched,
+					statuses: body.urls.map((url) =>
+						fetched.some((page) => page.url === url)
+							? { id: url, status: "success" }
+							: {
+									id: url,
+									status: "error",
+									error: { tag: "CRAWL_UNKNOWN_ERROR" },
+								},
+					),
+				});
+			},
+		},
+	);
+}
+
+const ContentsBodySchema = z.object({ urls: z.array(z.string()) });
+
+function prepareFailedLinkedInContents(
+	sourcePages: ReturnType<typeof sourceResults>,
+	fallbackUrl: string,
+	searchBodies: unknown[],
+) {
+	prepareContents(sourcePages.filter((page) => page.url !== urls[1]));
+	const contentsFetch = globalThis.fetch;
+	globalThis.fetch = async (input, init) => {
+		if (new URL(String(input)).pathname !== "/search")
+			return contentsFetch(input, init);
+		searchBodies.push(JSON.parse(String(init?.body)));
+		return jsonResponse({
+			requestId: "linkedin-fallback-search",
+			costDollars: { total: 0 },
+			results: [
 				{
-					text: "runs production Kubernetes",
-					window: {
-						amount: 2,
-						unit: "years",
-						appliesTo: "publication",
-						direction: "past",
-					},
-					sourceRule: "company domain",
+					id: "fallback-linkedin",
+					url: fallbackUrl,
+					title: "Skyscanner",
+					text: "Skyscanner is a travel search company.",
 				},
 			],
-		},
-	],
-};
-
-function windowedRef() {
-	const ref = conditionRefs([windowed])[0];
-	if (!ref) throw new Error("expected windowed condition");
-	return ref;
+		});
+	};
 }
 
-function unwindowedRef() {
-	const ref = conditionRefs([
-		requirementFixture("runs production Kubernetes"),
-	])[0];
-	if (!ref) throw new Error("expected unwindowed condition");
-	return ref;
-}
-
-describe("a proving search is bounded by the requirement's window", () => {
-	it("dates the earliest acceptable page at today less the window, and leaves an unwindowed requirement unbounded", () => {
-		expect(provingDemand(windowedRef(), "2026-09-03").notBefore).toBe(
-			"2024-09-03",
+describe("retrieveCompanyEvidence", () => {
+	it("retrieves the later companies' sources when a batch needs more than 100 pages", async () => {
+		const rows = Array.from({ length: 60 }, (_, index) => ({
+			...row(),
+			domain: `company${index}.example`,
+			linkedinUrl: `https://linkedin.com/company/company${index}`,
+		}));
+		const captures = Object.fromEntries(
+			rows.map((company) => [
+				company.domain,
+				{
+					...capture(),
+					evidence: capture().evidence.map((entry) => ({
+						...entry,
+						sourceUrl: `https://${company.domain}/proof`,
+					})),
+				},
+			]),
 		);
-		expect(provingDemand(unwindowedRef(), "2026-09-03").notBefore).toBeNull();
-	});
-
-	it("sends the window as startPublishedDate on every proving search", async () => {
-		const bodies: string[] = [];
-		globalThis.fetch = async (_input, init) => {
-			bodies.push(String(init?.body));
-			return new Response(JSON.stringify({ requestId: "r", results: [] }), {
-				status: 200,
-				headers: { "content-type": "application/json" },
-			});
-		};
-		const env = fakeSecretEnv({ EXA_API_KEY: "test-exa-key" });
-
-		await proveRows(
-			[row({ domain: "bank.com", name: "Bank" })],
-			provingDemand(windowedRef(), "2026-09-03"),
-			env,
+		prepareContents(
+			rows.flatMap((company) =>
+				[
+					`https://${company.domain}/`,
+					`https://${company.domain}/proof`,
+					company.linkedinUrl,
+				].map((url) => ({ url, text: `Fetched text for ${url}` })),
+			),
+		);
+		const result = await retrieveCompanyEvidence(
+			{ rows, captures, requirements: [] },
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
 			new CostLedger(),
 		);
+		expect(result.pages).toHaveLength(180);
+		expect(result.evidenceByRow.size).toBe(60);
+		expect(
+			[...result.evidenceByRow.values()].every((pages) => pages.size === 3),
+		).toBe(true);
+	});
 
-		expect(bodies.length).toBeGreaterThan(0);
-		for (const body of bodies) {
-			expect(JSON.parse(body).startPublishedDate).toBe("2024-09-03");
-		}
+	it("reuses LinkedIn host aliases and discards generated quotes and dates", async () => {
+		const sourcePages = sourceResults();
+		prepareContents(sourcePages);
+		const result = await retrieveCompanyEvidence(
+			{
+				rows: [
+					{
+						...row(),
+						linkedinUrl: "https://www.linkedin.com/company/skyscanner",
+					},
+				],
+				captures: { "skyscanner.net": capture() },
+				requirements: [],
+			},
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
+		const evidence = result.evidenceByRow.get(0);
+		expect(result.pages).toHaveLength(2);
+		expect(evidence?.size).toBe(2);
+		expect(
+			[...(evidence?.values() ?? [])].every((entry) => entry.quote === ""),
+		).toBe(true);
+		expect(
+			[...(evidence?.values() ?? [])].some(
+				(entry) => entry.publishedDate === "2099-01-01",
+			),
+		).toBe(false);
+	});
+
+	it("searches for the native LinkedIn page when the supplied URL crawl fails", async () => {
+		const sourcePages = sourceResults();
+		const fallbackUrl = "https://www.linkedin.com/company/skyscanner";
+		const searchBodies: unknown[] = [];
+		prepareFailedLinkedInContents(sourcePages, fallbackUrl, searchBodies);
+		const result = await retrieveCompanyEvidence(
+			{
+				rows: [row()],
+				captures: { "skyscanner.net": capture() },
+				requirements: [],
+			},
+			fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+			new CostLedger(),
+		);
+		const evidence = result.evidenceByRow.get(0);
+		expect(searchBodies).toHaveLength(1);
+		expect(searchBodies[0]).toMatchObject({
+			includeDomains: ["linkedin.com/company"],
+			contents: { text: { maxCharacters: expect.any(Number) } },
+		});
+		expect(result.pages.map((page) => page.url)).toContain(fallbackUrl);
+		expect(evidence?.get(fallbackUrl)?.text).toContain("travel search");
+		expect(result.pages.map((page) => page.url)).not.toContain(urls[1]);
 	});
 });

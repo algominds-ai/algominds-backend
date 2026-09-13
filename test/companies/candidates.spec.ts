@@ -9,6 +9,7 @@ import { CostLedger } from "@/core/cost";
 import type { CompanyEntity, ExaResult } from "@/core/providers/exa/search";
 import { conditionRefs } from "@/core/requirements";
 import type { SearchPlan } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
@@ -25,13 +26,12 @@ function entity(overrides: Partial<CompanyEntity> = {}): CompanyEntity {
 		...overrides,
 	};
 }
-
-function goodResult(
+function result(
 	domain: string,
 	overrides: Partial<CompanyEntity> = {},
 ): ExaResult {
 	return {
-		id: `https://exa.ai/library/organization/${domain}`,
+		id: `exa-${domain}`,
 		url: `https://${domain}/`,
 		title: `Company ${domain}`,
 		summary: null,
@@ -39,14 +39,10 @@ function goodResult(
 		person: null,
 	};
 }
-
-function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
+function plan(): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -59,87 +55,39 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 		maxRevenueAnnual: null,
 		minFundingTotal: null,
 		maxFundingTotal: null,
-		...overrides,
 	};
 }
+const today = "2026-08-30";
 
-const TODAY = "2026-08-30";
-
-describe("filterEntities — capturing the vendor payload", () => {
-	it("captures the full entity, including fields the row itself never reads", () => {
-		const richFields: Partial<CompanyEntity> = {
-			workforceTotal: 42,
-			foundedYear: 2018,
-			revenueAnnual: 5_000_000,
-			fundingTotal: 1_200_000,
-		};
-
+describe("candidate filtering and capture", () => {
+	it("keeps the vendor entity in the capture while producing the canonical row", () => {
 		const outcome = filterEntities(
-			[goodResult("rich.com", richFields)],
+			[result("rich.com", { workforceTotal: 42 })],
 			plan(),
-			TODAY,
+			today,
 		);
-
-		expect(outcome.captures["rich.com"]?.entity).toEqual(
-			entity({ name: "Company rich.com", ...richFields }),
-		);
-	});
-
-	it("captures a result missing its score and published date with those fields null, not a thrown error", () => {
-		const outcome = filterEntities([goodResult("noscore.com")], plan(), TODAY);
-
-		expect(outcome.captures["noscore.com"]?.result).toEqual({
-			id: "https://exa.ai/library/organization/noscore.com",
-			url: "https://noscore.com/",
-			title: "Company noscore.com",
-			signal: null,
-			quote: null,
-			publisher: null,
-			kind: null,
-			publishedDate: null,
-			score: null,
-			evidenceCheck: null,
-			fitReason: null,
+		expect(outcome.rows[0]).toEqual({
+			name: "Company rich.com",
+			domain: "rich.com",
+			linkedinUrl: null,
+			description: "a small software company",
+			record: outcome.rows[0]?.record,
 		});
+		expect(outcome.captures["rich.com"]?.entity.workforceTotal).toBe(42);
 	});
 
-	it("carries the kind onto the row and onto the capture beside it", () => {
-		const proved: ExaResult = {
-			...goodResult("displaced.com"),
-			evidenceUrl: "https://vendor.example/customers/displaced",
-			evidenceKind: "vendor-case-study",
-		};
-
-		const outcome = filterEntities([proved], plan(), TODAY);
-
-		expect(outcome.rows[0]?.evidenceKind).toBe("vendor-case-study");
-		expect(outcome.captures["displaced.com"]?.result.kind).toBe(
-			"vendor-case-study",
+	it("rejects a result without a company record", () => {
+		const outcome = filterEntities(
+			[{ ...result("missing.com"), company: null }],
+			plan(),
+			today,
 		);
+		expect(outcome.rows).toEqual([]);
+		expect(outcome.rejects[0]?.stage).toBe("filter");
 	});
 });
 
-describe("filterEntities — what the saved row carries", () => {
-	it("keeps the row to exactly the fields evidence reads, holding the vendor capture on the side", () => {
-		const outcome = filterEntities([goodResult("shape.com")], plan(), TODAY);
-
-		expect(Object.keys(outcome.rows[0] ?? {}).sort()).toEqual([
-			"description",
-			"domain",
-			"evidenceDate",
-			"evidenceKind",
-			"evidencePublisher",
-			"evidenceQuote",
-			"evidenceUrl",
-			"industry",
-			"linkedinUrl",
-			"name",
-			"signal",
-		]);
-	});
-});
-
-function keptDeps(): FindCompaniesDeps {
+function deps(): FindCompaniesDeps {
 	return {
 		recentDomains: async () => [],
 		synthesize: async () => ({
@@ -147,86 +95,61 @@ function keptDeps(): FindCompaniesDeps {
 			plans: [plan()],
 			ledger: new CostLedger(),
 		}),
-		search: async () => ({
-			requestId: "req-1",
-			results: [goodResult("kept.com")],
-		}),
-		agentRound: async () => {
-			throw new Error("should not reach the agent");
-		},
+		search: async () => ({ requestId: "req-1", results: [result("kept.com")] }),
+		agentRound: async () => ({ requestId: "agent-1", results: [] }),
 		backfill: async () => [],
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		gate,
 		judge: async (requirements, rows) => ({
 			verdicts: rows.map((_row, index) => ({
 				index,
-				statuses: requirements.map((r) => ({
-					id: conditionRefs([r])[0]?.id ?? "r1.a1.c1",
+				statuses: conditionRefs(requirements).map(({ id }) => ({
+					id,
 					status: "proven" as const,
-					quote: "",
+					sourceUrl: null,
+					date: null,
 				})),
 				reason: "fits icp",
-				sameOrganizationAs: null,
 			})),
 			ledger: new CostLedger(),
 		}),
 	};
 }
 
-describe("a kept company's row carries the judge's own reason for keeping it", () => {
-	it("carries the reason onto the row and onto toCompanyData's own result", async () => {
-		const icp = profileFixture();
+describe("candidate capture conversion", () => {
+	it("carries the judge qualification into the canonical match", async () => {
 		const options: FindCompaniesOptions = {
 			icpId: "icp-1",
 			organizationId: "org-1",
 			env: testEnv,
-			today: TODAY,
+			today,
 			requirements: [requirementFixture("fits the profile")],
 		};
-
-		const result = await findCompanies(icp, 1, options, keptDeps());
-
-		const capture = result.captures["kept.com"];
-		expect(capture?.result.fitReason).toBe("fits icp");
-		if (!capture) throw new Error("expected a capture for kept.com");
-		expect(toCompanyData(capture).result).toMatchObject({
-			fitReason: "fits icp",
-		});
+		const found = await findCompanies(profileFixture(), 1, options, deps());
+		const capture = found.captures["kept.com"];
+		if (!capture) throw new Error("expected capture");
+		expect(capture.result.qualification?.reason).toBe("fits icp");
+		expect(toCompanyData(capture).result.qualification?.reason).toBe(
+			"fits icp",
+		);
 	});
-});
 
-describe("toCompanyData", () => {
-	function captureFrom(source: string): CompanyCapture {
-		return {
+	it("preserves the selected provider on converted data", () => {
+		const capture: CompanyCapture = {
 			entity: entity(),
 			result: {
-				id: "https://exa.ai/library/organization/example",
-				url: "https://example.com/",
+				id: "id",
+				url: "https://example.com",
 				title: "Example",
-				signal: null,
-				quote: null,
-				publisher: null,
-				kind: null,
-				publishedDate: null,
-				score: null,
-				evidenceCheck: null,
-				fitReason: null,
+				qualification: null,
 			},
-			raw: JSON.stringify(goodResult("example.com")),
-			source,
+			evidence: [],
+			raw: "{}",
+			source: "exa-agent",
 		};
-	}
-
-	it("names the source the round chose, so two sources in one run stay apart", () => {
-		const searched = captureFrom("exa-search");
-		const agented = captureFrom("exa-agent");
-
-		expect(toCompanyData(searched)).toEqual({
-			provider: "exa-search",
-			entity: searched.entity,
-			result: searched.result,
-		});
-		expect(toCompanyData(agented).provider).toBe("exa-agent");
+		expect(toCompanyData(capture).provider).toBe("exa-agent");
 	});
 });

@@ -6,6 +6,7 @@ import type {
 	EvidenceByRow,
 	RequirementEvidence,
 } from "@/core/companies/judge-evidence";
+import { PartialSpendError } from "@/core/cost";
 import { db, withConnection } from "@/core/db/client";
 import { evidence as evidenceTable } from "@/core/db/schema";
 import { conditionRefs } from "@/core/requirements";
@@ -21,14 +22,8 @@ function companyRow(domain: string): CompanyRow {
 		name: `Co ${domain}`,
 		domain,
 		linkedinUrl: null,
-		evidenceUrl: null,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		record: null,
 		description: "a description of the company",
-		signal: null,
-		evidenceDate: null,
 	};
 }
 
@@ -76,10 +71,11 @@ function judgeDepsFor(
 ): ReturnType<typeof roundDeps>["judge"] {
 	return roundDeps({
 		accumulatedDomains: new Set(),
+		remaining: 15,
 		step: harness.step,
 		round: ROUND,
 		today: "2026-09-01",
-		seller: profileFixture().seller,
+		icp: profileFixture(),
 		timings: [],
 		runId,
 	}).judge;
@@ -107,7 +103,7 @@ type ParsedJudgeInput = {
 	round: number;
 	domain: string | null;
 	fields: { name: string | null };
-	requirements: { id: string; quoteRequired: boolean }[];
+	requirements: ReturnType<typeof requirements>;
 	evidence: Record<string, RequirementEvidence> | null;
 };
 
@@ -120,7 +116,7 @@ describe("the round saves the judge's exact input before it calls the model", ()
 		const runId = `judge-input-test-${crypto.randomUUID()}`;
 		const domain = `judge-input-co-${crypto.randomUUID()}.example`;
 		const harness = fakeWorkflowStep(
-			new Map([[`round_${ROUND}-judge`, { verdicts: [], costEntries: [] }]]),
+			new Map([[`round_${ROUND}-judge-0`, { verdicts: [], costEntries: [] }]]),
 		);
 		const judge = judgeDepsFor(runId, harness);
 
@@ -136,13 +132,75 @@ describe("the round saves the judge's exact input before it calls the model", ()
 			expect(parsed.round).toBe(ROUND);
 			expect(parsed.domain).toBe(domain);
 			expect(parsed.fields.name).toBe(`Co ${domain}`);
-			expect(parsed.requirements).toEqual([
-				{ id: requirementIds[0] ?? "r1.a1.c1", quoteRequired: true },
-				{ id: requirementIds[1] ?? "r2.a1.c1", quoteRequired: false },
-			]);
+			expect(parsed.requirements).toEqual(requirements());
 			expect(parsed.evidence?.[requirementIds[0] ?? ""]?.quote).toBe(
 				`${domain} runs it in production.`,
 			);
+		} finally {
+			await deleteEvidenceFor(runId);
+		}
+	});
+
+	it("remaps cached slice-local indices to global row indices at the second slice", async () => {
+		const runId = `judge-slices-${crypto.randomUUID()}`;
+		const rows = Array.from({ length: 5 }, (_, index) =>
+			companyRow(`slice-${index}.example`),
+		);
+		const cached = (index: number) => ({
+			verdicts: [
+				{
+					index,
+					statuses: [],
+					reason: "cached",
+				},
+			],
+			costEntries: [],
+		});
+		const harness = fakeWorkflowStep(
+			new Map<string, unknown>([
+				[`round_${ROUND}-judge-0`, cached(0)],
+				[`round_${ROUND}-judge-4`, cached(0)],
+			]),
+		);
+		try {
+			const result = await judgeDepsFor(runId, harness)(
+				requirements(),
+				rows,
+				testEnv,
+			);
+			expect(result.verdicts.map((verdict) => verdict.index)).toEqual([0, 4]);
+			expect(harness.calls).toContain(`round_${ROUND}-judge-4`);
+		} finally {
+			await deleteEvidenceFor(runId);
+		}
+	});
+
+	it("propagates cached and failed slice spend without invoking a provider", async () => {
+		const runId = `judge-slice-spend-${crypto.randomUUID()}`;
+		const rows = Array.from({ length: 5 }, (_, index) =>
+			companyRow(`spend-${index}.example`),
+		);
+		const harness = fakeWorkflowStep(
+			new Map<string, unknown>([
+				[
+					`round_${ROUND}-judge-0`,
+					{
+						verdicts: [],
+						costEntries: [{ provider: "test", op: "judge", dollars: 0.01 }],
+					},
+				],
+				[
+					`round_${ROUND}-judge-4`,
+					new PartialSpendError(0.02, new Error("slice failed")),
+				],
+			]),
+		);
+		try {
+			await expect(
+				judgeDepsFor(runId, harness)(requirements(), rows, testEnv),
+			).rejects.toMatchObject({ costDollars: 0.03 });
+			expect(harness.calls).toContain(`round_${ROUND}-judge-0`);
+			expect(harness.calls).toContain(`round_${ROUND}-judge-4`);
 		} finally {
 			await deleteEvidenceFor(runId);
 		}

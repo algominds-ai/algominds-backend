@@ -34,8 +34,8 @@ export class CostLedger {
 
 	/**
 	 * Records a dollar figure a vendor returned directly. When `detail` is
-	 * given, it replaces the flat figure with one line per key instead of one
-	 * line for `provider`.
+	 * complete, it attributes that total by key. A partial breakdown never
+	 * replaces the provider's reported total.
 	 */
 	reported(
 		provider: string,
@@ -43,7 +43,14 @@ export class CostLedger {
 		dollars: number,
 		detail?: Record<string, number>,
 	): void {
-		if (!detail || Object.keys(detail).length === 0) {
+		if (
+			!detail ||
+			Object.keys(detail).length === 0 ||
+			Object.values(detail).reduce(
+				(sum, amount) => sum + toNanos(amount),
+				0,
+			) !== toNanos(dollars)
+		) {
 			this.#entries.push({ provider, op, nanos: toNanos(dollars) });
 			return;
 		}

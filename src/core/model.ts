@@ -81,6 +81,7 @@ export type StructuredCallParams<T> = {
 	prompt: string;
 	schema: z.ZodType<T>;
 	headers: Record<string, string>;
+	reasoningEffort?: "low" | "medium";
 };
 
 async function attemptStructured<T>(
@@ -95,7 +96,14 @@ async function attemptStructured<T>(
 			prompt: params.prompt,
 			output: Output.object({ schema: params.schema }),
 			headers: params.headers,
-			providerOptions: STRUCTURED_ROUTING,
+			providerOptions: params.reasoningEffort
+				? {
+						[PROVIDER_NAME]: {
+							...STRUCTURED_ROUTING[PROVIDER_NAME],
+							reasoning: { effort: params.reasoningEffort },
+						},
+					}
+				: STRUCTURED_ROUTING,
 			include: { responseBody: true },
 			maxRetries: 0,
 			abortSignal: AbortSignal.timeout(MODEL_TIMEOUT_MS),

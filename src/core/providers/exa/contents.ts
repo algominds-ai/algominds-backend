@@ -4,6 +4,7 @@ import type { CostLedger } from "@/core/cost";
 import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 
 const EXA_CONTENTS_MAX_CHARACTERS = 20_000;
+const EXA_HIGHLIGHTS_MAX_CHARACTERS = 3_000;
 
 const EXA_LIVECRAWL_OPTIONS = [
 	"always",
@@ -17,17 +18,23 @@ export type ExaLivecrawl = (typeof EXA_LIVECRAWL_OPTIONS)[number];
 export type ExaContentsOptions = {
 	maxCharacters?: number;
 	livecrawl?: ExaLivecrawl;
+	query?: string;
+	byId?: boolean;
 };
 
 const ExaContentsStatusSchema = z.object({
 	id: z.string(),
 	status: z.enum(["success", "error"]),
-	error: z.object({ tag: z.string() }).optional(),
+	error: z.object({ tag: z.string().optional() }).optional(),
 });
 
 const ExaContentsResultSchema = z.object({
+	id: z.string().optional(),
 	url: z.string(),
+	title: z.string().optional(),
+	publishedDate: z.string().nullish(),
 	text: z.string().optional(),
+	highlights: z.array(z.string()).optional(),
 });
 
 const ExaContentsResponseSchema = z.object({
@@ -37,7 +44,13 @@ const ExaContentsResponseSchema = z.object({
 	costDollars: z.object({ total: z.number() }),
 });
 
-export type ExaContentResult = { url: string; text: string | null };
+export type ExaContentResult = {
+	id?: string;
+	url: string;
+	title?: string;
+	text: string | null;
+	publishedDate?: string | null;
+};
 
 /** One URL's fetch outcome. `tag` is the vendor's error tag, present only when `status` is `"error"`. */
 export type ExaContentStatus = {
@@ -85,10 +98,21 @@ export async function exaContents(
 			method: "POST",
 			headers: { "x-api-key": apiKey, "content-type": "application/json" },
 			body: JSON.stringify({
-				urls,
-				text: {
-					maxCharacters: options.maxCharacters ?? EXA_CONTENTS_MAX_CHARACTERS,
-				},
+				...(options.byId ? { ids: urls } : { urls }),
+				text: options.query
+					? true
+					: {
+							maxCharacters:
+								options.maxCharacters ?? EXA_CONTENTS_MAX_CHARACTERS,
+						},
+				...(options.query
+					? {
+							highlights: {
+								query: options.query,
+								maxCharacters: EXA_HIGHLIGHTS_MAX_CHARACTERS,
+							},
+						}
+					: {}),
 				...(options.livecrawl ? { livecrawl: options.livecrawl } : {}),
 			}),
 		},
@@ -100,8 +124,18 @@ export async function exaContents(
 	return {
 		requestId: parsed.requestId,
 		results: parsed.results.map((result) => ({
+			...(result.id !== undefined && { id: result.id }),
 			url: result.url,
-			text: result.text ?? null,
+			...(result.title ? { title: result.title } : {}),
+			text: options.query
+				? queryText(
+						result.text ?? "",
+						result.highlights,
+						EXA_HIGHLIGHTS_MAX_CHARACTERS,
+						options.maxCharacters ?? EXA_CONTENTS_MAX_CHARACTERS,
+					)
+				: (result.text ?? null),
+			publishedDate: result.publishedDate ?? null,
 		})),
 		statuses: parsed.statuses.map((status) => ({
 			url: status.id,
@@ -120,6 +154,33 @@ export function quoteFoundInText(text: string, quote: string): boolean {
 	return collapseWhitespace(text)
 		.toLowerCase()
 		.includes(collapseWhitespace(quote).toLowerCase());
+}
+
+function queryText(
+	text: string,
+	highlights: readonly string[] | undefined,
+	highlightsMaxCharacters: number,
+	textMaxCharacters: number,
+): string {
+	if (text.length <= textMaxCharacters) return text;
+	if (!highlights?.length) return text.slice(0, textMaxCharacters);
+	const exact = highlights
+		.flatMap((highlight) => highlight.split(/\n\.\.\.\n/))
+		.filter(
+			(highlight) =>
+				highlight.trim().length > 0 && quoteFoundInText(text, highlight),
+		);
+	let size = 0;
+	const selected: string[] = [];
+	for (const highlight of exact) {
+		const nextSize = size + highlight.length + (selected.length > 0 ? 5 : 0);
+		if (nextSize > highlightsMaxCharacters) break;
+		selected.push(highlight);
+		size = nextSize;
+	}
+	return selected.length > 0
+		? selected.join("\n...\n")
+		: text.slice(0, textMaxCharacters);
 }
 
 /** `"found"` or `"missing"` when the page fetched cleanly, else the vendor's error tag for that URL. */

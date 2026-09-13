@@ -2,11 +2,13 @@ import { z } from "zod";
 import { config } from "@/config";
 import type { CompanyRow } from "@/core/companies/gate";
 import { NOT_A_COMPANY_DOMAIN } from "@/core/companies/gate";
+import type { Verdict } from "@/core/companies/judge-evidence";
 import type { RejectDetail } from "@/core/companies/limits";
 import { entityRejectReason, planConstraints } from "@/core/companies/limits";
 import { normalizeDomain } from "@/core/db/schema";
 import type {
 	CompanyEntity,
+	CompanyEvidence,
 	ExaResult,
 	ExaSearchRequest,
 } from "@/core/providers/exa/search";
@@ -32,14 +34,7 @@ export type CompanyMatch = {
 	id: string | null;
 	url: string;
 	title: string;
-	signal: string | null;
-	quote: string | null;
-	publisher: string | null;
-	kind: string | null;
-	publishedDate: string | null;
-	score: number | null;
-	evidenceCheck: string | null;
-	fitReason: string | null;
+	qualification: Verdict | null;
 };
 
 /**
@@ -51,6 +46,7 @@ export type CompanyMatch = {
  * serializability check, which cannot resolve a type that carries it.
  */
 export type CompanyCapture = {
+	evidence: CompanyEvidence[];
 	entity: CompanyEntity;
 	result: CompanyMatch;
 	raw: string;
@@ -113,56 +109,22 @@ export function buildSearchRequest(
 	};
 }
 
-function describeCompany(entity: CompanyEntity): string {
-	const facts: string[] = [];
-	if (entity.industry !== null) facts.push(entity.industry);
-	if (entity.workforceTotal !== null)
-		facts.push(`headcount ${entity.workforceTotal}`);
-	if (entity.country !== null)
-		facts.push(`${entity.city ? `${entity.city}, ` : ""}${entity.country}`);
-	if (entity.foundedYear !== null) facts.push(`founded ${entity.foundedYear}`);
-	if (entity.revenueAnnual !== null)
-		facts.push(`annual revenue ${entity.revenueAnnual} USD`);
-	if (entity.fundingTotal !== null)
-		facts.push(`funding raised ${entity.fundingTotal} USD`);
-	const description = (entity.description ?? "").slice(0, DESCRIPTION_CHARS);
-	return [facts.join("; "), description].filter(Boolean).join(". ");
-}
-
-/** The page a row cites: the one that proves the signal when a source gave one, else the company's own site. */
-function evidenceUrlOf(result: ExaResult): string {
-	return result.evidenceUrl ?? result.url;
-}
-
 function toCompanyRow(result: ExaResult, entity: CompanyEntity): CompanyRow {
 	return {
 		name: entity.name ?? result.title,
 		domain: normalizeDomain(result.url),
 		linkedinUrl: result.linkedinUrl ?? null,
-		evidenceUrl: evidenceUrlOf(result),
-		evidenceQuote: result.evidenceQuote ?? null,
-		evidencePublisher: result.evidencePublisher ?? null,
-		evidenceKind: result.evidenceKind ?? null,
-		industry: entity.industry,
-		description: describeCompany(entity) || null,
-		signal: result.signal ?? null,
-		evidenceDate: result.publishedDate ?? null,
+		description: entity.description?.slice(0, DESCRIPTION_CHARS) || null,
+		record: result.id === null ? null : entity,
 	};
 }
 
 function toCompanyMatch(result: ExaResult): CompanyMatch {
 	return {
 		id: result.id,
-		url: evidenceUrlOf(result),
+		url: result.url,
 		title: result.title,
-		signal: result.signal ?? null,
-		quote: result.evidenceQuote ?? null,
-		publisher: result.evidencePublisher ?? null,
-		kind: result.evidenceKind ?? null,
-		publishedDate: result.publishedDate ?? null,
-		score: result.score ?? null,
-		evidenceCheck: null,
-		fitReason: null,
+		qualification: null,
 	};
 }
 
@@ -201,48 +163,18 @@ export type FilterOutcome = {
 };
 
 /** Keeps the results whose structured record satisfies the plan's country and headcount limits. A record that states nothing is kept for the judge. */
-/**
- * Why a dated page is too old to prove a signal the profile wants fresh. Only
- * arithmetic lives here: a page carrying no date reaches the judge instead,
- * because whether it still proves anything depends on what the page is, and a
- * live job advertisement is current whether or not it prints a date.
- */
-function staleRejectReason(
-	evidenceDate: string | null,
-	recencyDays: number | null,
-	today: string,
-): string | null {
-	if (recencyDays === null || evidenceDate === null) return null;
-	const age = Math.round(
-		(Date.parse(today) - Date.parse(evidenceDate)) / 86_400_000,
-	);
-	if (Number.isNaN(age)) return "the evidence date is not a date";
-	return age > recencyDays
-		? `evidence is ${age} days old, older than the ${recencyDays} the profile allows`
-		: null;
-}
-
-/** Why one result cannot become a row: its record misses the profile's limits, or its evidence is outside the window. */
+/** Why one result cannot become a row: its structured record misses the profile's limits. Date windows are judged from cited evidence later. */
 function rowRejectReason(
-	result: ExaResult,
+	_result: ExaResult,
 	entity: CompanyEntity,
 	plan: SearchPlan,
-	today: string,
+	_today: string,
 ): RejectDetail | null {
-	const detail = entityRejectReason(entity, plan);
-	if (detail) return detail;
-	if ((plan.conditionIds?.length ?? 0) > 0) return null;
-	const stale = staleRejectReason(
-		result.publishedDate ?? null,
-		plan.recencyDays,
-		today,
-	);
-	return stale
-		? {
-				reason: stale,
-				group: "evidence outside the window the profile asks for",
-			}
-		: null;
+	return entityRejectReason(entity, plan);
+}
+
+function evidenceOf(result: ExaResult): CompanyEvidence[] {
+	return result.evidence ?? [];
 }
 
 export function filterEntities(
@@ -279,6 +211,7 @@ export function filterEntities(
 		outcome.rows.push(row);
 		if (row.domain) {
 			outcome.captures[row.domain] = {
+				evidence: evidenceOf(result),
 				entity,
 				result: toCompanyMatch(result),
 				raw: JSON.stringify(result),
@@ -290,9 +223,9 @@ export function filterEntities(
 }
 
 /**
- * Collapses rejects that share a numeric group into one counted line, for
- * example `47 companies had a headcount below the floor of 20`. A reject
- * with no group keeps its own reason, deduplicated as before.
+ * Collapses rejects that share a numeric boundary or unmet ICP group into one counted line,
+ * for example `47 companies had a headcount below the floor of 20`. A reject
+ * with no group keeps its domain and reason so the planner can revisit it.
  */
 export function groupRejectReasons(
 	rejects: readonly FindCompaniesReject[],
@@ -302,7 +235,10 @@ export function groupRejectReasons(
 	for (const reject of rejects) {
 		if (reject.group)
 			counts.set(reject.group, (counts.get(reject.group) ?? 0) + 1);
-		else ungrouped.add(reject.reason);
+		else
+			ungrouped.add(
+				reject.domain ? `${reject.domain}: ${reject.reason}` : reject.reason,
+			);
 	}
 	const grouped = Array.from(
 		counts,

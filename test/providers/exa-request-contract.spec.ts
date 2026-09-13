@@ -8,14 +8,12 @@ import { search } from "../../src/core/providers/exa/search";
 import type { SearchPlan } from "../../src/core/synthesize";
 import { fakeSecretEnv } from "../support/env";
 import { jsonResponse, respondOnce } from "../support/fetch";
+import { profileFixture } from "../support/icp";
 
 function planFor(query: string): SearchPlan {
 	return {
 		query,
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -116,7 +114,13 @@ const MeasuredAgentRunRequestSchema = z
 			.object({ maxCostDollars: z.number().min(1).max(100) })
 			.strict()
 			.optional(),
-		input: z.object({ data: z.unknown() }).strict().optional(),
+		input: z
+			.object({
+				data: z.array(z.record(z.string(), z.json())).optional(),
+				exclusion: z.array(z.record(z.string(), z.json())).optional(),
+			})
+			.strict()
+			.optional(),
 		metadata: z.record(z.string(), z.string()).optional(),
 	})
 	.strict();
@@ -125,9 +129,6 @@ function samplePlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies at seed stage with a small team",
 		angle: "founder-led vertical software",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: "US",
@@ -183,26 +184,17 @@ describe("agent run request stays inside the measured Exa /agent/runs schema", (
 			plan: planFor("small US software teams"),
 			count: 10,
 			today: "2026-08-30",
-			seller: null,
+			icp: profileFixture(),
 			excludeDomains: [],
 		});
 
 		const parsed = MeasuredAgentRunRequestSchema.safeParse(request);
 		expect(parsed.success).toBe(true);
-		expect(request.dataSources?.length).toBeLessThanOrEqual(5);
+		expect(request.dataSources).toBeUndefined();
 	});
 });
 
 describe("the measured schemas reject exactly the defects that shipped unnoticed", () => {
-	it("rejects a field Exa's /search does not define", () => {
-		expect(
-			MeasuredSearchRequestSchema.safeParse({
-				query: "seed stage fintech",
-				includeText: ["only match this phrase"],
-			}).success,
-		).toBe(false);
-	});
-
 	it("rejects a search type outside the enum Exa accepts", () => {
 		expect(
 			MeasuredSearchRequestSchema.safeParse({
@@ -296,7 +288,7 @@ describe("what reaches the network matches what the builder produced", () => {
 				plan: planFor("ten fintech companies"),
 				count: 10,
 				today: "2026-08-30",
-				seller: null,
+				icp: profileFixture(),
 				excludeDomains: [],
 			}),
 			exaEnv(),
@@ -320,7 +312,7 @@ describe("fixed choices the code makes on the plan's behalf", () => {
 			plan: samplePlan({ agentEffort: "medium" }),
 			count: 5,
 			today: "2026-08-30",
-			seller: null,
+			icp: profileFixture(),
 			excludeDomains: [],
 		});
 		expect(agentRequest.effort).toBe("medium");

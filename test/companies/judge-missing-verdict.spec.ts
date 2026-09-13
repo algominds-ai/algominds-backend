@@ -8,15 +8,9 @@ const recordRequirement = requirementFixture("the company is a bank");
 const row: CompanyRow = {
 	name: "a.com",
 	domain: "a.com",
-	linkedinUrl: null,
-	evidenceUrl: "https://a.com/",
-	evidenceQuote: null,
-	evidencePublisher: null,
-	evidenceKind: null,
-	industry: null,
+	linkedinUrl: "https://linkedin.com/company/a",
+	record: null,
 	description: null,
-	signal: null,
-	evidenceDate: null,
 };
 
 describe("a row the judge never scored is never stored", () => {

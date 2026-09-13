@@ -12,6 +12,7 @@ import type {
 } from "@/core/providers/exa/search";
 import { requiredConditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeInput } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture(
@@ -62,8 +63,10 @@ function testDeps(
 		backfill: async () => {
 			throw new Error("this round should not have backfilled a record");
 		},
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		...overrides,
 	};
 }
@@ -85,9 +88,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -153,23 +153,22 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 			statuses: requiredConditionRefs(requirements).map((req) => ({
 				id: req.id,
 				status: rejects.includes(index) ? "contradicted" : "proven",
-				quote: "",
+				sourceUrl: null,
+				date: null,
 			})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
-			sameOrganizationAs: null,
 		}));
 		return { verdicts, ledger };
 	};
 }
 
 function recordingRecentDomains(domains: string[] = []) {
-	const calls: Array<{ organizationId: string; days: number }> = [];
+	const calls: Array<{ organizationId: string }> = [];
 	const recentDomains: FindCompaniesDeps["recentDomains"] = async (
 		_env,
 		organizationId,
-		days,
 	) => {
-		calls.push({ organizationId, days });
+		calls.push({ organizationId });
 		return domains;
 	};
 	return { recentDomains, calls };

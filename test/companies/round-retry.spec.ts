@@ -17,14 +17,8 @@ function row(name: string, domain: string): CompanyRow {
 		name,
 		domain,
 		linkedinUrl: null,
-		evidenceUrl: `https://${domain}/careers`,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		record: null,
 		description: null,
-		signal: "hiring a founding engineer",
-		evidenceDate: "2026-08-20",
 	};
 }
 
@@ -68,6 +62,16 @@ afterEach(() => {
 });
 
 describe("a round whose judge gives up never re-runs the round's own synthesize", () => {
+	it("allows the observed 331-second agent run and time to judge its results", () => {
+		const pollSeconds =
+			config.companies.exaAgentMaxPollAttempts *
+			config.companies.exaAgentPollIntervalSeconds;
+		const [amount, unit] = config.stepConfig.roundCall.timeout.split(" ");
+		expect(unit).toBe("minutes");
+		expect(pollSeconds).toBeGreaterThan(331);
+		expect(Number(amount) * 60).toBeGreaterThan(pollSeconds + 180);
+	});
+
 	it("calls the round's synthesize step exactly once, even though the judge fails every attempt", async () => {
 		let call = 0;
 		globalThis.fetch = async () => {
@@ -80,11 +84,12 @@ describe("a round whose judge gives up never re-runs the round's own synthesize"
 		const round = 1;
 		const deps = roundDeps({
 			accumulatedDomains: new Set(),
+			remaining: 15,
 			runId: "companies_round-retry",
 			step,
 			round,
 			today: "2026-09-05",
-			seller: profileFixture().seller,
+			icp: profileFixture(),
 			timings: [],
 		});
 		const env = fakeGatewayEnv();

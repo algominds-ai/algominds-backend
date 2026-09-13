@@ -12,6 +12,7 @@ import type {
 } from "@/core/providers/exa/search";
 import { requiredConditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeInput } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture(
@@ -73,8 +74,10 @@ function testDeps(
 		backfill: async () => {
 			throw new Error("this round should not have backfilled a record");
 		},
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		...overrides,
 	};
 }
@@ -96,9 +99,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -164,23 +164,22 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 			statuses: requiredConditionRefs(requirements).map((req) => ({
 				id: req.id,
 				status: rejects.includes(index) ? "contradicted" : "proven",
-				quote: "",
+				sourceUrl: null,
+				date: null,
 			})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
-			sameOrganizationAs: null,
 		}));
 		return { verdicts, ledger };
 	};
 }
 
 function recordingRecentDomains(domains: string[] = []) {
-	const calls: Array<{ organizationId: string; days: number }> = [];
+	const calls: Array<{ organizationId: string }> = [];
 	const recentDomains: FindCompaniesDeps["recentDomains"] = async (
 		_env,
 		organizationId,
-		days,
 	) => {
-		calls.push({ organizationId, days });
+		calls.push({ organizationId });
 		return domains;
 	};
 	return { recentDomains, calls };
@@ -222,27 +221,7 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 }
 
 describe("findCompanies — the three terminal states", () => {
-	it("fills to the requested count across two rounds once the gate and judge have trimmed round one", async () => {
-		const good = Array.from({ length: 8 }, (_, i) =>
-			goodResult(`good${i}.com`),
-		);
-		const bad = Array.from({ length: 6 }, (_, i) => entitylessResult(i));
-		const more = Array.from({ length: 5 }, (_, i) =>
-			goodResult(`more${i}.com`),
-		);
-		const { calls, result } = run(10, [[...good, ...bad], more], {
-			rejectsByCall: [[7], [3, 4]],
-		});
-
-		const outcome = await result;
-
-		expect(calls).toHaveLength(2);
-		expect(outcome.status).toBe("complete");
-		expect(outcome.rounds).toBe(2);
-		expect(outcome.found).toBe(10);
-	});
-
-	it("stops at round one, exhausted, without a second search call, when every row is already seen", async () => {
+	it("keeps a duplicate-only response recoverable for a later angle", async () => {
 		const { calls, result } = run(
 			5,
 			[
@@ -257,22 +236,8 @@ describe("findCompanies — the three terminal states", () => {
 		const outcome = await result;
 
 		expect(calls).toHaveLength(1);
-		expect(outcome.status).toBe("exhausted");
-		expect(outcome.companies).toHaveLength(0);
-	});
-
-	it("returns short with no throw when three rounds still fall short of the count", async () => {
-		const { calls, result } = run(10, [
-			[goodResult("r1a.com"), goodResult("r1b.com")],
-			[goodResult("r2a.com"), goodResult("r2b.com")],
-			[goodResult("r3a.com"), goodResult("r3b.com")],
-		]);
-
-		const outcome = await result;
-
-		expect(calls).toHaveLength(3);
 		expect(outcome.status).toBe("short");
-		expect(outcome.companies).toHaveLength(6);
+		expect(outcome.companies).toHaveLength(0);
 	});
 });
 

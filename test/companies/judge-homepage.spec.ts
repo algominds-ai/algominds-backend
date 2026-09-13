@@ -19,15 +19,9 @@ const rows: CompanyRow[] = [
 	{
 		name: "Acme",
 		domain: "acme.com",
-		linkedinUrl: null,
-		evidenceUrl: null,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		linkedinUrl: "https://linkedin.com/company/acme",
+		record: null,
 		description: "Acme sells a platform for banks",
-		signal: null,
-		evidenceDate: null,
 	},
 ];
 
@@ -53,9 +47,15 @@ function verdictsFor(rowSet: readonly CompanyRow[]) {
 	return {
 		verdicts: rowSet.map((_row, index) => ({
 			index,
-			statuses: [{ id: requirementId, status: "proven", quote: "" }],
+			statuses: [
+				{
+					id: requirementId,
+					status: "proven",
+					sourceUrl: null,
+					date: null,
+				},
+			],
 			reason: "fits the profile",
-			sameOrganizationAs: null,
 		})),
 	};
 }
@@ -80,7 +80,8 @@ describe("the judge reads a row's own homepage next to its record", () => {
 						"homepage",
 						{
 							url: "https://acme.com/",
-							quote: "An important update for Acme customers",
+							quote: "",
+							text: "An important update for Acme customers",
 						},
 					],
 				]),

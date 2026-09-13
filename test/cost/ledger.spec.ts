@@ -2,6 +2,18 @@ import { describe, expect, it } from "vitest";
 import { CostLedger, PartialSpendError, purchase } from "@/core/cost";
 
 describe("CostLedger.reported", () => {
+	it("retains the observed Exa total when its parsed breakdown omits a Fiber charge", () => {
+		const ledger = new CostLedger();
+		ledger.reported("exa", "agent-run", 0.132, {
+			agentCompute: 0,
+			search: 0.012,
+			emails: 0,
+			phoneNumbers: 0,
+		});
+		expect(ledger.total()).toBe(0.132);
+		expect(ledger.byProvider()).toEqual({ exa: 0.132 });
+	});
+
 	it("maps a detail breakdown straight through, one line per key, or a flat figure under the provider when none is given", () => {
 		const detailed = new CostLedger();
 		detailed.reported("exa", "agent-run", 1.02, {

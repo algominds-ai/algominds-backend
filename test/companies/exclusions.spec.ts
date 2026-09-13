@@ -8,6 +8,7 @@ import { CostLedger } from "@/core/cost";
 import type { ExaResult } from "@/core/providers/exa/search";
 import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture();
@@ -42,7 +43,6 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 		index: 0,
 		statuses: [],
 		reason: "a reason",
-		sameOrganizationAs: null,
 		...overrides,
 	};
 }
@@ -51,9 +51,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "banks",
 		angle: "banking",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -100,7 +97,6 @@ function options(
 		env: testEnv,
 		today: "2026-09-03",
 		requirements: [recordRequirement],
-		maxRounds: 1,
 		...overrides,
 	};
 }
@@ -133,8 +129,10 @@ function agentDeps(
 			backfilled.push(domains);
 			return domains.map((domain) => ({ domain, record: null }));
 		},
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		gate,
 		judge: async (_requirements, rows) => ({
 			verdicts: verdicts
@@ -143,8 +141,18 @@ function agentDeps(
 						verdict({
 							index,
 							statuses: [
-								{ id: requirementIds[0]?.id ?? "r1.a1.c1", status: "proven" },
-								{ id: requirementIds[1]?.id ?? "r2.a1.c1", status: "proven" },
+								{
+									id: requirementIds[0]?.id ?? "r1.a1.c1",
+									status: "proven",
+									sourceUrl: null,
+									date: null,
+								},
+								{
+									id: requirementIds[1]?.id ?? "r2.a1.c1",
+									status: "proven",
+									sourceUrl: null,
+									date: null,
+								},
 							],
 						}),
 					),
@@ -181,21 +189,13 @@ describe("a company this account already holds never comes back, on either route
 		]);
 	});
 
-	it("keeps an excluded company, and a brand of it, out of a stored agent round, never spending a lookup on it", async () => {
-		const spy = agentDeps(
-			[exaResult("jobs.barclays", 900), exaResult("fresh.com", 900)],
-			(rows) =>
-				rows.map((candidate, index) =>
-					verdict({
-						index,
-						statuses: [
-							{ id: requirementIds[0]?.id ?? "r1.a1.c1", status: "proven" },
-							{ id: requirementIds[1]?.id ?? "r2.a1.c1", status: "proven" },
-						],
-						sameOrganizationAs: candidate.domain === "jobs.barclays" ? 1 : null,
-					}),
-				),
-		);
+	it("keeps an excluded company and its provider-identified alternate domain out without looking up the excluded domain", async () => {
+		const companyUrl = "https://linkedin.com/company/barclays";
+		const spy = agentDeps([
+			{ ...exaResult("jobs.barclays", 900), linkedinUrl: companyUrl },
+			{ ...exaResult("home.barclays", 900), linkedinUrl: companyUrl },
+			exaResult("fresh.com", 900),
+		]);
 
 		const result = await findCompanies(
 			icp,
@@ -207,8 +207,15 @@ describe("a company this account already holds never comes back, on either route
 			spy.deps,
 		);
 
-		expect(result.companies.map((company) => company.domain)).not.toContain(
-			"jobs.barclays",
+		expect(result.companies.map((company) => company.domain)).toEqual([
+			"fresh.com",
+		]);
+		expect(result.rejects).toContainEqual(
+			expect.objectContaining({
+				domain: "jobs.barclays",
+				reason: "already found for this account",
+				stage: "gate",
+			}),
 		);
 		expect(spy.agentExclusions[0]).toContain("home.barclays");
 		expect(spy.backfilled[0]).not.toContain("home.barclays");
@@ -231,30 +238,44 @@ describe("a company this account already holds never comes back, on either route
 	});
 });
 
-describe("an agent-found company is bounded by the vendor's record, not its own claim", () => {
-	it("refuses an agent company the vendor's own record puts outside the bounds", async () => {
-		const spy = agentDeps([exaResult("small.com", 900)]);
+describe("research records reach grouped qualification", () => {
+	const size = requirementFixture("the company has at least 500 employees");
+	const rejected = verdict({
+		reason: "headcount 12 contradicts the required 500 minimum",
+		statuses: [
+			{ id: "r1.a1.c1", status: "contradicted", sourceUrl: null, date: null },
+		],
+	});
+	it("refuses a research candidate when the judge contradicts a required bound", async () => {
 		const boundedDeps: FindCompaniesDeps = {
-			...spy.deps,
+			...agentDeps([exaResult("small.com", 900)]).deps,
 			synthesize: async () => ({
 				route: "agent",
 				plans: [plan({ source: "exa-agent", minWorkforce: 500 })],
 				ledger: new CostLedger(),
 			}),
-			backfill: async (domains) =>
-				domains.map((domain) => ({ domain, record: exaResult(domain, 12) })),
+			backfill: async () => [
+				{
+					domain: "small.com",
+					record: { ...exaResult("small.com", 12), id: "indexed" },
+				},
+			],
+			judge: async (requirements, rows) => {
+				expect(requirements).toEqual([size]);
+				expect(rows[0]?.record?.workforceTotal).toBe(12);
+				return {
+					ledger: new CostLedger(),
+					verdicts: [rejected],
+				};
+			},
 		};
-
 		const result = await findCompanies(
 			icp,
 			1,
-			options({ requirements: [recordRequirement, pageRequirement] }),
+			options({ requirements: [size] }),
 			boundedDeps,
 		);
-
 		expect(result.companies).toHaveLength(0);
-		expect(
-			result.rejects.some((reject) => reject.reason.includes("headcount 12")),
-		).toBe(true);
+		expect(result.rejects[0]?.stage).toBe("judge");
 	});
 });

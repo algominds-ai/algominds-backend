@@ -60,7 +60,7 @@ function limitRule(limit: NumericLimit, plan: SearchPlan): string | null {
 	return clause === null ? null : `Every company must have a ${clause}.`;
 }
 
-/** The plan's bounds and countries as sentences, appended to a query so the vendor's search and any agent both see them stated. */
+/** The native company search's conjunctive record bounds as query sentences. */
 export function planConstraints(plan: SearchPlan): string {
 	const rules = NUMERIC_LIMITS.map((limit) => limitRule(limit, plan)).filter(
 		(rule): rule is string => rule !== null,
@@ -125,11 +125,12 @@ function countryRejectReason(
 	return allowed ? null : `headquarters in ${country}`;
 }
 
-/** Why one company's record fails the plan's country or numeric bounds, or null when it satisfies both. */
+/** Native search enforces its record bounds; research candidates are judged against the intact grouped ICP. */
 export function entityRejectReason(
 	entity: CompanyEntity,
 	plan: SearchPlan,
 ): RejectDetail | null {
+	if (plan.source !== "exa-search") return null;
 	const countryReason = countryRejectReason(entity, plan);
 	if (countryReason !== null) return { reason: countryReason };
 	return numericRejectReason(entity, plan);

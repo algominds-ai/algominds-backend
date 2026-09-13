@@ -45,52 +45,33 @@ auth:
     - https://*.algominds.ai
 
 companies:
-  # Rounds of search per run. Each round is one paid Exa call plus two model calls.
+  # Maximum query-revision rounds per run; the spend ceiling also applies.
   maxRounds: 3
   # Exa returns at most 100 records per call. Fewer makes the requested count unreachable.
   resultsPerRound: 100
-  # Candidates sent to the judge, as a multiple of the requested count. Measured on
-  # two profiles: every judge refusal sat at rank nineteen or lower, so 2x candidates
-  # was never short a company the judge would have kept.
+  # Bounded candidate allowance; quality and yield are measured on live accounts.
   judgeCandidateMultiple: 2
   # How much of a company description reaches the judge.
   descriptionChars: 600
-  # Window for treating a domain as already seen: every company the account
-  # found in the trailing N days, across every profile it owns. Feeds both
-  # excludeDomains on the search request and the seen-domain gate.
-  seenDomainsWindowDays: 60
-  # The source and the agent's effort are no longer set here. The synthesizer picks
-  # both per round from the profile, because only it knows whether the profile asks
-  # for a recent event. Its effort choice is limited to two values: "low", measured
-  # at about $0.025 and 5 seconds, and "medium", measured at about $0.10 and 2
-  # minutes. Higher levels exist on the vendor but are not offered to the model.
   # Seconds between polls of a running exa-agent run.
   exaAgentPollIntervalSeconds: 5
   # Polls allowed before a stuck exa-agent run is treated as failed. A run that
   # only has to name companies returns in about 5 seconds. A run that must also
   # satisfy the plan's headcount band and countries takes far longer: measured
   # runs asking for three constrained companies passed 120 seconds and were
-  # killed mid-flight, losing everything already paid for. 60 polls at 5
-  # seconds is 5 minutes, which covers the constrained case.
-  exaAgentMaxPollAttempts: 60
+  # killed mid-flight, losing everything already paid for. The Form3 API probe
+  # took 331 seconds for one angle; allow ten minutes of polling.
+  exaAgentMaxPollAttempts: 120
   # Angles one agent round fans out across, each its own paid run. Measured: an agent run
   # asked for twenty companies returned one, because it stops at schema_satisfied, so more
   # companies come from more angles rather than a bigger ask. Seven angles returned nine
   # companies in 139 seconds.
   maxAnglesPerRound: 12
-  # Companies one agent angle is asked for. Small on purpose: the ask is not the floor.
-  companiesPerAngle: 4
   # Milliseconds between two agent run starts. Exa refuses above ten requests a second,
   # measured live, and a fan-out starts every angle at once without this.
   agentStartStaggerMs: 1500
-  # Domains an agent run is told by name to skip. The gate enforces the whole exclusion
-  # list; naming a bounded head of it in the query only stops the agent paying for
-  # companies that would be dropped anyway.
-  agentExcludedDomainsNamed: 50
   # Concurrent proving lookups and record backfills, under the same ten-a-second limit.
   provingConcurrency: 5
-  # Results one proving lookup asks for. The first carrying a quote wins.
-  provingResults: 3
   # Characters of page text Exa returns per page. The vendor's documented maximum is 10000;
   # a larger number is clamped rather than refused.
   contentsMaxCharacters: 10000
@@ -103,10 +84,6 @@ companies:
   # Poll requests the whole angle fan-out may spend per second; a round's poll
   # interval scales up with the angles in flight to stay under this.
   exaPollBudgetPerSecond: 2
-  # Characters of a candidate's own homepage handed to the judge next to its record.
-  # A shorter cap measured mostly navigation and a vague heading; a sunset notice or
-  # a signup label often sits lower on the page, so this reaches past the fold.
-  homepageMaxCharacters: 4000
 
 people:
   # Seconds between polls of a running exa-agent run.
@@ -152,10 +129,9 @@ enrich:
 spend:
   # A single run stops starting new paid work once it has already spent this
   # much. Cost is only knowable after a call returns, so this stops the NEXT
-  # round or batch, never the one in flight. Overshoot is bounded by one whole
-  # interval: about $0.045 for a companies round, more for a people batch of
-  # five. Measured runs: a companies run is $0.137, a people run over ten
-  # companies is $0.100.
+  # round or batch, never the one in flight. A completed company round has
+  # cost $3.34 with 91 judged candidates. This is a stop threshold, not a hard
+  # charge cap; the requested company count may remain unmet.
   perRunDollars: 2.00
   # An account refuses to start a new run once its day already costs this much.
   # Checked before any paid work, so a refused run spends nothing. Covers
@@ -189,12 +165,10 @@ stepConfig:
       limit: 5
       delay: 1 second
     timeout: 60 seconds
-  # The judge step. A retry there reruns every slice, including ones that
-  # already produced a verdict, so a timed-out attempt is not retried at
-  # this level; the timeout still covers the slowest real judge call.
+  # Each judge slice is cached separately; retry only the failed slice once.
   judgeCall:
     retries:
-      limit: 0
+      limit: 1
       delay: 10 seconds
     timeout: 5 minutes
   # The one step wrapping a whole round: synthesize, the search or agent
@@ -206,4 +180,5 @@ stepConfig:
     retries:
       limit: 0
       delay: 10 seconds
-    timeout: 5 minutes
+    # Includes the polling window plus planning, retrieval and judging.
+    timeout: 20 minutes

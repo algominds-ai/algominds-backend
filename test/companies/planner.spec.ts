@@ -147,6 +147,11 @@ describe("synthesize: gateway wiring", () => {
 		expect(new URL(String(call?.url)).pathname).toContain("/compat");
 		expect(modelOf(call)).toBe(env.MODEL_ROUTE_REASONING);
 		expect(modelOf(call)).not.toBe(env.MODEL_ROUTE_WORKER);
+		expect(call?.body).toMatchObject({
+			reasoning: { effort: "low" },
+			provider: { require_parameters: true },
+			response_format: { type: "json_schema" },
+		});
 	});
 
 	it("sends cf-aig-skip-cache on the single paid call", async () => {
@@ -218,6 +223,33 @@ describe("synthesize: the plan it returns", () => {
 });
 
 describe("synthesize: prompt drift and retries", () => {
+	it("passes only the company projection at the planner boundary", async () => {
+		const scoped = profileFixture(
+			{ offer: "Trust Fabric", buyer: "Platform leaders" },
+			"RAW NOTE: target only the security owner",
+			"form3.tech",
+		);
+		scoped.seller.description = "payments infrastructure seller";
+		const gateway = fakeGateway([chatCompletionResponse(planReply())]);
+		globalThis.fetch = gateway.fetch;
+
+		await synthesize(
+			{
+				...recordOnlyInput(),
+				icp: scoped,
+				requirements: [recordRequirement],
+			},
+			fakeGatewayEnv(),
+		);
+
+		const prompt = userContent(gateway.calls[0]);
+		expect(prompt).toContain("Seller: payments infrastructure seller");
+		expect(prompt).toContain("Offer in scope: Trust Fabric");
+		expect(prompt).toContain(JSON.stringify([recordRequirement]));
+		expect(prompt).not.toContain("RAW NOTE");
+		expect(prompt).not.toContain("Platform leaders");
+	});
+
 	it("keeps the requirement text in the round-2 prompt after reject reasons are added", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(planReply({ query: "round-1" })),
@@ -246,6 +278,10 @@ describe("synthesize: prompt drift and retries", () => {
 
 		expect(gateway.calls).toHaveLength(1);
 		expect(result.plans[0]?.query).toContain(icp.icp.offer ?? "");
+		expect(result.plans[0]?.query).toContain(
+			JSON.stringify([recordRequirement]),
+		);
+		expect(result.plans[0]?.query).not.toContain("Revenue leaders");
 	});
 
 	it("falls back to a template query on the profile's own route after two consecutive failures", async () => {
@@ -266,9 +302,8 @@ describe("synthesize: prompt drift and retries", () => {
 		const agentResult = await synthesize(pageGatedInput(), fakeGatewayEnv());
 		expect(agentResult.route).toBe("agent");
 		expect(agentResult.plans[0]?.source).toBe("exa-agent");
-		expect(agentResult.plans[0]?.recency).toContain(
+		expect(agentResult.plans[0]?.query).toContain(
 			"the company published an engineering page",
 		);
-		expect(agentResult.plans[0]?.recencyDays).toBe(30);
 	});
 });

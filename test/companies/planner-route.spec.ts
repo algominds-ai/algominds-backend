@@ -114,25 +114,25 @@ afterEach(() => {
 	globalThis.fetch = originalFetch;
 });
 
-describe("the round runs on the route the requirements allow", () => {
-	it("searches when nothing needs a page, ignoring an agent route the model asks for anyway", async () => {
+describe("the round respects the planner route", () => {
+	it("defaults to search and preserves an agent choice even without a dated condition", async () => {
 		const chosen = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = chosen.fetch;
 		const plain = await synthesize(recordOnlyInput(), fakeGatewayEnv());
 		expect(plain.route).toBe("search");
 		expect(plain.plans[0]?.source).toBe("exa-search");
-		expect(plain.plans[0]?.recency).toBeNull();
 
 		const overridden = fakeGateway([
 			chatCompletionResponse(planReply({ route: "agent" })),
 		]);
 		globalThis.fetch = overridden.fetch;
-		const ignored = await synthesize(recordOnlyInput(), fakeGatewayEnv());
-		expect(ignored.route).toBe("search");
-		expect(ignored.plans[0]?.source).toBe("exa-search");
+		const researched = await synthesize(recordOnlyInput(), fakeGatewayEnv());
+		expect(researched.route).toBe("agent");
+		expect(researched.plans[0]?.source).toBe("exa-agent");
+		expect(researched.plans[0]?.agentEffort).toBe("minimal");
 	});
 
-	it("carries the page requirement's evidence demand onto an agent round, and none onto a search one", async () => {
+	it("preserves the requirement in the planner input regardless of chosen route", async () => {
 		const agentGateway = fakeGateway([
 			chatCompletionResponse(planReply({ route: "agent" })),
 		]);
@@ -140,10 +140,9 @@ describe("the round runs on the route the requirements allow", () => {
 		const agentRound = await synthesize(pageGatedInput(), fakeGatewayEnv());
 		expect(agentRound.route).toBe("agent");
 		expect(agentRound.plans[0]?.source).toBe("exa-agent");
-		expect(agentRound.plans[0]?.recency).toContain(
+		expect(JSON.stringify(agentGateway.calls[0]?.body)).toContain(
 			pageRequirement.anyOf[0]?.allOf[0]?.text,
 		);
-		expect(agentRound.plans[0]?.eventWindowDays).toBe(30);
 
 		const searchGateway = fakeGateway([
 			chatCompletionResponse(planReply({ route: "search" })),
@@ -151,10 +150,9 @@ describe("the round runs on the route the requirements allow", () => {
 		globalThis.fetch = searchGateway.fetch;
 		const searchRound = await synthesize(pageGatedInput(), fakeGatewayEnv());
 		expect(searchRound.route).toBe("search");
-		expect(searchRound.plans[0]?.recency).toBeNull();
 	});
 
-	it("returns one plan per angle the model wrote, sharing the round's bounds", async () => {
+	it("keeps up to the requested agent angles and shares the round's bounds", async () => {
 		const gateway = fakeGateway([
 			chatCompletionResponse(
 				objectReply({
@@ -178,7 +176,10 @@ describe("the round runs on the route the requirements allow", () => {
 		]);
 		globalThis.fetch = gateway.fetch;
 
-		const result = await synthesize(pageGatedInput(), fakeGatewayEnv());
+		const result = await synthesize(
+			{ ...pageGatedInput(), angles: 2 },
+			fakeGatewayEnv(),
+		);
 
 		expect(result.plans.map((plan) => plan.angle)).toEqual([
 			"banking",
@@ -186,13 +187,45 @@ describe("the round runs on the route the requirements allow", () => {
 		]);
 		expect(result.plans.every((plan) => plan.minWorkforce === 500)).toBe(true);
 	});
+});
+
+describe("the planner bounds its generated angles", () => {
+	it("keeps one search angle even when the model writes several", async () => {
+		const gateway = fakeGateway([
+			chatCompletionResponse(
+				objectReply({
+					route: "search",
+					rounds: [
+						{ angle: "banking", query: "banks" },
+						{ angle: "retail", query: "retailers" },
+					],
+					userLocation: "US",
+					countries: ["United States"],
+					minWorkforce: null,
+					maxWorkforce: null,
+					minFoundedYear: null,
+					maxFoundedYear: null,
+					minRevenueAnnual: null,
+					maxRevenueAnnual: null,
+					minFundingTotal: null,
+					maxFundingTotal: null,
+				}),
+			),
+		]);
+		globalThis.fetch = gateway.fetch;
+
+		const result = await synthesize(pageGatedInput(), fakeGatewayEnv());
+
+		expect(result.route).toBe("search");
+		expect(result.plans.map((plan) => plan.angle)).toEqual(["banking"]);
+	});
 
 	it("asks the model for as many angles as the round wants, and how many the last one proved", async () => {
 		const angleCount = fakeGateway([chatCompletionResponse(planReply())]);
 		globalThis.fetch = angleCount.fetch;
 		await synthesize({ ...pageGatedInput(), angles: 6 }, fakeGatewayEnv());
 		expect(userContent(angleCount.calls[0])).toContain(
-			"Write 6 different angles",
+			"up to 6 different agent angles",
 		);
 
 		const provenRate = fakeGateway([chatCompletionResponse(planReply())]);

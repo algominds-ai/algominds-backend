@@ -12,6 +12,7 @@ import type {
 } from "@/core/providers/exa/search";
 import { requiredConditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeInput } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture(
@@ -58,8 +59,10 @@ function testDeps(
 		backfill: async () => {
 			throw new Error("this round should not have backfilled a record");
 		},
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		...overrides,
 	};
 }
@@ -81,9 +84,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -147,10 +147,10 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 			statuses: requiredConditionRefs(requirements).map((req) => ({
 				id: req.id,
 				status: rejects.includes(index) ? "contradicted" : "proven",
-				quote: "",
+				sourceUrl: null,
+				date: null,
 			})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
-			sameOrganizationAs: null,
 		}));
 		return { verdicts, ledger: new CostLedger() };
 	};
@@ -191,17 +191,15 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 }
 
 describe("what one round hands the next", () => {
-	it("gives a later round the earlier round's angle and its own refusal reason as feedback", async () => {
-		const { inputs, result } = run(
-			1,
-			[[goodResult("wrong.com")], [goodResult("right.com")]],
-			{ rejectsByCall: [[0]] },
-		);
+	it("keeps the caller's prior angle history in the single bounded round", async () => {
+		const { inputs, result } = run(1, [[goodResult("right.com")]], {
+			optionOverrides: { pastAngles: ["angle-from-an-earlier-round"] },
+		});
 
 		await result;
 
-		expect(inputs[1]?.pastAngles).toEqual(["angle-1"]);
-		expect(inputs[1]?.feedback.join(" ")).toContain("does not fit icp");
+		expect(inputs).toHaveLength(1);
+		expect(inputs[0]?.pastAngles).toEqual(["angle-from-an-earlier-round"]);
 	});
 
 	it("carries an angle a caller already used, so a second call does not repeat it", async () => {
@@ -217,13 +215,10 @@ describe("what one round hands the next", () => {
 
 describe("domains a round tells the vendor not to return", () => {
 	it("names every earlier round's domains, and the domains already seen before the run started", async () => {
-		const { calls, result } = run(2, [
-			[goodResult("first.com")],
-			[goodResult("second.com")],
-		]);
+		const { calls, result } = run(1, [[goodResult("first.com")]]);
 		await result;
-		expect(calls[0]?.excludeDomains).toBeUndefined();
-		expect(calls[1]?.excludeDomains).toContain("first.com");
+		expect(calls).toHaveLength(1);
+		expect(calls[0]?.excludeDomains).toContain("seller.example");
 
 		const { calls: seededCalls, result: seededResult } = run(
 			1,
@@ -245,13 +240,13 @@ describe("a company the caller already knows", () => {
 			},
 		);
 		await namedResult;
-		expect(named[0]?.excludeDomains).toEqual(["leadiq.com"]);
+		expect(named[0]?.excludeDomains).toEqual(["leadiq.com", "seller.example"]);
 
 		const { calls: unnamed, result: unnamedResult } = run(1, [
 			[goodResult("other.com")],
 		]);
 		await unnamedResult;
-		expect(unnamed[0]?.excludeDomains).toBeUndefined();
+		expect(unnamed[0]?.excludeDomains).toEqual(["seller.example"]);
 
 		const leaked = await run(
 			2,
@@ -267,44 +262,13 @@ describe("a company the caller already knows", () => {
 	});
 });
 
-describe("a round the vendor answers with nothing", () => {
-	it("searches again instead of stopping, reporting empty rather than exhausted when nothing is ever found", async () => {
-		const retried = await run(1, [[], [goodResult("late.com")]]).result;
-		expect(retried.rounds).toBe(2);
-		expect(retried.status).toBe("complete");
-
-		const empty = await run(1, [[], [], []]).result;
-		expect(empty.status).toBe("empty");
-
-		const exhausted = await run(5, [[goodResult("seen.com")]], {
-			seen: ["seen.com"],
-		}).result;
-		expect(exhausted.status).toBe("exhausted");
-	});
-});
-
-describe("a round the filter refuses outright", () => {
-	it("retries with the filter's own reasons as feedback, instead of stopping as exhausted", async () => {
-		const { inputs, result } = run(
-			1,
-			[
-				[
-					goodResult("big1.com", { workforceTotal: 400 }),
-					goodResult("big2.com", { workforceTotal: 500 }),
-				],
-				[goodResult("small.com", { workforceTotal: 10 })],
-			],
-			{ planOverrides: { maxWorkforce: 20 } },
-		);
+describe("a one-round core call", () => {
+	it("reports an empty result without retrying the vendor", async () => {
+		const { calls, result } = run(1, [[]]);
 		const outcome = await result;
 
-		expect(outcome.status).toBe("complete");
-		expect(outcome.companies.map((row) => row.domain)).toEqual(["small.com"]);
-		expect(inputs[1]?.feedback.join(" ")).toContain(
-			"headcount above the limit of 20",
-		);
-		expect(inputs[1]?.feedback.join(" ")).not.toContain(
-			"matched no companies at all",
-		);
+		expect(calls).toHaveLength(1);
+		expect(outcome.rounds).toBe(1);
+		expect(outcome.status).toBe("empty");
 	});
 });

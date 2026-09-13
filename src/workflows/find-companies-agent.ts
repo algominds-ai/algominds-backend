@@ -5,57 +5,41 @@ import {
 	buildAgentRunRequest,
 	toExaSearchResult,
 } from "@/core/companies/agent-search";
-import type { CompanyRow } from "@/core/companies/gate";
 import { gate } from "@/core/companies/gate";
-import { fetchHomepages } from "@/core/companies/homepages";
-import type { JudgeOptions } from "@/core/companies/judge";
-import { judge } from "@/core/companies/judge";
-import type { EvidenceByRow } from "@/core/companies/judge-evidence";
-import { proveRows } from "@/core/companies/proof";
+import type { RequirementEvidence } from "@/core/companies/judge-evidence";
+import { retrieveCompanyEvidence } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
 import type { RoundTiming } from "@/core/companies/rows";
-import {
-	agentRunEvidenceRow,
-	judgeInputEvidenceRows,
-} from "@/core/companies/rows";
-import { CostLedger } from "@/core/cost";
+import { agentRunEvidenceRow } from "@/core/companies/rows";
+import { addPartialSpend, CostLedger } from "@/core/cost";
 import { appendEvidence, recentDomains } from "@/core/db/queries";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
 import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
 import type { ExaResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
-import type { Requirement } from "@/core/requirements";
-import type { IcpDoc, IcpSeller, SearchPlan } from "@/core/synthesize";
+import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
+import { steppedJudge } from "@/workflows/find-companies-judge";
 
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
 const MAX_POLL_ATTEMPTS = config.companies.exaAgentMaxPollAttempts;
-const COMPANIES_PER_ANGLE = config.companies.companiesPerAngle;
 const START_STAGGER_MS = config.companies.agentStartStaggerMs;
 const POLL_BUDGET_PER_SECOND = config.companies.exaPollBudgetPerSecond;
-
-/**
- * Seconds between polls for one angle of a fan-out carrying `anglesInFlight`
- * angles, scaled up so the whole fan-out spends at most
- * `exaPollBudgetPerSecond` poll requests a second. A single-angle round keeps
- * `exaAgentPollIntervalSeconds` unchanged.
- */
 function scaledPollIntervalSeconds(anglesInFlight: number): number {
 	return Math.max(
 		POLL_INTERVAL_SECONDS,
 		Math.ceil(anglesInFlight / POLL_BUDGET_PER_SECOND),
 	);
 }
-
 export type AgentSearchInput = {
+	remaining: number;
 	step: WorkflowStep;
 	round: number;
 	today: string;
-	seller: IcpSeller | null;
+	icp: IcpDoc;
 	runId: string;
 };
-
 type AngleInput = {
 	input: AgentSearchInput;
 	plan: SearchPlan;
@@ -63,21 +47,13 @@ type AngleInput = {
 	anglesInFlight: number;
 	excludeDomains: readonly string[];
 };
-
-/**
- * Runs one angle as its own durable agent run: start, poll to completion, and
- * return the companies it found. Each angle owns its own step names so a
- * replay resumes the angle it was in rather than restarting the fan-out, and
- * every angle after the first waits its slot out so a round never crosses
- * Exa's ten-requests-a-second limit.
- */
 async function runAngle(
 	angle: AngleInput,
 	env: Env,
 	ledger: CostLedger,
 ): Promise<ExaAgentCompany[]> {
 	const { input, plan, slot, anglesInFlight, excludeDomains } = angle;
-	const { step, round, today, seller, runId } = input;
+	const { step, round, today, icp, runId } = input;
 	const name = `round_${round}-angle_${slot}`;
 	if (slot > 0) {
 		await step.sleep(
@@ -92,9 +68,9 @@ async function runAngle(
 			startAgentRun(
 				buildAgentRunRequest({
 					plan,
-					count: COMPANIES_PER_ANGLE,
+					count: Math.ceil(input.remaining / anglesInFlight),
 					today,
-					seller,
+					icp,
 					excludeDomains,
 				}),
 				env,
@@ -127,18 +103,12 @@ async function runAngle(
 		},
 	);
 }
-
-/**
- * Builds the fan-out dependency: one agent run per angle the planner wrote,
- * started `agentStartStaggerMs` apart so a round never crosses Exa's
- * ten-requests-a-second limit, and their companies merged into one result.
- */
 export function agentFanout(
 	input: AgentSearchInput,
 ): FindCompaniesDeps["agentRound"] {
 	return async (plans, excludeDomains, env, ledger) => {
 		const anglesInFlight = plans.length;
-		const perAngle = await Promise.all(
+		const outcomes = await Promise.allSettled(
 			plans.map((plan, slot) =>
 				runAngle(
 					{ input, plan, slot, anglesInFlight, excludeDomains },
@@ -147,11 +117,19 @@ export function agentFanout(
 				),
 			),
 		);
-		return toExaSearchResult(`round_${input.round}-fanout`, perAngle.flat());
+		const failure = outcomes.find(
+			(outcome): outcome is PromiseRejectedResult =>
+				outcome.status === "rejected",
+		);
+		if (failure) throw failure.reason;
+		return toExaSearchResult(
+			`round_${input.round}-fanout`,
+			outcomes.flatMap((outcome) =>
+				outcome.status === "fulfilled" ? outcome.value : [],
+			),
+		);
 	};
 }
-
-/** Wraps the record backfill in one durable step, so a replay reuses the records it already paid for. */
 export function steppedBackfill(
 	step: WorkflowStep,
 	round: number,
@@ -179,8 +157,6 @@ export function steppedBackfill(
 		}));
 	};
 }
-
-/** One serialized Exa result read back after a durable step, whose reply must be plain JSON. */
 function readExaResult(raw: string): ExaResult | null {
 	const parsed: unknown = JSON.parse(raw);
 	if (parsed === null || typeof parsed !== "object") return null;
@@ -195,52 +171,42 @@ function readExaResult(raw: string): ExaResult | null {
 	};
 	return candidate.url === "" ? null : candidate;
 }
-
-/** Wraps the proving pass in one durable step, so a replay reuses the pages it already paid for. */
-export function steppedProve(
+export function steppedEvidence(
 	step: WorkflowStep,
 	round: number,
-): FindCompaniesDeps["prove"] {
-	return async (rows, requirement, env, ledger) => {
+): FindCompaniesDeps["retrieveEvidence"] {
+	return async (input, env, ledger) => {
 		const cached = await step.do(
-			`round_${round}-prove`,
+			`round_${round}-evidence`,
 			config.stepConfig.paidCall,
 			async () => {
 				const stepLedger = new CostLedger();
-				const proven = await proveRows(rows, requirement, env, stepLedger);
-				return { proven, costEntries: stepLedger.toJSON().entries };
+				try {
+					const result = await retrieveCompanyEvidence(input, env, stepLedger);
+					return {
+						evidenceByRow: [...result.evidenceByRow.entries()].map(
+							([index, evidence]) => [index, [...evidence.entries()]] as const,
+						),
+						pages: result.pages,
+						costEntries: stepLedger.toJSON().entries,
+					};
+				} catch (error) {
+					throw addPartialSpend(error, stepLedger.total());
+				}
 			},
 		);
 		applyCostEntries(cached.costEntries, ledger);
-		return cached.proven;
+		return {
+			evidenceByRow: new Map(
+				cached.evidenceByRow.map(([index, evidence]) => [
+					index,
+					new Map<string, RequirementEvidence>(evidence),
+				]),
+			),
+			pages: cached.pages,
+		};
 	};
 }
-
-/** Wraps the homepage fetch in one durable step, so a replay reuses the pages it already paid for. */
-export function steppedHomepages(
-	step: WorkflowStep,
-	round: number,
-): FindCompaniesDeps["homepages"] {
-	return async (domains, env, ledger) => {
-		const cached = await step.do(
-			`round_${round}-homepages`,
-			config.stepConfig.paidCall,
-			async () => {
-				const stepLedger = new CostLedger();
-				const pages = await fetchHomepages(domains, env, stepLedger);
-				return { pages, costEntries: stepLedger.toJSON().entries };
-			},
-		);
-		applyCostEntries(cached.costEntries, ledger);
-		return cached.pages;
-	};
-}
-
-/**
- * Wraps `synthesize` in its own durable step so a replay triggered by a
- * later `step.sleep` in the same round returns the cached plan instead of
- * paying for a second, possibly different, model call.
- */
 export function agentSynthesize(
 	step: WorkflowStep,
 	round: number,
@@ -263,98 +229,27 @@ export function agentSynthesize(
 		return { route: cached.route, plans: cached.plans, ledger };
 	};
 }
-
-/**
- * Wraps the recent-domains lookup in its own durable step, for the same
- * replay-safety reason as `agentSynthesize`.
- */
 export function agentRecentDomains(
 	step: WorkflowStep,
 	round: number,
-): (env: Env, organizationId: string, days: number) => Promise<string[]> {
-	return (env, organizationId, days) =>
+): (env: Env, organizationId: string) => Promise<string[]> {
+	return (env, organizationId) =>
 		step.do(
 			`round_${round}-recent-domains`,
 			config.stepConfig.databaseCall,
-			() => recentDomains(env, organizationId, days),
+			() => recentDomains(env, organizationId),
 		);
 }
-
-type SaveJudgeInputInput = {
-	step: WorkflowStep;
-	round: number;
-	runId: string;
-	env: Env;
-	requirements: readonly Requirement[];
-	rows: readonly CompanyRow[];
-	evidenceByRow: EvidenceByRow;
-};
-
-/** Saves the exact rows, page evidence and requirement list the judge call is about to read, in its own durable step, so a later replay can reproduce that call byte for byte. */
-async function saveJudgeInput(input: SaveJudgeInputInput): Promise<void> {
-	const { step, round, runId, env, requirements, rows, evidenceByRow } = input;
-	await step.do(
-		`round_${round}-judge-input`,
-		config.stepConfig.databaseCall,
-		() =>
-			appendEvidence(
-				env,
-				judgeInputEvidenceRows({
-					runId,
-					round,
-					rows,
-					evidenceByRow,
-					requirements,
-				}),
-			),
-	);
-}
-
-/** Wraps the judge in its own durable step, for the same replay-safety reason as `agentSynthesize`. */
-function steppedJudge(
-	step: WorkflowStep,
-	round: number,
-	runId: string,
-): FindCompaniesDeps["judge"] {
-	return async (requirements, rows, env, options: JudgeOptions = {}) => {
-		const evidenceByRow = options.evidenceByRow ?? new Map();
-		await saveJudgeInput({
-			step,
-			round,
-			runId,
-			env,
-			requirements,
-			rows,
-			evidenceByRow: evidenceByRow ?? new Map(),
-		});
-		const cached = await step.do(
-			`round_${round}-judge`,
-			config.stepConfig.judgeCall,
-			async () => {
-				const result = await judge(requirements, rows, env, options);
-				return {
-					verdicts: result.verdicts,
-					costEntries: result.ledger.toJSON().entries,
-				};
-			},
-		);
-		const ledger = new CostLedger();
-		applyCostEntries(cached.costEntries, ledger);
-		return { verdicts: cached.verdicts, ledger };
-	};
-}
-
-/** Builds every dependency one round runs on. The route is the planner's, so both the search path and the agent fan-out are wired here and the round picks between them. */
 export type RoundDepsInput = {
+	remaining: number;
 	accumulatedDomains: ReadonlySet<string>;
 	step: WorkflowStep;
 	round: number;
 	today: string;
-	seller: IcpDoc["seller"];
+	icp: IcpDoc;
 	timings: RoundTiming[];
 	runId: string;
 };
-
 function timed<A extends unknown[], R>(
 	dep: string,
 	fn: (...args: A) => Promise<R>,
@@ -369,8 +264,6 @@ function timed<A extends unknown[], R>(
 		}
 	};
 }
-
-/** `deps` with every paid or model dependency wrapped to push how long each call took onto `timings`. */
 export function timedDeps(
 	deps: FindCompaniesDeps,
 	timings: RoundTiming[],
@@ -381,26 +274,31 @@ export function timedDeps(
 		search: timed("search", deps.search, timings),
 		agentRound: timed("agent", deps.agentRound, timings),
 		backfill: timed("backfill", deps.backfill, timings),
-		prove: timed("prove", deps.prove, timings),
+		retrieveEvidence: timed("evidence", deps.retrieveEvidence, timings),
 		judge: timed("judge", deps.judge, timings),
 	};
 }
-
 export function roundDeps(input: RoundDepsInput): FindCompaniesDeps {
 	const { accumulatedDomains, step, round, today, runId } = input;
-	const seller = input.seller ?? null;
+	const icp = input.icp;
 	const lookupRecentDomains = agentRecentDomains(step, round);
 	const deps: FindCompaniesDeps = {
-		recentDomains: async (env, organizationId, days) => {
-			const known = await lookupRecentDomains(env, organizationId, days);
+		recentDomains: async (env, organizationId) => {
+			const known = await lookupRecentDomains(env, organizationId);
 			return [...known, ...accumulatedDomains];
 		},
 		synthesize: agentSynthesize(step, round),
 		search: (_plan, req, env, ledger) => search(req, env, ledger),
-		agentRound: agentFanout({ step, round, today, seller, runId: input.runId }),
+		agentRound: agentFanout({
+			step,
+			round,
+			today,
+			icp,
+			remaining: input.remaining,
+			runId: input.runId,
+		}),
 		backfill: steppedBackfill(step, round),
-		prove: steppedProve(step, round),
-		homepages: steppedHomepages(step, round),
+		retrieveEvidence: steppedEvidence(step, round),
 		gate,
 		judge: steppedJudge(step, round, runId),
 	};

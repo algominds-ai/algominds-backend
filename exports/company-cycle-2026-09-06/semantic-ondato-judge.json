@@ -1,0 +1,137 @@
+{
+  "profile": "ondato",
+  "elapsedSeconds": 38.508,
+  "cost": {
+    "total": 0.085546,
+    "byProvider": {
+      "anthropic/claude-sonnet-5": 0.085546
+    },
+    "entries": [
+      {
+        "provider": "anthropic/claude-sonnet-5",
+        "op": "judge",
+        "dollars": 0.085546
+      }
+    ]
+  },
+  "verdicts": [
+    {
+      "linkedinUrl": "https://www.linkedin.com/company/wirex-limited",
+      "index": 0,
+      "statuses": [
+        {
+          "id": "r1.a1.c1",
+          "status": "proven",
+          "sourceUrl": "https://linkedin.com/company/wirex-limited",
+          "date": null
+        },
+        {
+          "id": "r2.a3.c1",
+          "status": "proven",
+          "sourceUrl": "https://wirexapp.com/",
+          "date": null
+        },
+        {
+          "id": "r3.a1.c1",
+          "status": "proven",
+          "sourceUrl": "https://linkedin.com/company/wirex-limited",
+          "date": null
+        },
+        {
+          "id": "r4.a1.c1",
+          "status": "proven",
+          "sourceUrl": "https://wirexapp.com/",
+          "date": null
+        },
+        {
+          "id": "r5.a1.c1",
+          "status": "proven",
+          "sourceUrl": "https://www.wirexapp.com/post/already-got-a-wirex-app-account-and-interested-in-joining-wirex-one",
+          "date": null
+        },
+        {
+          "id": "r6.a3.c1",
+          "status": "proven",
+          "sourceUrl": "https://www.finextra.com/pressarticle/109676/wirex-launches-stablecoin-consumer-finance-app-wirex-one",
+          "date": "2026-05-01"
+        }
+      ],
+      "reason": "Wirex is a UK-based crypto/payments platform with millions of consumer users (top traffic countries include UK), raised $27.8M (within $2M-$250M range), is a fintech/payments/crypto-wallet business rather than a verification vendor, runs high-volume digital onboarding where identity verification is embedded (Wirex One transfer flow references identity confirmation), and launched the new consumer app Wirex One in 2026-05 which requires new user signup/verification, satisfying the recency requirement.",
+      "sameOrganizationAs": null
+    },
+    {
+      "linkedinUrl": "https://www.linkedin.com/company/zbdpay",
+      "index": 1,
+      "statuses": [
+        {
+          "id": "r2.a3.c1",
+          "status": "proven",
+          "sourceUrl": "https://zbdpay.com/",
+          "date": null
+        },
+        {
+          "id": "r3.a1.c1",
+          "status": "proven",
+          "sourceUrl": "https://www.cbinsights.com/company/zebedee",
+          "date": null
+        },
+        {
+          "id": "r4.a1.c1",
+          "status": "proven",
+          "sourceUrl": "https://zbdpay.com/",
+          "date": null
+        }
+      ],
+      "reason": "ZBD is a licensed payments/PSP company for games with total funding of $86.5M (within range) and is not itself a verification/compliance vendor. However, its customers are primarily game studios/publishers rather than direct consumer or SMB end-users in the UK/Ireland/US/Canada, there is no evidence its own signup flow drives high-volume revenue-enabling identity checks, and no qualifying recent trigger (new license/go-live, user complaints, new consumer product needing verification, age-gated exposure, or a funding round within 120 days\u2014the Series C was announced 2026-01-22, more than 120 days before 2026-09-06) is established.",
+      "sameOrganizationAs": null
+    }
+  ],
+  "decision": {
+    "stored": [
+      {
+        "name": "Wirex",
+        "domain": "wirexapp.com",
+        "linkedinUrl": "https://www.linkedin.com/company/wirex-limited",
+        "description": "Wirex is a digital payment platform with a mission - to make crypto and traditional currencies equal and accessible to everyone. \n \nWe\u2019re making fintech simple. Our innovative mobile app and next-gen Wirex card lets you buy, store, exchange and spend a wide variety of conventional and digital currencies quickly and securely, with no hidden fees and zero fuss.\n \nDownload the app now and discover a world where every purchase earns you Cryptoback\u2122 rewards - and using your cryptocurrency in real life is as easy as tapping your Wirex card.\n\n*Content on the page not intended for UK and NZ users!",
+        "record": {
+          "name": "Wirex",
+          "description": "Wirex is a digital payment platform with a mission - to make crypto and traditional currencies equal and accessible to everyone. \n \nWe\u2019re making fintech simple. Our innovative mobile app and next-gen Wirex card lets you buy, store, exchange and spend a wide variety of conventional and digital currencies quickly and securely, with no hidden fees and zero fuss.\n \nDownload the app now and discover a world where every purchase earns you Cryptoback\u2122 rewards - and using your cryptocurrency in real life is as easy as tapping your Wirex card.\n\n*Content on the page not intended for UK and NZ users!",
+          "industry": null,
+          "foundedYear": 2014,
+          "workforceTotal": 181,
+          "city": "Liverpool Street",
+          "country": "United Kingdom",
+          "revenueAnnual": null,
+          "fundingTotal": 27768774
+        }
+      }
+    ],
+    "rejects": [
+      {
+        "domain": "zbdpay.com",
+        "reason": "the required condition r1.a1.c1 was not proven: ZBD is a licensed payments/PSP company for games with total funding of $86.5M (within range) and is not itself a verification/compliance vendor. However, its customers are primarily game studios/publishers rather than direct consumer or SMB end-users in the UK/Ireland/US/Canada, there is no evidence its own signup flow drives high-volume revenue-enabling identity checks, and no qualifying recent trigger (new license/go-live, user complaints, new consumer product needing verification, age-gated exposure, or a funding round within 120 days\u2014the Series C was announced 2026-01-22, more than 120 days before 2026-09-06) is established.",
+        "stage": "judge",
+        "statuses": [
+          {
+            "id": "r2.a3.c1",
+            "status": "proven",
+            "sourceUrl": "https://zbdpay.com/",
+            "date": null
+          },
+          {
+            "id": "r3.a1.c1",
+            "status": "proven",
+            "sourceUrl": "https://www.cbinsights.com/company/zebedee",
+            "date": null
+          },
+          {
+            "id": "r4.a1.c1",
+            "status": "proven",
+            "sourceUrl": "https://zbdpay.com/",
+            "date": null
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,7 +1,6 @@
 import { env as testEnv } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { config } from "@/config";
 import type { DbMode } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
 import type {
@@ -63,37 +62,32 @@ describe("recentDomains", () => {
 			return {
 				select: () => ({
 					from: () => ({
-						where: () => ({
-							orderBy: () => ({ limit: () => Promise.resolve([]) }),
-						}),
+						where: () => ({ orderBy: () => Promise.resolve([]) }),
 					}),
 				}),
 			};
 		};
 
-		await recentDomains(fakeDbEnv("x", "y"), "org-1", 60, buildDb);
+		await recentDomains(fakeDbEnv("x", "y"), "org-1", buildDb);
 
 		expect(recordedMode).toBe("direct");
 	});
 
-	it("excludes a company found outside the window or by another account", async () => {
+	it("returns every company for the account, but not another account", async () => {
 		const org = await seedOrganization("companies-recent");
 		const otherOrg = await seedOrganization("companies-recent-other");
 		const icpRow = await seedIcpFor(org, "companies-recent");
 		const runA = await seedRunFor(org, "companies", { icpId: icpRow.id });
 		const otherRun = await seedRunFor(otherOrg, "companies");
-		const dayMs = 24 * 60 * 60 * 1000;
-		const recent = new Date(Date.now() - 10 * dayMs);
-		const stale = new Date(
-			Date.now() - (config.companies.seenDomainsWindowDays + 1) * dayMs,
-		);
+		const recent = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+		const stale = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000);
 
 		try {
 			const kept = await seedCompanyFor(org, runA, "recent-kept", {
 				icpId: icpRow.id,
 				foundAt: recent,
 			});
-			await seedCompanyFor(org, runA, "recent-stale", {
+			const staleRow = await seedCompanyFor(org, runA, "recent-stale", {
 				icpId: icpRow.id,
 				foundAt: stale,
 			});
@@ -101,13 +95,9 @@ describe("recentDomains", () => {
 				foundAt: recent,
 			});
 
-			const result = await recentDomains(
-				testEnv,
-				org.id,
-				config.companies.seenDomainsWindowDays,
-			);
+			const result = await recentDomains(testEnv, org.id);
 
-			expect(result).toEqual([kept.domain]);
+			expect(result).toEqual([kept.domain, staleRow.domain]);
 		} finally {
 			await wipeOrganizations([org.id, otherOrg.id]);
 		}
@@ -233,6 +223,7 @@ describe("companiesForRun", () => {
 				id: "c1",
 				domain: "acme.com",
 				name: "Acme",
+				description: null,
 				linkedinUrl: "https://linkedin.com/company/acme",
 				icpId: "icp-1",
 				data: { provider: "exa-search", result: { id: "exa-org-1" } },

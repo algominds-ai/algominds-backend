@@ -8,15 +8,13 @@ import type { SearchPlan } from "@/core/synthesize";
 import { agentFanout } from "@/workflows/find-companies-agent";
 import { fakeSecretEnv } from "../support/env";
 import { fakeExaAgentRun } from "../support/fetch";
+import { profileFixture } from "../support/icp";
 import { fakeWorkflowStep } from "../support/step";
 
 function plan(): SearchPlan {
 	return {
 		query: "angle one",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -59,8 +57,9 @@ describe("an angle banks the agent run it started before it can fail", () => {
 		const fanout = agentFanout({
 			step: failing.step,
 			round: 1,
+			remaining: 15,
 			today: "2026-08-30",
-			seller: null,
+			icp: profileFixture(),
 			runId,
 		});
 

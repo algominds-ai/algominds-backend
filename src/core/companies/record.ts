@@ -1,7 +1,7 @@
 import { config } from "@/config";
 import type { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
-import type { CompanyEntity, ExaResult } from "@/core/providers/exa/search";
+import type { ExaResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
 
 const { provingConcurrency: LOOKUP_CONCURRENCY } = config.companies;
@@ -10,6 +10,13 @@ const SLICE_WAIT_MS = 1000;
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** A division's subdomain or product page is not the requested company's own homepage. */
+function recordHomepage(result: ExaResult): string | null {
+	const url = new URL(result.url);
+	const host = url.hostname.replace(/^www\./, "");
+	return url.pathname === "/" && host === normalizeDomain(host) ? host : null;
 }
 
 /**
@@ -37,8 +44,7 @@ async function lookupRecord(
 		ledger,
 	);
 	return (
-		found.results.find((result) => normalizeDomain(result.url) === wanted) ??
-		null
+		found.results.find((result) => recordHomepage(result) === wanted) ?? null
 	);
 }
 
@@ -48,12 +54,52 @@ export type BackfilledRecord = {
 	record: ExaResult | null;
 };
 
+/** Fetch one bounded domain batch, then retry only its missing records. */
+async function lookupBatch(
+	domains: readonly string[],
+	env: Env,
+	ledger: CostLedger,
+): Promise<Map<string, ExaResult | null>> {
+	const wanted = new Set(domains.map(normalizeDomain));
+	const records = new Map<string, ExaResult | null>();
+	if (wanted.size > 1) {
+		const found = await search(
+			{
+				query: `Companies with these websites: ${[...wanted].join(", ")}`,
+				category: "company",
+				type: "fast",
+				numResults: Math.min(wanted.size * 2, config.companies.resultsPerRound),
+				includeDomains: [...wanted],
+			},
+			env,
+			ledger,
+		);
+		for (const result of found.results) {
+			const domain = recordHomepage(result);
+			if (
+				domain &&
+				wanted.has(domain) &&
+				result.company &&
+				!records.has(domain)
+			)
+				records.set(domain, result);
+		}
+	}
+	const missing = [...wanted].filter((domain) => !records.has(domain));
+	for (let offset = 0; offset < missing.length; offset += LOOKUP_CONCURRENCY) {
+		if (offset > 0) await sleep(SLICE_WAIT_MS);
+		await Promise.all(
+			missing.slice(offset, offset + LOOKUP_CONCURRENCY).map(async (domain) => {
+				records.set(domain, await lookupRecord(domain, env, ledger));
+			}),
+		);
+	}
+	return records;
+}
+
 /**
- * Looks up the vendor's own company record for every domain an agent round
- * returned, `provingConcurrency` at a time under Exa's rate limit, waiting
- * one second between slices whenever there is more than one, so the
- * profile's headcount, country and revenue bounds are applied to the vendor's
- * figures rather than to numbers the agent wrote about itself.
+ * Batches native record lookups, retrying missing exact domains individually.
+ * Individual fallbacks retain the existing provider concurrency limit.
  */
 export async function backfillRecords(
 	domains: readonly string[],
@@ -61,56 +107,37 @@ export async function backfillRecords(
 	ledger: CostLedger,
 ): Promise<BackfilledRecord[]> {
 	const filled: BackfilledRecord[] = [];
-	for (let at = 0; at < domains.length; at += LOOKUP_CONCURRENCY) {
+	const batchSize = config.companies.resultsPerRound;
+	for (let at = 0; at < domains.length; at += batchSize) {
 		if (at > 0) await sleep(SLICE_WAIT_MS);
-		const slice = domains.slice(at, at + LOOKUP_CONCURRENCY);
-		const found = await Promise.all(
-			slice.map(async (domain) => ({
+		const slice = domains.slice(at, at + batchSize);
+		const records = await lookupBatch(slice, env, ledger);
+		filled.push(
+			...slice.map((domain) => ({
 				domain,
-				record: await lookupRecord(domain, env, ledger),
+				record: records.get(normalizeDomain(domain)) ?? null,
 			})),
 		);
-		filled.push(...found);
 	}
 	return filled;
 }
 
-/**
- * The vendor's record for a company where it has one, falling back to what the
- * agent reported for a company its index has never heard of. A field the
- * vendor left null keeps the agent's own value, since a null is silence.
- */
-function mergeEntity(
-	agent: CompanyEntity,
-	vendor: CompanyEntity | null,
-): CompanyEntity {
-	if (vendor === null) return agent;
-	return {
-		name: vendor.name ?? agent.name,
-		description: vendor.description ?? agent.description,
-		industry: agent.industry ?? vendor.industry,
-		foundedYear: vendor.foundedYear ?? agent.foundedYear,
-		workforceTotal: vendor.workforceTotal ?? agent.workforceTotal,
-		city: vendor.city ?? agent.city,
-		country: vendor.country ?? agent.country,
-		revenueAnnual: vendor.revenueAnnual ?? agent.revenueAnnual,
-		fundingTotal: vendor.fundingTotal ?? agent.fundingTotal,
-	};
-}
-
-/** Every agent result with the vendor's own record merged into it, keyed on the normalized domain each lookup was asked for. */
+/** Replace an agent result with the exact native provider record when one was found. */
 export function applyRecords(
 	results: readonly ExaResult[],
 	filled: readonly BackfilledRecord[],
 ): ExaResult[] {
 	const byDomain = new Map(
-		filled.map((entry) => [entry.domain, entry.record?.company ?? null]),
+		filled.map((entry) => [normalizeDomain(entry.domain), entry.record]),
 	);
 	return results.map((result) => {
-		const agent = result.company;
-		if (agent === null) return result;
-		const vendor = byDomain.get(normalizeDomain(result.url));
-		if (vendor === undefined) return result;
-		return { ...result, company: mergeEntity(agent, vendor) };
+		const native = byDomain.get(normalizeDomain(result.url));
+		if (native === undefined || native === null || native.company === null)
+			return result;
+		return {
+			...result,
+			id: native.id,
+			company: native.company,
+		};
 	});
 }

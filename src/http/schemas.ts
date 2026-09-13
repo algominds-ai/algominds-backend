@@ -57,7 +57,10 @@ export const companiesFindSchema = z.intersection(
 			.number()
 			.int()
 			.positive()
-			.max(config.limits.maxCompaniesPerRequest),
+			.max(config.limits.maxCompaniesPerRequest)
+			.describe(
+				"Target company count; all qualifying companies in the completed batch are returned.",
+			),
 		excludeDomains: domainsField.optional(),
 	}),
 );

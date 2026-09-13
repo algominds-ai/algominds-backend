@@ -1,6 +1,7 @@
 import { config } from "@/config";
 import type { FindCompaniesReject } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
+import { verifiedLinkedInCompanyUrl } from "@/core/companies/identity";
 import type {
 	EvidenceByRow,
 	RequirementEvidence,
@@ -11,14 +12,15 @@ import {
 	JudgeModelSchema,
 	judgedFields,
 	REQUIREMENT_STATUSES,
+	supportedStatus,
 } from "@/core/companies/judge-evidence";
-import { CostLedger } from "@/core/cost";
+import { addPartialSpend, CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import { generateStructured, reasoningModel } from "@/core/model";
 import type { ConditionRef, Requirement } from "@/core/requirements";
 import {
-	evidenceDemandConditions,
 	requiredConditionRefs,
+	requiredGroupSatisfied,
 	requiredSatisfied,
 	requirementLine,
 } from "@/core/requirements";
@@ -42,30 +44,15 @@ export type JudgeOptions = {
 };
 
 const JUDGE_INSTRUCTIONS = [
-	"For every row, by index, return one status per id: `proven` when the row's record or",
-	"evidence establishes it; `contradicted` when they show the row is what the requirement",
-	"excludes or not what it requires, e.g. selling IT services contradicts an IT-services",
-	"exclusion; `unproven` when they say nothing either way, e.g. silence on hiring is",
-	"unproven, not contradicted, for hiring.",
-	"When a requirement lists the qualifying categories, a row whose record affirmatively",
-	"states a different category the list does not include is contradicted, not unproven;",
-	"silence or an unclear category stays unproven.",
-	"A row whose name or description says the company was acquired, merged, shut down, sunset",
-	"or no longer operates contradicts every hard requirement, so the row is refused.",
-	"A row's evidence page proves a requirement only when the quote is about the company the",
-	"row names and the page records it; a quote about another company proves nothing.",
-	"A row's `pageEvidence` object, when present, gives the quote already found for one or",
-	"more requirement ids; an id missing there had no page found for it, so a `page`",
-	"requirement with no entry stays unproven unless the record itself settles it.",
-	"A row's homepage text, keyed `homepage` in `pageEvidence`, is the company's own current",
-	"statement and establishes what it sells, to whom, through what signup, and whether it",
-	'still operates; a word like "partners" alone does not disqualify a row.',
-	"When every status for a row is `proven`, set its `reason` to an empty string. When any",
-	"status for a row is `contradicted` or `unproven`, give one reason of twenty-five words",
-	"or fewer describing only what that row's own fields show, and never invent a fact the",
-	"row does not carry.",
-	"Set `sameOrganizationAs` to the index of an earlier row that is the same organisation",
-	"under another brand, country domain or subdomain, and to null otherwise.",
+	"Judge company fit from the indexed record and retrieved page text. Description is discovery context; a generated claim or quote is not evidence.",
+	"Required groups rN are ANDed; alternatives aN are ORed; conditions cN within an alternative are ANDed. Establish every condition of at least one alternative for each required group. Preferences never exclude.",
+	"Return statuses only for conditions established or contradicted by the evidence. Omitted conditions are unproven; do not enumerate unsupported alternatives or preferences.",
+	"For proven conditions cite a retrieved sourceUrl. Null sourceUrl is allowed only for directly stated indexed-record facts with no source or date restriction. Establish every clause of the condition: related categories, skill/tool tags or headcounts do not establish deployment, operational scale, ownership or signup requirements.",
+	"Apply competitor exclusions to the scoped offer. Using or integrating verification, payments or other capabilities does not itself make a company a competing vendor; establish what it sells.",
+	"Infer company categories from concrete operating activities; an exact category label is unnecessary. Do not add requirements for independence, exclusivity, or a core business unless specified. A marketing contrast with traditional providers does not itself negate category membership. Concrete technology, identity, numeric and date claims still need direct evidence.",
+	"For dated conditions give the relevant YYYY-MM-DD date. Distinguish event, publication and observation; a profile update is not a role-start date, and a careers page is not a dated vacancy. Unsupported dates stay null.",
+	"Vendor case studies are valid evidence for the customer they describe.",
+	"Return each row by index with a concise reason naming the decisive supporting or missing facts. Acquisition alone does not prove a business stopped operating; apply the actual exclusions.",
 ].join(" ");
 
 function judgePrompt(input: {
@@ -77,12 +64,14 @@ function judgePrompt(input: {
 	profile: IcpDoc | undefined;
 }): string {
 	const { requirements, rows, offset, evidenceByRow, today, profile } = input;
-	const hard = requiredConditionRefs(requirements);
+	const conditions = requiredConditionRefs(requirements);
 	const lines = [
 		...(today ? [`Today is ${today}.`] : []),
-		...(profile ? [`Full account profile: ${JSON.stringify(profile)}`] : []),
+		...(profile
+			? [`Offer in scope: ${profile.icp.offer ?? "unspecified"}`]
+			: []),
 		"Requirements needing a status:",
-		...hard.map(requirementLine),
+		...conditions.map((ref) => `${ref.kind}: ${requirementLine(ref)}`),
 	];
 	lines.push("Rows:");
 	for (const [index, row] of rows.entries()) {
@@ -93,12 +82,12 @@ function judgePrompt(input: {
 }
 
 const FALLBACK_REASON =
-	"the judge produced nothing usable, so this row was kept by default";
+	"the judge produced nothing usable, so required conditions remain unproven";
 
 type JudgeSlice = { rows: CompanyRow[]; offset: number };
 
 /** Splits gated rows into slices of at most `JUDGE_BATCH_SIZE`, each carrying the offset its local indices must be shifted by to land back on the full row list. */
-function judgeSlices(rows: readonly CompanyRow[]): JudgeSlice[] {
+export function judgeSlices(rows: readonly CompanyRow[]): JudgeSlice[] {
 	const slices: JudgeSlice[] = [];
 	for (let offset = 0; offset < rows.length; offset += JUDGE_BATCH_SIZE) {
 		slices.push({
@@ -109,11 +98,7 @@ function judgeSlices(rows: readonly CompanyRow[]): JudgeSlice[] {
 	return slices;
 }
 
-/**
- * Every hard requirement `unproven` for a slice whose model call produced
- * nothing. A row-level fallback cannot claim proof it never saw, so a page
- * requirement stays unproven and the round's own rule decides what that means.
- */
+/** Missing structured verdicts leave required conditions unproven. */
 function unjudgedSlice(
 	slice: JudgeSlice,
 	requirements: readonly Requirement[],
@@ -121,12 +106,13 @@ function unjudgedSlice(
 	const statuses = requiredConditionRefs(requirements).map((req) => ({
 		id: req.id,
 		status: "unproven" as const,
+		sourceUrl: null,
+		date: null,
 	}));
 	return slice.rows.map((_row, index) => ({
 		index: index + slice.offset,
 		statuses,
 		reason: FALLBACK_REASON,
-		sameOrganizationAs: null,
 	}));
 }
 
@@ -134,20 +120,9 @@ function shiftVerdicts(
 	slice: JudgeSlice,
 	verdicts: readonly Verdict[],
 ): Verdict[] {
-	return verdicts.flatMap((verdict) => {
-		if (verdict.index >= slice.rows.length) return [];
-		const same = verdict.sameOrganizationAs;
-		return [
-			{
-				...verdict,
-				index: verdict.index + slice.offset,
-				sameOrganizationAs:
-					same !== null && same >= 0 && same < verdict.index
-						? same + slice.offset
-						: null,
-			},
-		];
-	});
+	return verdicts
+		.filter((verdict) => verdict.index < slice.rows.length)
+		.map((verdict) => ({ ...verdict, index: verdict.index + slice.offset }));
 }
 
 type JudgeContext = {
@@ -178,27 +153,34 @@ async function judgeSlice(
 				profile: ctx.profile,
 			}),
 			schema: JudgeModelSchema,
+			reasoningEffort: "medium",
 			headers: { "cf-aig-cache-ttl": String(JUDGE_CACHE_TTL_SECONDS) },
 		},
 		ctx.ledger,
 		"judge",
 	);
 	return output
-		? shiftVerdicts(slice, output.verdicts)
+		? shiftVerdicts(
+				slice,
+				output.verdicts.map((verdict) => ({
+					...verdict,
+					statuses: verdict.statuses.map((entry) =>
+						supportedStatus(
+							entry,
+							slice.rows[verdict.index],
+							ctx.requirements,
+							{
+								evidence: ctx.evidenceByRow.get(slice.offset + verdict.index),
+								today: ctx.today,
+							},
+						),
+					),
+				})),
+			)
 		: unjudgedSlice(slice, ctx.requirements);
 }
 
-/**
- * Judges every gate-passed row against the profile's requirements, in slices
- * of at most `JUDGE_BATCH_SIZE` rows so one call never sends the model more
- * than it can finish inside its own timeout. Every slice runs as its own
- * model call, concurrently, on one shared cost ledger; a slice whose model
- * produces nothing usable twice in a row falls back to every hard requirement
- * unproven rather than failing the whole batch. `evidenceByRow` carries the
- * page a search already proved for a row's other hard page requirements, so
- * only the first ever reaching the row's own single evidence slot does not
- * leave the rest unweighed.
- */
+/** Judges source-backed company batches, preserving reported costs if a batch fails. */
 export async function judge(
 	requirements: readonly Requirement[],
 	rows: readonly CompanyRow[],
@@ -216,10 +198,20 @@ export async function judge(
 		today: options.today,
 		profile: options.profile,
 	};
-	const verdictsBySlice = await Promise.all(
+	const verdictsBySlice = await Promise.allSettled(
 		judgeSlices(rows).map((slice) => judgeSlice(ctx, slice)),
 	);
-	return { verdicts: verdictsBySlice.flat(), ledger };
+	const failure = verdictsBySlice.find(
+		(result) => result.status === "rejected",
+	);
+	if (failure?.status === "rejected")
+		throw addPartialSpend(failure.reason, ledger.total());
+	return {
+		verdicts: verdictsBySlice.flatMap((result) =>
+			result.status === "fulfilled" ? result.value : [],
+		),
+		ledger,
+	};
 }
 
 export type Decision = {
@@ -233,27 +225,23 @@ function statusOf(verdict: Verdict | undefined, id: string): RequirementStatus {
 	);
 }
 
-/** The first hard requirement a row's own record or evidence contradicts, or null when none does. */
-function contradictedRequirement(
-	requirements: readonly Requirement[],
-	verdict: Verdict | undefined,
-): ConditionRef | null {
-	return (
-		requiredConditionRefs(requirements).find(
-			(req) => statusOf(verdict, req.id) === "contradicted",
-		) ?? null
-	);
-}
-
-/** The first hard page requirement no cited page has proven for a row, or null when every one of them is proven. */
+/** Identifies an unmet condition in an unsatisfied required group. */
 function unprovenRequirement(
 	requirements: readonly Requirement[],
 	verdict: Verdict | undefined,
 ): ConditionRef | null {
+	const statuses = new Map(
+		(verdict?.statuses ?? []).map((status) => [status.id, status.status]),
+	);
 	return (
-		requiredConditionRefs(requirements).find(
-			(req) => statusOf(verdict, req.id) !== "proven",
-		) ?? null
+		requiredConditionRefs(requirements).find((ref) => {
+			const group = requirements[ref.groupIndex];
+			return (
+				group !== undefined &&
+				!requiredGroupSatisfied(group, ref.groupIndex, statuses) &&
+				statusOf(verdict, ref.id) !== "proven"
+			);
+		}) ?? null
 	);
 }
 
@@ -267,6 +255,7 @@ function keepsRow(
 ): boolean {
 	return (
 		verdict !== undefined &&
+		verdict.reason.trim().length > 0 &&
 		requiredSatisfied(
 			requirements,
 			new Map(verdict.statuses.map((status) => [status.id, status.status])),
@@ -280,32 +269,31 @@ function refusalReason(
 ): string {
 	if (verdict === undefined)
 		return "the judge produced no verdict for this row";
+	if (
+		verdict.reason.trim().length === 0 &&
+		requiredSatisfied(
+			requirements,
+			new Map(verdict.statuses.map((status) => [status.id, status.status])),
+		)
+	)
+		return "the judge produced no selection reason";
 	const detail =
 		verdict.reason.length > 0 ? verdict.reason : "the judge gave no reason";
-	const bad = contradictedRequirement(requirements, verdict);
-	if (bad !== null) return `contradicts ${bad.id}: ${detail}`;
 	const missing = unprovenRequirement(requirements, verdict);
+	if (missing && statusOf(verdict, missing.id) === "contradicted")
+		return `contradicts ${missing.id}: ${detail}`;
 	return `the required condition ${missing?.id ?? "a required condition"} was not proven: ${detail}`;
 }
 
-/**
- * The rows one round's judged batch collapses away: a row the judge marked as
- * the same organisation as another row in the batch, so one group is stored
- * once under one brand. A row naming itself, or an index outside the batch, is
- * not a collapse.
- */
-function collapsedIndices(
-	verdicts: readonly Verdict[],
-	rowCount: number,
-): Set<number> {
-	const collapsed = new Set<number>();
-	for (const verdict of verdicts) {
-		const other = verdict.sameOrganizationAs;
-		if (other === null || other === verdict.index) continue;
-		if (other < 0 || other >= rowCount) continue;
-		collapsed.add(verdict.index);
-	}
-	return collapsed;
+/** Recovery targets the original unmet group, including all of its allowed alternatives. */
+function refusalGroup(
+	requirements: readonly Requirement[],
+	verdict: Verdict | undefined,
+): string {
+	const missing = unprovenRequirement(requirements, verdict);
+	return missing
+		? `proof gap for required group r${missing.groupIndex + 1}`
+		: "missing usable qualification verdict";
 }
 
 export type DecideInput = {
@@ -313,67 +301,76 @@ export type DecideInput = {
 	rows: readonly CompanyRow[];
 	verdicts: readonly Verdict[];
 	excluded: ReadonlySet<string>;
+	excludedLinkedInUrls?: ReadonlySet<string>;
 };
 
-/** Whether a row belongs to an organisation this run must not return: its own domain is excluded, or the judge says it is the same organisation as a row whose domain is. */
-function excludedRow(
-	rows: readonly CompanyRow[],
-	index: number,
-	verdict: Verdict | undefined,
+function excludedDomain(
+	row: CompanyRow,
 	excluded: ReadonlySet<string>,
 ): boolean {
-	const own = rows[index]?.domain;
-	if (own !== null && own !== undefined && excluded.has(normalizeDomain(own)))
-		return true;
-	const other = verdict?.sameOrganizationAs;
-	if (other === null || other === undefined) return false;
-	const parent = rows[other]?.domain;
-	return (
-		parent !== null &&
-		parent !== undefined &&
-		excluded.has(normalizeDomain(parent))
-	);
+	return row.domain !== null && excluded.has(normalizeDomain(row.domain));
 }
 
-/**
- * Applies the refusal policy to one judged batch: brand duplicates collapse to
- * one row, a contradicted hard requirement refuses, a hard page requirement no
- * page proved refuses, and everything else is stored.
- */
+/** Apply fit requirements, exact domain exclusions, and provider LinkedIn deduplication. */
 export function decideRows(input: DecideInput): Decision {
 	const { requirements, rows, verdicts, excluded } = input;
 	const byIndex = new Map(verdicts.map((verdict) => [verdict.index, verdict]));
-	const collapsed = collapsedIndices(verdicts, rows.length);
+	const excludedIdentities: ReadonlySet<string | null> = new Set(
+		[
+			...(input.excludedLinkedInUrls ?? []),
+			...rows
+				.filter((row) => excludedDomain(row, excluded))
+				.map((row) => row.linkedinUrl),
+		]
+			.map(verifiedLinkedInCompanyUrl)
+			.filter((url): url is string => url !== null),
+	);
+	const acceptedIdentities = new Set<string>();
 	const stored: CompanyRow[] = [];
 	const rejects: FindCompaniesReject[] = [];
 	rows.forEach((row, index) => {
 		const verdict = byIndex.get(index);
-		if (excludedRow(rows, index, verdict, excluded)) {
+		const linkedinUrl = verifiedLinkedInCompanyUrl(row.linkedinUrl);
+		if (excludedDomain(row, excluded) || excludedIdentities.has(linkedinUrl)) {
 			rejects.push({
 				domain: row.domain,
-				reason: "already found for this account, or a brand of one that was",
+				reason: "already found for this account",
 				stage: "gate",
 				group: "a company this account already holds",
 			});
 			return;
 		}
-		if (collapsed.has(index)) {
+		if (!linkedinUrl) {
 			rejects.push({
 				domain: row.domain,
-				reason: "the same organisation as another company in this round",
-				stage: "judge",
-				group: "one organisation under more than one brand",
+				reason:
+					"company website and LinkedIn identity were not verified by the provider",
+				stage: "gate",
 			});
 			return;
 		}
-		if (keepsRow(requirements, verdict)) stored.push(row);
-		else
+		if (!keepsRow(requirements, verdict)) {
 			rejects.push({
 				domain: row.domain,
 				reason: refusalReason(requirements, verdict),
 				stage: "judge",
+				group: refusalGroup(requirements, verdict),
 				statuses: verdict?.statuses ?? [],
 			});
+			return;
+		}
+		if (acceptedIdentities.has(linkedinUrl)) {
+			rejects.push({
+				domain: row.domain,
+				reason:
+					"the same provider LinkedIn identity as another accepted company in this round",
+				stage: "gate",
+				group: "one company under more than one domain",
+			});
+			return;
+		}
+		acceptedIdentities.add(linkedinUrl);
+		stored.push({ ...row, linkedinUrl });
 	});
 	return { stored, rejects };
 }
@@ -383,7 +380,7 @@ export function provenRate(
 	requirements: readonly Requirement[],
 	verdicts: readonly Verdict[],
 ): string | null {
-	if (evidenceDemandConditions(requirements).length === 0) return null;
+	if (verdicts.length === 0) return null;
 	const proven = verdicts.filter((verdict) =>
 		requiredSatisfied(
 			requirements,

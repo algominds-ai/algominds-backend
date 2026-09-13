@@ -1,6 +1,5 @@
 import { env as testEnv } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
-import { config } from "@/config";
 import type { FindCompaniesDeps, FindCompaniesOptions } from "@/core/companies";
 import { findCompanies } from "@/core/companies";
 import { gate } from "@/core/companies/gate";
@@ -13,6 +12,7 @@ import type {
 } from "@/core/providers/exa/search";
 import { conditionRefs } from "@/core/requirements";
 import type { IcpDoc, SearchPlan, SynthesizeInput } from "@/core/synthesize";
+import { companyIdentityEvidence } from "../support/companies";
 import { profileFixture, requirementFixture } from "../support/icp";
 
 const icp: IcpDoc = profileFixture(
@@ -63,8 +63,10 @@ function testDeps(
 		backfill: async () => {
 			throw new Error("this round should not have backfilled a record");
 		},
-		prove: async () => [],
-		homepages: async () => [],
+		retrieveEvidence: async ({ rows }) => ({
+			evidenceByRow: companyIdentityEvidence(rows),
+			pages: [],
+		}),
 		...overrides,
 	};
 }
@@ -86,9 +88,6 @@ function testPlan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "fintech companies",
 		angle: "angle-1",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -155,23 +154,22 @@ function scriptedJudge(rejectsByCall: number[][]): FindCompaniesDeps["judge"] {
 			statuses: refs.map((ref) => ({
 				id: ref.id,
 				status: rejects.includes(index) ? "contradicted" : "proven",
-				quote: "",
+				sourceUrl: null,
+				date: null,
 			})),
 			reason: rejects.includes(index) ? "does not fit icp" : "fits icp",
-			sameOrganizationAs: null,
 		}));
 		return { verdicts, ledger };
 	};
 }
 
 function recordingRecentDomains(domains: string[] = []) {
-	const calls: Array<{ organizationId: string; days: number }> = [];
+	const calls: Array<{ organizationId: string }> = [];
 	const recentDomains: FindCompaniesDeps["recentDomains"] = async (
 		_env,
 		organizationId,
-		days,
 	) => {
-		calls.push({ organizationId, days });
+		calls.push({ organizationId });
 		return domains;
 	};
 	return { recentDomains, calls };
@@ -209,7 +207,7 @@ function run(count: number, rounds: ExaResult[][], extras: RunExtras = {}) {
 }
 
 describe("collapsing numeric reject reasons for the synthesizer's feedback", () => {
-	it("collapses many companies below the same floor into one counted line, and passes a judge reject through untouched", async () => {
+	it("groups missing requirements for recovery while retaining the judge's explanation", async () => {
 		const below = Array.from({ length: 5 }, (_, i) =>
 			goodResult(`low${i}.com`, { workforceTotal: 10 + i }),
 		);
@@ -225,19 +223,33 @@ describe("collapsing numeric reject reasons for the synthesizer's feedback", () 
 			domain: "wrong.com",
 			reason: "contradicts r1.a1.c1: does not fit icp",
 			stage: "judge",
-			statuses: [{ id: "r1.a1.c1", status: "contradicted", quote: "" }],
+			group: "proof gap for required group r1",
+			statuses: [
+				{ id: "r1.a1.c1", status: "contradicted", sourceUrl: null, date: null },
+			],
 		});
+		expect(ungrouped.feedback).toEqual([
+			"Previous round used search, admitted 0 companies; 1 companies still needed.",
+			"1 company had a proof gap for required group r1",
+		]);
 	});
 });
 
 describe("findCompanies — cost and dependency wiring", () => {
+	it("reports admitted companies and the remaining count to the next round", async () => {
+		const outcome = await run(2, [[goodResult("accepted.com")]]);
+		expect(outcome.feedback[0]).toBe(
+			"Previous round used search, admitted 1 companies; 1 companies still needed.",
+		);
+	});
+
 	it("reports costDollars as the merged total across every round and both model calls", async () => {
 		const outcome = await run(2, [
 			[goodResult("cost1.com")],
 			[goodResult("cost2.com")],
 		]);
 
-		expect(outcome.costDollars).toBeCloseTo(2 * (0.001 + 0.01 + 0.002), 9);
+		expect(outcome.costDollars).toBeCloseTo(0.001 + 0.01 + 0.002, 9);
 	});
 
 	it("reads seen domains through the injected recentDomains dependency, scoped to the account", async () => {
@@ -261,7 +273,6 @@ describe("findCompanies — cost and dependency wiring", () => {
 		expect(calls).toEqual([
 			{
 				organizationId: "org-42",
-				days: config.companies.seenDomainsWindowDays,
 			},
 		]);
 	});

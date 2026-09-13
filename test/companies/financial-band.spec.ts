@@ -34,9 +34,6 @@ function plan(overrides: Partial<SearchPlan> = {}): SearchPlan {
 	return {
 		query: "seed stage startups",
 		angle: "the profile as written",
-		recency: null,
-		eventWindowDays: null,
-		recencyDays: null,
 		source: "exa-search",
 		agentEffort: "low",
 		userLocation: null,
@@ -61,6 +58,26 @@ const financialBand: Partial<SearchPlan> = {
 };
 
 describe("provider bounds are independent required limits", () => {
+	it("defers research candidates to grouped qualification even when flat record bounds conflict", () => {
+		const outcome = filterEntities(
+			[
+				result(
+					"alternative.com",
+					entity({ revenueAnnual: 10_000_000, fundingTotal: 300_000_000 }),
+				),
+			],
+			plan({
+				...financialBand,
+				source: "exa-agent",
+				minWorkforce: 501,
+				countries: ["Canada"],
+			}),
+			"2026-09-08",
+		);
+		expect(outcome.rejects).toEqual([]);
+		expect(outcome.rows.map((row) => row.domain)).toEqual(["alternative.com"]);
+	});
+
 	it("rejects a failed funding bound even when its revenue bound passes", () => {
 		const outcome = filterEntities(
 			[

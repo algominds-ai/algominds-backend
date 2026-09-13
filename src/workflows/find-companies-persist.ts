@@ -40,9 +40,6 @@ export type RoundReport = {
 	round: number;
 	angle: string;
 	query: string;
-	recency: string | null;
-	eventWindowDays: number | null;
-	recencyDays: number | null;
 	source: string;
 	agentEffort: string;
 	found: number;
@@ -61,9 +58,6 @@ export function reportRound(
 		round,
 		angle: plan?.angle ?? "",
 		query: plan?.query ?? "",
-		recency: plan?.recency ?? null,
-		eventWindowDays: plan?.eventWindowDays ?? null,
-		recencyDays: plan?.recencyDays ?? null,
 		source: plan?.source ?? "",
 		agentEffort: plan?.agentEffort ?? "",
 		found: result.companies.length,

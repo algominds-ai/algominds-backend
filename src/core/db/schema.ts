@@ -89,7 +89,10 @@ export const company = pgTable(
 		domain: text("domain").notNull(),
 		name: text("name").notNull(),
 		linkedinUrl: text("linkedin_url"),
-		industry: text("industry"),
+		/** The bounded company summary shown to downstream people-search and users. */
+		description: text("description"),
+		/** The judge's explanation for accepting this company; null only on historical rows. */
+		selectionReason: text("selection_reason"),
 		data: jsonb("data"),
 		runId: text("run_id")
 			.notNull()

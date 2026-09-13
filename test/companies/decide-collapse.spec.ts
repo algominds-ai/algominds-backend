@@ -13,7 +13,6 @@ function verdict(overrides: Partial<Verdict> = {}): Verdict {
 		index: 0,
 		statuses: [],
 		reason: "a reason",
-		sameOrganizationAs: null,
 		...overrides,
 	};
 }
@@ -24,71 +23,127 @@ function provenVerdict(
 ): Verdict {
 	return verdict({
 		index,
-		statuses: [{ id: recordId, status: "proven" }],
+		statuses: [{ id: recordId, status: "proven", sourceUrl: null, date: null }],
 		...overrides,
 	});
 }
 
-function row(domain: string): CompanyRow {
+function row(
+	domain: string,
+	linkedinUrl = `https://linkedin.com/company/${domain}`,
+): CompanyRow {
 	return {
 		name: domain,
 		domain,
-		linkedinUrl: null,
-		evidenceUrl: `https://${domain}/`,
-		evidenceQuote: null,
-		evidencePublisher: null,
-		evidenceKind: null,
-		industry: null,
+		linkedinUrl,
+		record: null,
 		description: null,
-		signal: null,
-		evidenceDate: null,
 	};
 }
 
-describe("one organisation is stored once, under one brand", () => {
-	it("drops a row the judge marked as the same organisation as another, ignoring a collapse onto itself or outside the batch", () => {
+describe("provider identity deduplicates accepted companies", () => {
+	it("keeps the first fit-positive row for one canonical provider LinkedIn identity", () => {
 		const collapsed = decideRows({
 			requirements: [recordRequirement],
-			rows: [row("home.barclays"), row("jobs.barclays")],
-			verdicts: [provenVerdict(0), provenVerdict(1, { sameOrganizationAs: 0 })],
+			rows: [
+				row("home.barclays", "https://linkedin.com/company/barclays"),
+				row(
+					"jobs.barclays",
+					"https://uk.linkedin.com/company/barclays/?from=exa",
+				),
+			],
+			verdicts: [provenVerdict(0), provenVerdict(1)],
 			excluded: new Set(),
 		});
 		expect(collapsed.stored.map((kept) => kept.domain)).toEqual([
 			"home.barclays",
 		]);
-		expect(collapsed.rejects[0]?.group).toBe(
-			"one organisation under more than one brand",
+		expect(collapsed.stored[0]?.linkedinUrl).toBe(
+			"https://www.linkedin.com/company/barclays",
 		);
+		expect(collapsed.rejects[0]).toMatchObject({
+			domain: "jobs.barclays",
+			stage: "gate",
+			group: "one company under more than one domain",
+		});
+	});
 
-		const ignored = decideRows({
+	it("keeps companies with different provider identities", () => {
+		const distinct = decideRows({
 			requirements: [recordRequirement],
 			rows: [row("a.com"), row("b.com")],
-			verdicts: [
-				provenVerdict(0, { sameOrganizationAs: 0 }),
-				provenVerdict(1, { sameOrganizationAs: 9 }),
-			],
+			verdicts: [provenVerdict(0), provenVerdict(1)],
 			excluded: new Set(),
 		});
-		expect(ignored.stored.map((kept) => kept.domain)).toEqual([
+		expect(distinct.stored.map((kept) => kept.domain)).toEqual([
 			"a.com",
 			"b.com",
 		]);
 	});
+
+	it.each([
+		"unproven",
+		"contradicted",
+	] as const)("does not let an earlier %s row reserve the identity", (status) => {
+		const decision = decideRows({
+			requirements: [recordRequirement],
+			rows: [
+				row("old.bank", "https://linkedin.com/company/bank"),
+				row("current.bank", "https://linkedin.com/company/bank"),
+			],
+			verdicts: [
+				verdict({
+					statuses: [{ id: recordId, status, sourceUrl: null, date: null }],
+				}),
+				provenVerdict(1),
+			],
+			excluded: new Set(),
+		});
+		expect(decision.stored.map((kept) => kept.domain)).toEqual([
+			"current.bank",
+		]);
+		expect(decision.rejects[0]?.stage).toBe("judge");
+	});
 });
 
 describe("a company this account already holds never comes back", () => {
-	it("drops an excluded domain and the brand the judge collapses onto it", () => {
+	it("drops an excluded domain and its canonical identity even when that domain appears later", () => {
 		const decision = decideRows({
 			requirements: [recordRequirement],
-			rows: [row("home.barclays"), row("jobs.barclays"), row("other.com")],
-			verdicts: [
-				provenVerdict(0),
-				provenVerdict(1, { sameOrganizationAs: 0 }),
-				provenVerdict(2),
+			rows: [
+				row("jobs.barclays", "https://linkedin.com/company/barclays"),
+				row("home.barclays", "https://www.linkedin.com/company/barclays/"),
+				row("other.com"),
 			],
+			verdicts: [provenVerdict(0), provenVerdict(2)],
 			excluded: new Set(["home.barclays"]),
 		});
 
 		expect(decision.stored.map((kept) => kept.domain)).toEqual(["other.com"]);
+		expect(decision.rejects.map((rejected) => rejected.reason)).toEqual([
+			"already found for this account",
+			"already found for this account",
+		]);
+	});
+
+	it("uses known excluded identities when the excluded domain was gated before judging", () => {
+		const decision = decideRows({
+			requirements: [recordRequirement],
+			rows: [
+				row("jobs.barclays", "https://linkedin.com/company/barclays"),
+				row("other.com"),
+			],
+			verdicts: [provenVerdict(0), provenVerdict(1)],
+			excluded: new Set(["home.barclays"]),
+			excludedLinkedInUrls: new Set([
+				"https://uk.linkedin.com/company/barclays/?from=exa",
+			]),
+		});
+		expect(decision.stored.map((kept) => kept.domain)).toEqual(["other.com"]);
+		expect(decision.rejects[0]).toMatchObject({
+			domain: "jobs.barclays",
+			stage: "gate",
+			reason: "already found for this account",
+		});
 	});
 });

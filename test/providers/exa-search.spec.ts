@@ -1,12 +1,12 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { backfillRecords } from "../../src/core/companies/record";
-import { CostLedger } from "../../src/core/cost";
-import { exaContents } from "../../src/core/providers/exa/contents";
-import type { ExaSearchRequest } from "../../src/core/providers/exa/search";
-import { search } from "../../src/core/providers/exa/search";
-import { RetryableProviderError } from "../../src/core/providers/waterfall";
+import { CostLedger } from "@/core/cost";
+import { exaContents } from "@/core/providers/exa/contents";
+import type { ExaSearchRequest } from "@/core/providers/exa/search";
+import { search } from "@/core/providers/exa/search";
+import { RetryableProviderError } from "@/core/providers/waterfall";
+import untaggedContents from "../fixtures/exa-contents-untagged-error.json";
 import { fakeSecretEnv } from "../support/env";
 import {
 	jsonResponse,
@@ -255,29 +255,6 @@ describe("search summary parsing", () => {
 	});
 });
 
-describe("company record backfill waits between concurrency slices", () => {
-	it("waits one second between slices when more than one is needed, never when one suffices", async () => {
-		globalThis.fetch = async () =>
-			jsonResponse({
-				requestId: "req-backfill",
-				costDollars: { total: 0 },
-				results: [],
-			});
-		const sleeps = stubSleep();
-		const domains = Array.from(
-			{ length: 7 },
-			(_, index) => `company-${index}.com`,
-		);
-
-		await backfillRecords(domains, exaEnv(), new CostLedger());
-		expect(sleeps.waits).toEqual([1000]);
-
-		sleeps.waits.length = 0;
-		await backfillRecords(["a.com", "b.com"], exaEnv(), new CostLedger());
-		expect(sleeps.waits).toEqual([]);
-	});
-});
-
 const ContentsRequestSchema = z.object({
 	urls: z.array(z.string()),
 	text: z.object({ maxCharacters: z.number() }),
@@ -314,6 +291,25 @@ describe("contents request shape", () => {
 });
 
 describe("contents response shape and cost", () => {
+	it("keeps successful pages from the captured untagged-error response", async () => {
+		globalThis.fetch = respondOnce(jsonResponse(untaggedContents)).fetch;
+		const ledger = new CostLedger();
+		const result = await exaContents(
+			untaggedContents.statuses.map((status) => status.id),
+			exaEnv(),
+			ledger,
+		);
+		expect(result.results.map((page) => page.url)).toEqual(
+			untaggedContents.results.map((page) => page.url),
+		);
+		expect(result.statuses).toContainEqual({
+			url: "https://linkamericanearshore.com/",
+			status: "error",
+			tag: null,
+		});
+		expect(ledger.total()).toBe(untaggedContents.costDollars.total);
+	});
+
 	it("raises NonRetryableError on a malformed 200 body", async () => {
 		globalThis.fetch = respondOnce(
 			jsonResponse({ requestId: "req-bad", results: "nope" }),

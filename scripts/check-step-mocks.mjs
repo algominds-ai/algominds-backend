@@ -10,7 +10,7 @@ const MOCK_CALL =
 	/mockStep(?:Result|Error)\(\s*\{\s*name:\s*(?:`([^`]*)`|"([^"]*)"|([A-Za-z_$][\w$]*\.[\w$]+))/g;
 
 function sources(dir, suffix) {
-	return readdirSync(dir)
+	return readdirSync(dir, { recursive: true })
 		.filter((name) => name.endsWith(suffix))
 		.map((name) => [join(dir, name), readFileSync(join(dir, name), "utf8")]);
 }
