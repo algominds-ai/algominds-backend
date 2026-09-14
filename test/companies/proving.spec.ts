@@ -4,7 +4,7 @@ import type { CompanyCapture } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
 import { retrieveCompanyEvidence } from "@/core/companies/proof";
 import { CostLedger } from "@/core/cost";
-import recordedSource from "../../exports/company-cycle-2026-09-06/agent-source-check-1788681565740.json";
+import recordedSource from "../fixtures/company/proving-source.json";
 import { fakeSecretEnv } from "../support/env";
 import { fakeVendors, jsonResponse } from "../support/fetch";
 

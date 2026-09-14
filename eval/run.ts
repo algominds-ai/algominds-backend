@@ -1,354 +1,214 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import type { SeededTrial } from "@eval/arm-db";
-import {
-	armDatabaseUrl,
-	bootstrapArmSchema,
-	seedArmProfiles,
-} from "@eval/arm-db";
-import { openKeyDataset, syncKeyDataset } from "@eval/datasets";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { options } from "@eval/args";
+import { bootstrapArmSchema } from "@eval/arm-db";
 import { startDevServer } from "@eval/dev-server";
-import type {
-	Budget,
-	SanitizedInput,
-	TrialCase,
-	TrialMetadata,
-} from "@eval/full-chain";
+import { qualityScorer, verifySources } from "@eval/judge";
 import {
-	buildTask,
-	casesFor,
-	emptyTrialMetadata,
-	newBudget,
-	sanitizedInputFor,
-} from "@eval/full-chain";
-import { readKeyFile, readPeopleKeyFile } from "@eval/keys-io";
-import { seedKeyFileFromArm } from "@eval/label";
-import type { KeyFileVersion, ScoredTrialRow } from "@eval/manifest";
-import { buildManifest, sha256Hex } from "@eval/manifest";
-import {
-	COMPANIES_PER_RUN,
-	MIN_TRIALS,
-	type PROFILES,
-	profilesFor,
-} from "@eval/profiles";
-import type { TrialOutput } from "@eval/scorers";
-import { CODE_SCORERS } from "@eval/scorers";
-import { Eval } from "braintrust";
-import postgres from "postgres";
+	CaseSchema,
+	type Expected,
+	failedOutput,
+	type Input,
+	type Output,
+} from "@eval/schema";
+import { referenceScores, structuralScores } from "@eval/scores";
+import { runCase } from "@eval/task";
+import { currentSpan, Eval, initDataset, loadPrompt } from "braintrust";
+import { z } from "zod";
 
-const DEV_SERVER_PORT = 8787;
+type Options = ReturnType<typeof options>;
 
-export type RunArgs = {
-	profile: string | null;
-	arm: string;
-	trials: number;
-	count: number;
-	port: number;
-};
-
-function flagValue(argv: readonly string[], flag: string): string | null {
-	const index = argv.indexOf(flag);
-	return index === -1 ? null : (argv[index + 1] ?? null);
-}
-
-export function parseArgs(argv: readonly string[]): RunArgs {
-	const profile = flagValue(argv, "--profile");
-	const arm = flagValue(argv, "--arm") ?? "baseline";
-	const trialsArg = flagValue(argv, "--trials");
-	const trials = trialsArg ? Number.parseInt(trialsArg, 10) : MIN_TRIALS;
-	if (!Number.isInteger(trials) || trials < 1) {
-		throw new Error("eval: --trials must be a positive integer");
-	}
-	const count = Number.parseInt(
-		flagValue(argv, "--count") ?? String(COMPANIES_PER_RUN),
-		10,
-	);
-	const port = Number.parseInt(
-		flagValue(argv, "--port") ?? String(DEV_SERVER_PORT),
-		10,
-	);
-	if (!Number.isInteger(count) || count < 1) {
-		throw new Error("eval: --count must be a positive integer");
-	}
-	if (!Number.isInteger(port) || port < 1024) {
-		throw new Error("eval: --port must be an integer above 1023");
-	}
-	return { profile, arm, trials, count, port };
-}
-
-export function selectedProfiles(
-	slug: string | null,
-): readonly (typeof PROFILES)[number][] {
-	return profilesFor(slug);
-}
-
-function gitCommit(): string {
-	return execFileSync("git", ["rev-parse", "HEAD"], {
-		encoding: "utf8",
-	}).trim();
-}
-
-async function syncDatasetsFor(
-	profiles: typeof PROFILES,
-): Promise<Record<string, string | null>> {
-	const snapshotIds: Record<string, string | null> = {};
-	for (const profile of profiles) {
-		const key = readKeyFile(profile.slug, profile.icpId);
-		const synced = await syncKeyDataset(openKeyDataset(profile.slug), key);
-		snapshotIds[profile.slug] = synced.version;
-	}
-	return snapshotIds;
-}
-
-async function keyFileVersionsFor(
-	profiles: typeof PROFILES,
-): Promise<Record<string, KeyFileVersion>> {
-	const versions: Record<string, KeyFileVersion> = {};
-	for (const profile of profiles) {
-		const key = readKeyFile(profile.slug, profile.icpId);
-		const peopleKey = readPeopleKeyFile(profile.slug, profile.icpId);
-		versions[profile.slug] = {
-			companyKeyHash: await sha256Hex(JSON.stringify(key)),
-			peopleKeyHash: await sha256Hex(JSON.stringify(peopleKey)),
+async function loadCases(args: Options) {
+	if (args.local) {
+		const text = readFileSync(`eval/${args.suite}/cases.json`, "utf8");
+		return {
+			rows: selectCases(z.array(CaseSchema).parse(JSON.parse(text)), args),
+			version: createHash("sha256").update(text).digest("hex"),
+			id: null,
 		};
 	}
-	return versions;
-}
-
-type ArmSetup = { seeded: SeededTrial[]; apiUrl: string; stop: () => void };
-
-/** Bootstraps and seeds `eval_<arm>` exactly once for the whole invocation, with every profile's trials, so running with no `--profile` never drops or reseeds what an earlier profile in the same run already wrote. */
-async function setUpArm(
-	arm: string,
-	trials: number,
-	port: number,
-): Promise<ArmSetup> {
-	bootstrapArmSchema(arm);
-	const seeded = await seedArmProfiles(arm, trials);
-	const envUrl = process.env.EVAL_API_URL;
-	if (envUrl) return { seeded, apiUrl: envUrl, stop: () => {} };
-	const server = await startDevServer(arm, port);
-	return { seeded, apiUrl: server.url, stop: server.stop };
-}
-
-export type ResultRow = { input: SanitizedInput; output: TrialOutput };
-
-function trialLine(row: ResultRow): string {
-	const label = `${row.input.slug} t${row.input.trialIndex}`;
-	if (row.output.skipped) return `${label}: skipped (${row.output.skipped})`;
-	const engine = row.output.engine;
-	if (!engine) return `${label}: no output (the trial threw)`;
-	const requested = row.input.count;
-	const seconds = row.output.totalSeconds ?? 0;
-	return (
-		`${label}: score ${engine.engineScore.toFixed(2)} ` +
-		`yield ${engine.acceptedCompanies}/${requested} ` +
-		`coverage ${engine.acceptedCompaniesWithBuyer}/${requested} ` +
-		`buyer-precision ${engine.acceptedPeople}/${engine.deliveredPeopleCount} ` +
-		`$${row.output.totalCostDollars.toFixed(2)} ${seconds.toFixed(1)}s`
-	);
-}
-
-function printTrialLines(rows: readonly ResultRow[]): void {
-	for (const row of rows) console.log(trialLine(row));
-}
-
-function meanEngineScore(rows: readonly ResultRow[]): number {
-	const scores = rows
-		.map((row) => row.output.engine?.engineScore)
-		.filter((score): score is number => score !== undefined);
-	if (scores.length === 0) return 0;
-	return scores.reduce((total, score) => total + score, 0) / scores.length;
-}
-
-function profileFullyScored(rows: readonly ResultRow[], slug: string): boolean {
-	const profileRows = rows.filter((row) => row.input.slug === slug);
-	return (
-		profileRows.length > 0 &&
-		profileRows.every((row) => row.output.engine !== null)
-	);
-}
-
-/** The mean engine score across ten as `rating <n>`, or `rating incomplete (<n> of <m> profiles)` the moment any selected profile has a skipped or thrown trial, so a partial run is never mistaken for a clean one. */
-export function ratingLine(
-	rows: readonly ResultRow[],
-	profiles: readonly { slug: string }[],
-): string {
-	const complete = profiles.filter((profile) =>
-		profileFullyScored(rows, profile.slug),
-	).length;
-	if (complete < profiles.length) {
-		return `rating incomplete (${complete} of ${profiles.length} profiles)`;
-	}
-	return `rating ${(10 * meanEngineScore(rows)).toFixed(2)}`;
-}
-
-async function seedKeyFiles(
-	sql: postgres.Sql,
-	profiles: typeof PROFILES,
-): Promise<void> {
-	for (const profile of profiles) {
-		const seeded = await seedKeyFileFromArm(sql, profile.slug);
-		console.log(
-			`${profile.slug}: ${seeded.companyCount} companies, ${seeded.unlabelledCount} unlabelled`,
-		);
-	}
-}
-
-export function runIdsByProfile(
-	rows: readonly ResultRow[],
-): Record<string, string[]> {
-	const byProfile: Record<string, string[]> = {};
-	for (const { input, output } of rows) {
-		const ids = [output.companiesRunId, output.peopleRunId].filter(
-			(id): id is string => id !== null,
-		);
-		if (ids.length === 0) continue;
-		byProfile[input.slug] = [...(byProfile[input.slug] ?? []), ...ids];
-	}
-	return byProfile;
-}
-
-export function scoredRowsFrom(rows: readonly ResultRow[]): ScoredTrialRow[] {
-	return rows.map((row) => ({
-		slug: row.input.slug,
-		trialIndex: row.input.trialIndex,
-		companies: row.output.scoredCompanies,
-		people: row.output.scoredPeople,
-	}));
-}
-
-type ManifestContext = {
-	experiment: string;
-	commit: string;
-	arm: string;
-	startedAt: string;
-	budget: Budget;
-	rows: readonly ResultRow[];
-	datasetSnapshotIds: Record<string, string | null>;
-	keyFileVersions: Record<string, KeyFileVersion>;
-};
-
-async function writeExperimentManifest(
-	context: ManifestContext,
-): Promise<void> {
-	const manifest = await buildManifest({
-		experiment: context.experiment,
-		commit: context.commit,
-		arm: context.arm,
-		datasetSnapshotIds: context.datasetSnapshotIds,
-		configText: readFileSync("config.yaml", "utf8"),
-		scorerPrompts: {},
-		resolvedModelIds: {},
-		runIds: runIdsByProfile(context.rows),
-		startedAt: context.startedAt,
-		finishedAt: new Date().toISOString(),
-		totalSpendDollars: context.budget.spent,
-		perProfileSpendDollars: context.budget.perProfile,
-		scoredRows: scoredRowsFrom(context.rows),
-		keyFileVersions: context.keyFileVersions,
+	const dataset = initDataset({
+		project: "algo-backend",
+		dataset: `${args.suite}-discovery`,
+		...(args.version ? { version: args.version } : {}),
 	});
-	mkdirSync("eval/runs", { recursive: true });
-	writeFileSync(
-		`eval/runs/${context.experiment}.json`,
-		`${JSON.stringify(manifest, null, "\t")}\n`,
+	const version = await dataset.version();
+	if (!version)
+		throw new Error("eval: dataset has no version; run eval:datasets first");
+	const rows = selectCases(
+		(
+			await initDataset({
+				project: "algo-backend",
+				dataset: `${args.suite}-discovery`,
+				version,
+			}).fetchedData()
+		).map((row) => CaseSchema.parse(row)),
+		args,
 	);
+	return { rows, version, id: await dataset.id };
 }
 
-type EvalContext = {
-	apiUrl: string;
-	sql: postgres.Sql;
-	budget: Budget;
-	cases: readonly TrialCase[];
-	count: number;
-	experiment: string;
-	commit: string;
-	arm: string;
-};
-
-async function runEval(context: EvalContext): Promise<{
-	results: readonly ResultRow[];
-	experimentUrl: string | undefined;
-}> {
-	const { apiUrl, sql, budget, cases, count, experiment, commit, arm } =
-		context;
-	const result = await Eval<SanitizedInput, TrialOutput, void, TrialMetadata>(
-		"algo-backend",
-		{
-			data: cases.map((trial) => ({
-				input: sanitizedInputFor(trial, count),
-				metadata: emptyTrialMetadata(),
-			})),
-			task: buildTask(apiUrl, sql, budget, cases),
-			scores: CODE_SCORERS,
-			experimentName: experiment,
-			metadata: { commit, arm },
-			maxConcurrency: 1,
-		},
+function selectCases(rows: z.infer<typeof CaseSchema>[], args: Options) {
+	const selected = rows.filter(
+		(row) =>
+			(!args.profile || row.input.slug === args.profile) &&
+			(!args.caseId || row.id === args.caseId) &&
+			row.input.stage === args.stage,
 	);
-	return {
-		results: result.results.map((row) => ({
-			input: row.input,
-			output: row.output,
-		})),
-		experimentUrl: result.summary.experimentUrl,
+	if (!selected.length) throw new Error("eval: no matching cases");
+	if (selected.some((row) => row.input.suite !== args.suite))
+		throw new Error("eval: mixed suite dataset");
+	return selected;
+}
+
+function sourceMetadata() {
+	const commit = execFileSync("git", ["rev-parse", "HEAD"], {
+		encoding: "utf8",
+	}).trim();
+	const files = execFileSync(
+		"git",
+		[
+			"ls-files",
+			"-co",
+			"--exclude-standard",
+			"src",
+			"eval",
+			"config.yaml",
+			"package.json",
+			"bun.lock",
+		],
+		{ encoding: "utf8" },
+	)
+		.trim()
+		.split("\n");
+	const hash = createHash("sha256");
+	for (const path of [...new Set(files)].sort())
+		if (existsSync(path)) hash.update(path).update(readFileSync(path));
+	return { commit, sourceHash: hash.digest("hex") };
+}
+
+async function verify(output: Output, codeOnly: boolean) {
+	if (codeOnly || output.status !== "complete") return output;
+	try {
+		return await verifySources(output);
+	} catch (error) {
+		return {
+			...output,
+			error: error instanceof Error ? error.message : String(error),
+		};
+	}
+}
+
+function taskFor(
+	args: Options,
+	context: { arm: string; url: string; timeout: number; token: string },
+) {
+	let spent = 0;
+	let halted = false;
+	return async (input: Input) => {
+		if (halted || spent >= args.maxSpend)
+			return failedOutput(
+				"Stopped: prior failure, unresolved spend, or spend ceiling reached",
+			);
+		const output = await verify(
+			await runCase(input, context),
+			args.codeOnly || input.stage !== "engine",
+		);
+		spent += (output.costDollars ?? 0) + (output.verificationCostDollars ?? 0);
+		halted = [
+			output.error !== null,
+			output.status !== "complete",
+			output.costDollars === null,
+		].some(Boolean);
+		currentSpan().log({
+			metrics: {
+				...(output.costDollars !== null
+					? { engine_cost: output.costDollars }
+					: {}),
+				...(output.verificationCostDollars !== null
+					? { source_read_cost: output.verificationCostDollars }
+					: {}),
+			},
+			metadata: {
+				costKnown: output.costDollars !== null,
+				seconds: output.seconds,
+			},
+		});
+		return output;
 	};
 }
 
-async function main(): Promise<void> {
-	const args = parseArgs(process.argv.slice(2));
-	const profiles = selectedProfiles(args.profile);
-	const datasetSnapshotIds = await syncDatasetsFor(profiles);
-	const { seeded, apiUrl, stop } = await setUpArm(
-		args.arm,
-		args.trials,
-		args.port,
-	);
-	const scale = args.count / COMPANIES_PER_RUN;
-	const cases = casesFor(seeded, scale).filter((trial) =>
-		profiles.some((profile) => profile.slug === trial.slug),
-	);
-	const sql = postgres(armDatabaseUrl(args.arm), { max: 1 });
-	const budget = newBudget(
-		profiles.map((profile) => profile.slug),
-		scale,
-	);
-	const startedAt = new Date().toISOString();
-	const commit = gitCommit();
-	const experiment = `${commit.slice(0, 12)}-${args.arm}`;
+async function main() {
+	const args = options(process.argv.slice(2));
+	const dataset = await loadCases(args);
+	const judge = args.codeOnly
+		? null
+		: await loadPrompt({
+				projectName: "algo-backend",
+				slug: `${args.suite}-quality`,
+			});
+	const judgeVersion = judge?.version;
+	if (!args.codeOnly && !judgeVersion)
+		throw new Error("eval: missing versioned quality scorer");
+	const arm = `${args.suite}_${Date.now()}`;
+	if (args.stage === "engine") bootstrapArmSchema(arm);
+	const server = await startDevServer(arm, args.port);
 	try {
-		const { results, experimentUrl } = await runEval({
-			apiUrl,
-			sql,
-			budget,
-			cases,
-			count: args.count,
-			experiment,
-			commit,
-			arm: args.arm,
-		});
-		const keyFileVersions = await keyFileVersionsFor(profiles);
-		await writeExperimentManifest({
-			experiment,
-			commit,
-			arm: args.arm,
-			startedAt,
-			budget,
-			rows: results,
-			datasetSnapshotIds,
-			keyFileVersions,
-		});
-		await seedKeyFiles(sql, profiles);
-		printTrialLines(results);
-		console.log(ratingLine(results, profiles));
-		console.log(`eval: total spend $${budget.spent.toFixed(4)}`);
-		console.log(`eval: experiment ${experimentUrl ?? experiment}`);
+		const result = await Eval<Input, Output, Expected>(
+			"algo-backend",
+			{
+				data: dataset.rows,
+				experimentName: arm,
+				summarizeScores: Boolean(args.baseline),
+				trialCount: args.trials,
+				maxConcurrency: 1,
+				...(args.baseline ? { baseExperimentName: args.baseline } : {}),
+				metadata: {
+					suite: args.suite,
+					stage: args.stage,
+					datasetId: dataset.id,
+					datasetVersion: dataset.version,
+					judgeVersion,
+					...sourceMetadata(),
+					codeOnly: args.codeOnly,
+					maxSpend: args.maxSpend,
+				},
+				task: taskFor(args, {
+					arm,
+					url: server.url,
+					timeout: args.timeout,
+					token: server.token,
+				}),
+				scores: [
+					({ input, output }) => structuralScores(input, output),
+					({ input, output, expected }) =>
+						input.stage !== "engine" || args.suite === "onboarding" || !expected
+							? []
+							: referenceScores(output, expected),
+					...(judgeVersion ? [qualityScorer(args.suite, judgeVersion)] : []),
+				],
+			},
+			{ noSendLogs: args.local },
+		);
+		if (args.local) console.log(JSON.stringify(result.results));
+		if (!args.local) console.log(result.summary.experimentUrl);
+		console.log(
+			JSON.stringify({
+				suite: args.suite,
+				cases: result.results.length,
+				codeOnly: args.codeOnly,
+			}),
+		);
+		if (
+			result.results.some(
+				(row) => row.error || row.output.error || row.scores.run_complete !== 1,
+			)
+		)
+			process.exitCode = 1;
 	} finally {
-		await sql.end();
-		stop();
+		server.stop();
 	}
 }
 
-if (import.meta.main) {
-	await main();
-}
+if (import.meta.main) await main();

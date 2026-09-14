@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import recorded from "../../exports/company-cycle-2026-09-06/form3-agent-minimal-refine-1788681482177-result.json";
 import { toExaSearchResult } from "../../src/core/companies/agent-search";
 import { filterEntities } from "../../src/core/companies/candidates";
 import type { ExaAgentCompany } from "../../src/core/providers/exa/agent";
 import { ExaAgentCompanySchema } from "../../src/core/providers/exa/agent";
 import type { SearchPlan } from "../../src/core/synthesize";
+import recorded from "../fixtures/company/agent-mapping.json";
 
 function plan(): SearchPlan {
 	return {

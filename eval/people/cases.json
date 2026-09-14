@@ -1,0 +1,2522 @@
+[
+	{
+		"id": "form3-hard10",
+		"input": {
+			"suite": "people",
+			"slug": "form3",
+			"profile": {
+				"seller": {
+					"domain": "form3.tech",
+					"description": "Form3 operates a cloud-native, real-time account-to-account (A2A) payments platform, delivered as a managed service to banks and fintechs, providing access to domestic and international payment schemes across the US, UK and Europe via a single API.",
+					"customers": [],
+					"sourceUrls": ["https://www.form3.tech/"]
+				},
+				"icp": {
+					"offer": "Trust Fabric, a product installed into a Kubernetes cluster to manage certificate trust and infrastructure risk across distributed services; this excludes Form3's payments platform, which is out of scope for this profile.",
+					"buyer": "The platform, infrastructure or security leader who owns the cluster and its certificate estate: CTO, CIO, CISO, and the VP, Director or Head of Engineering, Platform Engineering, Infrastructure, Cloud, Site Reliability Engineering, DevOps, Security Engineering, Information Security or Architecture. CEO only at companies under about 1,000 people. Never the payments or commercial function. Excludes recruiters, HR, sales, marketing, individual engineers and academics. At most three people per company.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Runs production Kubernetes with a distributed architecture or many independent services (no cluster, no deal)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "An in-house engineering team operates that infrastructure, not an outsourced platform",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "501 or more employees",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Uptime-critical or regulated, where an hour of downtime is a board-level event",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Based in North America, the UK and Ireland, or Continental Europe",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Not a consultant, agency, non-profit, private equity firm, recruiter, freelancer, managed service provider, systems integrator, or certificate-lifecycle vendor such as AppViewX, Entrust, or CyberArk",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A platform, SRE, infrastructure or PKI role posted naming Kubernetes, TLS, mTLS, cert-manager, PKI or a service mesh",
+											"window": {
+												"amount": 30,
+												"unit": "days",
+												"appliesTo": "publication",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Public evidence of production Kubernetes at scale",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A published SLA",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "DORA, PSD2, NIS2 or PCI DSS obligations",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A new platform or security leader",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A post-quantum commitment",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A public certificate or TLS incident",
+											"window": {
+												"amount": 90,
+												"unit": "days",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "This profile is for Trust Fabric only, not Form3's payments platform. Form3 (form3.tech) sells Trust Fabric, a product installed into a Kubernetes cluster to manage certificate trust and infrastructure risk across distributed services.\nHard gates, all required: runs production Kubernetes with a distributed architecture or many independent services (no cluster, no deal); an in-house engineering team operates that infrastructure, not an outsourced platform; 501 or more employees; uptime-critical or regulated, where an hour of downtime is a board-level event; based in North America, the UK and Ireland, or Continental Europe. Do not gate on revenue.\nVerticals: SaaS, online retail, fintech, automotive, energy, pharma, gaming, media, travel, telcos, public sector. Model accounts at reachable size: Trainline, Skyscanner, Auto Trader UK, Ocado Technology, Deliveroo.\nOut: consultants, agencies, non-profits, private equity, recruiters, freelancers, managed service providers and systems integrators, and certificate-lifecycle vendors such as AppViewX, Entrust and CyberArk.\nThe buyer is the platform, infrastructure or security leader who owns the cluster and its certificate estate, never the payments or commercial function: CTO, CIO, CISO, and the VP, Director or Head of Engineering, Platform Engineering, Infrastructure, Cloud, Site Reliability Engineering, DevOps, Security Engineering, Information Security or Architecture. CEO only at companies under about 1,000 people. Exclude recruiters, HR, sales, marketing, individual engineers and academics. At most three people per company.\nHot signals: a platform, SRE, infrastructure or PKI role posted in the last 30 days naming Kubernetes, TLS, mTLS, cert-manager, PKI or a service mesh; public evidence of production Kubernetes at scale; a published SLA; DORA, PSD2, NIS2 or PCI DSS obligations; a new platform or security leader in the last 12 months; a post-quantum commitment; a public certificate or TLS incident in the last 90 days.\n"
+			},
+			"domains": ["clear.bank", "ppro.com"],
+			"stage": "engine",
+			"sample": null
+		},
+		"expected": {
+			"rubric": "For every delivered person, independently assess exact identity, current employer as of output.asOf, current title/remit, and buyer fit under input.profile. Distinguish a real budget/remit owner from a title keyword match. Reject former employees, ambiguous identities, wrong employers, and unsupported authority. Evidence must support the exact person and current role; engine verification decisions and scores are not proof. Missing currentness evidence is insufficient. Respect recorded reference limitations and dates. A public reference list is a lower bound, never a complete roster; do not invent recall or penalize legitimate unlisted buyers.",
+			"closedWorld": false,
+			"sources": [],
+			"references": []
+		}
+	},
+	{
+		"id": "form3-holdout4",
+		"input": {
+			"suite": "people",
+			"slug": "form3",
+			"profile": {
+				"seller": {
+					"domain": "form3.tech",
+					"description": "Form3 operates a cloud-native, real-time account-to-account (A2A) payments platform, delivered as a managed service to banks and fintechs, providing access to domestic and international payment schemes across the US, UK and Europe via a single API.",
+					"customers": [],
+					"sourceUrls": ["https://www.form3.tech/"]
+				},
+				"icp": {
+					"offer": "Trust Fabric, a product installed into a Kubernetes cluster to manage certificate trust and infrastructure risk across distributed services; this excludes Form3's payments platform, which is out of scope for this profile.",
+					"buyer": "The platform, infrastructure or security leader who owns the cluster and its certificate estate: CTO, CIO, CISO, and the VP, Director or Head of Engineering, Platform Engineering, Infrastructure, Cloud, Site Reliability Engineering, DevOps, Security Engineering, Information Security or Architecture. CEO only at companies under about 1,000 people. Never the payments or commercial function. Excludes recruiters, HR, sales, marketing, individual engineers and academics. At most three people per company.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Runs production Kubernetes with a distributed architecture or many independent services (no cluster, no deal)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "An in-house engineering team operates that infrastructure, not an outsourced platform",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "501 or more employees",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Uptime-critical or regulated, where an hour of downtime is a board-level event",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Based in North America, the UK and Ireland, or Continental Europe",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Not a consultant, agency, non-profit, private equity firm, recruiter, freelancer, managed service provider, systems integrator, or certificate-lifecycle vendor such as AppViewX, Entrust, or CyberArk",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A platform, SRE, infrastructure or PKI role posted naming Kubernetes, TLS, mTLS, cert-manager, PKI or a service mesh",
+											"window": {
+												"amount": 30,
+												"unit": "days",
+												"appliesTo": "publication",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Public evidence of production Kubernetes at scale",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A published SLA",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "DORA, PSD2, NIS2 or PCI DSS obligations",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A new platform or security leader",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A post-quantum commitment",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "preferred",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "A public certificate or TLS incident",
+											"window": {
+												"amount": 90,
+												"unit": "days",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "This profile is for Trust Fabric only, not Form3's payments platform. Form3 (form3.tech) sells Trust Fabric, a product installed into a Kubernetes cluster to manage certificate trust and infrastructure risk across distributed services.\nHard gates, all required: runs production Kubernetes with a distributed architecture or many independent services (no cluster, no deal); an in-house engineering team operates that infrastructure, not an outsourced platform; 501 or more employees; uptime-critical or regulated, where an hour of downtime is a board-level event; based in North America, the UK and Ireland, or Continental Europe. Do not gate on revenue.\nVerticals: SaaS, online retail, fintech, automotive, energy, pharma, gaming, media, travel, telcos, public sector. Model accounts at reachable size: Trainline, Skyscanner, Auto Trader UK, Ocado Technology, Deliveroo.\nOut: consultants, agencies, non-profits, private equity, recruiters, freelancers, managed service providers and systems integrators, and certificate-lifecycle vendors such as AppViewX, Entrust and CyberArk.\nThe buyer is the platform, infrastructure or security leader who owns the cluster and its certificate estate, never the payments or commercial function: CTO, CIO, CISO, and the VP, Director or Head of Engineering, Platform Engineering, Infrastructure, Cloud, Site Reliability Engineering, DevOps, Security Engineering, Information Security or Architecture. CEO only at companies under about 1,000 people. Exclude recruiters, HR, sales, marketing, individual engineers and academics. At most three people per company.\nHot signals: a platform, SRE, infrastructure or PKI role posted in the last 30 days naming Kubernetes, TLS, mTLS, cert-manager, PKI or a service mesh; public evidence of production Kubernetes at scale; a published SLA; DORA, PSD2, NIS2 or PCI DSS obligations; a new platform or security leader in the last 12 months; a post-quantum commitment; a public certificate or TLS incident in the last 90 days.\n"
+			},
+			"domains": ["rapyd.net"],
+			"stage": "engine",
+			"sample": null
+		},
+		"expected": {
+			"rubric": "For every delivered person, independently assess exact identity, current employer as of output.asOf, current title/remit, and buyer fit under input.profile. Distinguish a real budget/remit owner from a title keyword match. Reject former employees, ambiguous identities, wrong employers, and unsupported authority. Evidence must support the exact person and current role; engine verification decisions and scores are not proof. Missing currentness evidence is insufficient. Respect recorded reference limitations and dates. A public reference list is a lower bound, never a complete roster; do not invent recall or penalize legitimate unlisted buyers.",
+			"closedWorld": false,
+			"sources": [],
+			"references": [
+				{
+					"id": "https://linkedin.com/in/nir-rothenberg-5a6b48ba",
+					"company": "rapyd.net",
+					"judgment": "accept",
+					"rationale": "Employer and 2026 webinar independently identify current Rapyd CISO; podcast links canonical profile. Direct LinkedIn did not render in reference research; canonical identity link is supported, profile current-role fields uninspected.",
+					"sources": [
+						"https://www.rapyd.net/company/about-rapyd/",
+						"https://blast.security/events/preemptive-cloud-defense-webinar/",
+						"https://podcasts.apple.com/us/podcast/security-cyber-intel-and-a-sense-of-humor/id1744915544?i=1000722651878&l=es-MX"
+					],
+					"reviewedAt": "2026-09-13T04:28:00Z"
+				}
+			]
+		}
+	},
+	{
+		"id": "aris-hard10",
+		"input": {
+			"suite": "people",
+			"slug": "aris",
+			"profile": {
+				"seller": {
+					"domain": "arissearch.com",
+					"description": "Aris Search, LLC is an IT and sales recruiting/staffing firm that has helped businesses and careers across many industries for over 50 years, providing IT staffing services including placements for managed service providers, IT solutions firms, SaaS companies, healthcare, finance, manufacturing, engineering, accounting, entertainment, logistics, and industrial sectors.",
+					"customers": [],
+					"sourceUrls": ["https://arissearch.com/"]
+				},
+				"icp": {
+					"offer": "Recruiting/placement services for technicians and service-delivery staff (helpdesk, cloud, network, security, project engineers, service-delivery leads) specifically for managed service providers (MSPs).",
+					"buyer": "The buyer is the person who owns the decision to engage an outside recruiter for technical hiring, or who owns the headcount those hires fill. POSITIVE (would own the budget or decision): Owner, founder, CEO, president, managing partner \u2014 at an MSP under ~150 people the owner usually makes this call personally; COO, chief services officer, chief customer officer, VP/director of service delivery, VP/director of operations, VP/director of managed services, VP/director of professional services \u2014 they own the technical headcount; head of people, HR director, VP people, director of talent acquisition, recruiting manager \u2014 they own the recruiting relationship, and at small MSPs an 'HR Manager' who is the only HR person counts; market president / regional president at a roll-up \u2014 owns a regional P&L and its hiring. INFLUENCER (not positive): service desk manager, NOC manager, engineering manager, team lead \u2014 feel the pain, rarely sign a recruiter; chief technology officer / CIO at an MSP \u2014 often owns technical strategy, sometimes owns hiring; label INFLUENCER unless the company is small enough that the CTO is a founder. HARD NEGATIVE (not a buyer for this purchase): CFO, controller, finance director \u2014 approve spend, do not choose recruiters; VP/director of sales, account executives, account managers, marketing \u2014 revenue side; chief information security officer / vCISO delivering security to clients \u2014 a delivered service role, not a hiring owner; individual engineers, technicians, analysts, project managers, consultants; board members, investors, advisors; anyone at a PARENT PE firm rather than at the MSP itself.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Company is a managed service provider (MSP)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "Aris Search is a recruiting firm that places technicians and service-delivery staff\n(helpdesk, cloud, network, security, project engineers, service-delivery leads) at managed\nservice providers. The buyer is the person who OWNS THE DECISION TO ENGAGE AN OUTSIDE\nRECRUITER for technical hiring, or who owns the headcount those hires fill.\n\n## POSITIVE (would own the budget or the decision)\n- Owner, founder, CEO, president, managing partner \u2014 at an MSP under ~150 people the owner\n  usually makes this call personally.\n- COO, chief services officer, chief customer officer, VP/director of service delivery,\n  VP/director of operations, VP/director of managed services, VP/director of professional\n  services \u2014 they own the technical headcount.\n- Head of people, HR director, VP people, director of talent acquisition, recruiting\n  manager \u2014 they own the recruiting relationship. At small MSPs an \"HR Manager\" who is the\n  only HR person counts.\n- Market president / regional president at a roll-up \u2014 owns a regional P&L and its hiring.\n\n## CHAMPION (influences, does not own) \u2014 label INFLUENCER, not positive\n- Service desk manager, NOC manager, engineering manager, team lead \u2014 feel the pain, rarely\n  sign a recruiter.\n- Chief technology officer / CIO at an MSP \u2014 often owns technical strategy, sometimes owns\n  hiring; label INFLUENCER unless the company is small enough that the CTO is a founder.\n\n## HARD NEGATIVE (looks senior, is not a buyer for THIS purchase)\n- CFO, controller, finance director \u2014 approve spend, do not choose recruiters.\n- VP/director of sales, account executives, account managers, marketing \u2014 revenue side.\n- Chief information security officer / vCISO delivering security to clients \u2014 a delivered\n  service role, not a hiring owner.\n- Individual engineers, technicians, analysts, project managers, consultants.\n- Board members, investors, advisors.\n- Anyone at a PARENT PE firm rather than at the MSP itself."
+			},
+			"domains": [
+				"advancedits.net",
+				"nsumsp.com",
+				"saw.it",
+				"netopsconsulting.com",
+				"centra.com.au"
+			],
+			"stage": "engine",
+			"sample": null
+		},
+		"expected": {
+			"rubric": "For every delivered person, independently assess exact identity, current employer as of output.asOf, current title/remit, and buyer fit under input.profile. Distinguish a real budget/remit owner from a title keyword match. Reject former employees, ambiguous identities, wrong employers, and unsupported authority. Evidence must support the exact person and current role; engine verification decisions and scores are not proof. Missing currentness evidence is insufficient. Respect recorded reference limitations and dates. A public reference list is a lower bound, never a complete roster; do not invent recall or penalize legitimate unlisted buyers.",
+			"closedWorld": false,
+			"sources": [],
+			"references": []
+		}
+	},
+	{
+		"id": "aris-holdout4",
+		"input": {
+			"suite": "people",
+			"slug": "aris",
+			"profile": {
+				"seller": {
+					"domain": "arissearch.com",
+					"description": "Aris Search, LLC is an IT and sales recruiting/staffing firm that has helped businesses and careers across many industries for over 50 years, providing IT staffing services including placements for managed service providers, IT solutions firms, SaaS companies, healthcare, finance, manufacturing, engineering, accounting, entertainment, logistics, and industrial sectors.",
+					"customers": [],
+					"sourceUrls": ["https://arissearch.com/"]
+				},
+				"icp": {
+					"offer": "Recruiting/placement services for technicians and service-delivery staff (helpdesk, cloud, network, security, project engineers, service-delivery leads) specifically for managed service providers (MSPs).",
+					"buyer": "The buyer is the person who owns the decision to engage an outside recruiter for technical hiring, or who owns the headcount those hires fill. POSITIVE (would own the budget or decision): Owner, founder, CEO, president, managing partner \u2014 at an MSP under ~150 people the owner usually makes this call personally; COO, chief services officer, chief customer officer, VP/director of service delivery, VP/director of operations, VP/director of managed services, VP/director of professional services \u2014 they own the technical headcount; head of people, HR director, VP people, director of talent acquisition, recruiting manager \u2014 they own the recruiting relationship, and at small MSPs an 'HR Manager' who is the only HR person counts; market president / regional president at a roll-up \u2014 owns a regional P&L and its hiring. INFLUENCER (not positive): service desk manager, NOC manager, engineering manager, team lead \u2014 feel the pain, rarely sign a recruiter; chief technology officer / CIO at an MSP \u2014 often owns technical strategy, sometimes owns hiring; label INFLUENCER unless the company is small enough that the CTO is a founder. HARD NEGATIVE (not a buyer for this purchase): CFO, controller, finance director \u2014 approve spend, do not choose recruiters; VP/director of sales, account executives, account managers, marketing \u2014 revenue side; chief information security officer / vCISO delivering security to clients \u2014 a delivered service role, not a hiring owner; individual engineers, technicians, analysts, project managers, consultants; board members, investors, advisors; anyone at a PARENT PE firm rather than at the MSP itself.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Company is a managed service provider (MSP)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "Aris Search is a recruiting firm that places technicians and service-delivery staff\n(helpdesk, cloud, network, security, project engineers, service-delivery leads) at managed\nservice providers. The buyer is the person who OWNS THE DECISION TO ENGAGE AN OUTSIDE\nRECRUITER for technical hiring, or who owns the headcount those hires fill.\n\n## POSITIVE (would own the budget or the decision)\n- Owner, founder, CEO, president, managing partner \u2014 at an MSP under ~150 people the owner\n  usually makes this call personally.\n- COO, chief services officer, chief customer officer, VP/director of service delivery,\n  VP/director of operations, VP/director of managed services, VP/director of professional\n  services \u2014 they own the technical headcount.\n- Head of people, HR director, VP people, director of talent acquisition, recruiting\n  manager \u2014 they own the recruiting relationship. At small MSPs an \"HR Manager\" who is the\n  only HR person counts.\n- Market president / regional president at a roll-up \u2014 owns a regional P&L and its hiring.\n\n## CHAMPION (influences, does not own) \u2014 label INFLUENCER, not positive\n- Service desk manager, NOC manager, engineering manager, team lead \u2014 feel the pain, rarely\n  sign a recruiter.\n- Chief technology officer / CIO at an MSP \u2014 often owns technical strategy, sometimes owns\n  hiring; label INFLUENCER unless the company is small enough that the CTO is a founder.\n\n## HARD NEGATIVE (looks senior, is not a buyer for THIS purchase)\n- CFO, controller, finance director \u2014 approve spend, do not choose recruiters.\n- VP/director of sales, account executives, account managers, marketing \u2014 revenue side.\n- Chief information security officer / vCISO delivering security to clients \u2014 a delivered\n  service role, not a hiring owner.\n- Individual engineers, technicians, analysts, project managers, consultants.\n- Board members, investors, advisors.\n- Anyone at a PARENT PE firm rather than at the MSP itself."
+			},
+			"domains": ["centerlogic.com", "framewerx.ca"],
+			"stage": "engine",
+			"sample": null
+		},
+		"expected": {
+			"rubric": "For every delivered person, independently assess exact identity, current employer as of output.asOf, current title/remit, and buyer fit under input.profile. Distinguish a real budget/remit owner from a title keyword match. Reject former employees, ambiguous identities, wrong employers, and unsupported authority. Evidence must support the exact person and current role; engine verification decisions and scores are not proof. Missing currentness evidence is insufficient. Respect recorded reference limitations and dates. A public reference list is a lower bound, never a complete roster; do not invent recall or penalize legitimate unlisted buyers.",
+			"closedWorld": false,
+			"sources": [],
+			"references": [
+				{
+					"id": "https://linkedin.com/in/jeffrey-jones-518b11a7",
+					"company": "centerlogic.com",
+					"judgment": "accept",
+					"rationale": "Substantive employer author bio and LinkedIn About agree on VP of Service; service-delivery headcount owner. Main leadership page has placeholder biography text; not used as proof.",
+					"sources": [
+						"https://centerlogic.com/it-support-in-portland-is-your-business-ready-for-2026/"
+					],
+					"reviewedAt": "2026-09-13T04:28:00Z"
+				},
+				{
+					"id": "https://linkedin.com/in/danreid-edmonton",
+					"company": "framewerx.ca",
+					"judgment": "accept",
+					"rationale": "Employer team explicitly labels Chief Executive Officer and current profile has company leadership activity.",
+					"sources": ["https://www.framewerx.ca/about-us/"],
+					"reviewedAt": "2026-09-13T04:28:00Z"
+				}
+			]
+		}
+	},
+	{
+		"id": "ondato-hard10",
+		"input": {
+			"suite": "people",
+			"slug": "ondato",
+			"profile": {
+				"seller": {
+					"domain": "ondato.com",
+					"description": "Ondato is a Lithuania-founded, London-headquartered SaaS company providing KYC, KYB, AML, identity and age verification, biometric authentication, and lifecycle-monitoring compliance solutions, covering 192 countries and 10,000+ document types with a 97% average pass rate and ~30-second onboarding.",
+					"customers": ["OnlyFans", "Fjord Bank", "Saldo Bank", "Ooredoo"],
+					"sourceUrls": [
+						"https://ondato.com/",
+						"https://ondato.com/about-us/",
+						"https://ondato.com/faq/",
+						"https://ondato.com/identity-verification/",
+						"https://ondato.com/industries/neobanking/",
+						"https://ondato.com/aml-software/",
+						"https://ondato.com/authentication-solutions/",
+						"https://ondato.com/case-studies/",
+						"https://ondato.com/case-studies/ooredoo-case-study/",
+						"https://ondato.com/case-studies/onlyfans-case-study/",
+						"https://ondato.com/case-studies/fjord-bank-ondato-case-study/",
+						"https://ondato.com/case-studies/saldobank-ondato-case-study/"
+					]
+				},
+				"icp": {
+					"offer": "Identity verification (KYC) and age assurance solutions positioned as a conversion product (high pass-rate, fast onboarding across 192 countries); excludes KYT (transaction monitoring), which is never pitched.",
+					"buyer": "Growth-oriented buying committee: CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or Founder/CEO. Compliance, risk, legal, and MLRO titles are never targeted.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Company serves consumers or SMBs in the United Kingdom, Ireland, United States, or Canada",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "fintech company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "neobank or digital bank",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "payments company or PSP",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "lending company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "trading or investment app",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "crypto exchange or wallet",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform (adult content, gambling, gaming, social, dating, vaping, or alcohol e-commerce)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "privately held company that has raised $2M to $250M in funding",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "privately held company with $1M to $150M in revenue",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "company is not itself a verification vendor or competitor, compliance consultancy, agency, or non-profit",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "runs high-volume digital signups where identity assurance is a revenue enabler",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, or Canada)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup",
+											"window": {
+												"amount": 6,
+												"unit": "months",
+												"appliesTo": "observation",
+												"direction": "past"
+											},
+											"sourceRule": "app store or Trustpilot reviews"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type, or trading feature)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws",
+											"window": null,
+											"sourceRule": "shown by its own compliance statement or enforcement coverage"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "raised a round in the last 120 days with stated user-growth or expansion plans",
+											"window": {
+												"amount": 120,
+												"unit": "days",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "Ondato sells identity verification (KYC, age assurance) as a conversion product: 97% average pass rate, 30-second onboarding, 192 countries, 10,000+ document types. We sell to growth buyers, not compliance. The buying committee is the CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, and the Founder or CEO. Never target compliance, risk, legal or MLRO titles. Never pitch KYT (transaction monitoring).\n\nGeography: United Kingdom and Ireland, United States, Canada. Verticals: fintech, neobanks, digital banks, payments companies and PSPs, lending, trading and investment apps, crypto exchanges and wallets, age-gated platforms (adult content, gambling, gaming, social, dating, vaping and alcohol e-commerce). A company qualifies by revenue or funding, never by headcount. Exclude verification vendors and competitors, compliance consultancies, agencies and non-profits. They are privately held and reachable for outbound: $2M to $250M raised or $1M to $150M in revenue; public companies and larger groups are named accounts outside this motion.\n\nWe target situations, not demographics. A company is a fit when at least one of these dated, publicly observable situations is true, and the situation must be proven by a page:\n1. New market, new rulebook: announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, Canada).\n2. The leaky funnel: their own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup.\n3. Launch window: announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type or trading feature).\n4. The age-check clock: an age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws, shown by its own compliance statement or enforcement coverage.\n5. Freshly funded: raised a round in the last 120 days with stated user-growth or expansion plans.\n\nHard rules for every company we find: it runs high-volume digital signups where identity assurance is a revenue enabler; it serves consumers or SMBs in the UK, Ireland, US or Canada; it is not itself a KYC, identity or age-verification vendor.\n"
+			},
+			"domains": ["apxlending.com", "edgemarkets.io", "stoa.money"],
+			"stage": "engine",
+			"sample": null
+		},
+		"expected": {
+			"rubric": "For every delivered person, independently assess exact identity, current employer as of output.asOf, current title/remit, and buyer fit under input.profile. Distinguish a real budget/remit owner from a title keyword match. Reject former employees, ambiguous identities, wrong employers, and unsupported authority. Evidence must support the exact person and current role; engine verification decisions and scores are not proof. Missing currentness evidence is insufficient. Respect recorded reference limitations and dates. A public reference list is a lower bound, never a complete roster; do not invent recall or penalize legitimate unlisted buyers.",
+			"closedWorld": false,
+			"sources": [],
+			"references": []
+		}
+	},
+	{
+		"id": "ondato-holdout4",
+		"input": {
+			"suite": "people",
+			"slug": "ondato",
+			"profile": {
+				"seller": {
+					"domain": "ondato.com",
+					"description": "Ondato is a Lithuania-founded, London-headquartered SaaS company providing KYC, KYB, AML, identity and age verification, biometric authentication, and lifecycle-monitoring compliance solutions, covering 192 countries and 10,000+ document types with a 97% average pass rate and ~30-second onboarding.",
+					"customers": ["OnlyFans", "Fjord Bank", "Saldo Bank", "Ooredoo"],
+					"sourceUrls": [
+						"https://ondato.com/",
+						"https://ondato.com/about-us/",
+						"https://ondato.com/faq/",
+						"https://ondato.com/identity-verification/",
+						"https://ondato.com/industries/neobanking/",
+						"https://ondato.com/aml-software/",
+						"https://ondato.com/authentication-solutions/",
+						"https://ondato.com/case-studies/",
+						"https://ondato.com/case-studies/ooredoo-case-study/",
+						"https://ondato.com/case-studies/onlyfans-case-study/",
+						"https://ondato.com/case-studies/fjord-bank-ondato-case-study/",
+						"https://ondato.com/case-studies/saldobank-ondato-case-study/"
+					]
+				},
+				"icp": {
+					"offer": "Identity verification (KYC) and age assurance solutions positioned as a conversion product (high pass-rate, fast onboarding across 192 countries); excludes KYT (transaction monitoring), which is never pitched.",
+					"buyer": "Growth-oriented buying committee: CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or Founder/CEO. Compliance, risk, legal, and MLRO titles are never targeted.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Company serves consumers or SMBs in the United Kingdom, Ireland, United States, or Canada",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "fintech company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "neobank or digital bank",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "payments company or PSP",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "lending company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "trading or investment app",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "crypto exchange or wallet",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform (adult content, gambling, gaming, social, dating, vaping, or alcohol e-commerce)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "privately held company that has raised $2M to $250M in funding",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "privately held company with $1M to $150M in revenue",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "company is not itself a verification vendor or competitor, compliance consultancy, agency, or non-profit",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "runs high-volume digital signups where identity assurance is a revenue enabler",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, or Canada)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup",
+											"window": {
+												"amount": 6,
+												"unit": "months",
+												"appliesTo": "observation",
+												"direction": "past"
+											},
+											"sourceRule": "app store or Trustpilot reviews"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type, or trading feature)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws",
+											"window": null,
+											"sourceRule": "shown by its own compliance statement or enforcement coverage"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "raised a round in the last 120 days with stated user-growth or expansion plans",
+											"window": {
+												"amount": 120,
+												"unit": "days",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "Ondato sells identity verification (KYC, age assurance) as a conversion product: 97% average pass rate, 30-second onboarding, 192 countries, 10,000+ document types. We sell to growth buyers, not compliance. The buying committee is the CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, and the Founder or CEO. Never target compliance, risk, legal or MLRO titles. Never pitch KYT (transaction monitoring).\n\nGeography: United Kingdom and Ireland, United States, Canada. Verticals: fintech, neobanks, digital banks, payments companies and PSPs, lending, trading and investment apps, crypto exchanges and wallets, age-gated platforms (adult content, gambling, gaming, social, dating, vaping and alcohol e-commerce). A company qualifies by revenue or funding, never by headcount. Exclude verification vendors and competitors, compliance consultancies, agencies and non-profits. They are privately held and reachable for outbound: $2M to $250M raised or $1M to $150M in revenue; public companies and larger groups are named accounts outside this motion.\n\nWe target situations, not demographics. A company is a fit when at least one of these dated, publicly observable situations is true, and the situation must be proven by a page:\n1. New market, new rulebook: announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, Canada).\n2. The leaky funnel: their own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup.\n3. Launch window: announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type or trading feature).\n4. The age-check clock: an age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws, shown by its own compliance statement or enforcement coverage.\n5. Freshly funded: raised a round in the last 120 days with stated user-growth or expansion plans.\n\nHard rules for every company we find: it runs high-volume digital signups where identity assurance is a revenue enabler; it serves consumers or SMBs in the UK, Ireland, US or Canada; it is not itself a KYC, identity or age-verification vendor.\n"
+			},
+			"domains": ["helcim.com"],
+			"stage": "engine",
+			"sample": null
+		},
+		"expected": {
+			"rubric": "For every delivered person, independently assess exact identity, current employer as of output.asOf, current title/remit, and buyer fit under input.profile. Distinguish a real budget/remit owner from a title keyword match. Reject former employees, ambiguous identities, wrong employers, and unsupported authority. Evidence must support the exact person and current role; engine verification decisions and scores are not proof. Missing currentness evidence is insufficient. Respect recorded reference limitations and dates. A public reference list is a lower bound, never a complete roster; do not invent recall or penalize legitimate unlisted buyers.",
+			"closedWorld": false,
+			"sources": [],
+			"references": [
+				{
+					"id": "https://linkedin.com/in/nicbeique",
+					"company": "helcim.com",
+					"judgment": "accept",
+					"rationale": "Employer team, August21 2026 release and current profile agree; eligible founder/CEO.",
+					"sources": [
+						"https://www.helcim.com/about-us/",
+						"https://www.helcim.com/company/helcim-raises-series-c/"
+					],
+					"reviewedAt": "2026-09-13T04:28:00Z"
+				}
+			]
+		}
+	},
+	{
+		"id": "ondato-prefilter",
+		"input": {
+			"suite": "people",
+			"slug": "ondato",
+			"profile": {
+				"seller": {
+					"domain": "ondato.com",
+					"description": "Ondato is a Lithuania-founded, London-headquartered SaaS company providing KYC, KYB, AML, identity and age verification, biometric authentication, and lifecycle-monitoring compliance solutions, covering 192 countries and 10,000+ document types with a 97% average pass rate and ~30-second onboarding.",
+					"customers": ["OnlyFans", "Fjord Bank", "Saldo Bank", "Ooredoo"],
+					"sourceUrls": [
+						"https://ondato.com/",
+						"https://ondato.com/about-us/",
+						"https://ondato.com/faq/",
+						"https://ondato.com/identity-verification/",
+						"https://ondato.com/industries/neobanking/",
+						"https://ondato.com/aml-software/",
+						"https://ondato.com/authentication-solutions/",
+						"https://ondato.com/case-studies/",
+						"https://ondato.com/case-studies/ooredoo-case-study/",
+						"https://ondato.com/case-studies/onlyfans-case-study/",
+						"https://ondato.com/case-studies/fjord-bank-ondato-case-study/",
+						"https://ondato.com/case-studies/saldobank-ondato-case-study/"
+					]
+				},
+				"icp": {
+					"offer": "Identity verification (KYC) and age assurance solutions positioned as a conversion product (high pass-rate, fast onboarding across 192 countries); excludes KYT (transaction monitoring), which is never pitched.",
+					"buyer": "Growth-oriented buying committee: CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or Founder/CEO. Compliance, risk, legal, and MLRO titles are never targeted.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Company serves consumers or SMBs in the United Kingdom, Ireland, United States, or Canada",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "fintech company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "neobank or digital bank",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "payments company or PSP",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "lending company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "trading or investment app",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "crypto exchange or wallet",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform (adult content, gambling, gaming, social, dating, vaping, or alcohol e-commerce)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "privately held company that has raised $2M to $250M in funding",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "privately held company with $1M to $150M in revenue",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "company is not itself a verification vendor or competitor, compliance consultancy, agency, or non-profit",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "runs high-volume digital signups where identity assurance is a revenue enabler",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, or Canada)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup",
+											"window": {
+												"amount": 6,
+												"unit": "months",
+												"appliesTo": "observation",
+												"direction": "past"
+											},
+											"sourceRule": "app store or Trustpilot reviews"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type, or trading feature)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws",
+											"window": null,
+											"sourceRule": "shown by its own compliance statement or enforcement coverage"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "raised a round in the last 120 days with stated user-growth or expansion plans",
+											"window": {
+												"amount": 120,
+												"unit": "days",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "Ondato sells identity verification (KYC, age assurance) as a conversion product: 97% average pass rate, 30-second onboarding, 192 countries, 10,000+ document types. We sell to growth buyers, not compliance. The buying committee is the CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, and the Founder or CEO. Never target compliance, risk, legal or MLRO titles. Never pitch KYT (transaction monitoring).\n\nGeography: United Kingdom and Ireland, United States, Canada. Verticals: fintech, neobanks, digital banks, payments companies and PSPs, lending, trading and investment apps, crypto exchanges and wallets, age-gated platforms (adult content, gambling, gaming, social, dating, vaping and alcohol e-commerce). A company qualifies by revenue or funding, never by headcount. Exclude verification vendors and competitors, compliance consultancies, agencies and non-profits. They are privately held and reachable for outbound: $2M to $250M raised or $1M to $150M in revenue; public companies and larger groups are named accounts outside this motion.\n\nWe target situations, not demographics. A company is a fit when at least one of these dated, publicly observable situations is true, and the situation must be proven by a page:\n1. New market, new rulebook: announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, Canada).\n2. The leaky funnel: their own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup.\n3. Launch window: announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type or trading feature).\n4. The age-check clock: an age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws, shown by its own compliance statement or enforcement coverage.\n5. Freshly funded: raised a round in the last 120 days with stated user-growth or expansion plans.\n\nHard rules for every company we find: it runs high-volume digital signups where identity assurance is a revenue enabler; it serves consumers or SMBs in the UK, Ireland, US or Canada; it is not itself a KYC, identity or age-verification vendor.\n"
+			},
+			"domains": ["capimoney.com"],
+			"stage": "prefilter",
+			"sample": {
+				"company": {
+					"domain": "capimoney.com",
+					"name": "Capi Money",
+					"linkedinUrl": null,
+					"exaId": null,
+					"description": "Cross-border payments for businesses",
+					"workforceTotal": null
+				},
+				"candidates": [
+					{
+						"name": "St\u00e9phane ZOLA",
+						"title": "Senior Recruitment Specialist",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/st%c3%a9phane-zola-455129151",
+						"location": "Paris et p\u00e9riph\u00e9rie",
+						"since": "2026-08-01",
+						"id": 0,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Anthony Danon",
+						"title": "Investor",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/anthony-danon-3409099b",
+						"location": "United Kingdom",
+						"since": "2023-09-01",
+						"id": 1,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "No\u00e9 Gersanois",
+						"title": "Angel Investor",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/no%c3%a9-gersanois",
+						"location": "France, France",
+						"since": "2023-09-01",
+						"id": 2,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "St\u00e9phanie D.",
+						"title": "Regional Talent Manager - Africa Market",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/stephanie-diarrassouba-334408b8",
+						"location": "Paris, France",
+						"since": "2025-09-01",
+						"id": 3,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Gracie Sparks",
+						"title": "Talent Acquisition Manager - Tech",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/gracie-sparks",
+						"location": "London, United Kingdom",
+						"since": "2026-07-01",
+						"id": 4,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "idrissa K.",
+						"title": "Senior Sales Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/idrissakeita",
+						"location": "Senegal",
+						"since": "2026-03-01",
+						"id": 5,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Wendy C.",
+						"title": "Global Banking Partnerships",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/wendy-cheng-bb800710b",
+						"location": "London, United Kingdom",
+						"since": "2025-06-01",
+						"id": 6,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "S\u00e9bastien V.",
+						"title": "Head of West Africa",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/s%c3%a9bastien-v-22260ab",
+						"location": "\u0627\u0644\u062f\u0627\u0631 \u0627\u0644\u0628\u064a\u0636\u0627\u0621 \u0633\u0637\u0627\u062a \u0627\u0644\u0645\u063a\u0631\u0628",
+						"since": "2025-04-01",
+						"id": 7,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Lorcan Delaney",
+						"title": "Investor",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/lorcan-delaney-509b9a110",
+						"location": "London, United Kingdom",
+						"since": "2023-06-01",
+						"id": 8,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Mitch Riley",
+						"title": "Co-Founder & CEO",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/mitch-riley-076a355b",
+						"location": "London, United Kingdom",
+						"since": "2023-01-01",
+						"id": 9,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Franck Cedric Y.",
+						"title": "Country Managing Director",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/franck-cedric-yanou-n-4944076a",
+						"location": "Communaut\u00e9 urbaine de Douala, Cameroon",
+						"since": "2024-12-01",
+						"id": 10,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Issa N.",
+						"title": "Sales Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/issa-niang-80272343",
+						"location": "Bamako, Mali",
+						"since": "2026-01-01",
+						"id": 11,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Mike Goldfarb",
+						"title": "Investor (Current) / Advisor (Former)",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/mike-goldfarb-4b851130",
+						"location": "New York City, United States",
+						"since": "2022-09-01",
+						"id": 12,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Tobi O.",
+						"title": "Senior Talent Partner",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/tobiogunnaike1",
+						"location": "London, United Kingdom",
+						"since": "2025-06-01",
+						"id": 13,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Ma\u00e9va Rabet",
+						"title": "Commercial team lead",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/ma%c3%a9va-rabet-189a32109",
+						"location": "Abidjan, C\u00f4te d'Ivoire",
+						"since": "2026-06-01",
+						"id": 14,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Yensi O.",
+						"title": "Head of Compliance & MLRO",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/yensi-ocampo-acams-ica-gdpr-practitioner-9b22a176",
+						"location": "London, United Kingdom",
+						"since": "2025-02-01",
+						"id": 15,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Becaye A.",
+						"title": "Senior Account Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/becayeanne",
+						"location": "Dakar Region, Senegal",
+						"since": "2025-07-01",
+						"id": 16,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Curtis Noble",
+						"title": "FX Sales & Partnerships Lead",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/curtis-noble-92b1a56a",
+						"location": "London, United Kingdom",
+						"since": "2026-01-01",
+						"id": 17,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Scott L.",
+						"title": "Co-Founder",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/scott-l-890678195",
+						"location": "London, United Kingdom",
+						"since": "2023-04-01",
+						"id": 18,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Emily Richie",
+						"title": "Head of Talent",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/emily-richie",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2025-05-01",
+						"id": 19,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Bahaa A.",
+						"title": "Head of Engineering",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/bahaagalal",
+						"location": "London, United Kingdom",
+						"since": "2025-10-01",
+						"id": 20,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Bilal Aslam",
+						"title": "General Manager - New Bets",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/bilal-aslam-673075218",
+						"location": "Tallinn, Estonia",
+						"since": "2026-01-01",
+						"id": 21,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Allegra",
+						"title": "Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/allegra9",
+						"location": "Vilnius, Lithuania",
+						"since": "2025-08-01",
+						"id": 22,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Jay-Ann B.",
+						"title": "Senior Fullstack Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/jay-ann-bravo-harriott",
+						"location": "London, United Kingdom",
+						"since": "2026-04-01",
+						"id": 23,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Joshua Wong",
+						"title": "Head of Partnerships & Launch",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/joshswong",
+						"location": "London, United Kingdom",
+						"since": "2024-01-01",
+						"id": 24,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Luke O'Leary",
+						"title": "Group General Counsel",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/luke-o-leary-a8ab8234",
+						"location": "Paris, France",
+						"since": "2025-04-01",
+						"id": 25,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Quentin Vigneau",
+						"title": "Seed Investor",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/quentin-vigneau-25884260",
+						"location": "London, United Kingdom",
+						"since": "2023-09-01",
+						"id": 26,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Alice Dufeu",
+						"title": "Head of Growth",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/alice-dufeu-b2842b5a",
+						"location": "Paris, France",
+						"since": "2024-12-01",
+						"id": 27,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Celmar Bonamour G",
+						"title": "Sales Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/celmar-bonamour-g-31ab76121",
+						"location": "Pointe-Noire, Republic of the Congo",
+						"since": "2025-11-01",
+						"id": 28,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Geraud Le Merrer",
+						"title": "Supplier Acquisition Lead",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/geraud-le-merrer",
+						"location": "Paris, France",
+						"since": "2026-03-01",
+						"id": 29,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Lamine BARRY",
+						"title": "Payment operations",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/lamine-barry-5487a087",
+						"location": "Paris et p\u00e9riph\u00e9rie",
+						"since": "2025-03-01",
+						"id": 30,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Adia NDIAYE, PMP Certified",
+						"title": "Reseller Business Lead - UEMOA chez Capi Money",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/adia-ndiaye-pmp-certified-2233a9125",
+						"location": "Dakar, Senegal",
+						"since": "2026-04-01",
+						"id": 31,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Gloria M.",
+						"title": "Payment Operations",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/gloriamarinquerol",
+						"location": "London, United Kingdom",
+						"since": "2026-02-01",
+						"id": 32,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Trusha V.",
+						"title": "Finance Assistant",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/trushav",
+						"location": "United Kingdom",
+						"since": "2025-09-01",
+						"id": 33,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Amadou D. Diarra",
+						"title": "Directeur g\u00e9n\u00e9ral",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/amadou-d-diarra-4a373787",
+						"location": "Bamako, Mali",
+						"since": "2025-09-01",
+						"id": 34,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Phil Efstathiou",
+						"title": "Head of Product / Founding Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/phil-efstathiou-2a843a8b",
+						"location": "London, United Kingdom",
+						"since": "2023-06-01",
+						"id": 35,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Michael Bridgman",
+						"title": "Product",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/michael-bridgman-9063585a",
+						"location": "Paris, France",
+						"since": "2026-05-01",
+						"id": 36,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Papa Babacar D.",
+						"title": "Sales manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/papa-babacar-d-88a9a4289",
+						"location": "Dakar, Senegal",
+						"since": "2025-06-01",
+						"id": 37,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Joseph Kuvor",
+						"title": "General Manager, Ghana",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/joseph-kuvor",
+						"location": "Accra, Ghana",
+						"since": "2026-06-01",
+						"id": 38,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Audrey Bousquet-Parisis",
+						"title": "Executive Assistant",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/audrey-bousquet-parisis-40a592159",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2026-04-01",
+						"id": 39,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Lisa Mutschler",
+						"title": "Operations Lead",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/lisa-mutschler-3a8465165",
+						"location": "Paris et p\u00e9riph\u00e9rie",
+						"since": "2026-06-01",
+						"id": 40,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Shivachi M.",
+						"title": "Launcher (East and Southern Africa)",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/shivachi-muleji-0a3a5b76",
+						"location": "Kenya",
+						"since": "2026-01-01",
+						"id": 41,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Carlous F.",
+						"title": "Senior Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/carlous-fahmi-231a4869",
+						"location": "London, United Kingdom",
+						"since": "2026-03-01",
+						"id": 42,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "L\u00e9once KATO",
+						"title": "Key Account Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/l%c3%a9once-kato-94bbb71bb",
+						"location": "Cocody, C\u00f4te d'Ivoire",
+						"since": "2026-04-01",
+						"id": 43,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Gr\u00e9goire D.",
+						"title": "Growth Operations Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/gr%c3%a9goire-de-marcillac",
+						"location": "Paris, France",
+						"since": "2025-08-01",
+						"id": 44,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Nahangami Issouf C.",
+						"title": "Sales Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/nahangami-issouf-c-066992146",
+						"location": "Abidjan, C\u00f4te d'Ivoire",
+						"since": "2026-02-01",
+						"id": 45,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Adrien A.",
+						"title": "Chief of Staff",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/adrienaixala",
+						"location": "Paris, France",
+						"since": "2026-01-01",
+						"id": 46,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Mathilde Caignault",
+						"title": "Partner Ops",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/mathilde-caignault-298764106",
+						"location": "Paris, France",
+						"since": "2026-06-01",
+						"id": 47,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Maxime Chabin",
+						"title": "Legal Counsel",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/maxime-chabin-348aa792",
+						"location": "Paris, France",
+						"since": "2026-03-01",
+						"id": 48,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Nathalie Ball",
+						"title": "Executive Assistant to Founders",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/nathalie-ball-97a43059",
+						"location": "Oxford, United Kingdom",
+						"since": "2025-02-01",
+						"id": 49,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Jovy MONGO ESSEM BICKO",
+						"title": "Sales Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/jovy-mongo-500737127",
+						"location": "Brazzaville, Republic of the Congo",
+						"since": "2025-11-01",
+						"id": 50,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Gaspard M.",
+						"title": "Senior Product Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/gaspard-m-49987512b",
+						"location": "Paris, France",
+						"since": "2025-07-01",
+						"id": 51,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "David Vincent",
+						"title": "Operations",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/davidmvincent",
+						"location": "Toronto, Canada",
+						"since": "2025-11-01",
+						"id": 52,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Ousmane F.",
+						"title": "Customer Operations Specialist",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/ousmane-f-8b6815213",
+						"location": "Senegal",
+						"since": "2025-07-01",
+						"id": 53,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Jamie Griffiths",
+						"title": "Chief of Staff",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/james-griffiths-london",
+						"location": "London, United Kingdom",
+						"since": "2025-06-01",
+						"id": 54,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Thibaud M.",
+						"title": "Head of Treasury and FX",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/thibaud-maudry",
+						"location": "London, United Kingdom",
+						"since": "2025-07-01",
+						"id": 55,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Flore de Taisne",
+						"title": "Interim Head of Growth",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/flore-de-taisne-4b72a958",
+						"location": "United Kingdom",
+						"since": "2025-12-01",
+						"id": 56,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Fatou wade Fall",
+						"title": "Key Account Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/fatou-wade-fall-606ab910b",
+						"location": "Dakar Region, Senegal",
+						"since": "2025-11-01",
+						"id": 57,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Daphn\u00e9 Piriou",
+						"title": "Launch & Partnerships",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/daphne-piriou-72218694",
+						"location": "Paris, France",
+						"since": "2026-01-01",
+						"id": 58,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Eve A.",
+						"title": "Customer Ops",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/eve-amiot-2840b2b5",
+						"location": "Paris, France",
+						"since": "2025-09-01",
+						"id": 59,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Pierre V.",
+						"title": "Head of Finance",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/pierre-van-oosterzee-699b6780",
+						"location": "United Kingdom",
+						"since": "2025-09-01",
+						"id": 60,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Jeanne D.",
+						"title": "Head of Business Operations",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/jeanne-delduc",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2024-11-01",
+						"id": 61,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Daniel McNamara",
+						"title": "Data & Analytics Consultant",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/daniel-mcnamara-74903814",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2026-02-01",
+						"id": 62,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Rory McLoughlin",
+						"title": "Senior Product Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/rorymcloughlin123",
+						"location": "London, United Kingdom",
+						"since": "2025-04-01",
+						"id": 63,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Dinora K.",
+						"title": "Lead User Researcher",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/dinora1",
+						"location": "United Kingdom",
+						"since": "2025-04-01",
+						"id": 64,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Jeanne Baron",
+						"title": "Compliance Associate",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/jeanne-baron-4896aaab",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2025-01-01",
+						"id": 65,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Kirk Feather",
+						"title": "Lead Product Designer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/kirk-feather-3a809765",
+						"location": "United Kingdom",
+						"since": "2026-01-01",
+						"id": 66,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Moyra B.",
+						"title": "Compliance 1st line Ops Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/moyra-brenner",
+						"location": "Genf, Switzerland",
+						"since": "2026-06-01",
+						"id": 67,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Sophia G.",
+						"title": "Head of People & Communications",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/sophia-g-84254a27",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2025-06-01",
+						"id": 68,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Rosaline A.",
+						"title": "Key Account Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/rosaline-a-4ba098aa",
+						"location": "Communaut\u00e9 urbaine de Douala, Cameroon",
+						"since": "2026-05-01",
+						"id": 69,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Arnold K.",
+						"title": "Global Payment Operations",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/arnold-koga",
+						"location": "Dubai, United Arab Emirates",
+						"since": "2026-07-01",
+						"id": 70,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Ryan Dewea",
+						"title": "Compliance Associate",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/ryan-dewea-436a16167",
+						"location": "London, United Kingdom",
+						"since": "2024-09-01",
+						"id": 71,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "DANGA FOHOM O.",
+						"title": "Operations Intern",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/osvaldes-danga",
+						"location": "Lyon, France",
+						"since": "2026-03-01",
+						"id": 72,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Tiahore Kevin",
+						"title": "Account Manager Key Account",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/tiahore-kevin-643b6316a",
+						"location": "C\u00f4te d'Ivoire",
+						"since": "2026-03-01",
+						"id": 73,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Ngon\u00e9 D.",
+						"title": "FinCrime analyst",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/ngon%c3%a9-d-8902b8213",
+						"location": "Dakar, Senegal",
+						"since": "2026-03-01",
+						"id": 74,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Emmanuel Nkrumah-Sarpong",
+						"title": "Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/nkrumahthis",
+						"location": "Accra, Ghana",
+						"since": "2025-01-01",
+						"id": 75,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Julien du Vergier",
+						"title": "Owner",
+						"company": "du Vergier Law",
+						"url": "https://linkedin.com/in/duvergier",
+						"location": "New York, United States",
+						"since": "2023-09-01",
+						"id": 76,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Daniel Ng",
+						"title": "Financial Controller",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/daniel-ng-276809122",
+						"location": "London, United Kingdom",
+						"since": "2025-01-01",
+						"id": 77,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Dinmohamed D.",
+						"title": "Senior Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/dinmohamed-danabek-a9248a130",
+						"location": "London, United Kingdom",
+						"since": "2026-02-01",
+						"id": 78,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Djibril Niang",
+						"title": "Key Account Manager",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/djibril-niang-736330235",
+						"location": "Abidjan, C\u00f4te d'Ivoire",
+						"since": "2025-07-01",
+						"id": 79,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Joseph J.",
+						"title": "Senior Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/johansenja",
+						"location": "London, United Kingdom",
+						"since": "2025-07-01",
+						"id": 80,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Mike N.",
+						"title": "Senior Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/mike-n-644b901b3",
+						"location": "London, United Kingdom",
+						"since": "2026-07-01",
+						"id": 81,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Zahir D.",
+						"title": "FX and Treasury Associate",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/zahir-d-26800915b",
+						"location": "City of Cape Town, South Africa",
+						"since": "2024-08-01",
+						"id": 82,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Jessica Mikhail",
+						"title": "Senior Executive Assistant to the CEO & CRO",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/jessica-mikhail-266586148",
+						"location": "Paris, France",
+						"since": "2026-01-01",
+						"id": 83,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Richard S.",
+						"title": "Staff Product Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/richard-scoones",
+						"location": "South Croydon, United Kingdom",
+						"since": "2025-10-01",
+						"id": 84,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "F. Noelle M.",
+						"title": "Responsable Senior Grands Comptes",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/f-noelle-m-46a2a3146",
+						"location": "Cameroon",
+						"since": "2026-06-01",
+						"id": 85,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Enock Sang",
+						"title": "Development Representative",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/enock-sang-737395350",
+						"location": "Nakuru, Kenya",
+						"since": null,
+						"id": 86,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Hayfa A.",
+						"title": "Senior Product Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/hayfa-awshan",
+						"location": "London, United Kingdom",
+						"since": "2026-03-01",
+						"id": 87,
+						"seenBy": ["clay"]
+					},
+					{
+						"name": "Igor S.",
+						"title": "Principal Software Engineer",
+						"company": "Capi Money",
+						"url": "https://linkedin.com/in/sotsugov",
+						"location": "United Kingdom, United Kingdom",
+						"since": "2025-06-01",
+						"id": 88,
+						"seenBy": ["clay"]
+					}
+				],
+				"researchAll": false,
+				"bands": []
+			}
+		},
+		"expected": {
+			"rubric": "Judge every preliminary keep/reject decision against the explicit buyer paths. Preserve founders and CEOs, relevant growth/product/commercial owners and adjacent influencers. Reject clear unrelated functions; uncertainty must survive for research. Do not claim current employment at this stage. All IDs must appear exactly once; grouping is seniority, not eligibility. Investors and advisors alone are not current operating buyers.",
+			"references": [],
+			"closedWorld": false,
+			"sources": []
+		}
+	},
+	{
+		"id": "ondato-verification",
+		"input": {
+			"suite": "people",
+			"slug": "ondato",
+			"profile": {
+				"seller": {
+					"domain": "ondato.com",
+					"description": "Ondato is a Lithuania-founded, London-headquartered SaaS company providing KYC, KYB, AML, identity and age verification, biometric authentication, and lifecycle-monitoring compliance solutions, covering 192 countries and 10,000+ document types with a 97% average pass rate and ~30-second onboarding.",
+					"customers": ["OnlyFans", "Fjord Bank", "Saldo Bank", "Ooredoo"],
+					"sourceUrls": [
+						"https://ondato.com/",
+						"https://ondato.com/about-us/",
+						"https://ondato.com/faq/",
+						"https://ondato.com/identity-verification/",
+						"https://ondato.com/industries/neobanking/",
+						"https://ondato.com/aml-software/",
+						"https://ondato.com/authentication-solutions/",
+						"https://ondato.com/case-studies/",
+						"https://ondato.com/case-studies/ooredoo-case-study/",
+						"https://ondato.com/case-studies/onlyfans-case-study/",
+						"https://ondato.com/case-studies/fjord-bank-ondato-case-study/",
+						"https://ondato.com/case-studies/saldobank-ondato-case-study/"
+					]
+				},
+				"icp": {
+					"offer": "Identity verification (KYC) and age assurance solutions positioned as a conversion product (high pass-rate, fast onboarding across 192 countries); excludes KYT (transaction monitoring), which is never pitched.",
+					"buyer": "Growth-oriented buying committee: CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, or Founder/CEO. Compliance, risk, legal, and MLRO titles are never targeted.",
+					"requirements": [
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "Company serves consumers or SMBs in the United Kingdom, Ireland, United States, or Canada",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "fintech company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "neobank or digital bank",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "payments company or PSP",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "lending company",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "trading or investment app",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "crypto exchange or wallet",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform (adult content, gambling, gaming, social, dating, vaping, or alcohol e-commerce)",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "privately held company that has raised $2M to $250M in funding",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "privately held company with $1M to $150M in revenue",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "company is not itself a verification vendor or competitor, compliance consultancy, agency, or non-profit",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "runs high-volume digital signups where identity assurance is a revenue enabler",
+											"window": null,
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						},
+						{
+							"kind": "required",
+							"anyOf": [
+								{
+									"allOf": [
+										{
+											"text": "announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, or Canada)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup",
+											"window": {
+												"amount": 6,
+												"unit": "months",
+												"appliesTo": "observation",
+												"direction": "past"
+											},
+											"sourceRule": "app store or Trustpilot reviews"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type, or trading feature)",
+											"window": {
+												"amount": 12,
+												"unit": "months",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws",
+											"window": null,
+											"sourceRule": "shown by its own compliance statement or enforcement coverage"
+										}
+									]
+								},
+								{
+									"allOf": [
+										{
+											"text": "raised a round in the last 120 days with stated user-growth or expansion plans",
+											"window": {
+												"amount": 120,
+												"unit": "days",
+												"appliesTo": "event",
+												"direction": "past"
+											},
+											"sourceRule": null
+										}
+									]
+								}
+							]
+						}
+					],
+					"unknowns": []
+				},
+				"version": 1,
+				"extracted": true,
+				"instructions": "Ondato sells identity verification (KYC, age assurance) as a conversion product: 97% average pass rate, 30-second onboarding, 192 countries, 10,000+ document types. We sell to growth buyers, not compliance. The buying committee is the CRO, Chief Growth Officer, CMO, Chief Product Officer, Head of Growth, Head of Product, Head of Business Development, and the Founder or CEO. Never target compliance, risk, legal or MLRO titles. Never pitch KYT (transaction monitoring).\n\nGeography: United Kingdom and Ireland, United States, Canada. Verticals: fintech, neobanks, digital banks, payments companies and PSPs, lending, trading and investment apps, crypto exchanges and wallets, age-gated platforms (adult content, gambling, gaming, social, dating, vaping and alcohol e-commerce). A company qualifies by revenue or funding, never by headcount. Exclude verification vendors and competitors, compliance consultancies, agencies and non-profits. They are privately held and reachable for outbound: $2M to $250M raised or $1M to $150M in revenue; public companies and larger groups are named accounts outside this motion.\n\nWe target situations, not demographics. A company is a fit when at least one of these dated, publicly observable situations is true, and the situation must be proven by a page:\n1. New market, new rulebook: announced a new market entry or a fresh e-money, banking, lending or payments license in the last 12 months, with a go-live in a new jurisdiction (UK, EU, US, Canada).\n2. The leaky funnel: their own users publicly complain, in app store or Trustpilot reviews from the last 6 months, about failed, stuck or slow identity verification at signup.\n3. Launch window: announced or launched a consumer product in the last 12 months that needs new users to verify identity or age at signup (a new app, wallet, card, account type or trading feature).\n4. The age-check clock: an age-gated platform serving UK or US users, exposed to the UK Online Safety Act's age assurance duty or US state age-verification laws, shown by its own compliance statement or enforcement coverage.\n5. Freshly funded: raised a round in the last 120 days with stated user-growth or expansion plans.\n\nHard rules for every company we find: it runs high-volume digital signups where identity assurance is a revenue enabler; it serves consumers or SMBs in the UK, Ireland, US or Canada; it is not itself a KYC, identity or age-verification vendor.\n"
+			},
+			"domains": ["capimoney.com"],
+			"stage": "verification",
+			"sample": {
+				"name": "Mitch Riley",
+				"title": "Co-Founder & CEO",
+				"company": "Capi Money",
+				"url": "https://linkedin.com/in/mitch-riley-076a355b",
+				"location": "London, United Kingdom",
+				"since": "2023-01-01",
+				"id": 9,
+				"seenBy": ["clay"]
+			}
+		},
+		"expected": {
+			"rubric": "Judge the returned decision against the retrieved source material, exact candidate identity, current employer and role, and the buyer requirements. An invalid decision or fabricated/nonverbatim role quote fails. Unsupported current employment must remain unresolved. Do not reward the engine merely for labelling a person verified.",
+			"references": [],
+			"closedWorld": false,
+			"sources": []
+		}
+	}
+]

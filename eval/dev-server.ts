@@ -1,10 +1,9 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
 	closeSync,
 	mkdirSync,
 	openSync,
 	readFileSync,
-	rmSync,
 	writeFileSync,
 } from "node:fs";
 import { armDatabaseUrl } from "@eval/arm-db";
@@ -30,24 +29,34 @@ function armConfigPath(arm: string): string {
  * entry point relative to the config file. A plain text substitution rather than a JSONC parse: the
  * file's only well-known variable part is that one literal string.
  */
-function writeArmConfig(arm: string): string {
+function writeArmConfig(arm: string, token: string): string {
 	const base = readFileSync("wrangler.jsonc", "utf8");
-	const swapped = base.replaceAll(BASE_CONNECTION_STRING, armDatabaseUrl(arm));
+	if (!base.includes(BASE_CONNECTION_STRING))
+		throw new Error("eval: local database configuration changed");
+	if (!/"vars"\s*:\s*\{/.test(base))
+		throw new Error("eval: missing Worker vars");
+	const swapped = base
+		.replaceAll(BASE_CONNECTION_STRING, armDatabaseUrl(arm))
+		.replace(/"vars"\s*:\s*\{/, `"vars": {"EVAL_TOKEN":"${token}",`);
 	const path = armConfigPath(arm);
-	writeFileSync(path, swapped);
+	writeFileSync(path, swapped, { mode: 0o600 });
 	return path;
 }
 
 export type DevServer = {
 	url: string;
+	token: string;
 	stop: () => void;
 };
 
-async function waitForHealth(url: string): Promise<void> {
+async function waitForHealth(url: string, token: string): Promise<void> {
 	const deadline = Date.now() + HEALTH_TIMEOUT_MS;
 	while (Date.now() < deadline) {
 		try {
-			const response = await fetch(`${url}/health`);
+			const response = await fetch(`${url}/__eval/health`, {
+				headers: { authorization: `Bearer ${token}` },
+				signal: AbortSignal.timeout(1000),
+			});
 			if (response.ok) return;
 		} catch {}
 		await new Promise((resolve) => setTimeout(resolve, HEALTH_POLL_MS));
@@ -65,25 +74,47 @@ export async function startDevServer(
 	arm: string,
 	port: number,
 ): Promise<DevServer> {
-	const configPath = writeArmConfig(arm);
+	const token = crypto.randomUUID();
+	const configPath = writeArmConfig(arm, token);
 	const url = `http://localhost:${port}`;
 	mkdirSync(LOG_DIR, { recursive: true });
 	const logFd = openSync(devServerLogPath(arm, port), "a");
 	const child = spawn(
 		"bunx",
-		["wrangler", "dev", "--config", configPath, "--port", String(port)],
-		{ stdio: ["ignore", logFd, logFd], detached: false },
+		[
+			"wrangler",
+			"dev",
+			"eval/worker.ts",
+			"--ip",
+			"127.0.0.1",
+			"--config",
+			configPath,
+			"--port",
+			String(port),
+		],
+		{
+			stdio: ["ignore", logFd, logFd],
+			detached: true,
+			env: { ...process.env, SFW_SHIM_DISABLE: "1" },
+		},
 	);
+	let stopped = false;
 	const stop = () => {
-		child.kill();
+		if (stopped) return;
+		stopped = true;
+		if (child.pid) {
+			try {
+				process.kill(-child.pid, "SIGTERM");
+			} catch {}
+		}
 		closeSync(logFd);
-		rmSync(configPath, { force: true });
+		spawnSync("trash", [configPath]);
 	};
 	try {
-		await waitForHealth(url);
+		await waitForHealth(url, token);
 	} catch (error) {
 		stop();
 		throw error;
 	}
-	return { url, stop };
+	return { url, token, stop };
 }

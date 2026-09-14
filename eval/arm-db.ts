@@ -12,6 +12,8 @@ import { icp } from "@/core/db/schema";
 const LOCAL_HOST = "postgresql://postgres:postgres@localhost:5432";
 
 export function armDatabaseName(arm: string): string {
+	if (!/^[a-z][a-z0-9_]{0,45}$/.test(arm))
+		throw new Error("eval: invalid database name");
 	return `eval_${arm}`;
 }
 
@@ -26,7 +28,7 @@ function runOrThrow(
 ): void {
 	const result = spawnSync(cmd, args, {
 		encoding: "utf8",
-		env: { ...process.env, ...env },
+		env: { ...process.env, PGPASSWORD: "postgres", ...env },
 	});
 	if (result.status !== 0) {
 		throw new Error(
@@ -36,22 +38,12 @@ function runOrThrow(
 }
 
 /**
- * Drops and recreates `eval_<arm>`, then migrates it to the current schema
+ * Creates `eval_<arm>`, refusing existing databases, then migrates it
  * — the same drop, create, migrate recipe `bun run db:test:reset` uses for
  * `algo_test`, parameterized by arm name so every arm gets its own database.
  */
 export function bootstrapArmSchema(arm: string): void {
 	const name = armDatabaseName(arm);
-	runOrThrow("dropdb", [
-		"--if-exists",
-		"-h",
-		"localhost",
-		"-p",
-		"5432",
-		"-U",
-		"postgres",
-		name,
-	]);
 	runOrThrow("createdb", [
 		"-h",
 		"localhost",
@@ -111,7 +103,7 @@ async function seedOneTrial(
 	profile: (typeof ARM_SEED_PROFILES)[number],
 	trialIndex: number,
 ): Promise<SeededTrial> {
-	const label = `${profile.organizationName}-t${trialIndex}`;
+	const label = `${profile.organizationName}-t${trialIndex}-${crypto.randomUUID().slice(0, 8)}`;
 	const signedUp = await auth.api.signUpEmail({
 		body: {
 			name: label,
@@ -185,4 +177,17 @@ export function seedArmProfiles(
 	trials: number,
 ): Promise<SeededTrial[]> {
 	return seedProfilesAt(armDatabaseUrl(arm), trials);
+}
+
+export async function seedCase(
+	databaseUrl: string,
+	profile: (typeof ARM_SEED_PROFILES)[number],
+): Promise<SeededTrial> {
+	const client = postgres(databaseUrl, { max: 1 });
+	try {
+		const connection = drizzle(client, { schema });
+		return await seedOneTrial(buildArmAuth(connection), connection, profile, 0);
+	} finally {
+		await client.end();
+	}
 }

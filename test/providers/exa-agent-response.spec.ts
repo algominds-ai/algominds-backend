@@ -1,10 +1,10 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { afterEach, describe, expect, it } from "vitest";
-import sourceCheck from "../../exports/company-cycle-2026-09-06/agent-source-check-1788692725167.json";
 import { CostLedger } from "../../src/core/cost";
 import { getAgentRun } from "../../src/core/providers/exa/agent";
 import { exaContents } from "../../src/core/providers/exa/contents";
 import { pollAgentRun } from "../../src/workflows/agent-poll";
+import sourceCheck from "../fixtures/company/agent-source.json";
 import emptyRun from "../fixtures/exa-agent-run-empty.json";
 import runningRun from "../fixtures/exa-agent-run-running.json";
 import shortArticle from "../fixtures/exa-contents-short-article.json";

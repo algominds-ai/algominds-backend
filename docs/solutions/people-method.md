@@ -51,22 +51,18 @@ Raw Search requests and normalized responses, native grounding, purchases, Agent
 
 Companies and purchases remain sequential so cumulative spend writes cannot overwrite each other. Search reuses the durable purchase/bank steps. A reported Search charge is recorded even when its response is malformed. Unknown Search billing retains a $0.05 reservation in evidence and stops further purchases; it is not reported as a free failure. Known-cost malformed responses can use Agent fallback.
 
-Agent start, polling, cancellation and settlement reuse the existing lifecycle. Each medium fallback requires $0.10 admission room. Ordinary paid steps retain their $0.05 admission allowance. The default configured $2 ceiling is shared across the entire workflow, with the account daily ceiling also enforced. The user-authorized Ondato probe disables both ceilings only in its isolated source snapshot; it still records actual charges and Clay quota.
+Agent start, polling, cancellation and settlement reuse the existing lifecycle. Each medium fallback requires $0.10 admission room. Ordinary paid steps retain their $0.05 admission allowance. The default configured $2 ceiling is shared across the entire workflow, with the account daily ceiling also enforced.
 
 Missing, duplicate, foreign and malformed outputs stay visible in coverage. Completed unresolved decisions count as checked; missing fallback decisions do not. Budget exhaustion and provider pagination limits remain capped/incomplete. Finishing a finite roster never proves discovery of every employee.
 
-## Evidence behind the change
+## Evaluation
 
-The earlier September 13 experiment on ten frozen, harder companies reported 19 supported people across eight companies and recovery of all 14 reference buyers. Its reported panel score was `10 × strict precision × company coverage = 8.0`. Later independent public-source reviews disagreed on one person's buyer fit: the current employer describes core payment-domain responsibility, while current reporting also describes platform and infrastructure hiring. That disputed label means the historical score is not current proof of an 8.0-quality engine.
+Use the independent people suite described in [Engine evals](eval.md). It runs
+through authenticated API calls with fresh accounts, retains evidence and costs,
+and provides focused prefilter and verification cases. Frozen company panels and
+dated reference buyers live in `eval/people/cases.json`.
 
-That experiment combined cached iterations. The source gate rejected provider-generated directory corroboration, recovered eligible founders that preliminary selection had missed, and withheld a stale CEO claim contradicted by the employer's current role page. Independent follow-up also found that an older Server At Work COO announcement referred to someone now at another employer.
-
-The production replacement is validated separately through authenticated `POST /people/find`, the real local Cloudflare Workflow runtime, paginated `GET /runs/:id/people`, and persisted evidence. The probe freezes source/configuration, uses isolated local data, retains zero-result companies and accounts for provider charges and prepaid Clay records. Hosted scheduling and production Hyperdrive require deployment validation.
-
-The completed mixed-batch fourteen-company baseline scored 5.96/10. The seniority-batched run was stopped after nine completed companies to close the task promptly: both independent audits supported 19 of 26 delivered people, across seven companies. Its partial-sample score is 5.68/10, not a completed fourteen-company rating. All selected candidates were researched and all 39 accepted Agent jobs settled; these mechanical checks do not establish buyer quality. The run does not support an 8/10 or 9/10 claim. See `exports/people-engine-2026-09-13/RESULTS.md` for the paired comparison and limitations.
-
-Local evidence:
-
-- `exports/people-cycle-2026-09-12/HARD-PANEL-RESULTS.md`: experiment results, source labels, exact costs and limitations.
-- `exports/people-engine-2026-09-13/`: pre-change snapshot manifest, baseline gate, frozen API panels and direct API results.
-- `docs/solutions/people-probe/api-probe.ts`: actual HTTP probe; `--check` performs its offline input checks. The adjacent README documents the audit and scoring commands.
+Past probes exposed stale-employer claims, missed eligible founders and disputed
+buyer-fit labels. Their aggregate ratings are not proof of current engine quality.
+Compare repeated runs on the same cases and independently inspect source evidence.
+Hosted scheduling and production Hyperdrive still require deployment validation.

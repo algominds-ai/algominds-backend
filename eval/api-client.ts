@@ -11,13 +11,14 @@ const TERMINAL_STATUSES = new Set([
 
 export type ApiClient = { baseUrl: string; apiKey: string };
 
-async function request(
+export async function request(
 	client: ApiClient,
 	method: string,
 	path: string,
 	body?: unknown,
 ): Promise<unknown> {
 	const response = await fetch(`${client.baseUrl}${path}`, {
+		signal: AbortSignal.timeout(30_000),
 		method,
 		headers: {
 			"x-api-key": client.apiKey,
@@ -69,8 +70,10 @@ async function readStatus(
 	client: ApiClient,
 	runId: string,
 	opening: boolean,
+	signal: AbortSignal,
 ): Promise<string | null> {
 	const response = await fetch(`${client.baseUrl}/runs/${runId}`, {
+		signal,
 		headers: { "x-api-key": client.apiKey },
 	});
 	if (response.status === 404 && opening) return null;
@@ -89,10 +92,21 @@ export async function waitForRunTerminal(
 ): Promise<void> {
 	const deadline = Date.now() + ceilingSeconds * 1000;
 	const openingUntil = Date.now() + OPENING_GRACE_MS;
+	const signal = AbortSignal.timeout(ceilingSeconds * 1000);
 	while (Date.now() < deadline) {
-		const status = await readStatus(client, runId, Date.now() < openingUntil);
+		const status = await readStatus(
+			client,
+			runId,
+			Date.now() < openingUntil,
+			signal,
+		);
 		if (status !== null && TERMINAL_STATUSES.has(status)) return;
-		await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+		await new Promise((resolve) =>
+			setTimeout(
+				resolve,
+				Math.min(POLL_MS, Math.max(0, deadline - Date.now())),
+			),
+		);
 	}
 	throw new Error(
 		`eval: harness ceiling ${ceilingSeconds}s exceeded for run ${runId}`,

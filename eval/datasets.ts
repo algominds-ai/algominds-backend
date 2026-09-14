@@ -1,77 +1,44 @@
-import { readKeyFile } from "@eval/keys-io";
-import type { KeyFile } from "@eval/label-core";
-import { BRAINTRUST_PROJECT, profilesFor } from "@eval/profiles";
-import type { Dataset } from "braintrust";
+import { readFileSync } from "node:fs";
+import { CaseSchema, SuiteSchema } from "@eval/schema";
 import { initDataset } from "braintrust";
+import { z } from "zod";
 
-export type DatasetRow = {
-	id: string;
-	input: { domain: string };
-	expected: string | null;
-	metadata: { name: string | null; firstSeenRunId: string; lastSeenAt: string };
-};
-
-/**
- * One dataset row per company the key names, `id`ed by domain so a rerun
- * upserts the same row instead of duplicating it. `expected` carries the
- * label a human typed — a scorer input, never a model's output.
- */
-export function datasetRowsFor(key: KeyFile): DatasetRow[] {
-	return Object.entries(key.companies).map(([domain, entry]) => ({
-		id: domain,
-		input: { domain },
-		expected: entry.label,
-		metadata: {
-			name: entry.name,
-			firstSeenRunId: entry.firstSeenRunId,
-			lastSeenAt: entry.lastSeenAt,
-		},
-	}));
-}
-
-export function keyDatasetName(slug: string): string {
-	return `key-${slug}`;
-}
-
-export function openKeyDataset(slug: string): Dataset {
-	return initDataset({
-		project: BRAINTRUST_PROJECT,
-		dataset: keyDatasetName(slug),
+export async function syncSuite(suite: z.infer<typeof SuiteSchema>) {
+	const rows = z
+		.array(CaseSchema)
+		.min(1)
+		.parse(JSON.parse(readFileSync(`eval/${suite}/cases.json`, "utf8")));
+	if (rows.some((row) => row.input.suite !== suite))
+		throw new Error("eval: mixed suite cases");
+	if (new Set(rows.map((row) => row.id)).size !== rows.length)
+		throw new Error("eval: duplicate case ids");
+	const dataset = initDataset({
+		project: "algo-backend",
+		dataset: `${suite}-discovery`,
 	});
-}
-
-export type DatasetSyncResult = { datasetId: string; version: string | null };
-
-/**
- * Pushes `datasetRowsFor(key)` into `dataset`, upserted by domain. Takes the
- * open dataset as an argument rather than opening one itself, so the only
- * logic worth testing — `datasetRowsFor` — is tested without a live
- * Braintrust connection.
- */
-export async function syncKeyDataset(
-	dataset: Dataset,
-	key: KeyFile,
-): Promise<DatasetSyncResult> {
-	for (const row of datasetRowsFor(key)) dataset.insert(row);
+	for (const row of rows)
+		dataset.insert({
+			...row,
+			metadata: {
+				suite,
+				slug: row.input.slug,
+				referencePolicy: "dated independent lower bound",
+			},
+		});
 	await dataset.flush();
-	const [datasetId, version] = await Promise.all([
-		dataset.id,
-		dataset.version(),
-	]);
-	return { datasetId, version: version ?? null };
-}
-
-async function main(): Promise<void> {
-	const slug = process.argv[2] ?? null;
-	for (const profile of profilesFor(slug)) {
-		const key = readKeyFile(profile.slug, profile.icpId);
-		const result = await syncKeyDataset(openKeyDataset(profile.slug), key);
-		console.log(
-			`${profile.slug}: ${Object.keys(key.companies).length} rows synced to dataset ${result.datasetId}${result.version ? ` @ ${result.version}` : ""}`,
-		);
-	}
+	console.log(
+		JSON.stringify({
+			suite,
+			datasetId: await dataset.id,
+			version: await dataset.version(),
+			cases: rows.length,
+		}),
+	);
 }
 
 if (import.meta.main) {
-	await main();
+	const suites = process.argv[2]
+		? [SuiteSchema.parse(process.argv[2])]
+		: SuiteSchema.options;
+	for (const suite of suites) await syncSuite(suite);
 }

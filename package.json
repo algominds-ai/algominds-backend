@@ -21,12 +21,11 @@
 		"cf-typegen": "SFW_SHIM_DISABLE=1 wrangler types",
 		"gate": "SFW_SHIM_DISABLE=1 bun scripts/gate.mjs",
 		"eval": "bun eval/run.ts",
-		"eval:label": "bun eval/label.ts",
 		"eval:datasets": "bun eval/datasets.ts",
-		"eval:people": "bun eval/people-run.ts",
-		"eval:people:live": "bun eval/people-live.ts",
-		"eval:onboard": "bun eval/onboard-run.ts",
-		"schemas": "schemalint check-node --profile openai --source 'src/**/*.ts' --exclude 'src/core/providers/exa/*.ts' --exclude 'src/http/schemas.ts' --config package.json --format human"
+		"eval:people": "bun eval/run.ts people",
+		"schemas": "schemalint check-node --profile openai --source 'src/**/*.ts' --exclude 'src/core/providers/exa/*.ts' --exclude 'src/http/schemas.ts' --config package.json --format human",
+		"eval:company": "bun eval/run.ts company",
+		"eval:onboarding": "bun eval/run.ts onboarding"
 	},
 	"dependencies": {
 		"@ai-sdk/mcp": "2.0.39",

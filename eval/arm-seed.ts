@@ -1,64 +1,11 @@
-import { PROFILES } from "@eval/profiles";
-import { type IcpDoc, IcpDocSchema } from "@/core/icp";
-import arisOutput from "../test/fixtures/onboarding/aris-company-boundary.json";
-import finalControlsInputs from "../test/fixtures/onboarding/final-controls-inputs.json";
-import form3Output from "../test/fixtures/onboarding/form3-candidate-final.json";
-import ondatoOutput from "../test/fixtures/onboarding/original-final.json";
-import realAccountsInputs from "../test/fixtures/onboarding/real-accounts-inputs.json";
+import cases from "@eval/company/cases.json";
+import { IcpDocSchema } from "@/core/icp";
 
-/** Historical arm JSON uses the removed pre-v1 schema and is unsupported. */
-export const UNSUPPORTED_LEGACY_ARM_SEEDS = Object.freeze(
-	PROFILES.map((profile) => profile.slug),
-);
-
-export type ArmSeedProfile = {
-	slug: string;
-	icpId: string;
-	organizationName: string;
-	doc: IcpDoc;
-};
-
-type CanonicalOutput = { output: unknown };
-
-const recordedInputs = [...realAccountsInputs, ...finalControlsInputs];
-
-function note(id: string): string {
-	const input = recordedInputs.find((entry) => entry.id === id);
-	if (!input?.note) throw new Error(`eval: missing exact note for ${id}`);
-	return input.note;
-}
-
-function canonical(input: CanonicalOutput, instructions: string): IcpDoc {
-	if (!input.output || typeof input.output !== "object") {
-		throw new Error("eval: recorded onboarding output is not an object");
-	}
-	return IcpDocSchema.parse({
-		...input.output,
-		version: 1,
-		extracted: true,
-		instructions,
-	});
-}
-
-const CANONICAL_BY_SLUG: ReadonlyMap<string, IcpDoc> = new Map([
-	["form3", canonical(form3Output, note("form3-candidate-final"))],
-	["aris", canonical(arisOutput, note("aris-candidate-final"))],
-	["ondato", canonical(ondatoOutput, note("original-final"))],
-]);
-
-/** Only recorded v1 outputs are runnable; legacy fixtures remain excluded. */
-export const ARM_SEED_PROFILES: readonly ArmSeedProfile[] = PROFILES.flatMap(
-	(profile) => {
-		const doc = CANONICAL_BY_SLUG.get(profile.slug);
-		return doc
-			? [
-					{
-						slug: profile.slug,
-						icpId: profile.icpId,
-						organizationName: `eval-${profile.slug}`,
-						doc,
-					},
-				]
-			: [];
-	},
-);
+export const ARM_SEED_PROFILES = cases
+	.filter((entry) => entry.input.stage === "engine")
+	.map(({ input }) => ({
+		slug: input.slug,
+		doc: IcpDocSchema.parse(input.profile),
+		icpId: input.slug,
+		organizationName: `eval-${input.slug}`,
+	}));

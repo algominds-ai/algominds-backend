@@ -1,6 +1,6 @@
 # What a fresh deploy needs
 
-Every unit is tested and the vendors are verified live. A fresh deploy needs
+A fresh deploy needs
 three things: the two Hyperdrive configurations, the four secrets-store
 secrets, and one migration run against the production database.
 
@@ -44,16 +44,11 @@ and its auth layer need. `wrangler dev` needs no separate step: it reads the
 local Postgres at `localhost:5432/algo` through the `localConnectionString`
 already set on both Hyperdrive bindings in `wrangler.jsonc`.
 
-## What is proven without a deploy
+## Local verification
 
-- Every vendor call, against live APIs. See `vendor-probe-findings.md`.
-- The full chain end to end, calling vendors directly: an ICP search returned
-  real seed fintech companies, a people search returned real decision makers with
-  current employment, and a LinkedIn URL resolved to a deliverable address, for
-  about $0.019 and one Findymail credit.
-- Every capability function, against injected fakes, across the test suite.
-- The full local stack, including real bindings and a real database: `wrangler
-  dev` against the local Postgres above, migrated with `bun run db:migrate`.
+Run `bun run gate` for the repository checks and Workers tests. Use the
+independent [engine evals](eval.md) for live provider and engine measurements.
+Passing tests does not establish current provider behavior or discovery quality.
 
 ## What only a deploy proves
 
