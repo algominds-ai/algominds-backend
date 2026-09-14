@@ -1,4 +1,0 @@
-See results at https://www.braintrust.dev/app/Algominds%20AI/p/algo-backend/experiments/0d844a4c976c-p2judge-form3-rescored
-form3: score 1.00 yield 5 coverage 5 buyer-precision 26/26 gates ok $1.66 560.727s
-rating 10.00
-eval: experiment https://www.braintrust.dev/app/Algominds%20AI/p/algo-backend/experiments/0d844a4c976c-p2judge-form3-rescored

@@ -1,2 +1,0 @@
-p2select2-dental  dental: score 0.00 yield 5 coverage 5 buyer-precision 36/45 gates FAIL $1.46 285.544s
-p2select2-carta  carta: score 0.00 yield 5 coverage 4 buyer-precision 4/6 gates FAIL $0.78 177.929s

@@ -1,2 +1,0 @@
-form3: score 0.00 yield 3 coverage 3 buyer-precision 9/27 gates FAIL $2.89 357.304s
-rating 0.00

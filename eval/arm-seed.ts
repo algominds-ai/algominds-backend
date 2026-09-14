@@ -1,10 +1,10 @@
 import { PROFILES } from "@eval/profiles";
 import { type IcpDoc, IcpDocSchema } from "@/core/icp";
-import arisOutput from "../exports/onboarding-cycle-2026-09-06/aris-company-boundary.json";
-import finalControlsInputs from "../exports/onboarding-cycle-2026-09-06/final-controls-inputs.json";
-import form3Output from "../exports/onboarding-cycle-2026-09-06/form3-candidate-final.json";
-import ondatoOutput from "../exports/onboarding-cycle-2026-09-06/original-final.json";
-import realAccountsInputs from "../exports/onboarding-cycle-2026-09-06/real-accounts-inputs.json";
+import arisOutput from "../test/fixtures/onboarding/aris-company-boundary.json";
+import finalControlsInputs from "../test/fixtures/onboarding/final-controls-inputs.json";
+import form3Output from "../test/fixtures/onboarding/form3-candidate-final.json";
+import ondatoOutput from "../test/fixtures/onboarding/original-final.json";
+import realAccountsInputs from "../test/fixtures/onboarding/real-accounts-inputs.json";
 
 /** Historical arm JSON uses the removed pre-v1 schema and is unsupported. */
 export const UNSUPPORTED_LEGACY_ARM_SEEDS = Object.freeze(

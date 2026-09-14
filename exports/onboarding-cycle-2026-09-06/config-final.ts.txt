@@ -1,2 +1,0 @@
-import base from "../../vitest.onboard-live.config";
-export default {...base, test:{...base.test,include:[".claude/onboarding-cycle/probe.ts"]}};
