@@ -118,7 +118,7 @@ describe("the round saves the judge's exact input before it calls the model", ()
 		const harness = fakeWorkflowStep(
 			new Map([
 				[
-					`round_${ROUND}-judge-0`,
+					`round_${ROUND}-judge-0-attempt-1`,
 					{
 						outcome: { status: "completed", output: { verdicts: [] } },
 						costEntries: [],
@@ -165,8 +165,8 @@ describe("the round saves the judge's exact input before it calls the model", ()
 		});
 		const harness = fakeWorkflowStep(
 			new Map<string, unknown>([
-				[`round_${ROUND}-judge-0`, cached(0)],
-				[`round_${ROUND}-judge-4`, cached(0)],
+				[`round_${ROUND}-judge-0-attempt-1`, cached(0)],
+				[`round_${ROUND}-judge-4-attempt-1`, cached(0)],
 			]),
 		);
 		try {
@@ -176,7 +176,7 @@ describe("the round saves the judge's exact input before it calls the model", ()
 				testEnv,
 			);
 			expect(result.verdicts.map((verdict) => verdict.index)).toEqual([0, 4]);
-			expect(harness.calls).toContain(`round_${ROUND}-judge-4`);
+			expect(harness.calls).toContain(`round_${ROUND}-judge-4-attempt-1`);
 		} finally {
 			await deleteEvidenceFor(runId);
 		}
@@ -190,14 +190,14 @@ describe("the round saves the judge's exact input before it calls the model", ()
 		const harness = fakeWorkflowStep(
 			new Map<string, unknown>([
 				[
-					`round_${ROUND}-judge-0`,
+					`round_${ROUND}-judge-0-attempt-1`,
 					{
 						outcome: { status: "completed", output: { verdicts: [] } },
 						costEntries: [{ provider: "test", op: "judge", dollars: 0.01 }],
 					},
 				],
 				[
-					`round_${ROUND}-judge-4`,
+					`round_${ROUND}-judge-4-attempt-1`,
 					new PartialSpendError(0.02, new Error("slice failed")),
 				],
 			]),
@@ -206,8 +206,8 @@ describe("the round saves the judge's exact input before it calls the model", ()
 			await expect(
 				judgeDepsFor(runId, harness)(requirements(), rows, testEnv),
 			).rejects.toMatchObject({ costDollars: 0.03 });
-			expect(harness.calls).toContain(`round_${ROUND}-judge-0`);
-			expect(harness.calls).toContain(`round_${ROUND}-judge-4`);
+			expect(harness.calls).toContain(`round_${ROUND}-judge-0-attempt-1`);
+			expect(harness.calls).toContain(`round_${ROUND}-judge-4-attempt-1`);
 		} finally {
 			await deleteEvidenceFor(runId);
 		}

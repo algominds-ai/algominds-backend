@@ -116,6 +116,48 @@ export function fakeRetryingWorkflowStep(): FakeRetryingWorkflowStep {
 	return { step, calls };
 }
 
+export type FakeReplayingWorkflowStep = { step: WorkflowStep; calls: string[] };
+
+/**
+ * A `WorkflowStep` whose resolved results live in a durable log, the way
+ * Cloudflare's engine replays them: a callback runs once per name ever, the
+ * first sight of each sleep throws a restart to end that engine lifetime, and
+ * a re-run reads recorded results and sleeps without re-running callbacks.
+ */
+export function fakeReplayingWorkflowStep(): FakeReplayingWorkflowStep {
+	const recorded = new Map<string, unknown>();
+	const calls: string[] = [];
+	const step: WorkflowStep = {
+		do: async (name, second, third) => {
+			const key = `do:${name}`;
+			if (recorded.has(key)) return recorded.get(key);
+			const callback = typeof second === "function" ? second : third;
+			if (typeof callback !== "function") {
+				throw new Error(`fake step: no callback for ${name}`);
+			}
+			calls.push(name);
+			const result: unknown = await callback({
+				step: { name, count: 0 },
+				attempt: 1,
+				config: {},
+			});
+			recorded.set(key, result);
+			return result;
+		},
+		sleep: async (name: string) => {
+			const key = `sleep:${name}`;
+			if (recorded.has(key)) return;
+			recorded.set(key, true);
+			throw new Error("the workflow engine restarted");
+		},
+		sleepUntil: async () => undefined,
+		waitForEvent: async () => {
+			throw new Error("fake step: waitForEvent not implemented");
+		},
+	};
+	return { step, calls };
+}
+
 export type RunLookup = {
 	get: (id: string) => Promise<{ status: () => Promise<{ status: string }> }>;
 };

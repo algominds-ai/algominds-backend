@@ -104,7 +104,7 @@ describe("a round whose judge gives up never re-runs the round's own synthesize"
 		await expect(runRound()).rejects.toThrow();
 
 		expect(
-			calls.filter((name) => name === `round_${round}-synthesize`),
+			calls.filter((name) => name.startsWith(`round_${round}-synthesize`)),
 		).toHaveLength(1);
 	});
 });

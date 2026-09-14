@@ -84,17 +84,20 @@ async function runAngle(
 				env,
 			),
 	);
-	await step.do(`${name}-start-evidence`, config.stepConfig.databaseCall, () =>
-		appendEvidence(env, [
-			agentRunEvidenceRow(runId, {
-				id,
-				angle: plan.angle,
-				effort: plan.agentEffort,
-			}),
-		]),
-	);
 	const angleLedger = new CostLedger();
 	try {
+		await step.do(
+			`${name}-start-evidence`,
+			config.stepConfig.databaseCall,
+			() =>
+				appendEvidence(env, [
+					agentRunEvidenceRow(runId, {
+						id,
+						angle: plan.angle,
+						effort: plan.agentEffort,
+					}),
+				]),
+		);
 		const output = await pollAgentRun(
 			{
 				env,
