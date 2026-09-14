@@ -62,12 +62,15 @@ async function seedOwnedIcp(label: string): Promise<string> {
 	return icpRow.id;
 }
 
-async function seedCompaniesRun(label: string): Promise<string> {
+async function seedCompaniesRun(
+	label: string,
+	icpId: string | null = null,
+): Promise<string> {
 	const runId = `companies_${label}-${crypto.randomUUID()}`;
 	await openRun(testEnv, {
 		id: runId,
 		organizationId: CALLER_ORGANIZATION_ID,
-		icpId: null,
+		icpId,
 		capability: "companies",
 		status: "complete",
 	});

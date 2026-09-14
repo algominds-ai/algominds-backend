@@ -53,7 +53,12 @@ async function loadProfile(
 			`findPeople: icp ${icpId} does not belong to organization ${organizationId}`,
 		);
 	}
-	return IcpDocSchema.parse(icpRow.doc);
+	const parsed = IcpDocSchema.safeParse(icpRow.doc);
+	if (!parsed.success)
+		throw new NonRetryableError(
+			"findPeople: legacy profile; onboard again with the original instructions",
+		);
+	return parsed.data;
 }
 
 /** Clamps a target company list to the caller's own `maxCompanies` and the single account-wide `limits.maxCompaniesPerPeopleRun` ceiling, whichever is smaller. */
@@ -142,7 +147,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
-				status: "complete",
+				status: loop.capped ? "capped" : "complete",
 				costDollars: loop.costDollars,
 			}),
 		);

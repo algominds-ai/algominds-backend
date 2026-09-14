@@ -23,7 +23,7 @@ import {
 	evidence,
 	type icp,
 	normalizeDomain,
-	person,
+	type person,
 	round,
 	type run,
 } from "@/core/db/schema";
@@ -101,16 +101,6 @@ interface AppendConnection<TTable, TNewRow, TRow> {
 		values(row: TNewRow): AppendChain<TRow>;
 		values(rows: TNewRow[]): AppendChain<TRow>;
 	};
-}
-
-export interface DeleteTransaction {
-	delete(table: typeof evidence | typeof person): {
-		where(condition: SQL | undefined): Promise<never[]>;
-	};
-}
-
-export interface TransactableConnection {
-	transaction<T>(fn: (tx: DeleteTransaction) => Promise<T>): Promise<T>;
 }
 
 export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
@@ -297,27 +287,6 @@ export async function latestEvidence(
 			.limit(1),
 	);
 	return rows[0];
-}
-
-/** Deletes a person and every evidence row recorded for them, in one transaction. */
-export async function deletePerson(
-	env: DbEnv,
-	personId: string,
-	buildDb: DbFactory<TransactableConnection> = db,
-): Promise<void> {
-	await withConnection(env, "cached", buildDb, (connection) =>
-		connection.transaction(async (tx) => {
-			await tx
-				.delete(evidence)
-				.where(
-					and(
-						eq(evidence.subjectType, "person"),
-						eq(evidence.subjectId, personId),
-					),
-				);
-			await tx.delete(person).where(eq(person.id, personId));
-		}),
-	);
 }
 
 export {

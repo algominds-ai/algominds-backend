@@ -5,6 +5,7 @@ import { config } from "@/config";
 import { toBatches } from "@/core/batches";
 import {
 	assertUnderDailyCeiling,
+	closeErroredRun,
 	closeRun,
 	findRun,
 	openRun,
@@ -31,6 +32,20 @@ export class EnrichWorkflow extends WorkflowEntrypoint<
 	EnrichWorkflowParams
 > {
 	override async run(
+		event: WorkflowEvent<EnrichWorkflowParams>,
+		step: WorkflowStep,
+	): Promise<EnrichWorkflowResult> {
+		try {
+			return await this.runToCompletion(event, step);
+		} catch (error) {
+			await step.do("close-errored", config.stepConfig.databaseCall, () =>
+				closeErroredRun(this.env, event.instanceId),
+			);
+			throw error;
+		}
+	}
+
+	private async runToCompletion(
 		event: WorkflowEvent<EnrichWorkflowParams>,
 		step: WorkflowStep,
 	): Promise<EnrichWorkflowResult> {

@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import type { z } from "zod";
+import { companiesForDomains } from "@/core/db/company-domains";
+import { findRun } from "@/core/db/queries";
 import type { ApiEnv } from "@/http/auth";
 import { requireApiKey } from "@/http/auth";
 import type { Job } from "@/http/jobs";
 import {
 	domainsScopeId,
 	getIcp,
+	isLegacyProfile,
+	legacyProfileResponse,
 	onboardScopeId,
 	resolveIcpId,
 	startJob,
@@ -25,6 +29,7 @@ import {
 
 type PeopleFindBody = z.infer<typeof peopleFindSchema>;
 type DomainsPeopleFindBody = Extract<PeopleFindBody, { domains: unknown }>;
+type CompaniesFindBody = z.infer<typeof companiesFindSchema>;
 
 /**
  * The job for a `domains` find-people request: the profile named by `icpId`
@@ -36,20 +41,62 @@ async function domainsPeopleJob(
 	body: DomainsPeopleFindBody,
 	organizationId: string,
 	scopeId: string,
-): Promise<Job | null> {
-	const icpId =
-		body.icpId === undefined
-			? null
-			: await resolveIcpId(env, { icpId: body.icpId }, organizationId);
-	if (body.icpId !== undefined && icpId === null) return null;
+): Promise<Job | Response | null> {
+	if (body.icpId !== undefined) {
+		const resolved = await resolveIcpId(
+			env,
+			{ icpId: body.icpId },
+			organizationId,
+		);
+		if (resolved === null) return null;
+		if (resolved.legacy) return legacyProfileResponse();
+		return {
+			scopeId,
+			params: {
+				domains: body.domains,
+				maxCompanies: body.maxCompanies,
+				target: body.target,
+				icpId: resolved.id,
+				organizationId,
+			},
+		};
+	}
+	const matches = await companiesForDomains(env, body.domains, organizationId);
+	const profileIds = new Set(matches.map((row) => row.icpId));
+	const shared = profileIds.size === 1 ? (matches[0]?.icpId ?? null) : null;
+	if (await isLegacyProfile(env, shared, organizationId))
+		return legacyProfileResponse();
 	return {
 		scopeId,
 		params: {
 			domains: body.domains,
 			maxCompanies: body.maxCompanies,
 			target: body.target,
-			icpId: icpId ?? undefined,
 			organizationId,
+		},
+	};
+}
+
+/** The job for a find-companies request: the resolved profile scopes it, and a legacy one is refused before a run starts. */
+async function companiesFindJob(
+	body: CompaniesFindBody,
+	env: Env,
+	organizationId: string,
+): Promise<Job | Response | null> {
+	const resolved = await resolveIcpId(env, body, organizationId);
+	if (resolved === null) return null;
+	if (resolved.legacy) return legacyProfileResponse();
+	const icpId = resolved.id;
+	const scopeId = body.excludeDomains
+		? await domainsScopeId(body.excludeDomains, icpId)
+		: icpId;
+	return {
+		scopeId,
+		icpId,
+		params: {
+			icpId,
+			count: body.count,
+			...(body.excludeDomains ? { excludeDomains: body.excludeDomains } : {}),
 		},
 	};
 }
@@ -63,24 +110,7 @@ export function createApiRoutes(): Hono<ApiEnv> {
 		startJob(c, companiesFindSchema, {
 			capability: "companies",
 			workflow: c.env.FIND_COMPANIES,
-			toJob: async (body, env) => {
-				const icpId = await resolveIcpId(env, body, c.get("organizationId"));
-				if (icpId === null) return null;
-				const scopeId = body.excludeDomains
-					? await domainsScopeId(body.excludeDomains, icpId)
-					: icpId;
-				return {
-					scopeId,
-					icpId,
-					params: {
-						icpId,
-						count: body.count,
-						...(body.excludeDomains
-							? { excludeDomains: body.excludeDomains }
-							: {}),
-					},
-				};
-			},
+			toJob: companiesFindJob,
 		}),
 	);
 
@@ -94,6 +124,9 @@ export function createApiRoutes(): Hono<ApiEnv> {
 					organizationId,
 				);
 				if ("runId" in body) {
+					const source = await findRun(env, body.runId);
+					if (await isLegacyProfile(env, source?.icpId ?? null, organizationId))
+						return legacyProfileResponse();
 					return {
 						scopeId,
 						sourceRunId: body.runId,

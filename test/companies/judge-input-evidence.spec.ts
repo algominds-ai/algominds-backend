@@ -116,7 +116,15 @@ describe("the round saves the judge's exact input before it calls the model", ()
 		const runId = `judge-input-test-${crypto.randomUUID()}`;
 		const domain = `judge-input-co-${crypto.randomUUID()}.example`;
 		const harness = fakeWorkflowStep(
-			new Map([[`round_${ROUND}-judge-0`, { verdicts: [], costEntries: [] }]]),
+			new Map([
+				[
+					`round_${ROUND}-judge-0`,
+					{
+						outcome: { status: "completed", output: { verdicts: [] } },
+						costEntries: [],
+					},
+				],
+			]),
 		);
 		const judge = judgeDepsFor(runId, harness);
 
@@ -147,13 +155,12 @@ describe("the round saves the judge's exact input before it calls the model", ()
 			companyRow(`slice-${index}.example`),
 		);
 		const cached = (index: number) => ({
-			verdicts: [
-				{
-					index,
-					statuses: [],
-					reason: "cached",
+			outcome: {
+				status: "completed",
+				output: {
+					verdicts: [{ index, statuses: [], reason: "cached" }],
 				},
-			],
+			},
 			costEntries: [],
 		});
 		const harness = fakeWorkflowStep(
@@ -185,7 +192,7 @@ describe("the round saves the judge's exact input before it calls the model", ()
 				[
 					`round_${ROUND}-judge-0`,
 					{
-						verdicts: [],
+						outcome: { status: "completed", output: { verdicts: [] } },
 						costEntries: [{ provider: "test", op: "judge", dollars: 0.01 }],
 					},
 				],

@@ -41,6 +41,7 @@ export type JudgeOptions = {
 	evidenceByRow?: EvidenceByRow;
 	today?: string;
 	profile?: IcpDoc;
+	ledger?: CostLedger;
 };
 
 const JUDGE_INSTRUCTIONS = [
@@ -188,7 +189,7 @@ export async function judge(
 	options: JudgeOptions = {},
 ): Promise<JudgeResult> {
 	const evidenceByRow = options.evidenceByRow ?? new Map();
-	const ledger = new CostLedger();
+	const ledger = options.ledger ?? new CostLedger();
 	const ctx: JudgeContext = {
 		requirements,
 		env,
