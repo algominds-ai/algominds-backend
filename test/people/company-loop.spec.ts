@@ -1,5 +1,6 @@
 import { env as testEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it } from "vitest";
+import { config } from "@/config";
 import { CostLedger } from "@/core/cost";
 import { findRun, saveRunCompanies } from "@/core/db/queries";
 import { resolveBuyer } from "@/core/people/buyer";
@@ -222,7 +223,8 @@ describe("people company settlement", () => {
 		const ctx = await context("ceiling");
 		const vendors = fakePeopleVendors(rows);
 		globalThis.fetch = vendors.fetch;
-		const result = await runCompanies(ctx, [company], 2);
+		const { perRunDollars } = config.spend;
+		const result = await runCompanies(ctx, [company], perRunDollars);
 		expect(result.companiesSearched).toBe(0);
 		expect(result.capped).toBe(true);
 		expect(vendors.calls).toHaveLength(0);

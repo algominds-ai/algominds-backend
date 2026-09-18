@@ -47,14 +47,14 @@ export const config = {
 		exaAgentMaxPollAttempts: 24,
 	},
 	spend: {
-		perRunDollars: 2,
+		perRunDollars: 10,
 		perAccountDailyDollars: 50,
 	},
 	judge: {
 		cacheTtlSeconds: 86400,
 	},
 	model: {
-		timeoutMs: 90000,
+		timeoutMs: 240000,
 	},
 	stepConfig: {
 		paidCall: {
