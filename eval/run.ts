@@ -19,6 +19,22 @@ import { z } from "zod";
 
 type Options = ReturnType<typeof options>;
 
+const TERMINAL_OUTCOMES: ReadonlySet<string> = new Set([
+	"complete",
+	"capped",
+	"empty",
+	"short",
+	"exhausted",
+]);
+
+function shouldHalt(output: Output): boolean {
+	return (
+		output.error !== null ||
+		output.costDollars === null ||
+		!TERMINAL_OUTCOMES.has(output.status)
+	);
+}
+
 async function loadCases(args: Options) {
 	if (args.local) {
 		const text = readFileSync(`eval/${args.suite}/cases.json`, "utf8");
@@ -116,11 +132,7 @@ function taskFor(
 			args.codeOnly || input.stage !== "engine",
 		);
 		spent += (output.costDollars ?? 0) + (output.verificationCostDollars ?? 0);
-		halted = [
-			output.error !== null,
-			output.status !== "complete",
-			output.costDollars === null,
-		].some(Boolean);
+		halted = shouldHalt(output);
 		currentSpan().log({
 			metrics: {
 				...(output.costDollars !== null

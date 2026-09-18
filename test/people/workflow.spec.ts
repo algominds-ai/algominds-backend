@@ -110,6 +110,44 @@ describe("FindPeopleWorkflow", () => {
 	});
 });
 
+describe("a company whose purchases fail partway through the loop", () => {
+	it("closes the run as capped rather than complete", async () => {
+		const org = await seedOrganization("people-capped");
+		const id = `people_capped_${crypto.randomUUID()}`;
+		instances.push(id);
+		const instance = await introspectWorkflowInstance(testEnv.FIND_PEOPLE, id);
+		const domain = `capped-${crypto.randomUUID()}.example`;
+		try {
+			await instance.modify(async (m) => {
+				await m.mockStepResult(
+					{ name: "load-companies" },
+					{
+						companies: [bareCompany(domain)],
+						icpId: null,
+						unknownDomains: [],
+					},
+				);
+				await m.mockStepError(
+					{ name: `people-${domain}-company-context` },
+					new NonRetryableError("the vendor refuses the request"),
+				);
+			});
+			await testEnv.FIND_PEOPLE.create({
+				id,
+				params: { domains: [domain], organizationId: org.id },
+			});
+			await instance.waitForStatus("complete");
+			const row = await findRun(testEnv, id);
+			expect(row?.status).toBe("capped");
+			expect(row?.finishedAt).toBeInstanceOf(Date);
+			expect(await instance.getOutput()).toMatchObject({ capped: true });
+		} finally {
+			await instance.dispose();
+			await wipeOrganizations([org.id]);
+		}
+	});
+});
+
 describe("workflow failure closure", () => {
 	it("closes the run as errored when an opened workflow cannot continue", async () => {
 		const org = await seedOrganization("people-workflow-error");

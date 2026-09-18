@@ -194,13 +194,15 @@ function toBounds(
  * Turns the profile's requirements, the angles already tried, and the previous
  * round's reject reasons into one route and its angles, each with the numeric
  * limits applied to the records that come back. Falls back to the profile text
- * when the model produces nothing usable twice in a row.
+ * when the model produces nothing usable twice in a row. `ledger` accumulates
+ * the model call's reported spend; pass the caller's own so a failed attempt's
+ * cost is not lost with this call's.
  */
 export async function synthesize(
 	input: SynthesizeInput,
 	env: Env,
+	ledger: CostLedger = new CostLedger(),
 ): Promise<SynthesizeResult> {
-	const ledger = new CostLedger();
 	const output = await generateStructured(
 		{
 			model: await reasoningModel(env),

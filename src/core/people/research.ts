@@ -155,7 +155,7 @@ export function peopleSearchRequest(candidate: Candidate): ExaSearchRequest {
 		z.toJSONSchema(SearchPersonSchema);
 	return {
 		query: `Verify this exact person as of ${new Date().toISOString().slice(0, 10)}. Context: ${JSON.stringify({ candidate })}`,
-		type: "deep",
+		type: "auto",
 		numResults: 10,
 		contents: { highlights: true },
 		outputSchema: z.json().parse(outputSchema),

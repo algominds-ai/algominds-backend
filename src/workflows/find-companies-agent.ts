@@ -10,16 +10,24 @@ import type { RequirementEvidence } from "@/core/companies/judge-evidence";
 import { retrieveCompanyEvidence } from "@/core/companies/proof";
 import { backfillRecords } from "@/core/companies/record";
 import type { RoundTiming } from "@/core/companies/rows";
-import { agentRunEvidenceRow } from "@/core/companies/rows";
-import { addPartialSpend, CostLedger } from "@/core/cost";
+import {
+	agentRunEvidenceRow,
+	agentRunSettleEvidenceRow,
+} from "@/core/companies/rows";
+import { addPartialSpend, CostLedger, purchase } from "@/core/cost";
 import { appendEvidence, recentDomains } from "@/core/db/queries";
 import type { ExaAgentCompany } from "@/core/providers/exa/agent";
-import { getAgentRun, startAgentRun } from "@/core/providers/exa/agent";
+import {
+	cancelAgentRun,
+	getAgentRun,
+	startAgentRun,
+} from "@/core/providers/exa/agent";
 import type { ExaResult } from "@/core/providers/exa/search";
 import { search } from "@/core/providers/exa/search";
 import type { IcpDoc, SearchPlan } from "@/core/synthesize";
 import { synthesize } from "@/core/synthesize";
 import { applyCostEntries, pollAgentRun } from "@/workflows/agent-poll";
+import { durablePurchase } from "@/workflows/durable-purchase";
 import { steppedJudge } from "@/workflows/find-companies-judge";
 
 const POLL_INTERVAL_SECONDS = config.companies.exaAgentPollIntervalSeconds;
@@ -76,31 +84,104 @@ async function runAngle(
 				env,
 			),
 	);
-	await step.do(`${name}-start-evidence`, config.stepConfig.databaseCall, () =>
-		appendEvidence(env, [
-			agentRunEvidenceRow(runId, {
+	const angleLedger = new CostLedger();
+	try {
+		await step.do(
+			`${name}-start-evidence`,
+			config.stepConfig.databaseCall,
+			() =>
+				appendEvidence(env, [
+					agentRunEvidenceRow(runId, {
+						id,
+						angle: plan.angle,
+						effort: plan.agentEffort,
+					}),
+				]),
+		);
+		const output = await pollAgentRun(
+			{
+				env,
+				step,
+				name,
 				id,
-				angle: plan.angle,
-				effort: plan.agentEffort,
+				intervalSeconds: scaledPollIntervalSeconds(anglesInFlight),
+				maxAttempts: MAX_POLL_ATTEMPTS,
+			},
+			angleLedger,
+			async (pollLedger) => {
+				const run = await getAgentRun(id, env, pollLedger);
+				return run.status === "completed"
+					? { status: "completed", output: run.companies }
+					: run;
+			},
+		);
+		applyCostEntries(angleLedger.toJSON().entries, ledger);
+		return output;
+	} catch (error) {
+		applyCostEntries(angleLedger.toJSON().entries, ledger);
+		await settleAgentRun(
+			{ step, name, id, runId, env },
+			ledger,
+			angleLedger.total(),
+		).catch(() => undefined);
+		throw error;
+	}
+}
+
+type SettleInput = {
+	step: WorkflowStep;
+	name: string;
+	id: string;
+	runId: string;
+	env: Env;
+};
+
+/**
+ * Cancels a paid Exa agent run its failed poll left behind, re-reading the
+ * settlement up to three times so the run's final charge lands in `ledger`
+ * rather than disappearing with it. Records an `agent-run-settle` evidence
+ * row either way, with `billingUnknown` when no terminal cost could be read.
+ */
+async function settleAgentRun(
+	input: SettleInput,
+	ledger: CostLedger,
+	billed: number,
+): Promise<void> {
+	const { step, name, id, runId, env } = input;
+	let settled: { status: string; costDollars: number | null } | null = null;
+	let resolved = false;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		const result = await step.do(
+			`${name}-settle-${attempt}`,
+			config.stepConfig.paidCall,
+			() =>
+				purchase(async () => ({
+					value: await cancelAgentRun(id, env, attempt === 0),
+					costDollars: 0,
+				})),
+		);
+		settled = result.value ?? settled;
+		const cost = result.value?.costDollars;
+		if (cost !== null && cost !== undefined && cost > billed) {
+			ledger.reported("exa", "agent", cost - billed);
+			billed = cost;
+		}
+		if (result.value?.terminal && result.value.costDollars !== null) {
+			resolved = true;
+			break;
+		}
+		if (attempt < 2)
+			await step.sleep(`${name}-settle-wait-${attempt}`, "5 seconds");
+	}
+	await step.do(`${name}-settle-evidence`, config.stepConfig.databaseCall, () =>
+		appendEvidence(env, [
+			agentRunSettleEvidenceRow(runId, {
+				id,
+				status: settled?.status ?? null,
+				costDollars: settled?.costDollars ?? null,
+				billingUnknown: !resolved,
 			}),
 		]),
-	);
-	return pollAgentRun(
-		{
-			env,
-			step,
-			name,
-			id,
-			intervalSeconds: scaledPollIntervalSeconds(anglesInFlight),
-			maxAttempts: MAX_POLL_ATTEMPTS,
-		},
-		ledger,
-		async (pollLedger) => {
-			const run = await getAgentRun(id, env, pollLedger);
-			return run.status === "completed"
-				? { status: "completed", output: run.companies }
-				: run;
-		},
 	);
 }
 export function agentFanout(
@@ -135,23 +216,24 @@ export function steppedBackfill(
 	round: number,
 ): FindCompaniesDeps["backfill"] {
 	return async (domains, env, ledger) => {
-		const cached = await step.do(
-			`round_${round}-backfill`,
-			config.stepConfig.paidCall,
-			async () => {
-				const stepLedger = new CostLedger();
+		const settled = await durablePurchase(
+			{
+				step,
+				name: `round_${round}-backfill`,
+				budget: "paidCall",
+				ledger,
+			},
+			async (stepLedger) => {
 				const filled = await backfillRecords(domains, env, stepLedger);
 				return {
 					filled: filled.map((entry) => ({
 						domain: entry.domain,
 						record: entry.record ? JSON.stringify(entry.record) : null,
 					})),
-					costEntries: stepLedger.toJSON().entries,
 				};
 			},
 		);
-		applyCostEntries(cached.costEntries, ledger);
-		return cached.filled.map((entry) => ({
+		return settled.filled.map((entry) => ({
 			domain: entry.domain,
 			record: entry.record ? readExaResult(entry.record) : null,
 		}));
@@ -176,34 +258,31 @@ export function steppedEvidence(
 	round: number,
 ): FindCompaniesDeps["retrieveEvidence"] {
 	return async (input, env, ledger) => {
-		const cached = await step.do(
-			`round_${round}-evidence`,
-			config.stepConfig.paidCall,
-			async () => {
-				const stepLedger = new CostLedger();
-				try {
-					const result = await retrieveCompanyEvidence(input, env, stepLedger);
-					return {
-						evidenceByRow: [...result.evidenceByRow.entries()].map(
-							([index, evidence]) => [index, [...evidence.entries()]] as const,
-						),
-						pages: result.pages,
-						costEntries: stepLedger.toJSON().entries,
-					};
-				} catch (error) {
-					throw addPartialSpend(error, stepLedger.total());
-				}
+		const settled = await durablePurchase(
+			{
+				step,
+				name: `round_${round}-evidence`,
+				budget: "paidCall",
+				ledger,
+			},
+			async (stepLedger) => {
+				const result = await retrieveCompanyEvidence(input, env, stepLedger);
+				return {
+					evidenceByRow: [...result.evidenceByRow.entries()].map(
+						([index, evidence]) => [index, [...evidence.entries()]] as const,
+					),
+					pages: result.pages,
+				};
 			},
 		);
-		applyCostEntries(cached.costEntries, ledger);
 		return {
 			evidenceByRow: new Map(
-				cached.evidenceByRow.map(([index, evidence]) => [
+				settled.evidenceByRow.map(([index, evidence]) => [
 					index,
 					new Map<string, RequirementEvidence>(evidence),
 				]),
 			),
-			pages: cached.pages,
+			pages: settled.pages,
 		};
 	};
 }
@@ -212,21 +291,24 @@ export function agentSynthesize(
 	round: number,
 ): FindCompaniesDeps["synthesize"] {
 	return async (input, env) => {
-		const cached = await step.do(
-			`round_${round}-synthesize`,
-			config.stepConfig.paidCall,
-			async () => {
-				const result = await synthesize(input, env);
-				return {
-					route: result.route,
-					plans: result.plans,
-					costEntries: result.ledger.toJSON().entries,
-				};
-			},
-		);
 		const ledger = new CostLedger();
-		applyCostEntries(cached.costEntries, ledger);
-		return { route: cached.route, plans: cached.plans, ledger };
+		try {
+			const settled = await durablePurchase(
+				{
+					step,
+					name: `round_${round}-synthesize`,
+					budget: "paidCall",
+					ledger,
+				},
+				async (stepLedger) => {
+					const result = await synthesize(input, env, stepLedger);
+					return { route: result.route, plans: result.plans };
+				},
+			);
+			return { route: settled.route, plans: settled.plans, ledger };
+		} catch (error) {
+			throw addPartialSpend(error, ledger.total());
+		}
 	};
 }
 export function agentRecentDomains(

@@ -83,4 +83,43 @@ describe("an angle banks the agent run it started before it can fail", () => {
 
 		await deleteEvidenceFor(runId);
 	});
+
+	it("settles the started run even when recording its start fails", async () => {
+		const runId = `agent-start-evidence-test-${crypto.randomUUID()}`;
+		globalThis.fetch = fakeExaAgentRun({ structured: { companies: [] } }).fetch;
+		const failing = fakeWorkflowStep(
+			new Map([
+				[
+					"round_1-angle_0-start-evidence",
+					new Error("the start evidence write failed"),
+				],
+			]),
+		);
+		const fanout = agentFanout({
+			step: failing.step,
+			round: 1,
+			remaining: 15,
+			today: "2026-08-30",
+			icp: profileFixture(),
+			runId,
+		});
+
+		await expect(
+			fanout(
+				[plan()],
+				[],
+				fakeSecretEnv({ EXA_API_KEY: "test-exa-key" }),
+				new CostLedger(),
+			),
+		).rejects.toThrow("the start evidence write failed");
+
+		const rows = await evidenceRowsFor(runId);
+		const settleRows = rows.filter((row) => row.kind === "agent-run-settle");
+		expect(settleRows).toHaveLength(1);
+		expect(JSON.parse(settleRows[0]?.value ?? "{}")).toMatchObject({
+			id: "run-0",
+		});
+
+		await deleteEvidenceFor(runId);
+	});
 });

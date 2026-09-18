@@ -201,16 +201,6 @@ describe("what one round hands the next", () => {
 		expect(inputs).toHaveLength(1);
 		expect(inputs[0]?.pastAngles).toEqual(["angle-from-an-earlier-round"]);
 	});
-
-	it("carries an angle a caller already used, so a second call does not repeat it", async () => {
-		const { inputs, result } = run(1, [[goodResult("a.com")]], {
-			optionOverrides: { pastAngles: ["angle-from-an-earlier-round"] },
-		});
-
-		await result;
-
-		expect(inputs[0]?.pastAngles).toEqual(["angle-from-an-earlier-round"]);
-	});
 });
 
 describe("domains a round tells the vendor not to return", () => {

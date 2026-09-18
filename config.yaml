@@ -116,7 +116,7 @@ spend:
   # round or batch, never the one in flight. A completed company round has
   # cost $3.34 with 91 judged candidates. This is a stop threshold, not a hard
   # charge cap; the requested company count may remain unmet.
-  perRunDollars: 2.00
+  perRunDollars: 10.00
   # An account refuses to start a new run once its day already costs this much.
   # Checked before any paid work, so a refused run spends nothing. Covers
   # company, people, and enrich runs alike.
@@ -129,7 +129,7 @@ model:
   # Milliseconds before a structured model call is aborted. Kept apart from Exa's own fetch
   # timeout: a judge call reasoning over a batch of rows needs longer than a plain vendor
   # fetch, and sharing that shorter timeout aborted it mid-flight.
-  timeoutMs: 90000
+  timeoutMs: 240000
 
 # Retry and timeout budgets for Cloudflare Workflow steps.
 # Cloudflare's own default is 5 retries and a 10 minute timeout on every step.

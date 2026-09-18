@@ -149,6 +149,27 @@ export function agentRunEvidenceRow(
 	};
 }
 
+export type SettledAgentRun = {
+	id: string;
+	status: string | null;
+	costDollars: number | null;
+	billingUnknown: boolean;
+};
+
+/** One append-only evidence row recording how an abandoned Exa agent run settled: its last read status and charge, or `billingUnknown` when neither could be established. */
+export function agentRunSettleEvidenceRow(
+	runId: string,
+	settled: SettledAgentRun,
+): NewEvidence {
+	return {
+		subjectType: "run",
+		subjectId: runId,
+		kind: "agent-run-settle",
+		value: JSON.stringify(settled),
+		source: EVIDENCE_SOURCE,
+	};
+}
+
 export type RoundTiming = { dep: string; seconds: number };
 
 /** One append-only evidence row per round carrying the seconds each dependency spent, so a slow round can be attributed to its search, proof or judge; null when nothing was timed. */

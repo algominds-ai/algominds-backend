@@ -12,7 +12,7 @@ import { judgeInputEvidenceRows } from "@/core/companies/rows";
 import { addPartialSpend, CostLedger } from "@/core/cost";
 import { appendEvidence } from "@/core/db/queries";
 import type { Requirement } from "@/core/requirements";
-import { applyCostEntries } from "@/workflows/agent-poll";
+import { durablePurchase } from "@/workflows/durable-purchase";
 
 type SaveJudgeInput = {
 	step: WorkflowStep;
@@ -42,11 +42,6 @@ async function saveJudgeInput(input: SaveJudgeInput): Promise<void> {
 			),
 	);
 }
-
-type CachedJudgeSlice = {
-	verdicts: Verdict[];
-	costEntries: ReturnType<CostLedger["toJSON"]>["entries"];
-};
 
 function evidenceForSlice(
 	evidenceByRow: EvidenceByRow,
@@ -87,34 +82,44 @@ async function judgeSliceStep(input: {
 	env: Env;
 	options: JudgeOptions;
 	evidenceByRow: EvidenceByRow;
-}): Promise<CachedJudgeSlice> {
-	const { step, round, slice, requirements, env, options, evidenceByRow } =
-		input;
+	ledger: CostLedger;
+}): Promise<{ verdicts: Verdict[] }> {
+	const {
+		step,
+		round,
+		slice,
+		requirements,
+		env,
+		options,
+		evidenceByRow,
+		ledger,
+	} = input;
 	const evidenceBySlice = evidenceForSlice(
 		evidenceByRow,
 		slice.offset,
 		slice.rows.length,
 	);
-	return step.do(
-		`round_${round}-judge-${slice.offset}`,
-		config.stepConfig.judgeCall,
-		async () => {
+	return durablePurchase(
+		{
+			step,
+			name: `round_${round}-judge-${slice.offset}`,
+			budget: "judgeCall",
+			ledger,
+		},
+		async (stepLedger) => {
 			const result = await judge(requirements, slice.rows, env, {
 				...options,
 				evidenceByRow: evidenceBySlice,
+				ledger: stepLedger,
 			});
-			return {
-				verdicts: result.verdicts,
-				costEntries: result.ledger.toJSON().entries,
-			};
+			return { verdicts: result.verdicts };
 		},
 	);
 }
 
 function mergeJudgeOutcomes(
-	outcomes: PromiseSettledResult<CachedJudgeSlice>[],
+	outcomes: PromiseSettledResult<{ verdicts: Verdict[] }>[],
 	slices: { offset: number }[],
-	ledger: CostLedger,
 ): { verdicts: Verdict[]; failures: unknown[]; failedCost: number } {
 	const verdicts: Verdict[] = [];
 	const failures: unknown[] = [];
@@ -123,7 +128,6 @@ function mergeJudgeOutcomes(
 		const slice = slices[index];
 		if (!slice) continue;
 		if (outcome.status === "fulfilled") {
-			applyCostEntries(outcome.value.costEntries, ledger);
 			verdicts.push(
 				...shiftSliceVerdicts(outcome.value.verdicts, slice.offset),
 			);
@@ -163,13 +167,13 @@ export function steppedJudge(
 					env,
 					options,
 					evidenceByRow,
+					ledger,
 				}),
 			),
 		);
 		const { verdicts, failures, failedCost } = mergeJudgeOutcomes(
 			outcomes,
 			slices,
-			ledger,
 		);
 		if (failures.length > 0) {
 			const first = failures[0];

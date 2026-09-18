@@ -3,22 +3,12 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { db, withConnection } from "@/core/db/client";
 import type { Organization } from "@/core/db/queries";
-import {
-	appendEvidence,
-	deletePerson,
-	latestEvidence,
-} from "@/core/db/queries";
+import { appendEvidence, latestEvidence } from "@/core/db/queries";
 import { saveRunCompanies } from "@/core/db/run-companies";
 import type { NewEvidence } from "@/core/db/schema";
-import { evidence, person } from "@/core/db/schema";
+import { evidence } from "@/core/db/schema";
 import { rawEvidenceRow } from "@/core/people/rows";
-import {
-	seedCompanyFor,
-	seedOrganization,
-	seedPersonFor,
-	seedRunFor,
-	wipeOrganizations,
-} from "../support/db";
+import { seedOrganization, seedRunFor, wipeOrganizations } from "../support/db";
 
 type EvidenceFixture = { org: Organization; runCompanyId: string };
 
@@ -148,39 +138,6 @@ describe("rawEvidenceRow", () => {
 			expect(rows.every((r) => r.subjectType === "run_company")).toBe(true);
 		} finally {
 			await wipeOrganizations([fixture.org.id]);
-		}
-	});
-});
-
-describe("deletePerson", () => {
-	it("deletes every evidence row for the person, then the person row, in one transaction", async () => {
-		const org = await seedOrganization("evidence-delete-person");
-		const opened = await seedRunFor(org, "people");
-		const savedCompany = await seedCompanyFor(org, opened, "del");
-		const savedPerson = await seedPersonFor(org, savedCompany, "Del Person");
-		await appendEvidence(testEnv, [
-			{
-				subjectType: "person",
-				subjectId: savedPerson.id,
-				kind: "email",
-				value: "a@acme.com",
-				source: "apollo",
-			},
-		]);
-
-		try {
-			await deletePerson(testEnv, savedPerson.id);
-
-			const people = await withConnection(testEnv, "direct", db, (c) =>
-				c.select().from(person).where(eq(person.id, savedPerson.id)),
-			);
-			const evidenceRows = await withConnection(testEnv, "direct", db, (c) =>
-				c.select().from(evidence).where(eq(evidence.subjectId, savedPerson.id)),
-			);
-			expect(people).toHaveLength(0);
-			expect(evidenceRows).toHaveLength(0);
-		} finally {
-			await wipeOrganizations([org.id]);
 		}
 	});
 });

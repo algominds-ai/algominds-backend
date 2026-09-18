@@ -1,8 +1,11 @@
 import { introspectWorkflowInstance } from "cloudflare:test";
 import { env as testEnv } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { describe, expect, it } from "vitest";
 import { toBatches } from "@/core/batches";
+import { findRun } from "@/core/db/queries";
 import type { EnrichOutcome, EnrichResult, EnrichSubject } from "@/core/enrich";
+import { seedOrganization, wipeOrganizations } from "../support/db";
 
 type StepMocker = {
 	mockStepResult: (s: { name: string }, v: unknown) => Promise<void>;
@@ -150,6 +153,44 @@ describe("EnrichWorkflow: closes the run with the real spend", () => {
 			expect(await instance.getOutput()).toEqual(batchResult);
 		} finally {
 			await instance.dispose();
+		}
+	});
+});
+
+describe("EnrichWorkflow: a step failure after the run opens", () => {
+	it("closes the run row as errored instead of leaving it running", async () => {
+		const org = await seedOrganization("enrich-close-errored");
+		const instanceId = `enrich_workflow_errored_${crypto.randomUUID()}`;
+		const instance = await introspectWorkflowInstance(
+			testEnv.ENRICH,
+			instanceId,
+		);
+		try {
+			const subjects: EnrichSubject[] = [{ id: "subject-1" }];
+			await instance.modify(async (m) => {
+				await m.mockStepResult({ name: "resolve-subjects" }, subjects);
+				await m.mockStepResult(
+					{ name: "load-source-run" },
+					{ organizationId: org.id, icpId: null },
+				);
+				await m.mockStepError(
+					{ name: "enrich-batch-0" },
+					new NonRetryableError("enrichment provider down"),
+				);
+			});
+
+			await testEnv.ENRICH.create({
+				id: instanceId,
+				params: { runId: "people_run_x", channels: ["email"] },
+			});
+			await instance.waitForStatus("errored");
+
+			const row = await findRun(testEnv, instanceId);
+			expect(row?.status).toBe("errored");
+			expect(row?.finishedAt).toBeInstanceOf(Date);
+		} finally {
+			await instance.dispose();
+			await wipeOrganizations([org.id]);
 		}
 	});
 });

@@ -47,7 +47,7 @@ it("passes only the candidate without a category or system prompt", () => {
 		candidate,
 	});
 	expect(request).toMatchObject({
-		type: "deep",
+		type: "auto",
 	});
 	expect(request.contents).toEqual({ highlights: true });
 	expect(request.category).toBeUndefined();
