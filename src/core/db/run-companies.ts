@@ -1,6 +1,9 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, isNull } from "drizzle-orm";
-import { companyExaId } from "@/core/companies/candidates";
+import {
+	companyExaId,
+	companyWorkforceTotal,
+} from "@/core/companies/candidates";
 import type { DbEnv } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
 import type {
@@ -21,13 +24,14 @@ import { company, normalizeDomain, runCompany } from "@/core/db/schema";
 
 export type CompanyRunRow = Pick<
 	Company,
-	"id" | "domain" | "name" | "data" | "linkedinUrl" | "icpId"
+	"id" | "domain" | "name" | "data" | "linkedinUrl" | "icpId" | "description"
 >;
 export type CompanyOfRun = Pick<
 	Company,
-	"id" | "domain" | "name" | "linkedinUrl" | "icpId"
+	"id" | "domain" | "name" | "linkedinUrl" | "icpId" | "description"
 > & {
 	exaId: string | null;
+	workforceTotal: number | null;
 };
 export interface CompanyRunConnection {
 	select(columns: {
@@ -37,6 +41,7 @@ export interface CompanyRunConnection {
 		data: typeof company.data;
 		linkedinUrl: typeof company.linkedinUrl;
 		icpId: typeof company.icpId;
+		description: typeof company.description;
 	}): {
 		from(table: typeof company): {
 			where(condition: SQL | undefined): {
@@ -101,6 +106,7 @@ export async function companiesForRun(
 				data: company.data,
 				linkedinUrl: company.linkedinUrl,
 				icpId: company.icpId,
+				description: company.description,
 			})
 			.from(company)
 			.where(condition)
@@ -112,7 +118,9 @@ export async function companiesForRun(
 		name: row.name,
 		linkedinUrl: row.linkedinUrl,
 		icpId: row.icpId,
+		description: row.description,
 		exaId: companyExaId(row.data),
+		workforceTotal: companyWorkforceTotal(row.data),
 	}));
 }
 

@@ -10,10 +10,10 @@ import {
 	loadIcp,
 	openRun,
 } from "@/core/db/queries";
+import type { IcpDoc } from "@/core/icp";
+import { IcpDocSchema } from "@/core/icp";
 import type { ResolvedBuyer } from "@/core/people/buyer";
 import { resolveBuyer } from "@/core/people/buyer";
-import type { IcpDoc } from "@/core/synthesize";
-import { IcpDocSchema } from "@/core/synthesize";
 import { peopleFindSchema } from "@/http/schemas";
 import { runCompanies } from "@/workflows/find-people-company";
 import type { TargetCompany } from "@/workflows/find-people-target";
@@ -53,7 +53,12 @@ async function loadProfile(
 			`findPeople: icp ${icpId} does not belong to organization ${organizationId}`,
 		);
 	}
-	return IcpDocSchema.parse(icpRow.doc);
+	const parsed = IcpDocSchema.safeParse(icpRow.doc);
+	if (!parsed.success)
+		throw new NonRetryableError(
+			"findPeople: legacy profile; onboard again with the original instructions",
+		);
+	return parsed.data;
 }
 
 /** Clamps a target company list to the caller's own `maxCompanies` and the single account-wide `limits.maxCompaniesPerPeopleRun` ceiling, whichever is smaller. */
@@ -135,7 +140,6 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 				runId: event.instanceId,
 				organizationId,
 				buyer,
-				profile,
 			},
 			companies,
 			opened.alreadySpent,
@@ -143,7 +147,7 @@ export class FindPeopleWorkflow extends WorkflowEntrypoint<
 
 		await step.do("close-run", config.stepConfig.databaseCall, () =>
 			closeRun(this.env, event.instanceId, {
-				status: "complete",
+				status: loop.capped ? "capped" : "complete",
 				costDollars: loop.costDollars,
 			}),
 		);

@@ -3,6 +3,7 @@ import { cloudflareTest } from "@cloudflare/vitest-plugin";
 import { configDefaults, defineConfig } from "vitest/config";
 
 const TEST_DATABASE_URL =
+	process.env.TEST_DATABASE_URL ??
 	"postgresql://postgres:postgres@localhost:5432/algo_test";
 
 export default defineConfig({
@@ -20,6 +21,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": resolve("src"),
+			"@eval": resolve("eval"),
 		},
 	},
 	test: {

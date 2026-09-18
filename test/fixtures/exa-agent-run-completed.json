@@ -1,13 +1,27 @@
 {
-	"id": "agent_run_bc010e9c25214c968a5b3216289cf0be",
+	"id": "agent_run_e5ca5244ce02446593d179e57bbfcc75",
 	"object": "agent_run",
 	"status": "completed",
 	"stopReason": "schema_satisfied",
-	"createdAt": "2026-08-28T01:11:16.746Z",
-	"completedAt": "2026-08-28T01:11:32.533Z",
+	"createdAt": "2026-09-06T07:58:02.426Z",
+	"completedAt": "2026-09-06T07:58:28.811Z",
 	"request": {
-		"query": "Founder-led B2B software company selling directly without a sales team. Return exactly 2 distinct companies.",
-		"systemPrompt": "Give a working website domain for every company. Never repeat a company.",
+		"query": "Continue the same account search, finding up to THREE ADDITIONAL distinct companies beyond Trainline and Ocado. Try technical customer case studies, engineering talks and company engineering blogs for travel, online retail, gaming or SaaS companies operating distributed production Kubernetes with their own engineers. Preserve ALL required company conditions from the prior request. Prefer reachable firms over global giants. Confirm company headcount and headquarters at the company identity level. Fewer is valid, but first try a different retrieval angle when a promising candidate lacks evidence.",
+		"systemPrompt": "Today is 2026-09-06. The account's exact instructions are authoritative: This profile is for Trust Fabric only, not Form3's payments platform. Form3 (form3.tech) sells Trust Fabric, a product installed into a Kubernetes cluster to manage certificate trust and infrastructure risk across distributed services.\nHard gates, all required: runs production Kubernetes with a distributed architecture or many independent services (no cluster, no deal); an in-house engineering team operates that infrastructure, not an outsourced platform; 501 or more employees; uptime-critical or regulated, where an hour of downtime is a board-level event; based in North America, the UK and Ireland, or Continental Europe. Do not gate on revenue.\nVerticals: SaaS, online retail, fintech, automotive, energy, pharma, gaming, media, travel, telcos, public sector. Model accounts at reachable size: Trainline, Skyscanner, Auto Trader UK, Ocado Technology, Deliveroo.\nOut: consultants, agencies, non-profits, private equity, recruiters, freelancers, managed service providers and systems integrators, and certificate-lifecycle vendors such as AppViewX, Entrust and CyberArk.\nThe buyer is the platform, infrastructure or security leader who owns the cluster and its certificate estate, never the payments or commercial function: CTO, CIO, CISO, and the VP, Director or Head of Engineering, Platform Engineering, Infrastructure, Cloud, Site Reliability Engineering, DevOps, Security Engineering, Information Security or Architecture. CEO only at companies under about 1,000 people. Exclude recruiters, HR, sales, marketing, individual engineers and academics. At most three people per company.\nHot signals: a platform, SRE, infrastructure or PKI role posted in the last 30 days naming Kubernetes, TLS, mTLS, cert-manager, PKI or a service mesh; public evidence of production Kubernetes at scale; a published SLA; DORA, PSD2, NIS2 or PCI DSS obligations; a new platform or security leader in the last 12 months; a post-quantum commitment; a public certificate or TLS incident in the last 90 days.\n\nThis task finds companies only. Buyer titles guide later people selection, not a new company gate. Preserve company-versus-parent identity. Cite source URLs and short verbatim quotes for every required condition and for the company LinkedIn URL. Distinguish an event date from publication date. Unknown evidence stays unknown. Never infer employee count from customer count. Do not invent URLs or dates. A skills list on a personal profile does not establish that a job was posted recently or that its employer currently operates that technology. A profile's crawl/update date is not a job-post publication date. Cite the actual job detail or event page for optional dated signals; otherwise leave those unproven. Copy a contiguous verbatim quote without inserting ellipses; use several evidence entries when separate passages are needed.",
+		"input": {
+			"exclusion": [
+				{
+					"name": "Trainline",
+					"website": "https://www.thetrainline.com",
+					"linkedinUrl": "https://www.linkedin.com/company/trainline"
+				},
+				{
+					"name": "Ocado Group / Ocado Technology",
+					"website": "https://www.ocadogroup.com",
+					"linkedinUrl": "https://www.linkedin.com/company/ocadogroup"
+				}
+			]
+		},
 		"outputSchema": {
 			"type": "object",
 			"required": ["companies"],
@@ -16,42 +30,73 @@
 					"type": "array",
 					"items": {
 						"type": "object",
-						"required": ["name", "website"],
+						"required": [
+							"name",
+							"website",
+							"linkedinUrl",
+							"description",
+							"selectionReason",
+							"evidence"
+						],
 						"properties": {
-							"city": {
-								"type": "string"
-							},
 							"name": {
-								"type": "string"
-							},
-							"country": {
 								"type": "string"
 							},
 							"website": {
 								"type": "string"
 							},
+							"evidence": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"required": [
+										"conditionId",
+										"status",
+										"sourceUrl",
+										"quote",
+										"eventDate",
+										"publishedDate"
+									],
+									"properties": {
+										"quote": {
+											"type": ["string", "null"]
+										},
+										"status": {
+											"enum": ["proven", "unproven", "contradicted"],
+											"type": "string"
+										},
+										"eventDate": {
+											"type": ["string", "null"]
+										},
+										"sourceUrl": {
+											"type": ["string", "null"]
+										},
+										"conditionId": {
+											"type": "string"
+										},
+										"publishedDate": {
+											"type": ["string", "null"]
+										}
+									}
+								}
+							},
 							"description": {
 								"type": "string"
 							},
-							"foundedYear": {
-								"type": "number"
+							"linkedinUrl": {
+								"type": ["string", "null"]
 							},
-							"fundingTotal": {
-								"type": "number"
-							},
-							"revenueAnnual": {
-								"type": "number"
-							},
-							"workforceTotal": {
-								"type": "number"
+							"selectionReason": {
+								"type": "string"
 							}
 						}
 					},
-					"minItems": 2
+					"maxItems": 3
 				}
 			}
 		},
-		"effort": "low",
+		"effort": "minimal",
+		"previousRunId": "agent_run_8302a0f354d14fb996a56aa2cb0a7577",
 		"dataSources": [
 			{
 				"provider": "fiber"
@@ -59,30 +104,323 @@
 		]
 	},
 	"output": {
-		"text": "Two distinct founder-led B2B software companies matching the direct, no-dedicated-sales-team criterion are provided, with working domains and available company metrics. Revenue and workforce figures are sourced disclosures or estimates and may vary by reporting date.",
+		"text": "Three additional companies are delivered: Skyscanner, Auto Trader UK and John Lewis Partnership. All have evidence for production Kubernetes, distributed or multi-service architectures, in-house engineering ownership, at least 501 employees, qualifying headquarters and uptime-sensitive travel, automotive-marketplace or online-retail operations. Optional SLA, named regulatory, post-quantum and recent certificate/TLS-incident signals remain unproven where no sufficiently direct evidence was found.",
 		"structured": {
 			"companies": [
 				{
-					"city": "San Francisco",
-					"name": "Chatbase",
-					"country": "United States",
-					"website": "chatbase.co",
-					"description": "Founder-led B2B software company providing a self-serve platform for businesses to build and deploy customer-facing AI agents. It is bootstrapped and explicitly operated without a dedicated sales team, using product-led growth alongside self-serve purchasing.",
-					"foundedYear": 2023,
-					"fundingTotal": 0,
-					"revenueAnnual": 10000000,
-					"workforceTotal": 26
+					"name": "Skyscanner",
+					"website": "https://www.skyscanner.net",
+					"evidence": [
+						{
+							"quote": "With 1,400 employees worldwide running over 1,000 microservices across 24 production Kubernetes clusters",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://opentelemetry.io/blog/2026/devex-skyscanner/",
+							"conditionId": "r1.a1.c1",
+							"publishedDate": "2026-04-21"
+						},
+						{
+							"quote": "The Hubble team, consisting of six platform engineers, manages most of Skyscanner’s collectors.",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://opentelemetry.io/blog/2026/devex-skyscanner/",
+							"conditionId": "r2.a1.c1",
+							"publishedDate": "2026-04-21"
+						},
+						{
+							"quote": "Skyscanner employs 1,313 people",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/skyscanner",
+							"conditionId": "r3.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "We have 75 million monthly active users, with over 1200 travel providers and 24 billion origin-destination-partner combinations.",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://www.cirrushq.com/wp-content/uploads/2022/12/KubernetesServiceMeshPlatform.pdf",
+							"conditionId": "r4.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Headquartered in Edinburgh, United Kingdom",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/skyscanner",
+							"conditionId": "r5.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Skyscanner is a platform that allows users to compare flight prices from various airlines and travel agents and book airline tickets to their preferred destinations.",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/skyscanner",
+							"conditionId": "r6.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "With 1,400 employees worldwide running over 1,000 microservices across 24 production Kubernetes clusters",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://opentelemetry.io/blog/2026/devex-skyscanner/",
+							"conditionId": "r8.a1.c1",
+							"publishedDate": "2026-04-21"
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r9.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r10.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Senior Engineering Manager (Current)",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://www.linkedin.com/in/rory-mccann-9a87a15b",
+							"conditionId": "r11.a1.c1",
+							"publishedDate": "2026-01-01"
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r12.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r13.a1.c1",
+							"publishedDate": null
+						}
+					],
+					"description": "Skyscanner is an Edinburgh-based travel-search platform operating a large, distributed Kubernetes estate for its own travel-search services.",
+					"linkedinUrl": "https://linkedin.com/company/skyscanner",
+					"selectionReason": "Strongest additional reachable travel fit: the evidence explicitly establishes 24 production Kubernetes clusters, more than 1,000 microservices, platform-engineer ownership, 1,313 employees and Edinburgh headquarters. Its very large user and travel-provider footprint makes uptime operationally consequential, although no public SLA or named regulatory obligation was established."
 				},
 				{
-					"city": "Lier",
-					"name": "Oh Dear",
-					"country": "Belgium",
-					"website": "ohdear.app",
-					"description": "Founder-led B2B website-monitoring software company covering uptime, SSL, broken links, DNS, SEO, accessibility, and server health. The two founders sell through a self-serve free-trial model, building in public and relying on word of mouth rather than a sales team.",
-					"foundedYear": 2018,
-					"fundingTotal": 0,
-					"revenueAnnual": 1000000,
-					"workforceTotal": 2
+					"name": "Auto Trader UK",
+					"website": "https://www.autotrader.co.uk",
+					"evidence": [
+						{
+							"quote": "Our architecture consists of around 500 logical services. Around 140 of those are already in production on Google Cloud",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/customers/auto-trader-uk",
+							"conditionId": "r1.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "In terms of development, we've implemented a platform on GKE that automatically provisions, builds, and deploys our developers' applications.",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/customers/auto-trader-uk",
+							"conditionId": "r2.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Autotrader employs 1,000 people",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/auto-trader-uk",
+							"conditionId": "r3.a1.c1",
+							"publishedDate": "2025-03-25"
+						},
+						{
+							"quote": "55 million cross-platform visits every month",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/customers/auto-trader-uk",
+							"conditionId": "r4.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Headquartered in Manchester, United Kingdom",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/auto-trader-uk",
+							"conditionId": "r5.a1.c1",
+							"publishedDate": "2025-03-25"
+						},
+						{
+							"quote": "Auto Trader (UK) is the United Kingdom's largest digital automotive marketplace",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/customers/auto-trader-uk",
+							"conditionId": "r6.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Auto Trader (UK) moved its backend applications to Kubernetes Engine(GKE) and implemented Istio",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/customers/auto-trader-uk",
+							"conditionId": "r8.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r9.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r10.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "CTO at Autotrader",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://www.linkedin.com/in/chris-kelly-autotrader",
+							"conditionId": "r11.a1.c1",
+							"publishedDate": "2026-08-31"
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r12.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r13.a1.c1",
+							"publishedDate": null
+						}
+					],
+					"description": "Auto Trader UK is a Manchester-based digital automotive marketplace with an in-house delivery platform operating Kubernetes, Istio and hundreds of production services.",
+					"linkedinUrl": "https://linkedin.com/company/auto-trader-uk",
+					"selectionReason": "Excellent reachable-size fit: Google Cloud documents GKE/Istio, 500 logical services and 140 production services, while the company identity record establishes 1,000 employees and Manchester headquarters. The company also publicly describes a platform responsible for 24/7 availability; the case study's 55 million monthly visits support the uptime-critical gate."
+				},
+				{
+					"name": "John Lewis Partnership",
+					"website": "https://www.johnlewis.com",
+					"evidence": [
+						{
+							"quote": "The first tenant to adopt the platform was rebuilding the johnlewis.com, search capability",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/blog/products/application-development/simplifying-platform-engineering-at-john-lewis-part-one",
+							"conditionId": "r1.a1.c1",
+							"publishedDate": "2025-06-26"
+						},
+						{
+							"quote": "The vision was to empower development teams and arm them with the tools and processes they needed to go to market fast, with full ownership of their own business services.",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/blog/products/application-development/simplifying-platform-engineering-at-john-lewis-part-one",
+							"conditionId": "r2.a1.c1",
+							"publishedDate": "2025-06-26"
+						},
+						{
+							"quote": "John Lewis Partnership employs 3,177 people",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/john-lewis-partnership",
+							"conditionId": "r3.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "about £2.5 billion ($3.17bn) of trade goes through John Lewis’ online platform every year",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://www.datacenterdynamics.com/en/analysis/john-lewis-partnership-cio-cloud-migration/",
+							"conditionId": "r4.a1.c1",
+							"publishedDate": "2025-04-16"
+						},
+						{
+							"quote": "Headquartered in London, England, United Kingdom",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://linkedin.com/company/john-lewis-partnership",
+							"conditionId": "r5.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "John Lewis, a major UK retailer",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/blog/products/application-development/simplifying-platform-engineering-at-john-lewis-part-one",
+							"conditionId": "r6.a1.c1",
+							"publishedDate": "2025-06-26"
+						},
+						{
+							"quote": "we've ... firmly established that the foundation of our platform was on Google Kubernetes Engine (GKE)",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://cloud.google.com/blog/products/application-development/simplifying-platform-engineering-at-john-lewis-part-two",
+							"conditionId": "r8.a1.c1",
+							"publishedDate": "2025-06-26"
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r9.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r10.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": "Chief Information Officer at John Lewis Partnership",
+							"status": "proven",
+							"eventDate": null,
+							"sourceUrl": "https://www.linkedin.com/in/david-hunn-77562328",
+							"conditionId": "r11.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r12.a1.c1",
+							"publishedDate": null
+						},
+						{
+							"quote": null,
+							"status": "unproven",
+							"eventDate": null,
+							"sourceUrl": null,
+							"conditionId": "r13.a1.c1",
+							"publishedDate": null
+						}
+					],
+					"description": "John Lewis Partnership is a London-headquartered UK retailer whose Digital Platform runs customer-facing e-commerce workloads on Google Kubernetes Engine through an internal platform-engineering organization.",
+					"linkedinUrl": "https://linkedin.com/company/john-lewis-partnership",
+					"selectionReason": "Qualifies as a large UK online-retail account with a documented internal Digital Platform, GKE foundation, customer-facing production services and 3,177 employees at London headquarters. The £2.5bn annual online platform makes availability commercially material. It is less reachable than Auto Trader and Skyscanner because of its larger partnership and supplier ecosystem, but remains a strong technical fit."
 				}
 			]
 		},
@@ -91,16 +429,16 @@
 				"field": "structured.companies[0]",
 				"citations": [
 					{
-						"url": "https://stripe.com/customers/chatbase",
-						"title": "Bootstrapped Startup Chatbase Reaches $10 Million in ARR"
+						"url": "https://opentelemetry.io/blog/2026/devex-skyscanner/",
+						"title": "How Skyscanner scales OpenTelemetry"
 					},
 					{
-						"url": "https://linkedin.com/company/chatbase-co",
-						"title": "Chatbase"
+						"url": "https://linkedin.com/company/skyscanner",
+						"title": "Skyscanner company identity"
 					},
 					{
-						"url": "https://remarkablemag.com/yasser-elsaid-chatbase-ten-million-arr/",
-						"title": "The Tweet to $10M: Yasser Elsaid Built Chatbase With No VC and No Sales Team"
+						"url": "https://www.cirrushq.com/wp-content/uploads/2022/12/KubernetesServiceMeshPlatform.pdf",
+						"title": "Skyscanner Kubernetes architecture talk"
 					}
 				],
 				"confidence": "high"
@@ -109,16 +447,34 @@
 				"field": "structured.companies[1]",
 				"citations": [
 					{
-						"url": "https://saasrat.com/blog/oh-dear-founder-interviews/",
-						"title": "Oh Dear Founder Interview: $1M ARR, No Free Tier, No VC Money"
+						"url": "https://cloud.google.com/customers/auto-trader-uk",
+						"title": "Auto Trader UK case study"
 					},
 					{
-						"url": "https://ohdear.app/about",
-						"title": "Oh Dear About"
+						"url": "https://linkedin.com/company/auto-trader-uk",
+						"title": "Auto Trader UK company identity"
+					}
+				],
+				"confidence": "high"
+			},
+			{
+				"field": "structured.companies[2]",
+				"citations": [
+					{
+						"url": "https://cloud.google.com/blog/products/application-development/simplifying-platform-engineering-at-john-lewis-part-one",
+						"title": "John Lewis platform engineering blog"
 					},
 					{
-						"url": "https://linkedin.com/company/oh-dear",
-						"title": "Oh Dear"
+						"url": "https://cloud.google.com/blog/products/application-development/simplifying-platform-engineering-at-john-lewis-part-two",
+						"title": "John Lewis platform engineering blog, part two"
+					},
+					{
+						"url": "https://linkedin.com/company/john-lewis-partnership",
+						"title": "John Lewis company identity"
+					},
+					{
+						"url": "https://www.datacenterdynamics.com/en/analysis/john-lewis-partnership-cio-cloud-migration/",
+						"title": "John Lewis online platform scale"
 					}
 				],
 				"confidence": "high"
@@ -126,15 +482,15 @@
 		]
 	},
 	"usage": {
-		"agentComputeUnits": 0.1,
+		"agentComputeUnits": 0,
 		"searches": 3,
 		"emails": 0,
 		"phoneNumbers": 0
 	},
 	"costDollars": {
-		"total": 0.025,
-		"agentCompute": 0.01,
-		"search": 0.015,
+		"total": 0.012,
+		"agentCompute": 0,
+		"search": 0.012,
 		"emails": 0,
 		"phoneNumbers": 0
 	}

@@ -19,7 +19,8 @@ the probe wins.
 | `systemPrompt` | string | Source preference, novelty, and duplication guidance. |
 | `outputSchema` | JSON Schema | Synthesized output. Adds about 2 seconds. |
 | `contents` | object | `text`, `highlights`, `summary`, `extras`, `subpages`, `maxAgeHours`, `livecrawlTimeout`. |
-| `contents.text` | boolean or `{ maxCharacters }` | The object form caps the text returned per page. |
+| `contents.text` | boolean or `{ maxCharacters }` | The object form caps the text returned per page. The documented maximum is 10,000; a larger number is clamped, not refused. |
+| `contents.highlights` | boolean or object | `query`, `maxCharacters`, `dynamic`, and nothing else: `numSentences` and `highlightsPerUrl` do not exist and are dropped in silence. |
 | `contents.livecrawlTimeout` | milliseconds | How long a live crawl may take per page. Paired with `maxAgeHours: 0`. |
 | `moderation`, `compliance`, `stream` | | |
 
@@ -477,3 +478,44 @@ question of their format does not arise on the company or people paths. The
 Freshness is still demanded, just never as a vendor filter. The plan carries it
 as two day counts the code enforces itself, and the agent query states the
 shorter of them in words. See `two-windows-in-one-number.md`.
+
+## Correction: `includeDomains` on the company category matches a hostname suffix
+
+Measured 2026-09-03. `includeDomains` is documented as a domain filter and reads like
+one, but on `category: "company"` it matches the end of a hostname rather than the
+domain itself. Asking for four domains with `numResults: 100`:
+
+```
+includeDomains: ["monzo.com", "zalando.com", "adyen.com", "wise.com"]
+returns:        innowise.com, bigwise.com, ecwise.com, syswise.com,
+                gatewise.com, pairwise.com, ...
+```
+
+Every one of those is a suffix match on `wise.com`. So one call cannot look up a known
+set of companies: the slots fill with unrelated organisations whose hostname happens to
+end the same way. The earlier note above, that a domain matching nothing returns zero
+results "so the filter is real", is true and still misleading — the filter is real and
+it is not the filter it looks like.
+
+One record is therefore one call: `numResults: 1`, `includeDomains: [domain]`, and the
+reply kept only when the returned hostname normalizes to the domain that was asked for.
+Measured at **$0.007 and about 0.1 seconds each**, five at a time under the rate limit
+below. `src/core/companies/record.ts` is that lookup, and the identity check there is
+what makes it safe.
+
+## The account-wide rate limit is ten requests a second
+
+Measured live: seven simultaneous `POST /agent/runs` returned
+
+> You've exceeded your Exa rate limit of 10 requests per second.
+
+An agent fan-out therefore staggers its starts by `companies.agentStartStaggerMs`, and
+the proving pass and the record backfill run `companies.provingConcurrency` at a time.
+
+## An agent run stops when its schema is satisfied, so a bigger ask is not a bigger answer
+
+Measured 2026-09-03. One `medium`-effort run asked for twenty companies returned **one**,
+in 114 seconds, for $0.13. Seven `low`-effort runs on seven different angles, asked for
+four each, returned nine companies between them in about the same wall clock, for $0.18.
+Companies come from angles, not from the number in the query, which is why `synthesize`
+writes several angles for an agent round and the workflow runs one paid run for each.

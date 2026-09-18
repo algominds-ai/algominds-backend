@@ -1,5 +1,9 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, inArray } from "drizzle-orm";
+import {
+	companyExaId,
+	companyWorkforceTotal,
+} from "@/core/companies/candidates";
 import type { DbEnv } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
 import type { DbFactory } from "@/core/db/queries";
@@ -8,9 +12,15 @@ import { company } from "@/core/db/schema";
 
 export type CompanyDomainRow = Pick<
 	Company,
-	"id" | "domain" | "name" | "icpId" | "linkedinUrl"
+	"id" | "domain" | "name" | "icpId" | "linkedinUrl" | "description" | "data"
 >;
-export type CompanyDomainMatch = CompanyDomainRow;
+export type CompanyDomainMatch = Pick<
+	CompanyDomainRow,
+	"id" | "domain" | "name" | "icpId" | "linkedinUrl" | "description"
+> & {
+	workforceTotal: number | null;
+	exaId: string | null;
+};
 
 export interface CompanyDomainConnection {
 	select(): {
@@ -27,6 +37,9 @@ function toCompanyDomainMatch(row: CompanyDomainRow): CompanyDomainMatch {
 		name: row.name,
 		icpId: row.icpId,
 		linkedinUrl: row.linkedinUrl,
+		description: row.description,
+		exaId: companyExaId(row.data),
+		workforceTotal: companyWorkforceTotal(row.data),
 	};
 }
 

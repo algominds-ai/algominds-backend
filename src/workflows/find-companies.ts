@@ -9,30 +9,31 @@ import type {
 	FindCompaniesResult,
 	FindCompaniesStatus,
 } from "@/core/companies";
-import { findCompanies } from "@/core/companies";
 import type { CompanyCapture } from "@/core/companies/candidates";
 import { seedExcludedDomains } from "@/core/companies/candidates";
 import type { CompanyRow } from "@/core/companies/gate";
-import { evidenceRowsFor, matchRow, toNewCompany } from "@/core/companies/rows";
+import type { RoundTiming } from "@/core/companies/rows";
 import {
-	appendEvidence,
 	assertUnderDailyCeiling,
 	closeErroredRun,
 	closeRun,
 	loadIcp,
 	openRun,
-	recordRunSpend,
-	saveCompanies,
-	saveRound,
 } from "@/core/db/queries";
-import type { NewCompany } from "@/core/db/schema";
+import type { Requirement } from "@/core/requirements";
 import type { IcpDoc } from "@/core/synthesize";
 import { IcpDocSchema } from "@/core/synthesize";
 import { roundDeps } from "@/workflows/find-companies-agent";
+import type { RoundReport } from "@/workflows/find-companies-persist";
+import {
+	extractProfile,
+	persistCompanies,
+	persistRound,
+	reportRound,
+	runRoundBody,
+} from "@/workflows/find-companies-persist";
 
 const MAX_ROUNDS = config.companies.maxRounds;
-/** One round refused seventy eight companies once. Enough of them to answer why, not all of them. */
-const STORED_REJECTS_PER_ROUND = 120;
 
 const FindCompaniesPayloadSchema = z.object({
 	icpId: z.string(),
@@ -54,42 +55,18 @@ export function finalStatus(
 	return lastRoundStatus === "exhausted" ? "exhausted" : "short";
 }
 
-type PersistRoundInput = {
-	step: WorkflowStep;
-	env: Env;
-	runId: string;
-	costDollars: number;
-	result: FindCompaniesResult;
-	report: RoundReport;
-};
-
-/** Banks what one round spent and what it did, in one durable step, so both land together or replay together. */
-async function persistRound(input: PersistRoundInput): Promise<void> {
-	const { step, env, runId, report } = input;
-	await step.do(
-		`round_${report.round}-spend`,
-		config.stepConfig.databaseCall,
-		async () => {
-			await recordRunSpend(env, runId, input.costDollars);
-			await saveRound(env, {
-				runId,
-				ordinal: report.round,
-				plan: input.result.searches[0] ?? null,
-				found: report.found,
-				rejected: report.rejected,
-				rejects: input.result.rejects.slice(0, STORED_REJECTS_PER_ROUND),
-			});
-		},
-	);
-}
-
 /** The options one round runs under, carrying the angles and reject reasons the rounds before it produced. */
 type RoundOptionsInput = {
 	payload: FindCompaniesPayload;
 	organizationId: string;
 	env: Env;
 	today: string;
-	history: { pastAngles: readonly string[]; feedback: readonly string[] };
+	history: {
+		pastAngles: readonly string[];
+		feedback: readonly string[];
+		provenRate: string | null;
+	};
+	requirements: readonly Requirement[];
 };
 
 function roundOptions(input: RoundOptionsInput): FindCompaniesOptions {
@@ -99,9 +76,10 @@ function roundOptions(input: RoundOptionsInput): FindCompaniesOptions {
 		organizationId,
 		env,
 		today,
-		maxRounds: 1,
+		requirements: input.requirements,
 		pastAngles: history.pastAngles,
 		feedback: history.feedback,
+		provenRate: history.provenRate,
 		excludeDomains: payload.excludeDomains ?? [],
 	};
 }
@@ -110,104 +88,199 @@ function roundOptions(input: RoundOptionsInput): FindCompaniesOptions {
  * Runs up to three rounds, each in its own `step.do` for durability, and
  * merges their plain results into one `FindCompaniesResult`.
  */
-async function runFindCompaniesRounds(
+type CarriedAcross = {
+	searches: FindCompaniesResult["searches"];
+	captures: Record<string, CompanyCapture>;
+	pages: FindCompaniesResult["pages"];
+};
+
+/** Moves one round's plans, vendor captures and retrieved pages onto the run's own lists, and returns the angles that round tried. */
+function carried(result: FindCompaniesResult, across: CarriedAcross): string[] {
+	across.searches.push(...result.searches);
+	Object.assign(across.captures, result.captures);
+	across.pages.push(...result.pages);
+	return result.searches.map((plan) => plan.angle);
+}
+
+type RoundTarget = {
+	env: Env;
+	payload: FindCompaniesPayload;
+	icp: IcpDoc;
+	requirements: readonly Requirement[];
+	runId: string;
+	organizationId: string;
+	step: WorkflowStep;
+};
+
+type RoundLoopState = {
+	accumulatedDomains: Set<string>;
+	searches: FindCompaniesResult["searches"];
+	captures: Record<string, CompanyCapture>;
+	pages: FindCompaniesResult["pages"];
+	roundReports: RoundReport[];
+	companies: CompanyRow[];
+	rejects: FindCompaniesReject[];
+	costDollars: number;
+	rounds: number;
+	lastRoundStatus: FindCompaniesStatus;
+	pastAngles: string[];
+	feedback: string[];
+	provenRate: string | null;
+};
+
+/** Runs one round as its own durable step and folds its result into the loop's state. Returns `"stop"` once the run has covered the market it can, or crossed its own spend ceiling. */
+async function runOneRound(
+	target: RoundTarget,
+	state: RoundLoopState,
+	round: number,
+	today: string,
+): Promise<"continue" | "stop"> {
+	const { env, payload, icp, organizationId, step } = target;
+	const opts = roundOptions({
+		payload,
+		organizationId,
+		env,
+		today,
+		history: {
+			pastAngles: state.pastAngles,
+			feedback: state.feedback,
+			provenRate: state.provenRate,
+		},
+		requirements: target.requirements,
+	});
+	const timings: RoundTiming[] = [];
+	const remaining = payload.count - state.companies.length;
+	const deps = roundDeps({
+		accumulatedDomains: state.accumulatedDomains,
+		step,
+		round,
+		today,
+		icp,
+		timings,
+		runId: target.runId,
+		remaining,
+	});
+	const stepResult = await step.do(
+		`round_${round}`,
+		config.stepConfig.roundCall,
+		() =>
+			runRoundBody({
+				env,
+				step,
+				runId: target.runId,
+				round,
+				alreadySpent: state.costDollars,
+				icp,
+				remaining,
+				opts,
+				deps,
+			}),
+	);
+	state.companies = state.companies.concat(stepResult.companies);
+	state.rejects = state.rejects.concat(stepResult.rejects);
+	state.costDollars += stepResult.costDollars;
+	state.rounds += 1;
+	state.lastRoundStatus = stepResult.status;
+	state.pastAngles = state.pastAngles.concat(
+		carried(stepResult, {
+			searches: state.searches,
+			captures: state.captures,
+			pages: state.pages,
+		}),
+	);
+	state.feedback = stepResult.feedback;
+	state.provenRate = stepResult.provenRate ?? null;
+	const report = reportRound(round, stepResult);
+	state.roundReports.push(report);
+	await persistRound({
+		step,
+		env,
+		runId: target.runId,
+		icpId: payload.icpId,
+		costDollars: state.costDollars,
+		result: stepResult,
+		report,
+		timings,
+	});
+	for (const domain of stepResult.seenDomains) {
+		state.accumulatedDomains.add(domain);
+	}
+	if (stepResult.status === "exhausted") return "stop";
+	if (state.costDollars >= config.spend.perRunDollars) {
+		state.lastRoundStatus = "capped";
+		return "stop";
+	}
+	return "continue";
+}
+
+export async function runFindCompaniesRounds(
 	target: {
 		env: Env;
 		payload: FindCompaniesPayload;
 		icp: IcpDoc;
+		requirements: readonly Requirement[];
 		runId: string;
 		organizationId: string;
 		alreadySpent: number;
 	},
 	step: WorkflowStep,
 ): Promise<ReportedRounds> {
-	const { env, payload, icp, runId, organizationId } = target;
+	const { payload, icp } = target;
 	const today = await step.do("today", config.stepConfig.databaseCall, () =>
 		Promise.resolve(new Date().toISOString().slice(0, 10)),
 	);
-	const accumulatedDomains = seedExcludedDomains(
-		payload.excludeDomains ?? [],
-		icp.seller,
-	);
-	let companies: CompanyRow[] = [];
-	let rejects: FindCompaniesReject[] = [];
-	let costDollars = target.alreadySpent;
-	let rounds = 0;
-	const searches: FindCompaniesResult["searches"] = [];
-	const captures: Record<string, CompanyCapture> = {};
-	let lastRoundStatus: FindCompaniesStatus = "short";
-	let pastAngles: string[] = [];
-	let feedback: string[] = [];
-	const roundReports: RoundReport[] = [];
+	const state: RoundLoopState = {
+		accumulatedDomains: seedExcludedDomains(
+			payload.excludeDomains ?? [],
+			icp.seller,
+		),
+		searches: [],
+		captures: {},
+		pages: [],
+		roundReports: [],
+		companies: [],
+		rejects: [],
+		costDollars: target.alreadySpent,
+		rounds: 0,
+		lastRoundStatus: "short",
+		pastAngles: [],
+		feedback: [],
+		provenRate: null,
+	};
 
 	for (
 		let round = 1;
-		round <= MAX_ROUNDS && companies.length < payload.count;
+		round <= MAX_ROUNDS && state.companies.length < payload.count;
 		round++
 	) {
-		const remaining = payload.count - companies.length;
-		const opts = roundOptions({
-			payload,
-			organizationId,
-			env,
-			today,
-			history: { pastAngles, feedback },
-		});
-		const deps = roundDeps({
-			accumulatedDomains,
-			step,
+		const decision = await runOneRound(
+			{ ...target, step },
+			state,
 			round,
-			remaining,
 			today,
-			seller: icp.seller,
-		});
-		const stepResult = await step.do(
-			`round_${round}`,
-			config.stepConfig.paidCall,
-			() => findCompanies(icp, remaining, opts, deps),
 		);
-		companies = companies.concat(stepResult.companies);
-		rejects = rejects.concat(stepResult.rejects);
-		costDollars += stepResult.costDollars;
-		searches.push(...stepResult.searches);
-		Object.assign(captures, stepResult.captures);
-		rounds += 1;
-		const report = reportRound(round, stepResult);
-		roundReports.push(report);
-		lastRoundStatus = stepResult.status;
-		await persistRound({
-			step,
-			env,
-			runId,
-			costDollars,
-			result: stepResult,
-			report,
-		});
-		for (const domain of stepResult.seenDomains) accumulatedDomains.add(domain);
-		pastAngles = pastAngles.concat(
-			stepResult.searches.map((plan) => plan.angle),
-		);
-		feedback = stepResult.feedback;
-		if (stepResult.status === "exhausted") break;
-		if (costDollars >= config.spend.perRunDollars) {
-			lastRoundStatus = "capped";
-			break;
-		}
+		if (decision === "stop") break;
 	}
 
 	return {
-		companies,
+		companies: state.companies,
 		requested: payload.count,
-		found: companies.length,
-		rounds,
-		status: finalStatus(companies.length, payload.count, lastRoundStatus),
-		costDollars,
-		rejects,
-		searches,
-		captures,
-		seenDomains: [...accumulatedDomains],
-		feedback,
-		roundReports,
+		found: state.companies.length,
+		rounds: state.rounds,
+		status: finalStatus(
+			state.companies.length,
+			payload.count,
+			state.lastRoundStatus,
+		),
+		costDollars: state.costDollars,
+		rejects: state.rejects,
+		searches: state.searches,
+		captures: state.captures,
+		seenDomains: [...state.accumulatedDomains],
+		feedback: state.feedback,
+		pages: state.pages,
+		provenRate: state.provenRate,
+		roundReports: state.roundReports,
 	};
 }
 
@@ -217,45 +290,6 @@ async function runFindCompaniesRounds(
  * back a page at a time through `GET /runs/{runId}/companies`.
  */
 type ReportedRounds = FindCompaniesResult & { roundReports: RoundReport[] };
-
-export type RoundReport = {
-	round: number;
-	angle: string;
-	query: string;
-	recency: string | null;
-	eventWindowDays: number | null;
-	recencyDays: number | null;
-	source: string;
-	agentEffort: string;
-	found: number;
-	rejected: { filter: number; gate: number; judge: number };
-};
-
-/** One line per round: the angle it tried, what it kept, and how many fell at each stage. The reasons themselves stay inside the run, since one round refused seventy eight companies and named every one. */
-export function reportRound(
-	round: number,
-	result: FindCompaniesResult,
-): RoundReport {
-	const plan = result.searches[0];
-	const count = (stage: FindCompaniesReject["stage"]): number =>
-		result.rejects.filter((reject) => reject.stage === stage).length;
-	return {
-		round,
-		angle: plan?.angle ?? "",
-		query: plan?.query ?? "",
-		recency: plan?.recency ?? null,
-		eventWindowDays: plan?.eventWindowDays ?? null,
-		recencyDays: plan?.recencyDays ?? null,
-		source: plan?.source ?? "",
-		agentEffort: plan?.agentEffort ?? "",
-		found: result.companies.length,
-		rejected: {
-			filter: count("filter"),
-			gate: count("gate"),
-			judge: count("judge"),
-		},
-	};
-}
 
 export type FindCompaniesSummary = {
 	requested: number;
@@ -275,36 +309,6 @@ function summarizeFindCompanies(result: ReportedRounds): FindCompaniesSummary {
 		costDollars: result.costDollars,
 		roundReports: result.roundReports,
 	};
-}
-
-type PersistCompaniesInput = {
-	icpId: string;
-	runId: string;
-	organizationId: string;
-	companies: readonly CompanyRow[];
-	captures: Record<string, CompanyCapture>;
-};
-
-async function persistCompanies(
-	env: Env,
-	input: PersistCompaniesInput,
-): Promise<void> {
-	const { icpId, runId, organizationId, companies, captures } = input;
-	const newCompanies = companies
-		.map((row) =>
-			toNewCompany(
-				row,
-				{ icpId, runId, organizationId },
-				row.domain ? captures[row.domain] : undefined,
-			),
-		)
-		.filter((row): row is NewCompany => row !== null);
-	const saved = await saveCompanies(env, newCompanies);
-	const evidenceRows = saved.flatMap((company) => {
-		const row = matchRow(companies, company);
-		return row ? evidenceRowsFor(company, row) : [];
-	});
-	await appendEvidence(env, evidenceRows);
 }
 
 export class FindCompaniesWorkflow extends WorkflowEntrypoint<
@@ -330,7 +334,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 		step: WorkflowStep,
 	): Promise<FindCompaniesSummary> {
 		const payload = FindCompaniesPayloadSchema.parse(event.payload);
-		const { doc: icp, organizationId } = await step.do(
+		const loaded = await step.do(
 			"load-icp",
 			config.stepConfig.databaseCall,
 			async () => {
@@ -340,12 +344,19 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 						`findCompanies: unknown icp ${payload.icpId}`,
 					);
 				}
+				const parsed = IcpDocSchema.safeParse(icpRow.doc);
+				if (!parsed.success)
+					throw new NonRetryableError(
+						"findCompanies: legacy profile; onboard again with the original instructions",
+					);
 				return {
-					doc: IcpDocSchema.parse(icpRow.doc),
+					doc: parsed.data,
 					organizationId: icpRow.organizationId,
 				};
 			},
 		);
+		let icp = loaded.doc;
+		const { organizationId } = loaded;
 
 		const alreadySpent = await step.do(
 			"open-run",
@@ -363,14 +374,31 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 			},
 		);
 
+		const extracted = await extractProfile({
+			env: this.env,
+			icp,
+			icpId: payload.icpId,
+			runId: event.instanceId,
+			step,
+			alreadySpent: alreadySpent.alreadySpent,
+		});
+		icp = extracted.icp;
+		const costDollars = extracted.costDollars;
+		const requirements = icp.icp.requirements;
+		if (requirements.length === 0)
+			throw new NonRetryableError(
+				"findCompanies: target companies are unspecified; add targeting instructions",
+			);
+
 		const result = await runFindCompaniesRounds(
 			{
 				env: this.env,
 				payload,
 				icp,
+				requirements,
 				runId: event.instanceId,
 				organizationId,
-				alreadySpent: alreadySpent.alreadySpent,
+				alreadySpent: costDollars,
 			},
 			step,
 		);
@@ -382,6 +410,7 @@ export class FindCompaniesWorkflow extends WorkflowEntrypoint<
 				organizationId,
 				companies: result.companies,
 				captures: result.captures,
+				pages: result.pages,
 			}),
 		);
 

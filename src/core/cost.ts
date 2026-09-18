@@ -34,8 +34,8 @@ export class CostLedger {
 
 	/**
 	 * Records a dollar figure a vendor returned directly. When `detail` is
-	 * given, it replaces the flat figure with one line per key instead of one
-	 * line for `provider`.
+	 * complete, it attributes that total by key. A partial breakdown never
+	 * replaces the provider's reported total.
 	 */
 	reported(
 		provider: string,
@@ -43,7 +43,14 @@ export class CostLedger {
 		dollars: number,
 		detail?: Record<string, number>,
 	): void {
-		if (!detail || Object.keys(detail).length === 0) {
+		if (
+			!detail ||
+			Object.keys(detail).length === 0 ||
+			Object.values(detail).reduce(
+				(sum, amount) => sum + toNanos(amount),
+				0,
+			) !== toNanos(dollars)
+		) {
 			this.#entries.push({ provider, op, nanos: toNanos(dollars) });
 			return;
 		}
@@ -100,6 +107,59 @@ export class CostLedger {
 			merged.#entries.push(...ledger.#entries);
 		}
 		return merged;
+	}
+}
+
+/**
+ * Carries a round's own partial spend up through whatever it was doing when
+ * it threw, so the caller that lost the round can still bank what it paid
+ * for. `cause` is the error that actually stopped the round.
+ */
+export class PartialSpendError extends Error {
+	readonly costDollars: number;
+
+	constructor(costDollars: number, cause: unknown) {
+		super("a round failed after it had already spent", { cause });
+		this.name = "PartialSpendError";
+		this.costDollars = costDollars;
+	}
+}
+
+/** Folds `priorSpend` onto whatever `error` already carries, keeping the original cause rather than nesting wrappers. */
+export function addPartialSpend(
+	error: unknown,
+	priorSpend: number,
+): PartialSpendError {
+	if (error instanceof PartialSpendError) {
+		return new PartialSpendError(
+			toDollars(toNanos(priorSpend) + toNanos(error.costDollars)),
+			error.cause,
+		);
+	}
+	return new PartialSpendError(priorSpend, error);
+}
+
+export type Purchase<T> = {
+	value: T | null;
+	costDollars: number;
+	error: string | null;
+};
+/** Carries failed purchases out of the durable step so their reported spend is banked before failure. */
+export async function purchase<T>(
+	buy: () => Promise<{ value: T; costDollars: number }>,
+): Promise<Purchase<T>> {
+	try {
+		return { ...(await buy()), error: null };
+	} catch (error) {
+		const cause = error instanceof PartialSpendError ? error.cause : error;
+		return {
+			value: null,
+			costDollars: error instanceof PartialSpendError ? error.costDollars : 0,
+			error:
+				cause instanceof Error
+					? cause.message
+					: "provider purchase failed; billing may be unknown",
+		};
 	}
 }
 

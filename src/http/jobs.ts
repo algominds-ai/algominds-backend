@@ -1,11 +1,12 @@
 import type { Context } from "hono";
-import type { z } from "zod";
+import { z } from "zod";
 import {
 	createIcp,
 	findRun,
 	loadIcp,
 	organizationDomain,
 } from "@/core/db/queries";
+import { draftIcp, IcpDocSchema } from "@/core/icp";
 import type { ApiEnv } from "@/http/auth";
 import type { icpRef } from "@/http/schemas";
 
@@ -26,25 +27,68 @@ export function buildRunId(
 
 type IcpRef = z.infer<typeof icpRef>;
 
+export const LEGACY_PROFILE_MESSAGE =
+	"legacy profile; onboard again with the original targeting instructions";
+
+/** The 409 a start endpoint answers for a stored profile the workflows would reject. */
+export function legacyProfileResponse(): Response {
+	return Response.json({ error: LEGACY_PROFILE_MESSAGE }, { status: 409 });
+}
+
+export type ResolvedProfile = { id: string; legacy: boolean };
+
 /**
  * Uses the given ICP, or stores the free-text prompt as a new one under the
- * organization the caller's key proves. The caller never names it.
+ * organization the caller's key proves. The caller never names it. A stored
+ * profile is `legacy` when its document no longer parses — the workflow would
+ * reject it, so the endpoint refuses before a run is started.
  */
 export async function resolveIcpId(
 	env: Env,
 	body: IcpRef,
 	organizationId: string,
-): Promise<string | null> {
+): Promise<ResolvedProfile | null> {
 	if ("icpId" in body) {
 		const owned = await loadIcp(env, body.icpId);
-		return owned?.organizationId === organizationId ? owned.id : null;
+		if (owned?.organizationId !== organizationId) return null;
+		return {
+			id: owned.id,
+			legacy: !IcpDocSchema.safeParse(owned.doc).success,
+		};
 	}
+	const domain = await organizationDomain(env, organizationId);
 	const row = await createIcp(env, {
-		description: body.prompt,
-		domain: await organizationDomain(env, organizationId),
+		doc: draftIcp(domain, body.prompt),
+		domain,
 		organizationId,
 	});
-	return row.id;
+	return { id: row.id, legacy: false };
+}
+
+/** Whether `icpId` names a stored profile of this organization whose document no longer parses. */
+export async function isLegacyProfile(
+	env: Env,
+	icpId: string | null | undefined,
+	organizationId: string,
+): Promise<boolean> {
+	if (icpId === null || icpId === undefined) return false;
+	const row = await loadIcp(env, icpId);
+	if (row === undefined || row.organizationId !== organizationId) return false;
+	return !IcpDocSchema.safeParse(row.doc).success;
+}
+
+/** Reads a profile only for its owner, including the exact instructions to revise. */
+export async function getIcp(
+	c: Context<ApiEnv, "/icp/:icpId">,
+): Promise<Response> {
+	const id = z.uuid().safeParse(c.req.param("icpId"));
+	if (!id.success) return c.json({ error: "unknown profile" }, 404);
+	const row = await loadIcp(c.env, id.data);
+	if (!row || row.organizationId !== c.get("organizationId"))
+		return c.json({ error: "unknown profile" }, 404);
+	const parsed = IcpDocSchema.safeParse(row.doc);
+	if (!parsed.success) return c.json({ error: LEGACY_PROFILE_MESSAGE }, 409);
+	return c.json({ icpId: row.id, profile: parsed.data }, 200);
 }
 
 /**
@@ -91,13 +135,21 @@ export type Job = {
 
 export type JobConfig<Body> = {
 	capability: Capability;
-	workflow: Workflow<unknown>;
-	toJob: (body: Body, env: Env, organizationId: string) => Promise<Job | null>;
+	workflow: JobWorkflow;
+	toJob: (
+		body: Body,
+		env: Env,
+		organizationId: string,
+	) => Promise<Job | Response | null>;
 };
 
-/** The part of a Workflow binding this file reads: one instance, and whether it is still going. */
+/** The part of a Workflow binding this file reads: one instance, whether it is still going, and the batch call that creates one. */
 type RunLookup = {
 	get: (id: string) => Promise<{ status: () => Promise<{ status: string }> }>;
+};
+
+type JobWorkflow = RunLookup & {
+	createBatch(batch: { id?: string; params?: unknown }[]): Promise<unknown>;
 };
 
 const FAILED_STATUSES: ReadonlySet<string> = new Set(["errored", "terminated"]);
@@ -126,6 +178,27 @@ export async function instanceExists(
 	}
 }
 
+/**
+ * Starts `runId` and confirms an instance actually exists afterwards: the
+ * production API silently skips a retained id instead of restarting it, so a
+ * failed run's id reports "existing" rather than a "started" nothing was
+ * behind. Returns true only when a live instance is confirmed.
+ */
+export async function startInstance(
+	workflow: JobWorkflow,
+	runId: string,
+	params: unknown,
+): Promise<boolean> {
+	if (await instanceExists(workflow, runId)) return false;
+	try {
+		await workflow.createBatch([{ id: runId, params }]);
+	} catch (error) {
+		if (!(await instanceExists(workflow, runId))) throw error;
+		return false;
+	}
+	return instanceExists(workflow, runId);
+}
+
 export async function startJob<Body>(
 	c: Context<ApiEnv>,
 	schema: z.ZodType<Body>,
@@ -138,6 +211,7 @@ export async function startJob<Body>(
 	}
 	const organizationId = c.get("organizationId");
 	const job = await config.toJob(parsed.data, c.env, organizationId);
+	if (job instanceof Response) return job;
 	if (job === null) return c.json({ error: "unknown profile" }, 404);
 	if (job.sourceRunId !== undefined) {
 		const source = await findRun(c.env, job.sourceRunId);
@@ -153,12 +227,7 @@ export async function startJob<Body>(
 			200,
 		);
 	};
-	if (await instanceExists(config.workflow, runId)) return existingResponse();
-	try {
-		await config.workflow.createBatch([{ id: runId, params: job.params }]);
-	} catch (error) {
-		if (!(await instanceExists(config.workflow, runId))) throw error;
+	if (!(await startInstance(config.workflow, runId, job.params)))
 		return existingResponse();
-	}
 	return c.json({ runId, icpId: job.icpId, status: "started" }, 202);
 }

@@ -1,69 +1,21 @@
-# What an onboarding run buys, and how that spend is counted
+# Onboarding contract and accounting
 
-## The invariant
+An account has seller facts and a scoped ICP in the existing `icp.doc` JSON column. `src/core/icp.ts` is the shared runtime schema for HTTP, workflows and evaluations. No new table or campaign object is needed.
 
-`recordRunSpend` carries the rule the daily ceiling depends on: *a run that dies
-before it closes still counts*. `organizationSpendToday` sums `run.cost_dollars`,
-so spend is only visible once a `run` row exists. Any capability that buys
-something before opening its run row can spend money the ceiling never sees.
+The exact targeting note is stored outside model output as `instructions`. It controls product, audience and buyer intent; seller pages provide facts, not inferred targeting restrictions. A requirement is required or preferred, with OR alternatives containing AND conditions. Each condition carries its own optional time window and source rule. Provider filters and search angles are derived at run time, never stored as account facts.
 
-Onboarding first got this wrong. Its run row was written last, because
-`run.icp_id` referenced `icp.id` and the profile did not exist until the paid
-work finished. A run that died in the paid step therefore left no row, and the
-Exa search it had already paid for vanished from the account's day. The model
-path made it worse: `attemptStructured` records a failed call's cost into the
-ledger before rethrowing, so two failed attempts billed real money into a ledger
-that was then discarded.
+`extracted: false` marks a free-text request awaiting extraction. It cannot complete onboarding. Company discovery extracts such a request once per durable run and persists the whole profile before searching. An extracted profile without company criteria cannot launch broad discovery. Legacy documents are rejected explicitly; rebuild from original instructions rather than guessing a translation.
 
-## The fix
+## Paid work
 
-`run.icp_id` is nullable. A run that has not produced a profile yet genuinely
-points at nothing, and saying so is cheaper than the alternatives: a placeholder
-`icp` row would be a real profile carrying a fake description, reachable by any
-caller who passed its id to `/companies/find`.
+Open the run before buying anything. Read seller pages, bank their reported cost, extract the profile, bank its reported cost, then save the profile. The shared `purchase` helper returns plain serializable value, cost and error fields. A failed paid callback resolves this receipt so the workflow can bank partial spend and throw outside the paid step. Model schema failures do not silently trigger another paid attempt.
 
-The order is now: check the ceiling, open the run, buy the pages, bank what
-that cost, buy the profile, bank that too, then write the profile and close the
-run against it. The second bank matters: when neither the model nor a note
-produces a description the run fails, and without banking first the model call
-it already paid for would vanish the same way the search once did. Two readers of
-`run.icpId` — the people-run target and the enrich source — refuse a source run
-that produced no profile, which they should have done anyway.
+`recordRunSpend` writes a cumulative total. A restarted run seeds that total from `openRun`, preserving previously banked spend. A failure closes the run as errored. Missing provider billing is unknown, not evidence that a request was free.
 
-## Why the paid work is two steps
+`saveOnboardedIcp` locks the onboarding run in a transaction, checks organization ownership, and inserts the extracted profile while closing the run. Replaying a committed save returns its existing ICP ID instead of inserting another profile.
 
-`step.do` retries its whole callback. One step holding both the Exa search and
-the reasoning call meant a gateway 5xx on the model re-ran the search, buying it
-again, up to three times. `readSellerPages` and `writeSellerProfile` are separate
-steps, so a model retry re-buys only the model call.
+## Reading and revising
 
-`readSellerPages` returns `{ url, text }` rather than the vendor's `ExaResult`.
-The result type carries a recursive `Json` field that the step's own generic
-cannot instantiate, and the prompt never needed the rest of it. The same wall
-stops the plain company search from getting its own step, which is why that one
-still sits inside its round.
+`GET /icp/:icpId` returns the owned canonical profile and exact instructions. Submit the complete revised note to `POST /icp/onboard` to produce another profile. The existing request scope includes organization, domain and note, so different targeting does not reuse an earlier onboarding result. Existing runs continue to reference their original profile.
 
-## What a step may return
-
-Never a class instance. A step result is replayed from its serialized form, so a
-`CostLedger` does not survive one. Each paid step returns its total as a number
-and the workflow sums them.
-
-## The rule generalised
-
-Every capability now seeds its cost accumulator from what its run already
-banked, read from `openRun`'s returned row. `recordRunSpend` overwrites the
-column rather than adding to it, so a run restarted under its own id would
-otherwise replace a failed attempt's spend with its own and the account's day
-would undercount money already billed.
-
-That step returns an object rather than a bare number. A step mock whose result
-is falsy is treated as no mock at all, and the real step then runs — which is
-how ten tests hung when this step first returned zero.
-
-## Writing the profile
-
-`saveOnboardedIcp` inserts the profile and closes its run in one transaction,
-so a failure between the two cannot leave a profile no run points at. A retry
-after a full commit still writes a second profile; there is no idempotency key,
-and whether a later profile should replace or coexist is undecided.
+Checks live in `test/onboard/spend.spec.ts`, `test/companies/workflow-errored.spec.ts` and `test/http/icp.spec.ts`. They cover banked failure spend, extraction persistence, replay-safe profile saving, ownership and revised targeting scope. These checks verify mechanics; live extraction fidelity and prospect quality are measured separately in the experiment artifacts.

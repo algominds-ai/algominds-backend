@@ -1,6 +1,7 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Hono } from "hono";
+import { IcpDocSchema } from "@/core/icp";
 import {
 	companiesFindSchema,
 	enrichSchema,
@@ -91,7 +92,7 @@ const companyRow = storedRow(
 
 const personRow = storedRow(
 	"Person",
-	"One person row as stored, with its id, the company it belongs to, and its LinkedIn URL, name and title where known. `data.status` is verified or roster.",
+	"One person row as stored, with its id, company, LinkedIn URL, name and title where known. `data.status` is verified, pending or roster. Pending means current identity, employment, role or fit remains unresolved. `data.basis` explains the decision; `data.buyerFit` distinguishes direct and adjacent matches when evaluated.",
 );
 
 function pageResponse<Row extends z.ZodTypeAny>(row: Row) {
@@ -265,7 +266,7 @@ const onboardIcpRoute = createRoute({
 			},
 			"onboard with added context": {
 				summary:
-					"Adds a note the model reads for context, never as an instruction.",
+					"The note controls product, audience and buyers. Send the complete revised note to create a new profile; previous profiles and runs remain available.",
 				value: {
 					domain: "acme.example",
 					note: "Our best account is Globex, grew from 5 to 40 seats.",
@@ -288,6 +289,29 @@ const runStatusRoute = createRoute({
 			"The run, and the counts its capability reported.",
 		),
 		404: jsonResponse(errorResponse, UNKNOWN_RUN),
+		401: unauthorizedEntry,
+	},
+});
+
+const getIcpRoute = createRoute({
+	method: "get",
+	path: "/icp/{icpId}",
+	tags: ["icp"],
+	security: SECURITY,
+	request: { params: z.object({ icpId: z.uuid() }) },
+	responses: {
+		200: jsonResponse(
+			z.object({ icpId: z.uuid(), profile: IcpDocSchema }),
+			"The profile and its original targeting instructions.",
+		),
+		404: jsonResponse(
+			errorResponse,
+			"The profile is unknown, or belongs to another organization.",
+		),
+		409: jsonResponse(
+			errorResponse,
+			"A legacy profile must be rebuilt from its original instructions.",
+		),
 		401: unauthorizedEntry,
 	},
 });
@@ -339,6 +363,7 @@ const ROUTES = [
 	findPeopleRoute,
 	enrichRoute,
 	onboardIcpRoute,
+	getIcpRoute,
 	runStatusRoute,
 	runCompaniesRoute,
 	runPeopleRoute,

@@ -1,13 +1,7 @@
 import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import type { CostLedger } from "@/core/cost";
-import {
-	EXA_FETCH_TIMEOUT_MS,
-	extractRequestId,
-	readJson,
-	throwForStatus,
-} from "@/core/providers/exa/http";
-import { RetryableProviderError } from "@/core/providers/waterfall";
+import { exaFetch, extractRequestId } from "@/core/providers/exa/http";
 
 const JsonValueSchema = z.json();
 
@@ -45,8 +39,10 @@ const ExaSearchRequestSchema = z.object({
 	excludeDomains: z.array(z.string()).max(1200).optional(),
 	additionalQueries: z.array(z.string()).optional(),
 	systemPrompt: z.string().optional(),
+	outputSchema: JsonValueSchema.optional(),
 	contents: z
 		.object({
+			highlights: z.boolean().optional(),
 			text: z
 				.union([
 					z.boolean(),
@@ -183,6 +179,7 @@ const ExaResultSchema = z.object({
 	publishedDate: z.string().optional(),
 	score: z.number().optional(),
 	text: z.string().optional(),
+	highlights: z.array(z.string()).optional(),
 	summary: z.string().optional(),
 	entities: z.array(z.unknown()).optional(),
 });
@@ -191,6 +188,7 @@ const ExaResponseSchema = z.object({
 	requestId: z.string(),
 	costDollars: ExaCostSchema,
 	results: z.array(ExaResultSchema),
+	output: JsonValueSchema.optional(),
 });
 
 /** The structured company record Exa returns. Every field can be absent; see `docs/solutions/exa-search-contract.md` for the measured fill rates. */
@@ -212,13 +210,25 @@ export type PersonRecord = {
 	workHistory: PersonWorkHistoryEntry[];
 };
 
+export const CompanyEvidenceSchema = z.object({
+	conditionId: z.string(),
+	sourceUrl: z.string().nullable(),
+	quote: z.string().nullable(),
+	eventDate: z.string().nullable(),
+	publishedDate: z.string().nullable(),
+});
+
+export type CompanyEvidence = z.infer<typeof CompanyEvidenceSchema>;
+
 export type ExaResult = {
+	evidence?: CompanyEvidence[];
 	id: string | null;
 	url: string;
 	title: string;
 	publishedDate?: string;
 	score?: number;
 	text?: string;
+	highlights?: string[];
 	signal?: string;
 	evidenceUrl?: string;
 	evidenceQuote?: string;
@@ -233,6 +243,7 @@ export type ExaResult = {
 export type ExaSearchResult = {
 	requestId: string;
 	results: ExaResult[];
+	output?: Json;
 };
 
 function parseSummary(raw: string | undefined): Json | null {
@@ -324,6 +335,7 @@ function toExaResult(raw: z.infer<typeof ExaResultSchema>): ExaResult {
 			? { publishedDate: raw.publishedDate }
 			: {}),
 		...(raw.text !== undefined ? { text: raw.text } : {}),
+		...(raw.highlights !== undefined ? { highlights: raw.highlights } : {}),
 		summary: parseSummary(raw.summary),
 	};
 }
@@ -350,27 +362,25 @@ export async function search(
 	const validated = ExaSearchRequestSchema.parse(req);
 	rejectEntityIndexFilters(validated);
 	const apiKey = await env.EXA_API_KEY.get();
-	let response: Response;
-	try {
-		response = await fetch("https://api.exa.ai/search", {
+	const body = await exaFetch(
+		"https://api.exa.ai/search",
+		{
 			method: "POST",
 			headers: { "x-api-key": apiKey, "content-type": "application/json" },
 			body: JSON.stringify(validated),
-			signal: AbortSignal.timeout(EXA_FETCH_TIMEOUT_MS),
-		});
-	} catch (error) {
-		if (error instanceof DOMException && error.name === "TimeoutError") {
-			throw new RetryableProviderError("Exa search request timed out");
-		}
-		throw error;
+		},
+		"Exa",
+		"Exa search request timed out",
+	);
+	const cost = z.object({ costDollars: ExaCostSchema }).safeParse(body);
+	if (cost.success) {
+		const { total, ...rest } = cost.data.costDollars;
+		ledger.reported("exa", "search", total, flattenCost(rest));
 	}
-	const body = await readJson(response);
-	if (!response.ok) throwForStatus("Exa", response.status, body);
 	const parsed = parseResponse(body);
-	const { total, ...rest } = parsed.costDollars;
-	ledger.reported("exa", "search", total, flattenCost(rest));
 	return {
 		requestId: parsed.requestId,
 		results: parsed.results.map(toExaResult),
+		...(parsed.output !== undefined ? { output: parsed.output } : {}),
 	};
 }

@@ -192,8 +192,6 @@ export const findymailLinkedinProvider: Provider<
 	FindymailResult
 > = {
 	id: "findymail-linkedin",
-	channels: ["email"],
-	cost: 1,
 	async run(input, env, ledger = new CostLedger()) {
 		if (!input.linkedinUrl) return null;
 		const contact = await findymailSearchLinkedin(
@@ -210,8 +208,6 @@ export const findymailLinkedinProvider: Provider<
 export const findymailNameProvider: Provider<FindymailInput, FindymailResult> =
 	{
 		id: "findymail-name",
-		channels: ["email"],
-		cost: 1,
 		async run(input, env, ledger = new CostLedger()) {
 			if (!input.name || !input.domain) return null;
 			const contact = await findymailSearchByName(

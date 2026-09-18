@@ -10,6 +10,9 @@ export type TargetCompany = {
 	name: string | null;
 	linkedinUrl: string | null;
 	icpId: string | null;
+	workforceTotal: number | null;
+	exaId: string | null;
+	description: string | null;
 };
 
 export type TargetCompanies = {
@@ -35,6 +38,9 @@ async function targetByRun(
 			name: row.name,
 			linkedinUrl: row.linkedinUrl,
 			icpId: row.icpId,
+			workforceTotal: row.workforceTotal,
+			exaId: row.exaId,
+			description: row.description,
 		})),
 		icpId: runRow.icpId,
 		unknownDomains: [],
@@ -82,6 +88,9 @@ function toTargetCompany(
 			name: null,
 			linkedinUrl: null,
 			icpId: profileId,
+			workforceTotal: null,
+			exaId: null,
+			description: null,
 		};
 	}
 	return {
@@ -90,6 +99,9 @@ function toTargetCompany(
 		name: row.name,
 		linkedinUrl: row.linkedinUrl,
 		icpId: profileId,
+		workforceTotal: row.workforceTotal,
+		exaId: row.exaId,
+		description: row.description,
 	};
 }
 

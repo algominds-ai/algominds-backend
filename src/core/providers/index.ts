@@ -10,7 +10,3 @@ export const EMAIL: Provider<FindymailInput, FindymailResult>[] = [
 	...FINDYMAIL_EMAIL_PROVIDERS,
 	exaAgentEmailProvider,
 ];
-
-export const COMPANY: Provider<never, never>[] = [];
-export const EMPLOYMENT: Provider<never, never>[] = [];
-export const LINKEDIN: Provider<never, never>[] = [];

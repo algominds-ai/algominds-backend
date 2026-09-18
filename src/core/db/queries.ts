@@ -1,7 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { IndexColumn } from "drizzle-orm/pg-core";
-import { MAX_EXCLUDED_DOMAINS } from "@/core/companies/candidates";
 import { organization } from "@/core/db/auth-schema";
 import type { DbEnv, DbFactory } from "@/core/db/client";
 import { db, withConnection } from "@/core/db/client";
@@ -24,7 +23,7 @@ import {
 	evidence,
 	type icp,
 	normalizeDomain,
-	person,
+	type person,
 	round,
 	type run,
 } from "@/core/db/schema";
@@ -104,25 +103,15 @@ interface AppendConnection<TTable, TNewRow, TRow> {
 	};
 }
 
-export interface DeleteTransaction {
-	delete(table: typeof evidence | typeof person): {
-		where(condition: SQL | undefined): Promise<never[]>;
-	};
-}
-
-export interface TransactableConnection {
-	transaction<T>(fn: (tx: DeleteTransaction) => Promise<T>): Promise<T>;
-}
-
 export type IcpConnection = SelectLimitConnection<typeof icp, Icp>;
 export type IcpInsertConnection = AppendConnection<typeof icp, NewIcp, Icp>;
+export type IcpDocUpdateConnection = SelectLimitConnection<typeof icp, Icp> &
+	UpdateWhereConnection<typeof icp, Pick<NewIcp, "doc">>;
 export interface DomainsConnection {
 	select(columns: { domain: typeof company.domain }): {
 		from(table: typeof company): {
 			where(condition: SQL | undefined): {
-				orderBy(order: SQL): {
-					limit(count: number): Promise<{ domain: string }[]>;
-				};
+				orderBy(order: SQL): Promise<{ domain: string }[]>;
 			};
 		};
 	};
@@ -170,6 +159,7 @@ export type OrganizationSpendConnection = SelectWhereConnection<
 	{ costDollars: typeof run.costDollars },
 	{ costDollars: number }
 >;
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /** The instant `days` days before `now` (defaults to the current time). */
@@ -197,29 +187,18 @@ export async function organizationDomain(
 	return rows[0]?.domain ?? null;
 }
 
-/**
- * Domains this account found within the trailing `days` days, across every
- * profile it owns, most recent first and capped at the search contract's
- * exclusion limit. Read through the cache-disabled binding.
- */
+/** Every company domain already stored for this account, across all profiles, most recent first. Read through the cache-disabled binding; provider request limits are applied separately by the search adapter. */
 export async function recentDomains(
 	env: DbEnv,
 	organizationId: string,
-	days: number,
 	buildDb: DbFactory<DomainsConnection> = db,
 ): Promise<string[]> {
 	const rows = await withConnection(env, "direct", buildDb, (connection) =>
 		connection
 			.select({ domain: company.domain })
 			.from(company)
-			.where(
-				and(
-					eq(company.organizationId, organizationId),
-					gte(company.foundAt, cutoffDate(days)),
-				),
-			)
-			.orderBy(desc(company.foundAt))
-			.limit(MAX_EXCLUDED_DOMAINS),
+			.where(eq(company.organizationId, organizationId))
+			.orderBy(desc(company.foundAt)),
 	);
 	return rows.map((row) => row.domain);
 }
@@ -310,31 +289,11 @@ export async function latestEvidence(
 	return rows[0];
 }
 
-/** Deletes a person and every evidence row recorded for them, in one transaction. */
-export async function deletePerson(
-	env: DbEnv,
-	personId: string,
-	buildDb: DbFactory<TransactableConnection> = db,
-): Promise<void> {
-	await withConnection(env, "cached", buildDb, (connection) =>
-		connection.transaction(async (tx) => {
-			await tx
-				.delete(evidence)
-				.where(
-					and(
-						eq(evidence.subjectType, "person"),
-						eq(evidence.subjectId, personId),
-					),
-				);
-			await tx.delete(person).where(eq(person.id, personId));
-		}),
-	);
-}
-
 export {
 	createIcp,
 	loadIcp,
 	type NewIcpInput,
+	saveIcpProfile,
 	saveOnboardedIcp,
 } from "@/core/db/icp";
 export {

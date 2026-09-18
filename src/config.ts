@@ -21,14 +21,22 @@ export const config = {
 		resultsPerRound: 100,
 		judgeCandidateMultiple: 2,
 		descriptionChars: 600,
-		seenDomainsWindowDays: 60,
 		exaAgentPollIntervalSeconds: 5,
-		exaAgentMaxPollAttempts: 60,
+		exaAgentMaxPollAttempts: 120,
+		maxAnglesPerRound: 12,
+		agentStartStaggerMs: 1500,
+		provingConcurrency: 5,
+		contentsMaxCharacters: 10000,
+		judgeBatchSize: 4,
+		exaRetryAfterMaxMs: 5000,
+		exaPollBudgetPerSecond: 2,
 	},
 	people: {
 		exaAgentPollIntervalSeconds: 5,
-		exaAgentMaxPollAttempts: 24,
+		exaAgentMaxPollAttempts: 60,
 		clayFetchTimeoutMs: 30000,
+		clayRetryAfterMaxMs: 5000,
+		researchBatchSize: 10,
 	},
 	enrich: {
 		batchSize: 5,
@@ -39,11 +47,14 @@ export const config = {
 		exaAgentMaxPollAttempts: 24,
 	},
 	spend: {
-		perRunDollars: 2,
+		perRunDollars: 10,
 		perAccountDailyDollars: 50,
 	},
 	judge: {
 		cacheTtlSeconds: 86400,
+	},
+	model: {
+		timeoutMs: 240000,
 	},
 	stepConfig: {
 		paidCall: {
@@ -59,6 +70,20 @@ export const config = {
 				delay: "1 second",
 			},
 			timeout: "60 seconds",
+		},
+		judgeCall: {
+			retries: {
+				limit: 1,
+				delay: "10 seconds",
+			},
+			timeout: "5 minutes",
+		},
+		roundCall: {
+			retries: {
+				limit: 0,
+				delay: "10 seconds",
+			},
+			timeout: "20 minutes",
 		},
 	},
 } as const;

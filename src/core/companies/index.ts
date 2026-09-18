@@ -2,36 +2,32 @@ import { config } from "@/config";
 import type {
 	CompanyCapture,
 	FindCompaniesReject,
+	RetrievedPage,
 } from "@/core/companies/candidates";
 import {
-	buildSearchRequest,
-	collectDomains,
-	countUnseen,
-	excludedDomains,
-	filterEntities,
 	groupRejectReasons,
+	seedExcludedDomains,
 } from "@/core/companies/candidates";
-import {
-	applyEvidenceChecks,
-	demandsEvidenceProof,
-	toEvidenceRejects,
-	toGateRejects,
-	verifyEvidenceRows,
-} from "@/core/companies/evidence";
 import type {
 	CompanyRow,
 	GateOptions,
 	GateResult,
-	Reject,
-	SearchResult,
 } from "@/core/companies/gate";
-import type { JudgeResult, Verdict } from "@/core/companies/judge";
-import { CostLedger } from "@/core/cost";
+import type { JudgeOptions, JudgeResult } from "@/core/companies/judge";
+import {
+	type retrieveCompanyEvidence,
+	toGateRejects,
+} from "@/core/companies/proof";
+import type { BackfilledRecord } from "@/core/companies/record";
+import type { RoundOutcome } from "@/core/companies/round";
+import { runRound } from "@/core/companies/round";
+import type { CostLedger } from "@/core/cost";
 import { normalizeDomain } from "@/core/db/schema";
 import type {
 	ExaSearchRequest,
 	ExaSearchResult,
 } from "@/core/providers/exa/search";
+import type { Requirement } from "@/core/requirements";
 import type {
 	IcpDoc,
 	SearchPlan,
@@ -39,35 +35,24 @@ import type {
 	SynthesizeResult,
 } from "@/core/synthesize";
 
-export type { FindCompaniesReject };
+export type { FindCompaniesReject, RetrievedPage };
 
-const SPEND_PER_RUN = config.spend.perRunDollars;
-
-const {
-	maxRounds: MAX_ROUNDS,
-	judgeCandidateMultiple: JUDGE_CANDIDATE_MULTIPLE,
-	seenDomainsWindowDays: SEEN_DOMAINS_WINDOW_DAYS,
-} = config.companies;
+const { maxAnglesPerRound: MAX_ANGLES_PER_ROUND } = config.companies;
 
 export type FindCompaniesOptions = {
 	icpId: string;
 	organizationId: string;
 	env: Env;
 	today: string;
-	freshnessDays?: number;
-	scoreFloor?: number;
-	maxRounds?: number;
+	requirements: readonly Requirement[];
 	pastAngles?: readonly string[];
 	feedback?: readonly string[];
+	provenRate?: string | null;
 	excludeDomains?: readonly string[];
 };
 
 export type FindCompaniesDeps = {
-	recentDomains: (
-		env: Env,
-		organizationId: string,
-		days: number,
-	) => Promise<string[]>;
+	recentDomains: (env: Env, organizationId: string) => Promise<string[]>;
 	synthesize: (input: SynthesizeInput, env: Env) => Promise<SynthesizeResult>;
 	search: (
 		plan: SearchPlan,
@@ -75,16 +60,24 @@ export type FindCompaniesDeps = {
 		env: Env,
 		ledger: CostLedger,
 	) => Promise<ExaSearchResult>;
-	gate: (
-		rows: readonly CompanyRow[],
-		results: readonly SearchResult[],
-		opts: GateOptions,
-	) => GateResult;
+	agentRound: (
+		plans: readonly SearchPlan[],
+		excludeDomains: readonly string[],
+		env: Env,
+		ledger: CostLedger,
+	) => Promise<ExaSearchResult>;
+	backfill: (
+		domains: readonly string[],
+		env: Env,
+		ledger: CostLedger,
+	) => Promise<BackfilledRecord[]>;
+	retrieveEvidence: typeof retrieveCompanyEvidence;
+	gate: (rows: readonly CompanyRow[], opts: GateOptions) => GateResult;
 	judge: (
-		icp: IcpDoc,
+		requirements: readonly Requirement[],
 		rows: readonly CompanyRow[],
 		env: Env,
-		recency: string | null,
+		options?: JudgeOptions,
 	) => Promise<JudgeResult>;
 };
 
@@ -107,285 +100,44 @@ export type FindCompaniesResult = {
 	captures: Record<string, CompanyCapture>;
 	seenDomains: string[];
 	feedback: string[];
+	pages: RetrievedPage[];
+	provenRate?: string | null;
 };
 
-function applyVerdicts(
-	keptRows: readonly CompanyRow[],
-	verdicts: readonly Verdict[],
-): { accepted: CompanyRow[]; judgeRejects: FindCompaniesReject[] } {
-	const accepted: CompanyRow[] = [];
-	const judgeRejects: FindCompaniesReject[] = [];
-	for (const verdict of verdicts) {
-		const row = keptRows[verdict.index];
-		if (!row) continue;
-		if (verdict.keep) accepted.push(row);
-		else
-			judgeRejects.push({
-				domain: row.domain,
-				reason: verdict.reason ?? "refused without a reason",
-				stage: "judge",
-			});
-	}
-	return { accepted, judgeRejects };
+function clamp(value: number, min: number, max: number): number {
+	return Math.max(min, Math.min(max, value));
 }
 
-/** Dollars already banked by earlier rounds. Cost is only known after a call returns, so this can stop the next round but never the one in flight. */
-function spentSoFar(ledgers: readonly CostLedger[]): number {
-	return CostLedger.merge(...ledgers).total();
+/** How many bounded angles one round asks the planner for based on shortfall. */
+export function anglesForRound(
+	_requirements: readonly Requirement[],
+	shortfall: number,
+): number {
+	return clamp(Math.ceil(shortfall / 4), 1, MAX_ANGLES_PER_ROUND);
 }
 
-function buildFeedback(rejects: readonly FindCompaniesReject[]): string[] {
-	return groupRejectReasons(rejects);
-}
-
-type RoundContext = {
-	icp: IcpDoc;
-	count: number;
-	pastAngles: readonly string[];
-	feedback: readonly string[];
-	seenDomains: ReadonlySet<string>;
-};
-
-type RoundOutcome = {
-	plan: SearchPlan;
-	filterRejects: FindCompaniesReject[];
-	rows: CompanyRow[];
-	gateRejects: Reject[];
-	evidenceRejects: FindCompaniesReject[];
-	keptRows: CompanyRow[];
-	verdicts: Verdict[];
-	unseenCount: number;
-	resultCount: number;
-	ledger: CostLedger;
-	captures: Record<string, CompanyCapture>;
-};
-
-async function runRound(
-	ctx: RoundContext,
-	opts: FindCompaniesOptions,
-	deps: FindCompaniesDeps,
-): Promise<RoundOutcome> {
-	const synthesized = await deps.synthesize(
-		{
-			icp: ctx.icp,
-			pastAngles: ctx.pastAngles,
-			feedback: ctx.feedback,
-			today: opts.today,
-		},
-		opts.env,
-	);
-	const plan = synthesized.plan;
-	const searchLedger = new CostLedger();
-	const searched = await deps.search(
-		plan,
-		buildSearchRequest(
-			plan,
-			excludedDomains(opts.excludeDomains ?? [], ctx.seenDomains),
-		),
-		opts.env,
-		searchLedger,
-	);
-	const filtered = filterEntities(searched.results, plan, opts.today);
-	const unseenCount = countUnseen(filtered.rows, ctx.seenDomains);
-	const gated = deps.gate(filtered.rows, filtered.results, {
-		seenDomains: ctx.seenDomains,
-	});
-	const candidates = gated.kept.slice(0, ctx.count * JUDGE_CANDIDATE_MULTIPLE);
-	const evidenceLedger = new CostLedger();
-	const evidenceChecked = demandsEvidenceProof(plan)
-		? await verifyEvidenceRows(candidates, opts.env, evidenceLedger)
-		: { kept: candidates, rejects: [], checks: {} };
-	applyEvidenceChecks(filtered.captures, evidenceChecked.checks);
-	const judged =
-		evidenceChecked.kept.length > 0
-			? await deps.judge(ctx.icp, evidenceChecked.kept, opts.env, plan.recency)
-			: { verdicts: [], ledger: new CostLedger() };
-	return {
-		plan,
-		rows: filtered.rows,
-		filterRejects: filtered.rejects,
-		gateRejects: gated.rejects,
-		evidenceRejects: toEvidenceRejects(candidates, evidenceChecked.rejects),
-		keptRows: evidenceChecked.kept,
-		verdicts: judged.verdicts,
-		unseenCount,
-		resultCount: searched.results.length,
-		ledger: CostLedger.merge(
-			synthesized.ledger,
-			searchLedger,
-			evidenceLedger,
-			judged.ledger,
-		),
-		captures: filtered.captures,
-	};
-}
-
-type RunInput = { icp: IcpDoc; count: number; seenDomains: Set<string> };
-
-type RoundsAccumulator = {
-	companies: CompanyRow[];
-	rejects: FindCompaniesReject[];
-	ledgers: CostLedger[];
-	rounds: number;
-	status: FindCompaniesStatus;
-	searches: SearchPlan[];
-	captures: Record<string, CompanyCapture>;
-	feedback: string[];
-};
-
-const EMPTY_ROUND_FEEDBACK =
-	"the previous query matched no companies at all, so it was too narrow: write a broader angle";
-
-type AbsorbedRound = {
-	rejects: FindCompaniesReject[];
-	accepted: CompanyRow[];
-};
-
-/** Records one round's domains as seen and splits its rows into kept and rejected. */
-function absorbRound(
+function statusForRound(
+	companies: readonly CompanyRow[],
+	count: number,
 	outcome: RoundOutcome,
-	seenDomains: Set<string>,
-): AbsorbedRound {
-	for (const domain of collectDomains(outcome.rows)) seenDomains.add(domain);
-	const gateRejects = toGateRejects(outcome.rows, outcome.gateRejects);
-	const { accepted, judgeRejects } = applyVerdicts(
-		outcome.keptRows,
-		outcome.verdicts,
-	);
-	return {
-		rejects: [
-			...outcome.filterRejects,
-			...gateRejects,
-			...outcome.evidenceRejects,
-			...judgeRejects,
-		],
-		accepted,
-	};
-}
-
-type RoundDecision = "complete" | "retry" | "exhausted" | "continue";
-
-/**
- * What a finished round means for the loop. `retry` says the round is worth
- * repeating: either the vendor matched nothing at all, or it matched rows
- * that the filter refused outright, so no company ever reached the seen-domain
- * check. `exhausted` means the opposite: rows survived the filter, but every
- * one of them was a domain this run had already seen.
- */
-export function decideRound(
-	found: number,
-	wanted: number,
-	outcome: { resultCount: number; filteredCount: number; unseenCount: number },
-): RoundDecision {
-	if (found >= wanted) return "complete";
-	if (outcome.resultCount === 0) return "retry";
-	if (outcome.filteredCount === 0) return "retry";
-	if (outcome.unseenCount === 0) return "exhausted";
-	return "continue";
-}
-
-/** `empty` only when every round the run paid for matched nothing at all. */
-export function terminalStatus(
-	status: FindCompaniesStatus,
-	found: number,
-	emptyRounds: number,
-	rounds: number,
 ): FindCompaniesStatus {
-	if (found > 0 || rounds === 0) return status;
-	return emptyRounds === rounds ? "empty" : status;
+	if (companies.length >= count) return "complete";
+	if (outcome.resultCount === 0) return "empty";
+	return "short";
 }
 
-type RetryFeedback = { feedback: string[]; emptyRounds: number };
-
-/** A retry over a vendor answer of zero rows earns the generic too-narrow line and counts toward `empty`; a retry over a filter or gate refusal keeps the reject reasons already in `feedback`. */
-function retryFeedback(
-	feedback: readonly string[],
-	resultCount: number,
-	emptyRounds: number,
-): RetryFeedback {
-	if (resultCount !== 0) return { feedback: [...feedback], emptyRounds };
-	return {
-		feedback: [...feedback, EMPTY_ROUND_FEEDBACK],
-		emptyRounds: emptyRounds + 1,
-	};
-}
-
-async function runRounds(
-	input: RunInput,
-	opts: FindCompaniesOptions,
-	deps: FindCompaniesDeps,
-): Promise<RoundsAccumulator> {
-	const companies: CompanyRow[] = [];
-	const rejects: FindCompaniesReject[] = [];
-	const ledgers: CostLedger[] = [];
-	const searches: SearchPlan[] = [];
-	const captures: Record<string, CompanyCapture> = {};
-	const pastAngles: string[] = [...(opts.pastAngles ?? [])];
-	const maxRounds = opts.maxRounds ?? MAX_ROUNDS;
-	let feedback: string[] = [...(opts.feedback ?? [])];
-	let status: FindCompaniesStatus = "short";
-	let rounds = 0;
-	let emptyRounds = 0;
-
-	for (let round = 0; round < maxRounds; round++) {
-		if (spentSoFar(ledgers) >= SPEND_PER_RUN) {
-			status = "capped";
-			break;
-		}
-		rounds += 1;
-		const outcome = await runRound(
-			{
-				icp: input.icp,
-				count: input.count,
-				pastAngles: [...pastAngles],
-				feedback: [...feedback],
-				seenDomains: input.seenDomains,
-			},
-			opts,
-			deps,
-		);
-		ledgers.push(outcome.ledger);
-		searches.push(outcome.plan);
-		pastAngles.push(outcome.plan.angle);
-		Object.assign(captures, outcome.captures);
-		const absorbed = absorbRound(outcome, input.seenDomains);
-		rejects.push(...absorbed.rejects);
-		companies.push(...absorbed.accepted);
-		feedback = buildFeedback(absorbed.rejects);
-
-		const decision = decideRound(companies.length, input.count, {
-			resultCount: outcome.resultCount,
-			filteredCount: outcome.rows.length,
-			unseenCount: outcome.unseenCount,
-		});
-		if (decision === "retry") {
-			const retried = retryFeedback(feedback, outcome.resultCount, emptyRounds);
-			feedback = retried.feedback;
-			emptyRounds = retried.emptyRounds;
-			continue;
-		}
-		if (decision !== "continue") {
-			status = decision;
-			break;
-		}
-	}
-	return {
-		companies,
-		rejects,
-		ledgers,
-		rounds,
-		status: terminalStatus(status, companies.length, emptyRounds, rounds),
-		searches,
-		captures,
-		feedback,
-	};
+function rejectsForRound(outcome: RoundOutcome): FindCompaniesReject[] {
+	return [
+		...outcome.filterRejects,
+		...toGateRejects(outcome.rows, outcome.gateRejects),
+		...outcome.evidenceRejects,
+		...outcome.judgeRejects,
+	];
 }
 
 /**
- * Runs the deterministic company-discovery loop: read seen domains, then
- * synthesize, search, gate, and judge one round at a time until `count` is
- * met, three rounds pass, or a round adds no unseen domain. The gate always
- * outranks the count; a rejected row never reaches the result.
+ * Runs one deterministic discovery round. The durable workflow owns retries
+ * and cross-round state so direct callers and production use the same round.
  */
 export async function findCompanies(
 	icp: IcpDoc,
@@ -393,25 +145,47 @@ export async function findCompanies(
 	opts: FindCompaniesOptions,
 	deps: FindCompaniesDeps,
 ): Promise<FindCompaniesResult> {
-	const known = await deps.recentDomains(
-		opts.env,
-		opts.organizationId,
-		SEEN_DOMAINS_WINDOW_DAYS,
+	const requirements = opts.requirements;
+	const known = await deps.recentDomains(opts.env, opts.organizationId);
+	const excluded = seedExcludedDomains(
+		[...known, ...(opts.excludeDomains ?? [])],
+		icp.seller,
 	);
-	const seenDomains = new Set(known.map(normalizeDomain));
-	const outcome = await runRounds({ icp, count, seenDomains }, opts, deps);
-	const companies = outcome.companies.slice(0, count);
+	const outcome = await runRound(
+		{
+			icp,
+			requirements,
+			count,
+			pastAngles: opts.pastAngles ?? [],
+			feedback: opts.feedback ?? [],
+			provenRate: opts.provenRate ?? null,
+			excluded,
+		},
+		opts,
+		deps,
+	);
+	const companies = outcome.accepted;
+	const rejects = rejectsForRound(outcome);
+	const seenDomains = new Set(excluded);
+	for (const company of companies) {
+		if (company.domain) seenDomains.add(normalizeDomain(company.domain));
+	}
 	return {
 		companies,
 		requested: count,
 		found: companies.length,
-		rounds: outcome.rounds,
-		status: outcome.status,
-		costDollars: CostLedger.merge(...outcome.ledgers).total(),
-		rejects: outcome.rejects,
-		searches: outcome.searches,
+		rounds: 1,
+		status: statusForRound(companies, count, outcome),
+		costDollars: outcome.ledger.total(),
+		rejects,
+		searches: outcome.plans,
 		captures: outcome.captures,
 		seenDomains: [...seenDomains],
-		feedback: outcome.feedback,
+		feedback: [
+			`Previous round used ${outcome.plans[0]?.source === "exa-agent" ? "agent" : "search"}, admitted ${companies.length} companies; ${Math.max(0, count - companies.length)} companies still needed.`,
+			...groupRejectReasons(rejects),
+		],
+		pages: outcome.pages,
+		provenRate: outcome.provenRate,
 	};
 }
